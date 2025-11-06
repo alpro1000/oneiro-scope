@@ -18,7 +18,7 @@ from rapidfuzz import process, fuzz
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUT_PATH = os.path.join(ROOT, "data", "dreams_curated.json")
 TODAY = datetime.now(timezone.utc).strftime("%Y-%m-%d")
-UA = {"User-Agent": "LunarDream-ETL/1.0 (+https://github.com/<you>/lunar-landing)"}
+UA = {"User-Agent": "OneiroScope-ETL/1.0 (+https://github.com/alpro1000/oneiro-scope)"}
 TIMEOUT = 30
 RATE = 0.5  # сек/запрос (бережный режим)
 
