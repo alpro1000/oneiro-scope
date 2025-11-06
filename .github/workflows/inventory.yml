@@ -1,0 +1,41 @@
+name: Repo Inventory
+on:
+  workflow_dispatch:
+  push:
+    paths-ignore:
+      - 'INVENTORY.md'
+      - 'INVENTORY.json'
+jobs:
+  inventory:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.11' }
+      - name: Generate inventory
+        run: |
+          python <<EOF
+import os, json, pathlib
+rows=[]; dsum=fsum=0
+for cur, dnames, fnames in os.walk('.'):
+    dnames[:] = [d for d in dnames if d != '.git']
+    rel=os.path.relpath(cur,'.')
+    rows.append((rel, len(dnames), len(fnames)))
+    dsum+=len(dnames); fsum+=len(fnames)
+md=["# Инвентарь репозитория\n","| Путь | Папок | Файлов |","|---|---:|---:|"]
+for rel, dcnt, fcnt in rows:
+    md.append(f"| {'.' if rel=='.' else rel} | {dcnt} | {fcnt} |")
+md.append(f"\n**ИТОГО:** папок = {dsum}, файлов = {fsum}\n")
+pathlib.Path("INVENTORY.md").write_text("\n".join(md), encoding="utf-8")
+json.dump({
+  "tree":[{"path":('.' if r[0]=='.' else r[0]),"dirs":r[1],"files":r[2]} for r in rows],
+  "total_dirs":dsum,"total_files":fsum
+}, open("INVENTORY.json","w",encoding="utf-8"), ensure_ascii=False, indent=2)
+EOF
+      - name: Commit inventory
+        run: |
+          git config user.name "inventory-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add INVENTORY.md INVENTORY.json
+          git commit -m "ci: update repository inventory" || echo "No changes"
+          git push

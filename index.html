@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+  <title>Lunar Dream Calendar — Лунный календарь снов</title>
+  <meta name="description" content="Лунный календарь снов: дата → лунные сутки → тип → заметки (оценочно). Мультиязычно, с выбором часового пояса.">
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Noto+Sans:wght@400;700&display=swap" rel="stylesheet">
+  <link href="styles/tokens.css" rel="stylesheet">
+  <link href="styles/site.css" rel="stylesheet">
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <a class="brand" href="#" aria-label="Home">
+      <!-- Монохромный SVG-серп: динамически меняем фазу через JS -->
+      <svg id="moonSvg" class="moonIco" viewBox="0 0 100 100" aria-hidden="true">
+        <defs>
+          <mask id="moonMask">
+            <rect x="0" y="0" width="100" height="100" fill="black"/>
+            <!-- Светлая часть -->
+            <circle cx="50" cy="50" r="48" fill="white"/>
+            <!-- Тень (сдвигаем cx скриптом под фазу) -->
+            <circle id="shadowCircle" cx="50" cy="50" r="48" fill="black"/>
+          </mask>
+        </defs>
+        <circle cx="50" cy="50" r="48" fill="currentColor" mask="url(#moonMask)"/>
+      </svg>
+      <span id="brandName">Lunar Dream Calendar</span>
+    </a>
+    <a href="#dreambook" id="navDreambook" class="navlink btn">Сонник</a>
+
+    <div class="controls">
+      <select id="lang" class="select" aria-label="Language"></select>
+      <select id="tz" class="select" aria-label="Time zone"></select>
+      <button id="prev" class="btn" aria-label="Previous month">←</button>
+      <div id="monthLabel" class="muted" style="min-width:200px;font-weight:700"></div>
+      <button id="next" class="btn" aria-label="Next month">→</button>
+      <button id="today" class="btn today" aria-label="Сегодня">Сегодня</button>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+  <!-- КАЛЕНДАРЬ -->
+  <section class="card" id="calendarCard">
+    <h1 id="title" class="gold">Лунный календарь снов</h1>
+    <h2 id="subtitle" class="muted">Таблица: дата → лунные сутки → тип снов → заметки (оценочно).</h2>
+
+    <div class="row">
+      <span id="tzLabel" class="muted">Часовой пояс:</span>
+      <code id="tzActive" class="tz-active"></code>
+      <span class="muted" style="margin-left:auto" id="legend">Выделено — текущая дата</span>
+    </div>
+
+    <div class="table-wrap">
+      <div class="scroll">
+        <table aria-label="Lunar dream table">
+          <thead>
+            <tr>
+              <th id="thDate">Дата</th>
+              <th id="thDay">Лунные сутки</th>
+              <th id="thType">Тип снов</th>
+              <th id="thNotes">Краткие пометки</th>
+            </tr>
+          </thead>
+          <tbody id="tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <p id="sources" class="muted footnote" style="margin-top:10px">
+      Примечание: возраст Луны рассчитывается приближённо по выбранному часовому поясу; типы/заметки — по заданной таблице (оценочно).
+    </p>
+  </section>
+
+  <!-- РАЗБОР СНА -->
+  <section id="interpret" class="card">
+    <h2 class="gold" id="interpretTitle">Разбор сна (оценочно)</h2>
+    <p class="muted" id="interpretIntro">Вставьте текст сна — покажем связанные символы и краткие пояснения из современного корпуса.</p>
+
+    <textarea id="dreamText" rows="5" placeholder="Опишите ваш сон…"
+      class="input-area"></textarea>
+
+    <div class="bar">
+      <label id="lunarLabel" class="muted">Лунные сутки (опц.):</label>
+      <select id="lunarHint" class="select"></select>
+      <button id="analyzeBtn" class="btn strong">Разобрать сон</button>
+      <span id="interpretStatus" class="muted" style="margin-left:auto"></span>
+    </div>
+
+    <div id="interpretResult" class="interpret-result" style="display:none">
+      <div id="hitSymbols" class="chips"></div>
+      <div id="explain"></div>
+      <div id="advices" class="muted" style="margin-top:6px"></div>
+    </div>
+  </section>
+
+  <!-- СОВРЕМЕННЫЙ СОННИК -->
+  <section class="card" id="dreambook" style="padding-top:8px;">
+    <h2 class="gold" id="dbTitle" style="margin-top:0">Современный сонник</h2>
+    <input id="dreamSearch" type="search"
+           placeholder="Найдите символ… (например, вода, полёт)"
+           class="input-search">
+    <div id="dreamCount" class="muted" style="margin-bottom:8px;"></div>
+    <div class="table-wrap">
+      <table id="dreamTable" class="db-table">
+        <thead>
+          <tr>
+            <th id="dbThSymbol">Символ</th>
+            <th id="dbThSummary">Кратко</th>
+            <th id="dbThConf">Уверенность</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </section>
+
+  <footer>
+    <p id="footerText">© <span id="year"></span> • Все толкования — оценочно; не медицинский совет.</p>
+  </footer>
+</main>
+
+<script src="scripts/calendar.js"></script>
+<script src="scripts/dreambook.js"></script>
+</body>
+</html>

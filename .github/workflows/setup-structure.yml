@@ -1,0 +1,56 @@
+name: Setup Repo Structure
+on:
+  workflow_dispatch:
+jobs:
+  setup:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Create folders and placeholders
+        run: |
+          set -e
+          mkdir -p assets \
+                   data/raw/{ucsc,dreambank,zenodo,monash} \
+                   etl scripts styles .github/workflows
+          # .gitkeep для пустых папок
+          for d in data/raw/ucsc data/raw/dreambank data/raw/zenodo data/raw/monash; do
+            touch "$d/.gitkeep"
+          done
+
+          # Минималистичный moon.svg (если нет)
+          if [ ! -f assets/moon.svg ]; then
+            printf '%s\n' \
+              '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" fill="none">' \
+              '  <rect width="128" height="128" fill="none"/>' \
+              '  <path d="M95 64c0 25.405-20.595 46-46 46a46 46 0 0 1 0-92c2.8 0 5.53.25 8.16.73C45.07 25.43 37 39.1 37 54.5 37 79.905 57.595 100.5 83 100.5c15.4 0 29.07-8.07 36.77-20.16A45.3 45.3 0 0 1 95 64Z" fill="#EDEFF2"/>' \
+              '</svg>' \
+              > assets/moon.svg
+          fi
+
+          # README, если пусто
+          if [ ! -f README.md ]; then
+            printf '%s\n' \
+              '# Lunar Landing' \
+              'Статический сайт: лунный календарь снов + «современный сонник».' \
+              > README.md
+          fi
+
+          # Плейсхолдер для ETL, если нет
+          if [ ! -f etl/etl_dreams.py ]; then
+            printf '%s\n' \
+              '#!/usr/bin/env python3' \
+              '# placeholder: сюда кладётся реальный ETL (см. документацию в репозитории)' \
+              'if __name__ == "__main__":' \
+              '    print("ETL placeholder")' \
+              > etl/etl_dreams.py
+            chmod +x etl/etl_dreams.py
+          fi
+
+      - name: Commit structure
+        run: |
+          git config user.name "repo-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add -A
+          git commit -m "chore: setup repo structure (folders, .gitkeep, moon.svg)" || echo "No changes"
+          git push

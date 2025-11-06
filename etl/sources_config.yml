@@ -1,0 +1,23 @@
+timezone: Europe/Prague
+lang_default: ru
+
+sources:
+  sddb_zenodo:
+    enabled: true
+    record_ids: ["11662064"]   # можно добавить ещё ID Zenodo с снами/отчётами
+  dryad:
+    enabled: true
+    dois: []                   # пример: ["10.5061/dryad.qbzkh18fr"]
+  figshare:
+    enabled: true
+    article_ids: []            # пример: ["21388722"]
+  user_files:
+    enabled: true
+    paths: []                  # если положите свои CSV/JSON в etl/input/*.*
+llm_paraphrase:
+  enabled: true               # включите true, если есть OPENAI_API_KEY
+  model: gpt-4o-mini
+limits:
+  min_text_len: 100
+  per_source_max: 5000         # предохранитель от слишком больших выгрузок
+

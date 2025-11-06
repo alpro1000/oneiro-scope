@@ -1,0 +1,24 @@
+{
+  "CalendarPage": {
+    "title": "Lunar Dream Calendar",
+    "subtitle": "Track the moon's rhythm and dream guidance for the current lunar day.",
+    "todayLabel": "Today",
+    "metaDescription": "Daily lunar phase insights and dream recommendations inspired by ONEIROSCOP.",
+    "monthHeading": "Lunar month overview"
+  },
+  "LunarWidget": {
+    "showMonth": "\ud83d\udcc5 Show month",
+    "hideMonth": "\ud83d\udcc5 Hide month",
+    "loading": "Loading month\u2026",
+    "error": "We couldn't load the lunar calendar. Please try again.",
+    "lunarDay": "Lunar day {day}",
+    "phase": "Phase",
+    "description": "Dream energy",
+    "recommendation": "Recommendations",
+    "updated": "Updated for {date}",
+    "tableDate": "Date",
+    "tableDay": "Day",
+    "tableDescription": "Dream focus",
+    "tableRecommendation": "Notes"
+  }
+}

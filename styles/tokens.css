@@ -1,0 +1,16 @@
+:root{
+  --bg:#0E1114;       /* базовый фон */
+  --panel:#141A1E;    /* карточки/хедер */
+  --ink:#EDEFF2;      /* основной текст */
+  --muted:#9CA6B1;    /* вторичный текст */
+  --gold:#C3A56A;     /* золото-акцент */
+  --accent:#0B6E4F;   /* бирюзовый акцент */
+  --border:#1B232A;   /* границы/зебра */
+  --zebra:#12181D;    /* зебра (чуть темнее панели на 2–3%) */
+
+  --radius:14px;
+  --shadow:0 10px 28px rgba(0,0,0,.45);
+  --fs:18px; --lh:1.7;
+  --font:"Inter","Noto Sans",system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans",sans-serif;
+  --mono:ui-monospace,"SFMono-Regular",Menlo,Consolas,monospace;
+}

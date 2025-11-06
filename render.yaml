@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: oneiroscop-lunar-preview
+    env: node
+    plan: free
+    buildCommand: cd frontend && npm install && npm run build
+    startCommand: cd frontend && npm start
+    envVars:
+      - key: NEXT_PUBLIC_API_URL
+        value: https://oneiroscop-lunar-backend.onrender.com
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: NODE_ENV
+        value: production

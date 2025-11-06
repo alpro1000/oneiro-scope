@@ -1,0 +1,96 @@
+name: Build Dreambook Data
+
+on:
+  workflow_dispatch:
+  schedule:
+    # ежедневно в 02:30 UTC (~04:30 по Праге летом)
+    - cron: '30 2 * * *'
+
+permissions:
+  contents: write   # нужно, чтобы пушить изменения в репо
+
+concurrency:
+  group: dreams-etl
+  cancel-in-progress: false
+
+jobs:
+  etl:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Cache pip
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements*.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: Install deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install requests beautifulsoup4 html2text tqdm rapidfuzz pyyaml
+
+      - name: Ensure ETL script exists
+        run: |
+          test -f etl/etl_dreams.py || (echo "❌ etl/etl_dreams.py не найден" && exit 1)
+          chmod +x etl/etl_dreams.py
+
+      - name: Run ETL (Zenodo/DreamBank/Dryad/Donders/Monash)
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}   # опционально, для перефраза
+        run: |
+          mkdir -p data
+          # Выводим в JSONL (как в скрипте), потом конвертируем в JSON-массив
+          python etl/etl_dreams.py --sources dreambank,sddb_zenodo,dryad,donders,monash --out dreams_curated.jsonl
+
+          # JSONL -> JSON (массив); лёгкая валидация и усечение размера при необходимости
+          python - <<EOF
+import json, os, sys
+p_in = "dreams_curated.jsonl"
+rows=[]
+with open(p_in, "r", encoding="utf-8") as f:
+    for line in f:
+        line=line.strip()
+        if not line: continue
+        try:
+            rows.append(json.loads(line))
+        except Exception:
+            pass
+# необязательный лимит, чтобы не раздувать GitHub Pages (оставь как есть или сними лимит)
+MAX_ROWS = 8000
+if len(rows) > MAX_ROWS:
+    rows = rows[:MAX_ROWS]
+with open("data/dreams_curated.json", "w", encoding="utf-8") as f:
+    json.dump(rows, f, ensure_ascii=False, indent=2)
+print(f"✔ rows: {len(rows)} -> data/dreams_curated.json")
+EOF
+
+      - name: Sanity check
+        run: |
+          test -s data/dreams_curated.json || (echo "❌ пустой data/dreams_curated.json" && exit 1)
+          head -n 30 data/dreams_curated.json || true
+
+      - name: Upload artifact (debug)
+        uses: actions/upload-artifact@v4
+        with:
+          name: dreams_curated.json
+          path: data/dreams_curated.json
+          if-no-files-found: error
+          retention-days: 5
+
+      - name: Commit & push
+        run: |
+          git config user.name  "dreams-etl-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add data/dreams_curated.json
+          git diff --quiet && git diff --staged --quiet && echo "No changes to commit" || git commit -m "data: refresh dreams_curated.json (ETL)"
+          git push

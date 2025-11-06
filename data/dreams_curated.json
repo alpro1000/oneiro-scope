@@ -1,0 +1,36 @@
+[
+  {
+    "symbol": "вода",
+    "contexts": ["течение","очищение","погружение"],
+    "modern_interpretation": "Оценочно: вода часто связана с эмоциями и обновлением. Важнее чистота и движение воды, чем сам факт появления.",
+    "tone": "neutral",
+    "lunar_links": [6,22,27],
+    "sources": [{"url":"https://example.org","title":"Open corpus","date":"2025-08-01","license":"source-terms"}],
+    "confidence": 0.82,
+    "updated_at": "2025-08-25T00:00:00Z",
+    "notes": "Синтез."
+  },
+  {
+    "symbol": "полёт",
+    "contexts": ["свобода","контроль","перспектива"],
+    "modern_interpretation": "Оценочно: полёт отражает чувство свободы или поиск контроля над ситуацией.",
+    "tone": "positive",
+    "lunar_links": [7,8,30],
+    "sources": [{"url":"https://example.org","title":"Open corpus","date":"2025-08-01","license":"source-terms"}],
+    "confidence": 0.8,
+    "updated_at": "2025-08-25T00:00:00Z",
+    "notes": "Синтез."
+  },
+  {
+    "symbol": "змея",
+    "contexts": ["инстинкты","опыт","защита"],
+    "modern_interpretation": "Оценочно: змея не всегда про угрозу; чаще про инстинкт, защиту границ или обновление.",
+    "tone": "mixed",
+    "lunar_links": [24,26],
+    "sources": [{"url":"https://example.org","title":"Open corpus","date":"2025-08-01","license":"source-terms"}],
+    "confidence": 0.78,
+    "updated_at": "2025-08-25T00:00:00Z",
+    "notes": "Синтез."
+  }
+]
+

@@ -1,0 +1,34 @@
+:root {
+  --bg: #0d0d0d;
+  --surface: rgba(19, 19, 19, 0.92);
+  --surface-strong: #161616;
+  --gold: #c3a56a;
+  --gold-soft: rgba(195, 165, 106, 0.24);
+  --ink: #f2ede1;
+  --ink-muted: rgba(242, 237, 225, 0.72);
+  --accent: #6ac3c0;
+  --danger: #e05f6b;
+  --font-sans: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --radius-lg: 24px;
+  --radius-md: 16px;
+  --radius-sm: 12px;
+  --spacing-xs: 0.5rem;
+  --spacing-sm: 0.75rem;
+  --spacing-md: 1rem;
+  --spacing-lg: 1.5rem;
+  --spacing-xl: 2rem;
+  --shadow-gold: 0 24px 48px -24px rgba(195, 165, 106, 0.6);
+  --transition-slow: all 0.3s ease-in-out;
+  --transition-fast: all 0.18s ease-in-out;
+  --widget-max-width: 720px;
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    --bg: #f5f2e9;
+    --surface: rgba(255, 255, 255, 0.92);
+    --surface-strong: #ffffff;
+    --ink: #111111;
+    --ink-muted: rgba(17, 17, 17, 0.68);
+  }
+}

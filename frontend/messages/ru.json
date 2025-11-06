@@ -1,0 +1,24 @@
+{
+  "CalendarPage": {
+    "title": "Лунный календарь снов",
+    "subtitle": "Отслеживайте ритм Луны и рекомендации для текущего лунного дня.",
+    "todayLabel": "Сегодня",
+    "metaDescription": "Ежедневные подсказки по фазам Луны и снам в стиле ONEIROSCOP.",
+    "monthHeading": "Обзор лунного месяца"
+  },
+  "LunarWidget": {
+    "showMonth": "\ud83d\udcc5 Показать месяц",
+    "hideMonth": "\ud83d\udcc5 Скрыть месяц",
+    "loading": "Загружаем месяц\u2026",
+    "error": "Не удалось загрузить данные лунного календаря. Попробуйте ещё раз.",
+    "lunarDay": "{day}-й лунный день",
+    "phase": "Фаза",
+    "description": "Энергия сна",
+    "recommendation": "Рекомендации",
+    "updated": "Обновлено для {date}",
+    "tableDate": "Дата",
+    "tableDay": "День",
+    "tableDescription": "Фокус сна",
+    "tableRecommendation": "Заметки"
+  }
+}

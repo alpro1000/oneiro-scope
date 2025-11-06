@@ -1,0 +1,42 @@
+name: Frontend Tests
+
+on:
+  push:
+    branches: [ main, dev ]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Fix npm registry
+        working-directory: frontend
+        run: |
+          npm config delete registry || true
+          npm config set @playwright:registry https://registry.npmjs.org/
+          npm install -g npm@latest
+
+      - name: Install dependencies
+        env:
+          PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: 1
+        working-directory: frontend
+        run: |
+          npm ci --ignore-scripts
+          npx playwright install --with-deps
+
+      - name: Run unit tests
+        working-directory: frontend
+        run: npm run test:unit
+
+      - name: Run e2e tests
+        working-directory: frontend
+        run: npm run test:e2e
