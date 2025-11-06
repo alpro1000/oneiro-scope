@@ -22,7 +22,7 @@
 1. Склонируйте репозиторий или загрузите файлы.
 2. Убедитесь, что есть `data/dreams_curated.json` (можно с примерами).
 3. Включите Pages: Settings → Pages → Branch: `main` → `/ (root)`.
-4. Откройте: `https://<username>.github.io/lunar-landing/`.
+4. Откройте: `https://<username>.github.io/oneiro-scope/`.
 
 ## Структура
 - `index.html` — разметка.

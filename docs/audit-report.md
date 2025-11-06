@@ -1,4 +1,4 @@
-# ONEIROSCOP+LUNAR — Audit of `lunar-landing`
+# ONEIROSCOP+LUNAR — Audit of `oneiro-scope`
 
 ## Repository snapshot
 - **Type**: full-stack application with a FastAPI backend, React/Next.js frontend, and a Python ETL toolkit.

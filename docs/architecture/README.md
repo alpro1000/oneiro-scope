@@ -262,8 +262,8 @@ Fallback Rate:
 
 ```bash
 # 1. Клонировать репозиторий
-git clone https://github.com/yourusername/lunar-landing.git
-cd lunar-landing
+git clone https://github.com/alpro1000/oneiro-scope.git
+cd oneiro-scope
 
 # 2. Backend setup
 cd backend

@@ -8,8 +8,8 @@ function renderDreambookCount(){
 }
 
 (function(){
-  const DATA_URL = location.pathname.includes('/lunar-landing')
-    ? '/lunar-landing/data/dreams_curated.json'
+  const DATA_URL = location.pathname.includes('/oneiro-scope')
+    ? '/oneiro-scope/data/dreams_curated.json'
     : 'data/dreams_curated.json';
 
   const L=(typeof I18N!=="undefined" ? (I18N[document.documentElement.lang]||I18N.ru) : I18N.ru);

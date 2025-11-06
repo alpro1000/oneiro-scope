@@ -15,8 +15,8 @@ FastAPI-based backend для сервиса анализа снов OneiroScope/
 
 ```bash
 # 1. Clone repository
-git clone https://github.com/alpro1000/lunar-landing.git
-cd lunar-landing/backend
+git clone https://github.com/alpro1000/oneiro-scope.git
+cd oneiro-scope/backend
 
 # 2. Create virtual environment
 python -m venv venv
@@ -316,7 +316,7 @@ services:
 
 ## 🆘 Support
 
-- GitHub Issues: https://github.com/alpro1000/lunar-landing/issues
+- GitHub Issues: https://github.com/alpro1000/oneiro-scope/issues
 - Documentation: `/docs`
 
 ---
