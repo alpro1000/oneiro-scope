@@ -1,4 +1,38 @@
 {
+  "HomePage": {
+    "title": "Your Personal Oracle",
+    "subtitle": "Dream interpretation and astrological forecasts based on scientific approach and university research databases",
+    "startButton": "Get Started",
+    "services": {
+      "dreams": {
+        "title": "Dream Analysis",
+        "description": "Scientific interpretation of your dreams using Hall/Van de Castle methodology and academic databases",
+        "feature1": "University research databases",
+        "feature2": "Lunar cycle correlation",
+        "feature3": "Pattern recognition"
+      },
+      "astrology": {
+        "title": "Astrology & Forecasts",
+        "description": "Natal chart, personal horoscopes and event probability forecasting based on astronomical data",
+        "feature1": "Precise natal chart",
+        "feature2": "Personal horoscopes",
+        "feature3": "Event favorability forecast"
+      }
+    },
+    "voiceInput": {
+      "title": "Voice Input",
+      "description": "Record your dream or describe a situation for analysis — just press the button and speak",
+      "button": "Start Recording"
+    },
+    "lunarCalendar": {
+      "title": "Lunar Calendar",
+      "subtitle": "Track current lunar day and recommendations"
+    },
+    "footer": {
+      "disclaimer": "Astrological interpretations are symbolic and not scientifically proven. Use as a self-discovery tool.",
+      "rights": "All rights reserved"
+    }
+  },
   "CalendarPage": {
     "title": "Lunar Dream Calendar",
     "subtitle": "Track the moon's rhythm and dream guidance for the current lunar day.",
@@ -7,9 +41,9 @@
     "monthHeading": "Lunar month overview"
   },
   "LunarWidget": {
-    "showMonth": "\ud83d\udcc5 Show month",
-    "hideMonth": "\ud83d\udcc5 Hide month",
-    "loading": "Loading month\u2026",
+    "showMonth": "Show month",
+    "hideMonth": "Hide month",
+    "loading": "Loading month...",
     "error": "We couldn't load the lunar calendar. Please try again.",
     "lunarDay": "Lunar day {day}",
     "phase": "Phase",
@@ -20,5 +54,59 @@
     "tableDay": "Day",
     "tableDescription": "Dream focus",
     "tableRecommendation": "Notes"
+  },
+  "DreamsPage": {
+    "title": "Dream Analysis",
+    "subtitle": "Describe your dream and receive a scientific interpretation",
+    "inputPlaceholder": "Describe your dream in detail...",
+    "analyzeButton": "Analyze Dream",
+    "recording": "Recording...",
+    "lunarContext": "Current lunar day: {day}",
+    "methodology": "Interpretation based on Hall/Van de Castle methodology and DreamBank data"
+  },
+  "AstrologyPage": {
+    "title": "Astrology & Forecasts",
+    "subtitle": "Personal natal chart and event forecasts",
+    "tabs": {
+      "natalChart": "Natal Chart",
+      "horoscope": "Horoscope",
+      "eventForecast": "Event Forecast"
+    },
+    "natalChart": {
+      "title": "Calculate Natal Chart",
+      "birthDate": "Date of Birth",
+      "birthTime": "Time of Birth (optional)",
+      "birthPlace": "Place of Birth",
+      "calculateButton": "Calculate Chart",
+      "unknownTime": "If time is unknown, 12:00 noon will be used"
+    },
+    "horoscope": {
+      "title": "Personal Horoscope",
+      "period": "Period",
+      "daily": "Daily",
+      "weekly": "Weekly",
+      "monthly": "Monthly",
+      "yearly": "Yearly"
+    },
+    "eventForecast": {
+      "title": "Event Forecast",
+      "eventDate": "Event Date",
+      "eventType": "Event Type",
+      "eventLocation": "Location (optional)",
+      "forecastButton": "Get Forecast",
+      "favorability": "Favorability",
+      "positiveFactors": "Positive Factors",
+      "riskFactors": "Risk Factors",
+      "recommendations": "Recommendations",
+      "alternativeDates": "Alternative Dates"
+    }
+  },
+  "VoiceInput": {
+    "start": "Start Recording",
+    "stop": "Stop",
+    "listening": "Listening...",
+    "processing": "Processing...",
+    "error": "Microphone access denied",
+    "notSupported": "Voice input not supported in your browser"
   }
 }
