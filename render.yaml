@@ -1,14 +1,65 @@
-services:
-  - type: web
-    name: oneiroscop-lunar-preview
-    env: node
+databases:
+  - name: oneiroscope-postgres
     plan: free
-    buildCommand: cd frontend && npm install && npm run build
-    startCommand: cd frontend && npm start
+
+services:
+  - type: redis
+    name: oneiroscope-redis
+    plan: free
+    ipAllowList: []
+
+  - type: web
+    name: oneiroscope-backend
+    env: python
+    plan: free
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn backend.app.main:app --host 0.0.0.0 --port $PORT
     envVars:
-      - key: NEXT_PUBLIC_API_URL
-        value: https://oneiroscop-lunar-backend.onrender.com
+      - key: DATABASE_URL
+        fromDatabase:
+          name: oneiroscope-postgres
+          property: connectionString
+      - key: DATABASE_URL_SYNC
+        fromDatabase:
+          name: oneiroscope-postgres
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: oneiroscope-redis
+          property: connectionString
+      - key: SECRET_KEY
+        generateValue: true
+      - key: ALLOWED_ORIGINS
+        fromService:
+          type: web
+          name: oneiroscope-frontend
+          property: url
       - key: OPENAI_API_KEY
         sync: false
+
+  - type: web
+    name: oneiroscope-frontend
+    env: node
+    plan: free
+    rootDir: frontend
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    envVars:
+      - key: NEXT_PUBLIC_LUNAR_API_URL
+        fromService:
+          type: web
+          name: oneiroscope-backend
+          property: url
+      - key: LUNAR_API_URL
+        fromService:
+          type: web
+          name: oneiroscope-backend
+          property: url
+      - key: LUNAR_DEFAULT_TZ
+        value: UTC
       - key: NODE_ENV
         value: production
+      - key: OPENAI_API_KEY
+        sync: false

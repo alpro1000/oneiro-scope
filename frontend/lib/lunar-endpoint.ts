@@ -1,11 +1,36 @@
-const DEFAULT_BASE = 'http://localhost:8000/lunar';
+const DEFAULT_BASE = 'http://localhost:8000/api/v1/lunar';
 const RELATIVE_BASE = '/api/lunar';
+
+function normalizeBase(rawBase: string): string {
+  const trimmed = rawBase.trim();
+  if (!trimmed) return trimmed;
+
+  const stripped = trimmed.replace(/\/$/, '');
+
+  // If a specific lunar path is already provided, trust it.
+  if (stripped.endsWith('/lunar')) {
+    return stripped;
+  }
+
+  // Otherwise, append the backend-friendly path used by the FastAPI service.
+  return `${stripped}/api/v1/lunar`;
+}
 
 export function resolveLunarApiBase(isServer: boolean): string {
   if (isServer) {
-    return process.env.LUNAR_API_URL ?? process.env.NEXT_PUBLIC_LUNAR_API_URL ?? DEFAULT_BASE;
+    const envBase = process.env.LUNAR_API_URL ?? process.env.NEXT_PUBLIC_LUNAR_API_URL;
+    if (envBase) {
+      return normalizeBase(envBase);
+    }
+    return DEFAULT_BASE;
   }
-  return process.env.NEXT_PUBLIC_LUNAR_API_URL ?? RELATIVE_BASE;
+
+  const clientBase = process.env.NEXT_PUBLIC_LUNAR_API_URL;
+  if (clientBase) {
+    return normalizeBase(clientBase);
+  }
+
+  return RELATIVE_BASE;
 }
 
 export function buildLunarUrl(base: string, params: Record<string, string>): string {
