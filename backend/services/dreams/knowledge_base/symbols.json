@@ -1,0 +1,166 @@
+{
+  "symbols": [
+    {
+      "id": "flying",
+      "keywords": ["fly", "flying", "soar", "float", "levitate", "летать", "полёт", "парить"],
+      "category": "activities",
+      "archetype": "liberation",
+      "significance": 0.85,
+      "interpretation_en": "Flying dreams often represent a desire for freedom, escape from limitations, or feelings of empowerment. May indicate overcoming obstacles or gaining new perspective.",
+      "interpretation_ru": "Сны о полёте часто символизируют желание свободы, освобождение от ограничений или чувство силы. Могут указывать на преодоление препятствий или обретение новой перспективы."
+    },
+    {
+      "id": "falling",
+      "keywords": ["fall", "falling", "drop", "plunge", "падать", "падение", "обрыв"],
+      "category": "misfortunes",
+      "archetype": "loss_of_control",
+      "significance": 0.8,
+      "interpretation_en": "Falling dreams typically represent anxiety about losing control, fear of failure, or feeling overwhelmed. May reflect insecurities or major life transitions.",
+      "interpretation_ru": "Сны о падении обычно символизируют тревогу о потере контроля, страх неудачи или чувство перегруженности. Могут отражать неуверенность или важные жизненные перемены."
+    },
+    {
+      "id": "water",
+      "keywords": ["water", "ocean", "sea", "river", "lake", "swim", "вода", "океан", "море", "река", "озеро", "плавать"],
+      "category": "settings",
+      "archetype": "unconscious",
+      "significance": 0.75,
+      "interpretation_en": "Water in dreams represents the unconscious mind, emotions, and intuition. Clear water suggests emotional clarity, while murky water may indicate confusion or repressed feelings.",
+      "interpretation_ru": "Вода во снах символизирует бессознательное, эмоции и интуицию. Чистая вода говорит об эмоциональной ясности, мутная — о смятении или подавленных чувствах."
+    },
+    {
+      "id": "death",
+      "keywords": ["death", "dead", "die", "dying", "funeral", "смерть", "мёртвый", "умирать", "похороны"],
+      "category": "misfortunes",
+      "archetype": "transformation",
+      "significance": 0.9,
+      "interpretation_en": "Death in dreams rarely predicts actual death. It typically symbolizes major transformation, ending of one phase and beginning of another, or letting go of old patterns.",
+      "interpretation_ru": "Смерть во снах редко предсказывает реальную смерть. Обычно символизирует трансформацию, окончание одного этапа и начало другого, или отпускание старых паттернов."
+    },
+    {
+      "id": "chase",
+      "keywords": ["chase", "chasing", "pursue", "run", "escape", "погоня", "преследование", "бежать", "убегать"],
+      "category": "activities",
+      "archetype": "shadow",
+      "significance": 0.85,
+      "interpretation_en": "Being chased in dreams often represents avoidance of something in waking life - an emotion, situation, or aspect of yourself. The pursuer may symbolize your shadow self.",
+      "interpretation_ru": "Преследование во снах часто символизирует избегание чего-то в реальной жизни — эмоции, ситуации или аспекта себя. Преследователь может символизировать вашу теневую сторону."
+    },
+    {
+      "id": "teeth",
+      "keywords": ["teeth", "tooth", "losing teeth", "зубы", "зуб", "выпадают зубы"],
+      "category": "objects",
+      "archetype": "vulnerability",
+      "significance": 0.8,
+      "interpretation_en": "Dreams about teeth, especially losing them, often relate to anxiety about appearance, aging, communication issues, or feelings of powerlessness.",
+      "interpretation_ru": "Сны о зубах, особенно об их потере, часто связаны с тревогой о внешности, старении, проблемами общения или чувством беспомощности."
+    },
+    {
+      "id": "house",
+      "keywords": ["house", "home", "room", "building", "дом", "квартира", "комната", "здание"],
+      "category": "settings",
+      "archetype": "self",
+      "significance": 0.7,
+      "interpretation_en": "Houses in dreams often represent the self. Different rooms may symbolize different aspects of personality. The condition of the house reflects your mental/emotional state.",
+      "interpretation_ru": "Дома во снах часто символизируют личность. Разные комнаты могут представлять разные аспекты характера. Состояние дома отражает ваше ментальное/эмоциональное состояние."
+    },
+    {
+      "id": "animal",
+      "keywords": ["animal", "dog", "cat", "bird", "snake", "животное", "собака", "кошка", "птица", "змея"],
+      "category": "characters",
+      "archetype": "instinct",
+      "significance": 0.7,
+      "interpretation_en": "Animals in dreams often represent instincts, emotions, or aspects of personality. The specific animal and your relationship with it provides deeper meaning.",
+      "interpretation_ru": "Животные во снах часто представляют инстинкты, эмоции или аспекты личности. Конкретное животное и ваши отношения с ним дают более глубокий смысл."
+    },
+    {
+      "id": "naked",
+      "keywords": ["naked", "nude", "undressed", "голый", "обнажённый", "без одежды"],
+      "category": "descriptive_elements",
+      "archetype": "vulnerability",
+      "significance": 0.75,
+      "interpretation_en": "Nudity in dreams often represents vulnerability, authenticity, or fear of exposure. Context matters - public nudity suggests fear of judgment.",
+      "interpretation_ru": "Нагота во снах часто символизирует уязвимость, подлинность или страх разоблачения. Контекст важен — публичная нагота говорит о страхе осуждения."
+    },
+    {
+      "id": "exam",
+      "keywords": ["exam", "test", "school", "unprepared", "экзамен", "тест", "школа", "не готов"],
+      "category": "activities",
+      "archetype": "self_evaluation",
+      "significance": 0.75,
+      "interpretation_en": "Exam dreams, especially being unprepared, often reflect anxiety about being evaluated or judged. May indicate feeling tested in some area of life.",
+      "interpretation_ru": "Сны об экзаменах, особенно о неподготовленности, часто отражают тревогу об оценке или осуждении. Могут указывать на испытание в какой-то области жизни."
+    },
+    {
+      "id": "baby",
+      "keywords": ["baby", "infant", "child", "pregnancy", "ребёнок", "младенец", "малыш", "беременность"],
+      "category": "characters",
+      "archetype": "new_beginning",
+      "significance": 0.8,
+      "interpretation_en": "Babies in dreams often symbolize new beginnings, creative projects, or undeveloped aspects of self. May also represent vulnerability or need for nurturing.",
+      "interpretation_ru": "Младенцы во снах часто символизируют новые начинания, творческие проекты или неразвитые аспекты личности. Также могут представлять уязвимость или потребность в заботе."
+    },
+    {
+      "id": "vehicle",
+      "keywords": ["car", "drive", "vehicle", "bus", "train", "машина", "ехать", "автобус", "поезд", "транспорт"],
+      "category": "objects",
+      "archetype": "life_direction",
+      "significance": 0.7,
+      "interpretation_en": "Vehicles in dreams represent your life path and how much control you feel. Who's driving matters - being a passenger suggests feeling others control your life.",
+      "interpretation_ru": "Транспорт во снах символизирует ваш жизненный путь и ощущение контроля. Важно, кто за рулём — быть пассажиром означает чувство, что другие управляют вашей жизнью."
+    },
+    {
+      "id": "moon",
+      "keywords": ["moon", "lunar", "moonlight", "луна", "лунный", "лунный свет"],
+      "category": "settings",
+      "archetype": "feminine",
+      "significance": 0.8,
+      "interpretation_en": "The moon in dreams represents the unconscious, intuition, feminine energy, and cycles of change. Moon phase in dream may be significant.",
+      "interpretation_ru": "Луна во снах символизирует бессознательное, интуицию, женскую энергию и циклы перемен. Фаза луны во сне может быть значимой."
+    },
+    {
+      "id": "money",
+      "keywords": ["money", "cash", "wealth", "rich", "poor", "деньги", "богатство", "бедность"],
+      "category": "objects",
+      "archetype": "self_worth",
+      "significance": 0.7,
+      "interpretation_en": "Money in dreams often represents self-worth, power, or energy. Finding money suggests discovering personal resources, losing it may indicate fear of loss.",
+      "interpretation_ru": "Деньги во снах часто символизируют самооценку, власть или энергию. Находить деньги — обнаруживать личные ресурсы, терять — страх потери."
+    },
+    {
+      "id": "wedding",
+      "keywords": ["wedding", "marriage", "bride", "groom", "свадьба", "брак", "невеста", "жених"],
+      "category": "activities",
+      "archetype": "union",
+      "significance": 0.75,
+      "interpretation_en": "Wedding dreams represent union, commitment, or integration of different aspects of self. May also reflect thoughts about relationships or major life changes.",
+      "interpretation_ru": "Сны о свадьбе символизируют союз, обязательства или интеграцию разных аспектов личности. Также могут отражать мысли об отношениях или важных жизненных переменах."
+    }
+  ],
+  "emotions": {
+    "positive": ["happy", "joy", "love", "excitement", "peace", "счастье", "радость", "любовь", "волнение", "покой"],
+    "negative": ["fear", "anxiety", "anger", "sadness", "confusion", "страх", "тревога", "гнев", "печаль", "смятение"],
+    "neutral": ["curiosity", "surprise", "любопытство", "удивление"]
+  },
+  "archetypes": {
+    "shadow": {
+      "description_en": "The dark, rejected aspects of personality",
+      "description_ru": "Тёмные, отвергаемые аспекты личности"
+    },
+    "anima_animus": {
+      "description_en": "The feminine (anima) or masculine (animus) aspect in the unconscious",
+      "description_ru": "Женский (анима) или мужской (анимус) аспект в бессознательном"
+    },
+    "self": {
+      "description_en": "The unified totality of the psyche",
+      "description_ru": "Объединённая целостность психики"
+    },
+    "transformation": {
+      "description_en": "The process of psychological change and growth",
+      "description_ru": "Процесс психологического изменения и роста"
+    },
+    "hero": {
+      "description_en": "The aspect that overcomes challenges and achieves goals",
+      "description_ru": "Аспект, преодолевающий трудности и достигающий целей"
+    }
+  }
+}
