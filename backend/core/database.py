@@ -7,9 +7,25 @@ from typing import AsyncGenerator
 
 from backend.core.config import settings
 
+
+def _ensure_async_driver(url: str) -> str:
+    """Convert a Postgres DSN to use the asyncpg driver if needed."""
+
+    if url.startswith("postgresql+asyncpg://"):
+        return url
+
+    if url.startswith("postgres://"):
+        return "postgresql+asyncpg://" + url.removeprefix("postgres://")
+
+    if url.startswith("postgresql://"):
+        return "postgresql+asyncpg://" + url.removeprefix("postgresql://")
+
+    return url
+
 # Async engine for FastAPI
+# Ensure the async engine always receives an async-compatible DSN
 async_engine = create_async_engine(
-    settings.DATABASE_URL,
+    _ensure_async_driver(settings.DATABASE_URL),
     echo=settings.DEBUG,
     future=True,
     pool_pre_ping=True,
