@@ -1,10 +1,19 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
+import {
+  calculateNatalChart,
+  getHoroscope,
+  forecastEvent,
+  getEventTypes,
+  type NatalChartResponse,
+  type HoroscopeResponse,
+  type EventForecastResponse,
+} from '@/lib/astrology-client';
 
 type Tab = 'natalChart' | 'horoscope' | 'eventForecast';
 
@@ -20,17 +29,23 @@ export default function AstrologyPage() {
   const [birthTime, setBirthTime] = useState('');
   const [birthPlace, setBirthPlace] = useState('');
   const [isCalculating, setIsCalculating] = useState(false);
-  const [natalResult, setNatalResult] = useState<any>(null);
+  const [natalResult, setNatalResult] = useState<NatalChartResponse | null>(null);
+  const [natalError, setNatalError] = useState<string | null>(null);
 
   // Event forecast form
   const [eventDate, setEventDate] = useState('');
   const [eventType, setEventType] = useState('travel');
   const [eventLocation, setEventLocation] = useState('');
-  const [forecastResult, setForecastResult] = useState<any>(null);
+  const [forecastResult, setForecastResult] = useState<EventForecastResponse | null>(null);
+  const [forecastError, setForecastError] = useState<string | null>(null);
 
   // Horoscope
-  const [horoscopePeriod, setHoroscopePeriod] = useState('daily');
-  const [horoscopeResult, setHoroscopeResult] = useState<any>(null);
+  const [horoscopePeriod, setHoroscopePeriod] = useState<'daily' | 'weekly' | 'monthly' | 'yearly'>('daily');
+  const [horoscopeResult, setHoroscopeResult] = useState<HoroscopeResponse | null>(null);
+  const [horoscopeError, setHoroscopeError] = useState<string | null>(null);
+
+  // Event types from API
+  const [eventTypes, setEventTypes] = useState<Array<{ value: string; label_en: string; label_ru: string }>>([]);
 
   const tabs: { id: Tab; label: string }[] = [
     { id: 'natalChart', label: t('tabs.natalChart') },
@@ -38,84 +53,88 @@ export default function AstrologyPage() {
     { id: 'eventForecast', label: t('tabs.eventForecast') },
   ];
 
-  const eventTypes = [
-    { value: 'travel', label: locale === 'ru' ? 'Путешествие' : 'Travel' },
-    { value: 'wedding', label: locale === 'ru' ? 'Свадьба' : 'Wedding' },
-    { value: 'business', label: locale === 'ru' ? 'Бизнес-сделка' : 'Business Deal' },
-    { value: 'interview', label: locale === 'ru' ? 'Собеседование' : 'Interview' },
-    { value: 'surgery', label: locale === 'ru' ? 'Операция' : 'Surgery' },
-    { value: 'moving', label: locale === 'ru' ? 'Переезд' : 'Moving' },
-    { value: 'contract', label: locale === 'ru' ? 'Подписание контракта' : 'Contract Signing' },
-    { value: 'exam', label: locale === 'ru' ? 'Экзамен' : 'Exam' },
-    { value: 'date', label: locale === 'ru' ? 'Свидание' : 'Date' },
+  // Default event types as fallback
+  const defaultEventTypes = [
+    { value: 'travel', label_en: 'Travel', label_ru: 'Путешествие' },
+    { value: 'wedding', label_en: 'Wedding', label_ru: 'Свадьба' },
+    { value: 'business', label_en: 'Business Deal', label_ru: 'Бизнес-сделка' },
+    { value: 'interview', label_en: 'Interview', label_ru: 'Собеседование' },
+    { value: 'surgery', label_en: 'Surgery', label_ru: 'Операция' },
+    { value: 'moving', label_en: 'Moving', label_ru: 'Переезд' },
+    { value: 'contract', label_en: 'Contract Signing', label_ru: 'Подписание контракта' },
+    { value: 'exam', label_en: 'Exam', label_ru: 'Экзамен' },
+    { value: 'date', label_en: 'Date', label_ru: 'Свидание' },
   ];
+
+  // Load event types from API on mount
+  useEffect(() => {
+    getEventTypes()
+      .then((data) => setEventTypes(data.event_types))
+      .catch(() => setEventTypes(defaultEventTypes));
+  }, []);
+
+  const displayEventTypes = eventTypes.length > 0 ? eventTypes : defaultEventTypes;
 
   const handleCalculateNatalChart = async () => {
     if (!birthDate || !birthPlace) return;
 
     setIsCalculating(true);
+    setNatalError(null);
 
-    // TODO: Call actual API
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-
-    setNatalResult({
-      sunSign: locale === 'ru' ? 'Телец' : 'Taurus',
-      moonSign: locale === 'ru' ? 'Рак' : 'Cancer',
-      ascendant: birthTime ? (locale === 'ru' ? 'Скорпион' : 'Scorpio') : null,
-      interpretation:
-        locale === 'ru'
-          ? 'Ваше Солнце в Тельце придаёт вам стабильность и практичность. Луна в Раке усиливает эмоциональную чувствительность и связь с семьёй.'
-          : 'Your Sun in Taurus gives you stability and practicality. Moon in Cancer enhances emotional sensitivity and family connection.',
-    });
-
-    setIsCalculating(false);
+    try {
+      const result = await calculateNatalChart({
+        birth_date: birthDate,
+        birth_time: birthTime || undefined,
+        birth_place: birthPlace,
+        locale,
+      });
+      setNatalResult(result);
+    } catch (error) {
+      setNatalError(error instanceof Error ? error.message : 'Failed to calculate natal chart');
+      setNatalResult(null);
+    } finally {
+      setIsCalculating(false);
+    }
   };
 
   const handleGetHoroscope = async () => {
     setIsCalculating(true);
+    setHoroscopeError(null);
 
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-
-    setHoroscopeResult({
-      summary:
-        locale === 'ru'
-          ? 'Сегодня благоприятный день для начала новых проектов. Луна в растущей фазе усиливает вашу энергию.'
-          : 'Today is a favorable day for starting new projects. The waxing Moon enhances your energy.',
-      recommendations: [
-        locale === 'ru' ? 'Планируйте важные встречи на первую половину дня' : 'Schedule important meetings for the morning',
-        locale === 'ru' ? 'Избегайте финансовых рисков' : 'Avoid financial risks',
-        locale === 'ru' ? 'Уделите время творчеству' : 'Dedicate time to creativity',
-      ],
-    });
-
-    setIsCalculating(false);
+    try {
+      const result = await getHoroscope({
+        period: horoscopePeriod,
+        locale,
+      });
+      setHoroscopeResult(result);
+    } catch (error) {
+      setHoroscopeError(error instanceof Error ? error.message : 'Failed to get horoscope');
+      setHoroscopeResult(null);
+    } finally {
+      setIsCalculating(false);
+    }
   };
 
   const handleGetForecast = async () => {
     if (!eventDate) return;
 
     setIsCalculating(true);
+    setForecastError(null);
 
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-
-    setForecastResult({
-      favorability: 75,
-      level: locale === 'ru' ? 'Хорошо' : 'Good',
-      positiveFactors: [
-        locale === 'ru' ? 'Юпитер в тригоне с Солнцем' : 'Jupiter trine Sun',
-        locale === 'ru' ? 'Растущая Луна' : 'Waxing Moon',
-      ],
-      riskFactors: [
-        locale === 'ru' ? 'Меркурий ретроградный — проверяйте документы' : 'Mercury retrograde — check documents',
-      ],
-      recommendations: [
-        locale === 'ru' ? 'Начните подготовку заранее' : 'Start preparation early',
-        locale === 'ru' ? 'Имейте запасной план' : 'Have a backup plan',
-      ],
-      alternativeDates: ['2024-12-28', '2024-12-30'],
-    });
-
-    setIsCalculating(false);
+    try {
+      const result = await forecastEvent({
+        event_date: eventDate,
+        event_type: eventType,
+        event_location: eventLocation || undefined,
+        locale,
+      });
+      setForecastResult(result);
+    } catch (error) {
+      setForecastError(error instanceof Error ? error.message : 'Failed to get forecast');
+      setForecastResult(null);
+    } finally {
+      setIsCalculating(false);
+    }
   };
 
   return (
@@ -268,6 +287,17 @@ export default function AstrologyPage() {
                   </button>
                 </div>
 
+                {/* Error */}
+                {natalError && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="mt-6 p-4 bg-red-900/30 border border-red-500/30 rounded-xl"
+                  >
+                    <p className="text-red-300">{natalError}</p>
+                  </motion.div>
+                )}
+
                 {/* Result */}
                 {natalResult && (
                   <motion.div
@@ -278,11 +308,11 @@ export default function AstrologyPage() {
                     <div className="grid grid-cols-2 gap-4 mb-4">
                       <div>
                         <span className="text-amber-400 text-sm">☉ {locale === 'ru' ? 'Солнце' : 'Sun'}</span>
-                        <p className="text-white font-medium">{natalResult.sunSign}</p>
+                        <p className="text-white font-medium">{natalResult.sun_sign}</p>
                       </div>
                       <div>
                         <span className="text-amber-400 text-sm">☽ {locale === 'ru' ? 'Луна' : 'Moon'}</span>
-                        <p className="text-white font-medium">{natalResult.moonSign}</p>
+                        <p className="text-white font-medium">{natalResult.moon_sign}</p>
                       </div>
                       {natalResult.ascendant && (
                         <div>
@@ -291,7 +321,29 @@ export default function AstrologyPage() {
                         </div>
                       )}
                     </div>
-                    <p className="text-slate-300">{natalResult.interpretation}</p>
+
+                    {/* Planet positions */}
+                    {natalResult.planets && natalResult.planets.length > 0 && (
+                      <div className="mb-4">
+                        <h4 className="text-amber-400 font-medium mb-2">
+                          {locale === 'ru' ? 'Планеты' : 'Planets'}
+                        </h4>
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-2 text-sm">
+                          {natalResult.planets.slice(0, 10).map((planet) => (
+                            <div key={planet.name} className="flex items-center gap-1 text-slate-300">
+                              <span>{planet.symbol}</span>
+                              <span>{planet.name}</span>
+                              <span className="text-amber-400">{planet.sign}</span>
+                              {planet.retrograde && <span className="text-red-400">℞</span>}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {natalResult.interpretation && (
+                      <p className="text-slate-300">{natalResult.interpretation}</p>
+                    )}
                   </motion.div>
                 )}
               </motion.div>
@@ -343,24 +395,51 @@ export default function AstrologyPage() {
                   {locale === 'ru' ? 'Получить гороскоп' : 'Get Horoscope'}
                 </button>
 
+                {/* Error */}
+                {horoscopeError && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="mt-6 p-4 bg-red-900/30 border border-red-500/30 rounded-xl"
+                  >
+                    <p className="text-red-300">{horoscopeError}</p>
+                  </motion.div>
+                )}
+
                 {horoscopeResult && (
                   <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     className="mt-6 p-4 bg-gradient-to-br from-amber-900/30 to-orange-900/30 border border-amber-500/30 rounded-xl"
                   >
+                    {/* Lunar info */}
+                    <div className="flex items-center gap-4 mb-4 text-sm text-slate-400">
+                      <span>☽ {horoscopeResult.lunar_phase}</span>
+                      <span>{locale === 'ru' ? `День ${horoscopeResult.lunar_day}` : `Day ${horoscopeResult.lunar_day}`}</span>
+                      {horoscopeResult.retrograde_planets.length > 0 && (
+                        <span className="text-amber-400">
+                          ℞ {horoscopeResult.retrograde_planets.join(', ')}
+                        </span>
+                      )}
+                    </div>
+
                     <p className="text-slate-300 mb-4">{horoscopeResult.summary}</p>
-                    <h4 className="text-amber-400 font-medium mb-2">
-                      {t('eventForecast.recommendations')}:
-                    </h4>
-                    <ul className="space-y-2">
-                      {horoscopeResult.recommendations.map((rec: string, i: number) => (
-                        <li key={i} className="text-slate-300 flex items-start gap-2">
-                          <span className="text-amber-400">•</span>
-                          {rec}
-                        </li>
-                      ))}
-                    </ul>
+
+                    {horoscopeResult.recommendations && horoscopeResult.recommendations.length > 0 && (
+                      <>
+                        <h4 className="text-amber-400 font-medium mb-2">
+                          {t('eventForecast.recommendations')}:
+                        </h4>
+                        <ul className="space-y-2">
+                          {horoscopeResult.recommendations.map((rec: string, i: number) => (
+                            <li key={i} className="text-slate-300 flex items-start gap-2">
+                              <span className="text-amber-400">•</span>
+                              {rec}
+                            </li>
+                          ))}
+                        </ul>
+                      </>
+                    )}
                   </motion.div>
                 )}
               </motion.div>
@@ -401,9 +480,9 @@ export default function AstrologyPage() {
                       onChange={(e) => setEventType(e.target.value)}
                       className="w-full p-3 bg-slate-900/50 border border-slate-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
                     >
-                      {eventTypes.map((type) => (
+                      {displayEventTypes.map((type) => (
                         <option key={type.value} value={type.value}>
-                          {type.label}
+                          {locale === 'ru' ? type.label_ru : type.label_en}
                         </option>
                       ))}
                     </select>
@@ -440,6 +519,17 @@ export default function AstrologyPage() {
                   </button>
                 </div>
 
+                {/* Error */}
+                {forecastError && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="mt-6 p-4 bg-red-900/30 border border-red-500/30 rounded-xl"
+                  >
+                    <p className="text-red-300">{forecastError}</p>
+                  </motion.div>
+                )}
+
                 {/* Forecast Result */}
                 {forecastResult && (
                   <motion.div
@@ -450,7 +540,7 @@ export default function AstrologyPage() {
                     {/* Favorability Score */}
                     <div className="text-center mb-6">
                       <div className="text-4xl font-bold text-amber-400 mb-1">
-                        {forecastResult.favorability}%
+                        {forecastResult.favorability_score}%
                       </div>
                       <div className="text-slate-300">{forecastResult.level}</div>
 
@@ -458,11 +548,11 @@ export default function AstrologyPage() {
                       <div className="w-full h-2 bg-slate-700 rounded-full mt-3 overflow-hidden">
                         <motion.div
                           initial={{ width: 0 }}
-                          animate={{ width: `${forecastResult.favorability}%` }}
+                          animate={{ width: `${forecastResult.favorability_score}%` }}
                           className={`h-full rounded-full ${
-                            forecastResult.favorability >= 70
+                            forecastResult.favorability_score >= 70
                               ? 'bg-green-500'
-                              : forecastResult.favorability >= 40
+                              : forecastResult.favorability_score >= 40
                               ? 'bg-amber-500'
                               : 'bg-red-500'
                           }`}
@@ -477,7 +567,7 @@ export default function AstrologyPage() {
                           ✓ {t('eventForecast.positiveFactors')}
                         </h4>
                         <ul className="space-y-1">
-                          {forecastResult.positiveFactors.map((factor: string, i: number) => (
+                          {forecastResult.positive_factors.map((factor: string, i: number) => (
                             <li key={i} className="text-slate-300 text-sm">
                               {factor}
                             </li>
@@ -489,7 +579,7 @@ export default function AstrologyPage() {
                           ⚠ {t('eventForecast.riskFactors')}
                         </h4>
                         <ul className="space-y-1">
-                          {forecastResult.riskFactors.map((factor: string, i: number) => (
+                          {forecastResult.risk_factors.map((factor: string, i: number) => (
                             <li key={i} className="text-slate-300 text-sm">
                               {factor}
                             </li>
@@ -499,27 +589,36 @@ export default function AstrologyPage() {
                     </div>
 
                     {/* Recommendations */}
-                    <div className="mb-4">
-                      <h4 className="text-white font-medium mb-2">
-                        💡 {t('eventForecast.recommendations')}
-                      </h4>
-                      <ul className="space-y-1">
-                        {forecastResult.recommendations.map((rec: string, i: number) => (
-                          <li key={i} className="text-slate-300 text-sm">
-                            • {rec}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
+                    {forecastResult.recommendations && forecastResult.recommendations.length > 0 && (
+                      <div className="mb-4">
+                        <h4 className="text-white font-medium mb-2">
+                          💡 {t('eventForecast.recommendations')}
+                        </h4>
+                        <ul className="space-y-1">
+                          {forecastResult.recommendations.map((rec: string, i: number) => (
+                            <li key={i} className="text-slate-300 text-sm">
+                              • {rec}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+
+                    {/* Interpretation */}
+                    {forecastResult.interpretation && (
+                      <p className="text-slate-300 mb-4 text-sm italic">
+                        {forecastResult.interpretation}
+                      </p>
+                    )}
 
                     {/* Alternative dates */}
-                    {forecastResult.alternativeDates && forecastResult.alternativeDates.length > 0 && (
+                    {forecastResult.alternative_dates && forecastResult.alternative_dates.length > 0 && (
                       <div>
                         <h4 className="text-white font-medium mb-2">
                           📅 {t('eventForecast.alternativeDates')}
                         </h4>
-                        <div className="flex gap-2">
-                          {forecastResult.alternativeDates.map((date: string) => (
+                        <div className="flex gap-2 flex-wrap">
+                          {forecastResult.alternative_dates.map((date: string) => (
                             <span
                               key={date}
                               className="px-3 py-1 bg-slate-700 rounded-lg text-slate-300 text-sm"

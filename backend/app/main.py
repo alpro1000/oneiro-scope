@@ -17,7 +17,7 @@ from backend.core.database import init_db, close_db
 from backend.core.logging import logger
 
 # Import routers
-from backend.api.v1 import lunar, health
+from backend.api.v1 import lunar, health, astrology
 
 
 @asynccontextmanager
@@ -128,6 +128,7 @@ async def internal_error_handler(request: Request, exc):
 # Include routers
 app.include_router(health.router, tags=["Health"])
 app.include_router(lunar.router, prefix="/api/v1", tags=["Lunar"])
+app.include_router(astrology.router, prefix="/api/v1", tags=["Astrology"])
 # app.include_router(dreams.router, prefix="/api/v1", tags=["Dreams"])  # Coming soon
 # app.include_router(asr.router, prefix="/api/v1", tags=["ASR"])  # Coming soon
 # app.include_router(billing.router, prefix="/api/v1", tags=["Billing"])  # Coming soon
