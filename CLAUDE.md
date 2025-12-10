@@ -138,13 +138,32 @@ docker-compose up --build
 # Backend
 ENVIRONMENT=development
 DEBUG=true
-ANTHROPIC_API_KEY=sk-ant-...  # For AI interpretations
+
+# LLM Providers (configure at least one, or use fallback mode)
+# Providers are tried in order of cost (cheapest first):
+GROQ_API_KEY=gsk-...              # FREE tier, very fast (recommended!)
+TOGETHER_API_KEY=...              # $0.20 per 1M tokens
+OPENAI_API_KEY=sk-...             # GPT-4o-mini: $0.15 per 1M tokens
+ANTHROPIC_API_KEY=sk-ant-...      # Claude Haiku: $0.25 per 1M tokens
+
+# Database
 DATABASE_URL=sqlite:///./oneiroscope.db
 REDIS_URL=redis://localhost:6379  # Optional
 
 # Frontend
 NEXT_PUBLIC_API_URL=http://localhost:8000
 ```
+
+### LLM Provider Cost Comparison
+
+| Provider | Model | Cost (per 1M tokens) | Speed | Quality |
+|----------|-------|---------------------|-------|---------|
+| **Groq** | llama-3.1-8b-instant | **FREE** | ⚡ Very Fast | ⭐⭐⭐ Good |
+| Together AI | Meta-Llama-3.1-8B | $0.20 | ⚡ Fast | ⭐⭐⭐ Good |
+| OpenAI | gpt-4o-mini | $0.15 | 🚀 Fast | ⭐⭐⭐⭐ Very Good |
+| Anthropic | claude-3-haiku | $0.25 | 🚀 Fast | ⭐⭐⭐⭐ Very Good |
+
+**Recommendation:** Start with **Groq** (free tier) for development and testing!
 
 ---
 

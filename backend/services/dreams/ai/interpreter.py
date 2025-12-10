@@ -1,14 +1,13 @@
 """
 Dream AI Interpreter
 
-Uses Claude API for generating meaningful dream interpretations
+Uses multiple LLM providers for generating meaningful dream interpretations
 based on analyzed content and scientific methodology.
 """
 
-import os
 from typing import List, Optional
-import httpx
 
+from backend.core.llm_provider import UniversalLLMProvider, LLMProvider
 from backend.services.dreams.schemas import (
     DreamSymbol,
     ContentAnalysis,
@@ -19,7 +18,7 @@ from backend.services.dreams.schemas import (
 
 class DreamInterpreter:
     """
-    AI-powered dream interpreter using Claude API.
+    AI-powered dream interpreter using multiple LLM providers.
 
     Generates interpretations based on:
     - Hall/Van de Castle content analysis
@@ -28,10 +27,25 @@ class DreamInterpreter:
     - Scientific dream research
     """
 
-    def __init__(self):
-        self.api_key = os.getenv("ANTHROPIC_API_KEY")
-        self.model = "claude-3-haiku-20240307"  # Fast model for interpretations
-        self.api_url = "https://api.anthropic.com/v1/messages"
+    def __init__(
+        self,
+        max_tokens: int = 1500,
+        temperature: float = 0.7,
+        preferred_provider: Optional[LLMProvider] = None,
+    ):
+        """
+        Initialize DreamInterpreter.
+
+        Args:
+            max_tokens: Maximum tokens for response
+            temperature: Temperature for generation (0.0-1.0)
+            preferred_provider: Preferred LLM provider (or None for cheapest)
+        """
+        self.llm = UniversalLLMProvider(
+            max_tokens=max_tokens,
+            temperature=temperature,
+            preferred_provider=preferred_provider,
+        )
 
     async def generate_interpretation(
         self,
@@ -53,14 +67,8 @@ class DreamInterpreter:
             - Full interpretation
             - Recommendations
         """
-        if not self.api_key:
-            # Fallback to rule-based interpretation
-            return self._generate_fallback(
-                symbols, content, emotion, themes, archetypes, lunar_context, locale
-            )
-
         try:
-            return await self._call_claude(
+            return await self._call_llm(
                 dream_text, symbols, content, emotion, emotion_intensity,
                 themes, archetypes, lunar_context, locale
             )
@@ -70,7 +78,7 @@ class DreamInterpreter:
                 symbols, content, emotion, themes, archetypes, lunar_context, locale
             )
 
-    async def _call_claude(
+    async def _call_llm(
         self,
         dream_text: str,
         symbols: List[DreamSymbol],
@@ -82,7 +90,7 @@ class DreamInterpreter:
         lunar_context: Optional[LunarContext],
         locale: str,
     ) -> tuple[str, str, List[str]]:
-        """Call Claude API for interpretation"""
+        """Call LLM provider for interpretation"""
 
         system_prompt = self._build_system_prompt(locale)
         user_prompt = self._build_user_prompt(
@@ -90,26 +98,13 @@ class DreamInterpreter:
             themes, archetypes, lunar_context, locale
         )
 
-        async with httpx.AsyncClient(timeout=30.0) as client:
-            response = await client.post(
-                self.api_url,
-                headers={
-                    "Content-Type": "application/json",
-                    "x-api-key": self.api_key,
-                    "anthropic-version": "2023-06-01",
-                },
-                json={
-                    "model": self.model,
-                    "max_tokens": 1500,
-                    "system": system_prompt,
-                    "messages": [{"role": "user", "content": user_prompt}],
-                },
-            )
-            response.raise_for_status()
-            data = response.json()
+        # Use universal LLM provider
+        response_text, provider = await self.llm.generate(
+            prompt=user_prompt,
+            system_prompt=system_prompt,
+        )
 
-        content_text = data["content"][0]["text"]
-        return self._parse_response(content_text, locale)
+        return self._parse_response(response_text, locale)
 
     def _build_system_prompt(self, locale: str) -> str:
         """Build system prompt for Claude"""
