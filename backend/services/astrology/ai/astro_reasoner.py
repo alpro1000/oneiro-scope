@@ -1,4 +1,4 @@
-"""AI Reasoner for astrological interpretation using Claude API."""
+"""AI Reasoner for astrological interpretation using multiple LLM providers."""
 
 import json
 import logging
@@ -6,6 +6,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Optional
 
+from backend.core.llm_provider import UniversalLLMProvider, LLMProvider
 from .prompt_templates import (
     SYSTEM_PROMPT,
     NATAL_CHART_PROMPT,
@@ -29,35 +30,37 @@ class AstroReasoner:
 
     def __init__(
         self,
-        anthropic_api_key: Optional[str] = None,
-        model: str = "claude-3-haiku-20240307",
         max_tokens: int = 2000,
+        temperature: float = 0.7,
+        preferred_provider: Optional[LLMProvider] = None,
         knowledge_base_path: Optional[Path] = None,
     ):
         """
         Initialize AstroReasoner.
 
         Args:
-            anthropic_api_key: Anthropic API key (or from env)
-            model: Claude model to use
             max_tokens: Maximum tokens for response
+            temperature: Temperature for generation (0.0-1.0)
+            preferred_provider: Preferred LLM provider (or None for cheapest)
             knowledge_base_path: Path to knowledge base JSON files
         """
-        self.model = model
         self.max_tokens = max_tokens
 
         # Load knowledge base
         self.knowledge_base = self._load_knowledge_base(knowledge_base_path)
 
-        # Initialize Anthropic client
-        self._client = None
-        if anthropic_api_key:
-            try:
-                import anthropic
-                self._client = anthropic.Anthropic(api_key=anthropic_api_key)
-                logger.info(f"Anthropic client initialized with model {model}")
-            except ImportError:
-                logger.warning("anthropic package not installed")
+        # Initialize Universal LLM Provider
+        self.llm = UniversalLLMProvider(
+            max_tokens=max_tokens,
+            temperature=temperature,
+            preferred_provider=preferred_provider,
+        )
+
+        available = self.llm.get_available_providers()
+        if available:
+            logger.info(f"AstroReasoner initialized with providers: {', '.join(available)}")
+        else:
+            logger.warning("No LLM providers available - using fallback mode")
 
     def _load_knowledge_base(self, path: Optional[Path]) -> dict:
         """Load knowledge base from JSON files."""
@@ -234,30 +237,18 @@ class AstroReasoner:
         return self._parse_event_forecast(response, locale)
 
     async def _generate(self, prompt: str) -> str:
-        """Generate response using Claude API."""
-        if self._client is None:
-            return self._fallback_generation(prompt)
-
-        try:
-            message = self._client.messages.create(
-                model=self.model,
-                max_tokens=self.max_tokens,
-                system=SYSTEM_PROMPT,
-                messages=[{"role": "user", "content": prompt}],
-            )
-            return message.content[0].text
-        except Exception as e:
-            logger.error(f"Claude API error: {e}")
-            return self._fallback_generation(prompt)
-
-    def _fallback_generation(self, prompt: str) -> str:
-        """Fallback generation when API is unavailable."""
-        return (
-            "Интерпретация временно недоступна. "
-            "Астрологические данные рассчитаны корректно, "
-            "но для генерации текстовой интерпретации требуется подключение к API.\n\n"
-            "Пожалуйста, проверьте позиции планет и аспекты в разделе данных."
+        """Generate response using available LLM provider."""
+        result, provider = await self.llm.generate(
+            prompt=prompt,
+            system_prompt=SYSTEM_PROMPT,
         )
+
+        if provider:
+            logger.info(f"Generated interpretation using {provider}")
+        else:
+            logger.warning("Using fallback interpretation (no LLM available)")
+
+        return result
 
     def _parse_horoscope_sections(self, response: str, locale: str) -> dict:
         """Parse horoscope sections from response."""
