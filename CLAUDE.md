@@ -142,6 +142,7 @@ DEBUG=true
 # LLM Providers (configure at least one, or use fallback mode)
 # Providers are tried in order of cost (cheapest first):
 GROQ_API_KEY=gsk-...              # FREE tier, very fast (recommended!)
+GEMINI_API_KEY=...                # $0.075 per 1M tokens (cheapest paid!)
 TOGETHER_API_KEY=...              # $0.20 per 1M tokens
 OPENAI_API_KEY=sk-...             # GPT-4o-mini: $0.15 per 1M tokens
 ANTHROPIC_API_KEY=sk-ant-...      # Claude Haiku: $0.25 per 1M tokens
@@ -159,11 +160,12 @@ NEXT_PUBLIC_API_URL=http://localhost:8000
 | Provider | Model | Cost (per 1M tokens) | Speed | Quality |
 |----------|-------|---------------------|-------|---------|
 | **Groq** | llama-3.1-8b-instant | **FREE** | ⚡ Very Fast | ⭐⭐⭐ Good |
+| **Gemini** ⭐ | gemini-1.5-flash | **$0.075** | ⚡ Very Fast | ⭐⭐⭐⭐ Very Good |
 | Together AI | Meta-Llama-3.1-8B | $0.20 | ⚡ Fast | ⭐⭐⭐ Good |
 | OpenAI | gpt-4o-mini | $0.15 | 🚀 Fast | ⭐⭐⭐⭐ Very Good |
 | Anthropic | claude-3-haiku | $0.25 | 🚀 Fast | ⭐⭐⭐⭐ Very Good |
 
-**Recommendation:** Start with **Groq** (free tier) for development and testing!
+**Recommendation:** Start with **Groq** (free tier) for development. For production, **Gemini** offers the best value!
 
 ---
 

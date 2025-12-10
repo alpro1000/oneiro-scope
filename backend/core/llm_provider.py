@@ -3,9 +3,10 @@ Universal LLM Provider with multiple model support and automatic fallback.
 
 Supports (in order of priority by cost):
 1. Groq (free tier, very fast)
-2. Together AI (cheap open-source models)
-3. OpenAI GPT-4o-mini (cheaper than Claude)
-4. Anthropic Claude Haiku (current)
+2. Google Gemini (very cheap, good quality)
+3. Together AI (cheap open-source models)
+4. OpenAI GPT-4o-mini (cheaper than Claude)
+5. Anthropic Claude Haiku (current)
 """
 
 import logging
@@ -20,6 +21,7 @@ logger = logging.getLogger(__name__)
 class LLMProvider(str, Enum):
     """Available LLM providers"""
     GROQ = "groq"
+    GEMINI = "gemini"
     TOGETHER = "together"
     OPENAI = "openai"
     ANTHROPIC = "anthropic"
@@ -51,6 +53,13 @@ AVAILABLE_MODELS = [
         model_id="llama-3.1-8b-instant",
         cost_per_1k_tokens=0.0,  # Free tier
         max_tokens=8000,
+    ),
+    # Google Gemini - very cheap, good quality
+    LLMModel(
+        provider=LLMProvider.GEMINI,
+        model_id="gemini-1.5-flash",
+        cost_per_1k_tokens=0.000075,  # $0.075 per 1M input tokens (cheapest paid!)
+        max_tokens=8192,
     ),
     # Together AI - cheap open-source
     LLMModel(
@@ -104,6 +113,7 @@ class UniversalLLMProvider:
         # Load API keys from environment
         self.api_keys = {
             LLMProvider.GROQ: os.getenv("GROQ_API_KEY"),
+            LLMProvider.GEMINI: os.getenv("GEMINI_API_KEY"),
             LLMProvider.TOGETHER: os.getenv("TOGETHER_API_KEY"),
             LLMProvider.OPENAI: os.getenv("OPENAI_API_KEY"),
             LLMProvider.ANTHROPIC: os.getenv("ANTHROPIC_API_KEY"),
@@ -177,6 +187,8 @@ class UniversalLLMProvider:
 
         if model.provider == LLMProvider.GROQ:
             return await self._call_groq(model, prompt, system_prompt)
+        elif model.provider == LLMProvider.GEMINI:
+            return await self._call_gemini(model, prompt, system_prompt)
         elif model.provider == LLMProvider.TOGETHER:
             return await self._call_together(model, prompt, system_prompt)
         elif model.provider == LLMProvider.OPENAI:
@@ -214,6 +226,44 @@ class UniversalLLMProvider:
             response.raise_for_status()
             data = response.json()
             return data["choices"][0]["message"]["content"]
+
+    async def _call_gemini(
+        self, model: LLMModel, prompt: str, system_prompt: Optional[str]
+    ) -> str:
+        """Call Google Gemini API"""
+        api_key = self.api_keys[LLMProvider.GEMINI]
+
+        # Build request payload
+        payload = {
+            "contents": [
+                {
+                    "parts": [{"text": prompt}],
+                    "role": "user",
+                }
+            ],
+            "generationConfig": {
+                "temperature": self.temperature,
+                "maxOutputTokens": self.max_tokens,
+            },
+        }
+
+        # Add system instruction if provided
+        if system_prompt:
+            payload["systemInstruction"] = {
+                "parts": [{"text": system_prompt}]
+            }
+
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            response = await client.post(
+                f"https://generativelanguage.googleapis.com/v1beta/models/{model.model_id}:generateContent?key={api_key}",
+                headers={
+                    "Content-Type": "application/json",
+                },
+                json=payload,
+            )
+            response.raise_for_status()
+            data = response.json()
+            return data["candidates"][0]["content"]["parts"][0]["text"]
 
     async def _call_together(
         self, model: LLMModel, prompt: str, system_prompt: Optional[str]

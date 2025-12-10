@@ -27,7 +27,31 @@ OneiroScope supports multiple LLM providers with automatic fallback. The system 
 
 ---
 
-### 2. Together AI
+### 2. Google Gemini (Best Value!)
+
+**Cost:** $0.075 per 1M input tokens, $0.30 per 1M output (CHEAPEST paid option!)
+**Speed:** 🚀 Very Fast
+**Model:** `gemini-1.5-flash`
+
+**Pros:**
+- Cheapest paid option (2.5x cheaper than Groq alternatives, 3x cheaper than Claude)
+- Excellent quality (comparable to GPT-4o-mini)
+- Very fast inference
+- Great multilingual support (perfect for RU/EN)
+- Large context window (8K+ tokens)
+
+**Cons:**
+- Requires Google Cloud account
+- Requires payment (but extremely cheap)
+
+**Setup:**
+1. Sign up at https://aistudio.google.com/
+2. Create API key
+3. Add to `.env`: `GEMINI_API_KEY=...`
+
+---
+
+### 3. Together AI
 
 **Cost:** $0.20 per 1M tokens (very cheap)
 **Speed:** ⚡ Fast
@@ -50,7 +74,7 @@ OneiroScope supports multiple LLM providers with automatic fallback. The system 
 
 ---
 
-### 3. OpenAI (GPT-4o-mini)
+### 4. OpenAI (GPT-4o-mini)
 
 **Cost:** $0.15 per 1M input tokens, $0.60 per 1M output
 **Speed:** 🚀 Fast
@@ -74,7 +98,7 @@ OneiroScope supports multiple LLM providers with automatic fallback. The system 
 
 ---
 
-### 4. Anthropic (Claude Haiku)
+### 5. Anthropic (Claude Haiku)
 
 **Cost:** $0.25 per 1M input tokens, $1.25 per 1M output
 **Speed:** 🚀 Fast
@@ -113,31 +137,33 @@ GROQ_API_KEY=gsk-your-key-here
 For production, configure multiple providers for redundancy:
 
 ```env
-GROQ_API_KEY=gsk-...        # Primary (free tier)
-OPENAI_API_KEY=sk-...       # Fallback #1 (good quality)
-ANTHROPIC_API_KEY=sk-ant-...  # Fallback #2 (best quality)
+GROQ_API_KEY=gsk-...          # Primary (free tier)
+GEMINI_API_KEY=...            # Fallback #1 (cheapest paid, great quality)
+OPENAI_API_KEY=sk-...         # Fallback #2 (good quality)
+ANTHROPIC_API_KEY=sk-ant-...  # Fallback #3 (best quality)
 ```
 
 ### High-Volume Setup
 
-For high-volume applications where cost matters:
+For high-volume applications where cost matters most:
 
 ```env
-TOGETHER_API_KEY=...        # Primary (cheapest paid)
-GROQ_API_KEY=gsk-...       # Fallback (free tier)
+GEMINI_API_KEY=...            # Primary (cheapest paid option)
+GROQ_API_KEY=gsk-...          # Fallback (free tier)
 ```
 
 ---
 
 ## How Automatic Fallback Works
 
-The system tries providers in this order:
+The system tries providers in this order (cheapest to most expensive):
 
-1. **Groq** (if API key configured)
-2. **Together AI** (if API key configured)
-3. **OpenAI** (if API key configured)
-4. **Anthropic** (if API key configured)
-5. **Fallback Mode** (rule-based, no AI)
+1. **Groq** (if API key configured) - FREE
+2. **Google Gemini** (if API key configured) - $0.075 per 1M tokens
+3. **Together AI** (if API key configured) - $0.20 per 1M tokens
+4. **OpenAI** (if API key configured) - $0.15 per 1M tokens
+5. **Anthropic** (if API key configured) - $0.25 per 1M tokens
+6. **Fallback Mode** (rule-based, no AI)
 
 If a provider fails (network error, rate limit, etc.), the system automatically tries the next one.
 
@@ -158,12 +184,13 @@ If a provider fails (network error, rate limit, etc.), the system automatically 
 
 | Provider | Cost per Request | Monthly Cost (1000 req) |
 |----------|-----------------|------------------------|
-| Groq | $0.00 | **$0.00** |
+| Groq | $0.00 | **$0.00** (FREE!) |
+| **Google Gemini** | **$0.00015** | **$0.15** (Best paid!) |
 | Together AI | $0.0004 | **$0.40** |
 | OpenAI (GPT-4o-mini) | $0.0006 | **$0.60** |
 | Anthropic (Claude) | $0.001 | **$1.00** |
 
-**Recommendation:** Use Groq for development/testing, switch to paid providers only if needed for quality/volume.
+**Recommendation:** Use **Groq** (free) for development/testing. For production, **Gemini** offers the best value at just $0.15 per 1000 requests!
 
 ---
 
@@ -171,12 +198,13 @@ If a provider fails (network error, rate limit, etc.), the system automatically 
 
 Based on benchmarks:
 
-| Provider | Response Time | Quality Score | Cost Score |
-|----------|--------------|--------------|------------|
-| Groq | ⭐⭐⭐⭐⭐ (0.5-1s) | ⭐⭐⭐ | ⭐⭐⭐⭐⭐ |
-| Together AI | ⭐⭐⭐⭐ (1-2s) | ⭐⭐⭐ | ⭐⭐⭐⭐⭐ |
-| OpenAI | ⭐⭐⭐⭐ (1-3s) | ⭐⭐⭐⭐ | ⭐⭐⭐⭐ |
-| Anthropic | ⭐⭐⭐ (2-4s) | ⭐⭐⭐⭐⭐ | ⭐⭐⭐ |
+| Provider | Response Time | Quality Score | Cost Score | Overall |
+|----------|--------------|--------------|------------|---------|
+| Groq | ⭐⭐⭐⭐⭐ (0.5-1s) | ⭐⭐⭐ | ⭐⭐⭐⭐⭐ | Best for dev |
+| **Gemini** | ⭐⭐⭐⭐⭐ (0.5-1.5s) | ⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | **Best value!** |
+| Together AI | ⭐⭐⭐⭐ (1-2s) | ⭐⭐⭐ | ⭐⭐⭐⭐ | Good budget |
+| OpenAI | ⭐⭐⭐⭐ (1-3s) | ⭐⭐⭐⭐ | ⭐⭐⭐⭐ | Solid choice |
+| Anthropic | ⭐⭐⭐ (2-4s) | ⭐⭐⭐⭐⭐ | ⭐⭐⭐ | Best quality |
 
 ---
 
