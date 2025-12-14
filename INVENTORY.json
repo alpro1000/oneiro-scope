@@ -1,0 +1,246 @@
+{
+  "tree": [
+    {
+      "path": ".",
+      "dirs": 11,
+      "files": 7
+    },
+    {
+      "path": "oneiro-scope",
+      "dirs": 0,
+      "files": 0
+    },
+    {
+      "path": "scripts",
+      "dirs": 0,
+      "files": 2
+    },
+    {
+      "path": ".github",
+      "dirs": 1,
+      "files": 0
+    },
+    {
+      "path": ".github/workflows",
+      "dirs": 0,
+      "files": 5
+    },
+    {
+      "path": "assets",
+      "dirs": 0,
+      "files": 2
+    },
+    {
+      "path": ".claude",
+      "dirs": 0,
+      "files": 1
+    },
+    {
+      "path": "backend",
+      "dirs": 6,
+      "files": 5
+    },
+    {
+      "path": "backend/api",
+      "dirs": 1,
+      "files": 1
+    },
+    {
+      "path": "backend/api/v1",
+      "dirs": 0,
+      "files": 5
+    },
+    {
+      "path": "backend/models",
+      "dirs": 0,
+      "files": 6
+    },
+    {
+      "path": "backend/services",
+      "dirs": 2,
+      "files": 0
+    },
+    {
+      "path": "backend/services/astrology",
+      "dirs": 2,
+      "files": 11
+    },
+    {
+      "path": "backend/services/astrology/ai",
+      "dirs": 0,
+      "files": 3
+    },
+    {
+      "path": "backend/services/astrology/knowledge_base",
+      "dirs": 0,
+      "files": 3
+    },
+    {
+      "path": "backend/services/dreams",
+      "dirs": 2,
+      "files": 4
+    },
+    {
+      "path": "backend/services/dreams/ai",
+      "dirs": 0,
+      "files": 2
+    },
+    {
+      "path": "backend/services/dreams/knowledge_base",
+      "dirs": 0,
+      "files": 1
+    },
+    {
+      "path": "backend/app",
+      "dirs": 0,
+      "files": 2
+    },
+    {
+      "path": "backend/core",
+      "dirs": 0,
+      "files": 6
+    },
+    {
+      "path": "backend/alembic",
+      "dirs": 1,
+      "files": 2
+    },
+    {
+      "path": "backend/alembic/versions",
+      "dirs": 0,
+      "files": 1
+    },
+    {
+      "path": "etl",
+      "dirs": 1,
+      "files": 4
+    },
+    {
+      "path": "etl/input",
+      "dirs": 0,
+      "files": 1
+    },
+    {
+      "path": "docs",
+      "dirs": 1,
+      "files": 4
+    },
+    {
+      "path": "docs/architecture",
+      "dirs": 1,
+      "files": 5
+    },
+    {
+      "path": "docs/architecture/modules",
+      "dirs": 0,
+      "files": 3
+    },
+    {
+      "path": "data",
+      "dirs": 0,
+      "files": 2
+    },
+    {
+      "path": "frontend",
+      "dirs": 10,
+      "files": 12
+    },
+    {
+      "path": "frontend/stories",
+      "dirs": 0,
+      "files": 1
+    },
+    {
+      "path": "frontend/e2e",
+      "dirs": 0,
+      "files": 1
+    },
+    {
+      "path": "frontend/components",
+      "dirs": 0,
+      "files": 2
+    },
+    {
+      "path": "frontend/lib",
+      "dirs": 0,
+      "files": 6
+    },
+    {
+      "path": "frontend/messages",
+      "dirs": 0,
+      "files": 2
+    },
+    {
+      "path": "frontend/app",
+      "dirs": 3,
+      "files": 1
+    },
+    {
+      "path": "frontend/app/api",
+      "dirs": 1,
+      "files": 0
+    },
+    {
+      "path": "frontend/app/api/lunar",
+      "dirs": 0,
+      "files": 1
+    },
+    {
+      "path": "frontend/app/(calendar)",
+      "dirs": 0,
+      "files": 1
+    },
+    {
+      "path": "frontend/app/[locale]",
+      "dirs": 3,
+      "files": 2
+    },
+    {
+      "path": "frontend/app/[locale]/astrology",
+      "dirs": 0,
+      "files": 1
+    },
+    {
+      "path": "frontend/app/[locale]/(calendar)",
+      "dirs": 1,
+      "files": 0
+    },
+    {
+      "path": "frontend/app/[locale]/(calendar)/calendar",
+      "dirs": 0,
+      "files": 1
+    },
+    {
+      "path": "frontend/app/[locale]/dreams",
+      "dirs": 0,
+      "files": 1
+    },
+    {
+      "path": "frontend/.storybook",
+      "dirs": 0,
+      "files": 2
+    },
+    {
+      "path": "frontend/i18n",
+      "dirs": 0,
+      "files": 1
+    },
+    {
+      "path": "frontend/__tests__",
+      "dirs": 0,
+      "files": 2
+    },
+    {
+      "path": "frontend/styles",
+      "dirs": 0,
+      "files": 2
+    },
+    {
+      "path": "styles",
+      "dirs": 0,
+      "files": 2
+    }
+  ],
+  "total_dirs": 47,
+  "total_files": 129
+}
