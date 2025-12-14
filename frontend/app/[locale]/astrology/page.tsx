@@ -13,7 +13,7 @@ import {
   type NatalChartResponse,
   type HoroscopeResponse,
   type EventForecastResponse,
-} from '@/lib/astrology-client';
+} from '../../../lib/astrology-client';
 
 type Tab = 'natalChart' | 'horoscope' | 'eventForecast';
 
