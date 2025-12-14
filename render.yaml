@@ -12,10 +12,10 @@ services:
     name: oneiroscope-backend
     env: python
     plan: free
-    rootDir: backend
-    buildCommand: pip install -r requirements.txt
-    # Run from the backend root so "app.main" resolves without path tweaks
-    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    buildCommand: pip install -r backend/requirements.txt
+    # Make the backend package importable regardless of Render root directory
+    # by explicitly adding "backend" to sys.path.
+    startCommand: uvicorn app.main:app --app-dir backend --host 0.0.0.0 --port $PORT
     envVars:
       - key: DATABASE_URL
         fromDatabase:
