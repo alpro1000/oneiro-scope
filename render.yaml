@@ -39,7 +39,7 @@ services:
       - key: PYTHON_VERSION
         value: 3.11.9
       - key: OPENAI_API_KEY
-        sync: false
+        sync: true
 
   - type: web
     name: oneiroscope-frontend
