@@ -1,5 +1,5 @@
 import type {Meta, StoryObj} from '@storybook/react';
-import {NextIntlProvider} from 'next-intl';
+import {NextIntlClientProvider} from 'next-intl';
 import LunarWidget from '@/components/LunarWidget';
 import enMessages from '@/messages/en.json';
 
@@ -8,11 +8,11 @@ const meta: Meta<typeof LunarWidget> = {
   component: LunarWidget,
   decorators: [
     (Story) => (
-      <NextIntlProvider locale="en" messages={enMessages}>
+      <NextIntlClientProvider locale="en" messages={enMessages}>
         <div style={{background: 'var(--bg)', minHeight: '100vh', padding: '2rem'}}>
           <Story />
         </div>
-      </NextIntlProvider>
+      </NextIntlClientProvider>
     )
   ]
 };
