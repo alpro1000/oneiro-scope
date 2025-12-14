@@ -3,7 +3,7 @@
     {
       "path": ".",
       "dirs": 11,
-      "files": 9
+      "files": 7
     },
     {
       "path": "oneiro-scope",
@@ -242,5 +242,5 @@
     }
   ],
   "total_dirs": 47,
-  "total_files": 131
+  "total_files": 129
 }
