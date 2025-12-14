@@ -17,7 +17,7 @@ jobs:
         with:
           node-version: 20
           cache: 'npm'
-          cache-dependency-path: frontend/package-lock.json
+          cache-dependency-path: frontend/package.json
 
       - name: Fix npm registry
         working-directory: frontend
@@ -31,7 +31,7 @@ jobs:
           PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: 1
         working-directory: frontend
         run: |
-          npm ci --ignore-scripts
+          npm install --ignore-scripts
           npx playwright install --with-deps
 
       - name: Run unit tests
