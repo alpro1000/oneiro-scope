@@ -5,11 +5,11 @@ import { useTranslations } from 'next-intl';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import VoiceInput from '@/components/VoiceInput';
+import VoiceInput from '../../../components/VoiceInput';
 import {
   analyzeDream,
   type DreamAnalysisResponse,
-} from '@/lib/dreams-client';
+} from '../../../lib/dreams-client';
 
 export default function DreamsPage() {
   const t = useTranslations('DreamsPage');

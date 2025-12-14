@@ -1,8 +1,8 @@
 import type {Metadata} from 'next';
 import {format} from 'date-fns';
 import {getTranslations, unstable_setRequestLocale} from 'next-intl/server';
-import {getLunarDay} from '@/lib/lunar-server';
-import LunarWidget from '@/components/LunarWidget';
+import {getLunarDay} from '../../../../lib/lunar-server';
+import LunarWidget from '../../../../components/LunarWidget';
 
 export const metadata: Metadata = {
   alternates: {
