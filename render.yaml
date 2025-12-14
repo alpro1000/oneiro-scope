@@ -12,10 +12,9 @@ services:
     name: oneiroscope-backend
     env: python
     plan: free
-    buildCommand: pip install -r backend/requirements.txt
-    # Make the backend package importable regardless of Render root directory
-    # by explicitly adding "backend" to sys.path.
-    startCommand: uvicorn app.main:app --app-dir backend --host 0.0.0.0 --port $PORT
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: PYTHONPATH=.. uvicorn backend.app.main:app --host 0.0.0.0 --port $PORT
     envVars:
       - key: DATABASE_URL
         fromDatabase:
@@ -47,8 +46,8 @@ services:
     env: node
     plan: free
     rootDir: frontend
-    buildCommand: npm install && npm run build
-    startCommand: npm start
+    buildCommand: npm ci --include=dev && npm run build
+    startCommand: npm run start -- -p $PORT
     envVars:
       - key: NEXT_PUBLIC_LUNAR_API_URL
         fromService:
