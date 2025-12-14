@@ -143,7 +143,7 @@
     {
       "path": "frontend",
       "dirs": 10,
-      "files": 12
+      "files": 11
     },
     {
       "path": "frontend/stories",
@@ -242,5 +242,5 @@
     }
   ],
   "total_dirs": 47,
-  "total_files": 131
+  "total_files": 130
 }
