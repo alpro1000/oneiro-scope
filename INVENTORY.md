@@ -1,0 +1,54 @@
+# Инвентарь репозитория
+
+| Путь | Папок | Файлов |
+|---|---:|---:|
+| . | 11 | 7 |
+| oneiro-scope | 0 | 0 |
+| scripts | 0 | 2 |
+| .github | 1 | 0 |
+| .github/workflows | 0 | 5 |
+| assets | 0 | 2 |
+| .claude | 0 | 1 |
+| backend | 6 | 5 |
+| backend/api | 1 | 1 |
+| backend/api/v1 | 0 | 5 |
+| backend/models | 0 | 6 |
+| backend/services | 2 | 0 |
+| backend/services/astrology | 2 | 11 |
+| backend/services/astrology/ai | 0 | 3 |
+| backend/services/astrology/knowledge_base | 0 | 3 |
+| backend/services/dreams | 2 | 4 |
+| backend/services/dreams/ai | 0 | 2 |
+| backend/services/dreams/knowledge_base | 0 | 1 |
+| backend/app | 0 | 2 |
+| backend/core | 0 | 6 |
+| backend/alembic | 1 | 2 |
+| backend/alembic/versions | 0 | 1 |
+| etl | 1 | 4 |
+| etl/input | 0 | 1 |
+| docs | 1 | 4 |
+| docs/architecture | 1 | 5 |
+| docs/architecture/modules | 0 | 3 |
+| data | 0 | 2 |
+| frontend | 10 | 12 |
+| frontend/stories | 0 | 1 |
+| frontend/e2e | 0 | 1 |
+| frontend/components | 0 | 2 |
+| frontend/lib | 0 | 6 |
+| frontend/messages | 0 | 2 |
+| frontend/app | 3 | 1 |
+| frontend/app/api | 1 | 0 |
+| frontend/app/api/lunar | 0 | 1 |
+| frontend/app/(calendar) | 0 | 1 |
+| frontend/app/[locale] | 3 | 2 |
+| frontend/app/[locale]/astrology | 0 | 1 |
+| frontend/app/[locale]/(calendar) | 1 | 0 |
+| frontend/app/[locale]/(calendar)/calendar | 0 | 1 |
+| frontend/app/[locale]/dreams | 0 | 1 |
+| frontend/.storybook | 0 | 2 |
+| frontend/i18n | 0 | 1 |
+| frontend/__tests__ | 0 | 2 |
+| frontend/styles | 0 | 2 |
+| styles | 0 | 2 |
+
+**ИТОГО:** папок = 47, файлов = 129
