@@ -37,7 +37,18 @@ class Settings(BaseSettings):
 
     @property
     def allowed_origins_list(self) -> List[str]:
-        return [origin.strip() for origin in self.ALLOWED_ORIGINS.split(",")]
+        origins: List[str] = []
+        for origin in self.ALLOWED_ORIGINS.split(","):
+            cleaned = origin.strip()
+            if not cleaned:
+                continue
+
+            if not cleaned.startswith(("http://", "https://")):
+                cleaned = f"https://{cleaned}"
+
+            origins.append(cleaned)
+
+        return origins
 
     # API Keys
     OPENAI_API_KEY: str = ""
