@@ -1,26 +1,26 @@
-interface SpeechRecognitionResult {
+export interface SpeechRecognitionResult {
   isFinal: boolean;
   length: number;
   [index: number]: { transcript: string };
 }
 
-interface SpeechRecognitionResultList {
+export interface SpeechRecognitionResultList {
   length: number;
   [index: number]: SpeechRecognitionResult;
 }
 
-interface SpeechRecognitionEvent extends Event {
+export interface SpeechRecognitionEvent extends Event {
   resultIndex: number;
   results: SpeechRecognitionResultList;
 }
 
-interface SpeechRecognitionErrorEvent extends Event {
+export interface SpeechRecognitionErrorEvent extends Event {
   error: string;
 }
 
-type SpeechRecognitionConstructor = new () => SpeechRecognition;
+export type SpeechRecognitionConstructor = new () => SpeechRecognition;
 
-type SpeechRecognition = {
+export type SpeechRecognition = {
   lang: string;
   continuous: boolean;
   interimResults: boolean;

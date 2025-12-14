@@ -3,6 +3,11 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { motion, AnimatePresence } from 'framer-motion';
+import type {
+  SpeechRecognition,
+  SpeechRecognitionErrorEvent,
+  SpeechRecognitionEvent,
+} from '../types/web-speech';
 
 interface VoiceInputProps {
   onTranscript: (text: string) => void;
