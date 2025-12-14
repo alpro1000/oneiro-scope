@@ -47,6 +47,8 @@ export default function AstrologyPage() {
   // Event types from API
   const [eventTypes, setEventTypes] = useState<Array<{ value: string; label_en: string; label_ru: string }>>([]);
 
+  const horoscopePeriods = ['daily', 'weekly', 'monthly', 'yearly'] as const;
+
   const tabs: { id: Tab; label: string }[] = [
     { id: 'natalChart', label: t('tabs.natalChart') },
     { id: 'horoscope', label: t('tabs.horoscope') },
@@ -363,7 +365,7 @@ export default function AstrologyPage() {
                 </h2>
 
                 <div className="flex gap-2 mb-6">
-                  {['daily', 'weekly', 'monthly', 'yearly'].map((period) => (
+                  {horoscopePeriods.map((period) => (
                     <button
                       key={period}
                       onClick={() => setHoroscopePeriod(period)}
