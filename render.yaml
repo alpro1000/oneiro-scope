@@ -12,10 +12,14 @@ services:
     name: oneiroscope-backend
     env: python
     plan: free
-    rootDir: backend
-    buildCommand: pip install -r requirements.txt
-    startCommand: PYTHONPATH=.. uvicorn backend.app.main:app --host 0.0.0.0 --port $PORT
+    rootDir: .
+    buildCommand: pip install -r backend/requirements.txt
+    startCommand: uvicorn backend.app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
     envVars:
+      - key: PYTHON_VERSION
+        value: "3.11.9"
+
       - key: DATABASE_URL
         fromDatabase:
           name: oneiroscope-postgres
@@ -24,44 +28,67 @@ services:
         fromDatabase:
           name: oneiroscope-postgres
           property: connectionString
+
       - key: REDIS_URL
         fromService:
           type: redis
           name: oneiroscope-redis
           property: connectionString
+
       - key: SECRET_KEY
         generateValue: true
+
       - key: ALLOWED_ORIGINS
         fromService:
           type: web
           name: oneiroscope-frontend
-          property: host
-      - key: PYTHON_VERSION
-        value: "3.11.9"
+          envVarKey: RENDER_EXTERNAL_URL
+
+      - key: GROQ_API_KEY
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: TOGETHER_API_KEY
+        sync: false
       - key: OPENAI_API_KEY
-        value: ""
+        sync: false
+      - key: ANTHROPIC_API_KEY
+        sync: false
 
   - type: web
     name: oneiroscope-frontend
     env: node
     plan: free
     rootDir: frontend
-    buildCommand: npm install --include=dev && npm run build
+    buildCommand: npm ci --include=dev && npm run build
     startCommand: npm run start -- -p $PORT
     envVars:
-      - key: NEXT_PUBLIC_LUNAR_API_URL
+      - key: NODE_ENV
+        value: production
+      - key: LUNAR_DEFAULT_TZ
+        value: UTC
+
+      - key: NEXT_PUBLIC_API_URL
         fromService:
           type: web
           name: oneiroscope-backend
-          property: host
+          envVarKey: RENDER_EXTERNAL_URL
+
+      - key: ASTROLOGY_API_URL
+        fromService:
+          type: web
+          name: oneiroscope-backend
+          envVarKey: RENDER_EXTERNAL_URL
+      - key: DREAMS_API_URL
+        fromService:
+          type: web
+          name: oneiroscope-backend
+          envVarKey: RENDER_EXTERNAL_URL
       - key: LUNAR_API_URL
         fromService:
           type: web
           name: oneiroscope-backend
-          property: host
-      - key: LUNAR_DEFAULT_TZ
-        value: UTC
-      - key: NODE_ENV
-        value: production
-      - key: OPENAI_API_KEY
+          envVarKey: RENDER_EXTERNAL_URL
+
+      - key: NEXT_PUBLIC_LUNAR_API_URL
         value: ""
