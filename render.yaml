@@ -35,7 +35,7 @@ services:
         fromService:
           type: web
           name: oneiroscope-frontend
-          property: url
+          property: host
       - key: OPENAI_API_KEY
         sync: false
 
@@ -51,12 +51,12 @@ services:
         fromService:
           type: web
           name: oneiroscope-backend
-          property: url
+          property: host
       - key: LUNAR_API_URL
         fromService:
           type: web
           name: oneiroscope-backend
-          property: url
+          property: host
       - key: LUNAR_DEFAULT_TZ
         value: UTC
       - key: NODE_ENV

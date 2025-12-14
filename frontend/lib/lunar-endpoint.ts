@@ -7,6 +7,11 @@ function normalizeBase(rawBase: string): string {
 
   const stripped = trimmed.replace(/\/$/, '');
 
+  // If a host is provided without a protocol, assume HTTPS for Render services.
+  if (!stripped.startsWith('http') && !stripped.startsWith('/')) {
+    return normalizeBase(`https://${stripped}`);
+  }
+
   // If a specific lunar path is already provided, trust it.
   if (stripped.endsWith('/lunar')) {
     return stripped;
