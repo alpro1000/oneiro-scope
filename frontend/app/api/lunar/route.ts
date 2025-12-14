@@ -1,5 +1,5 @@
 import {NextRequest, NextResponse} from 'next/server';
-import {getLunarDay} from '@/lib/lunar-server';
+import {getLunarDay} from '../../../lib/lunar-server';
 
 const MOCK_FALLBACK = {
   phase: 'Full Moon',
