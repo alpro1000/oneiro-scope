@@ -3,8 +3,8 @@
 import {useEffect, useMemo, useRef, useState} from 'react';
 import {AnimatePresence, motion} from 'framer-motion';
 import {useTranslations} from 'next-intl';
-import {fetchLunarDayClient} from '@/lib/lunar-client';
-import type {LunarDayPayload} from '@/lib/lunar-server';
+import {fetchLunarDayClient} from '../lib/lunar-client';
+import type {LunarDayPayload} from '../lib/lunar-server';
 
 function formatDateLabel(dateIso: string, locale: string): string {
   const date = new Date(dateIso);
