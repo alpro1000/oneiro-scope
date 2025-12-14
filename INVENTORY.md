@@ -30,7 +30,7 @@
 | docs/architecture | 1 | 5 |
 | docs/architecture/modules | 0 | 3 |
 | data | 0 | 2 |
-| frontend | 10 | 12 |
+| frontend | 10 | 11 |
 | frontend/stories | 0 | 1 |
 | frontend/e2e | 0 | 1 |
 | frontend/components | 0 | 2 |
@@ -51,4 +51,4 @@
 | frontend/styles | 0 | 2 |
 | styles | 0 | 2 |
 
-**ИТОГО:** папок = 47, файлов = 131
+**ИТОГО:** папок = 47, файлов = 130
