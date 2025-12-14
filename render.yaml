@@ -36,6 +36,8 @@ services:
           type: web
           name: oneiroscope-frontend
           property: host
+      - key: PYTHON_VERSION
+        value: 3.11
       - key: OPENAI_API_KEY
         sync: false
 
