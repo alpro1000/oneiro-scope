@@ -23,14 +23,17 @@ function normalizeBase(rawBase: string): string {
 
 export function resolveLunarApiBase(isServer: boolean): string {
   if (isServer) {
-    const envBase = process.env.LUNAR_API_URL ?? process.env.NEXT_PUBLIC_LUNAR_API_URL;
+    const envBase =
+      process.env.LUNAR_API_URL ||
+      process.env.NEXT_PUBLIC_LUNAR_API_URL ||
+      process.env.NEXT_PUBLIC_API_URL;
     if (envBase) {
       return normalizeBase(envBase);
     }
     return DEFAULT_BASE;
   }
 
-  const clientBase = process.env.NEXT_PUBLIC_LUNAR_API_URL;
+  const clientBase = process.env.NEXT_PUBLIC_LUNAR_API_URL ?? process.env.NEXT_PUBLIC_API_URL;
   if (clientBase) {
     return normalizeBase(clientBase);
   }
