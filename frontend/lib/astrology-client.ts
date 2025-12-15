@@ -4,6 +4,8 @@
  * Client for interacting with the astrology backend service.
  */
 
+import { resolveApiBase } from './api-base';
+
 // Types for API requests/responses
 export interface NatalChartRequest {
   birth_date: string;  // YYYY-MM-DD
@@ -102,14 +104,15 @@ export interface EventForecastResponse {
 
 // API base URL resolution
 function getAstrologyApiBase(): string {
-  if (typeof window === 'undefined') {
-    // Server-side
-    return process.env.ASTROLOGY_API_URL
-      ?? process.env.NEXT_PUBLIC_API_URL
-      ?? 'http://localhost:8000';
-  }
-  // Client-side
-  return process.env.NEXT_PUBLIC_API_URL ?? '';
+  const isServer = typeof window === 'undefined';
+
+  return resolveApiBase({
+    serviceName: 'Astrology API',
+    isServer,
+    serverEnvVars: [process.env.ASTROLOGY_API_URL, process.env.NEXT_PUBLIC_API_URL],
+    clientEnvVars: [process.env.NEXT_PUBLIC_API_URL],
+    relativeFallback: '/api',
+  });
 }
 
 /**

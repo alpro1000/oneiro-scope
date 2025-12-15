@@ -91,4 +91,7 @@ services:
           envVarKey: RENDER_EXTERNAL_URL
 
       - key: NEXT_PUBLIC_LUNAR_API_URL
-        value: ""
+        fromService:
+          type: web
+          name: oneiroscope-backend
+          envVarKey: RENDER_EXTERNAL_URL
