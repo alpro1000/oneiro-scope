@@ -2,8 +2,8 @@
   "tree": [
     {
       "path": ".",
-      "dirs": 11,
-      "files": 9
+      "dirs": 12,
+      "files": 11
     },
     {
       "path": "oneiro-scope",
@@ -26,6 +26,16 @@
       "files": 5
     },
     {
+      "path": "geopy",
+      "dirs": 1,
+      "files": 1
+    },
+    {
+      "path": "geopy/geocoders",
+      "dirs": 0,
+      "files": 1
+    },
+    {
       "path": "assets",
       "dirs": 0,
       "files": 2
@@ -37,7 +47,7 @@
     },
     {
       "path": "backend",
-      "dirs": 6,
+      "dirs": 7,
       "files": 5
     },
     {
@@ -62,8 +72,8 @@
     },
     {
       "path": "backend/services/astrology",
-      "dirs": 2,
-      "files": 11
+      "dirs": 5,
+      "files": 13
     },
     {
       "path": "backend/services/astrology/ai",
@@ -71,9 +81,24 @@
       "files": 3
     },
     {
+      "path": "backend/services/astrology/policies",
+      "dirs": 0,
+      "files": 2
+    },
+    {
+      "path": "backend/services/astrology/validators",
+      "dirs": 0,
+      "files": 2
+    },
+    {
+      "path": "backend/services/astrology/engine",
+      "dirs": 0,
+      "files": 5
+    },
+    {
       "path": "backend/services/astrology/knowledge_base",
       "dirs": 0,
-      "files": 3
+      "files": 4
     },
     {
       "path": "backend/services/dreams",
@@ -99,6 +124,11 @@
       "path": "backend/core",
       "dirs": 0,
       "files": 6
+    },
+    {
+      "path": "backend/tests",
+      "dirs": 0,
+      "files": 1
     },
     {
       "path": "backend/alembic",
@@ -246,6 +276,6 @@
       "files": 2
     }
   ],
-  "total_dirs": 48,
-  "total_files": 135
+  "total_dirs": 54,
+  "total_files": 152
 }
