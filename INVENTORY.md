@@ -2,26 +2,32 @@
 
 | Путь | Папок | Файлов |
 |---|---:|---:|
-| . | 11 | 9 |
+| . | 12 | 11 |
 | oneiro-scope | 0 | 0 |
 | scripts | 0 | 2 |
 | .github | 1 | 0 |
 | .github/workflows | 0 | 5 |
+| geopy | 1 | 1 |
+| geopy/geocoders | 0 | 1 |
 | assets | 0 | 2 |
 | .claude | 0 | 1 |
-| backend | 6 | 5 |
+| backend | 7 | 5 |
 | backend/api | 1 | 1 |
 | backend/api/v1 | 0 | 5 |
 | backend/models | 0 | 6 |
 | backend/services | 2 | 0 |
-| backend/services/astrology | 2 | 11 |
+| backend/services/astrology | 5 | 13 |
 | backend/services/astrology/ai | 0 | 3 |
-| backend/services/astrology/knowledge_base | 0 | 3 |
+| backend/services/astrology/policies | 0 | 2 |
+| backend/services/astrology/validators | 0 | 2 |
+| backend/services/astrology/engine | 0 | 5 |
+| backend/services/astrology/knowledge_base | 0 | 4 |
 | backend/services/dreams | 2 | 4 |
 | backend/services/dreams/ai | 0 | 2 |
 | backend/services/dreams/knowledge_base | 0 | 1 |
 | backend/app | 0 | 2 |
 | backend/core | 0 | 6 |
+| backend/tests | 0 | 1 |
 | backend/alembic | 1 | 2 |
 | backend/alembic/versions | 0 | 1 |
 | etl | 1 | 4 |
@@ -52,4 +58,4 @@
 | frontend/styles | 0 | 2 |
 | styles | 0 | 2 |
 
-**ИТОГО:** папок = 48, файлов = 135
+**ИТОГО:** папок = 54, файлов = 152
