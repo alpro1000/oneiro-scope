@@ -241,3 +241,56 @@ See `render.yaml` for configuration. Deploy requires:
 1. PostgreSQL database
 2. Redis (optional, for caching)
 3. Environment variables set in Render dashboard
+
+## Repo Audit Summary
+- Полный аудит выполнен (frontend, backend, infra, CI, scripts). Полный отчёт: [docs/REPO_AUDIT.md](docs/REPO_AUDIT.md).
+- Архитектура: Next.js 14 (App Router, next-intl), FastAPI backend с Swiss Ephemeris, Render blueprint (backend+frontend+Postgres+Redis).
+- P0: Astrology endpoints ломаются на `await` синхронного geocoder → 500; backend pytest не запускается из-за импортов в несуществующие модули.
+- P1: Render запускает backend в `ENVIRONMENT=development` → авто `init_db()` в проде; CORS требует явных origin со схемой.
+- Лунный сервис реальный (Swiss Ephemeris/Moshier), без моков; фронт делает SSR-фетч через `getLunarDay` и клиентский догруз месяца.
+- Проверить env: `NEXT_PUBLIC_*` от backend `RENDER_EXTERNAL_URL`, `LUNAR_DEFAULT_TZ`, `ALLOWED_ORIGINS`, секреты LLM/SECRET_KEY.
+
+## Repo Map
+- Frontend: `frontend/app/[locale]/(calendar)/calendar/page.tsx` (SSR lunar fetch), API proxy `frontend/app/api/lunar/route.ts`, i18n `frontend/i18n/request.ts` + `middleware.ts`, styles `frontend/tailwind.config.ts` + `styles/globals.css`, lunar clients `frontend/lib/lunar-server.ts` / `lunar-client.ts` / `lunar-endpoint.ts`.
+- Backend: entry `backend/app/main.py`; routes `/api/v1/lunar`, `/api/v1/astrology`, `/api/v1/dreams`, `/health`; lunar engine `backend/services/lunar/engine.py` + tables `backend/data/lunar_tables.json`; astrology orchestrator `backend/services/astrology/service.py` + `geocoder.py`; dreams `backend/services/dreams/*`; settings `backend/core/config.py`.
+- Infra/CI: `render.yaml` (backend/frontend/DB/Redis), `docker-compose.yml`, workflows in `.github/workflows/*`.
+
+## Findings
+### P0
+| Issue | Evidence | Impact | Fix | Acceptance |
+| --- | --- | --- | --- | --- |
+| `await self.geocoder.geocode(...)` в AstrologyService при синхронном geocoder | `backend/services/astrology/service.py` lines 63-68, 133-138, 179-184; `backend/services/astrology/geocoder.py` lines 59-86 | Все astrology-эндпоинты падают 500 при первом запросе | Сделать geocode async-safe (executor) или убрать `await`; покрыть тестом | `/api/v1/astrology/natal-chart` отдаёт 201 с телом |
+| Backend pytest импортирует отсутствующие `backend.services.astrology.engine.*` | `backend/tests/test_astrology_quality.py` lines 5-10 | `pytest backend/tests` валится на ImportError → CI красная | Переписать тесты под текущий модульный путь или заменить проверками актуальных сервисов | `pytest backend/tests` проходит без ImportError |
+
+### P1/P2/P3
+- P1: Render по умолчанию `ENVIRONMENT=development` ⇒ `init_db()` в проде; выставить `ENVIRONMENT=production` и управлять схемой через Alembic.
+- P2: Нет логов/health-индикации режима ephemeris (SWIEPH vs MOSEPH); добавьте предупреждение при отсутствии файлов.
+- P3: LunarWidget не ретраит загрузку месяца; любой 502 даёт простой error-блок вместо graceful retry.
+
+## Render/Deploy Checklist
+- Backend: `ENVIRONMENT=production`, `DATABASE_URL`/`DATABASE_URL_SYNC`, `REDIS_URL`, `SECRET_KEY`, `ALLOWED_ORIGINS=<frontend RENDER_EXTERNAL_URL>`, ephemeris path env при наличии файлов.
+- Frontend: `NEXT_PUBLIC_API_URL`/`NEXT_PUBLIC_LUNAR_API_URL` = backend `RENDER_EXTERNAL_URL`, `LUNAR_DEFAULT_TZ=UTC`.
+- Commands: backend `pip install -r backend/requirements.txt` → `uvicorn backend.app.main:app --host 0.0.0.0 --port $PORT`; frontend `npm install --include=dev && npm run build`.
+
+## Lunar Correctness Checklist
+- `/api/v1/lunar` возвращает фазу/день с provenance (ephemeris_engine, jd_ut, timezone); данные варьируются по датам (см. `backend/tests/test_lunar_endpoint.py`).
+- Контент тянется из `backend/data/lunar_tables.json` через `get_lunar_day_text` с fallback на en, без моков.
+- SSR использует `getLunarDay` (tz из `LUNAR_DEFAULT_TZ`), клиент догружает месяц через `fetchLunarDayClient`.
+
+## Security & Env Notes
+- Хранить SECRET_KEY/LLM ключи в секретах Render, не в git.
+- Geocoder Nominatim без ключа/лимита — добавить провайдер/квоты при проде.
+- CORS: передавать origins со схемой; ALLOWED_ORIGINS по умолчанию только localhost.
+
+## Roadmap
+- Phase 0 (builds green): исправить geocoder await; починить backend тесты; выставить `ENVIRONMENT=production` на Render. Acceptance: `pytest backend/tests` зелёный; Render деплой без `init_db()` логов; astrology endpoints 2xx.
+- Phase 1 (lunar correctness): лог/health ephemeris режима; тест на вариативность lunar_day; retry в LunarWidget. Acceptance: health показывает режим, UI месяц разный по датам, тесты ловят константный lunar_day.
+- Phase 2 (astrology hardening): строгий геокодинг с rate limit/provenance; обработка timezone ошибок; валидаторы орбов/applying. Acceptance: geocode ошибки = 400 с кодом; аспектные тесты на текущем движке.
+- Phase 3 (QA/CI): CI job для backend pytest + frontend lint/test; проверки provenance/source в ответах. Acceptance: pipeline зелёный, регрессия на `source=backend`/provenance проходит.
+
+## Next Actions
+1) Деплоить/запускать backend только после исправления geocoder await. 
+2) Обновить backend тесты под текущие модули и прогнать `pytest backend/tests`. 
+3) Прописать `ENVIRONMENT=production` и миграции в Render, отключив автогенерацию схемы на старте. 
+4) Добавить health/log для режима ephemeris и предупреждения при MOSEPH. 
+5) Улучшить LunarWidget: retry/backoff и surfaced provenance/source.
