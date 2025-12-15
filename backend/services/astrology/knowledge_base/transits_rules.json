@@ -1,0 +1,8 @@
+[
+  {
+    "rule_id": "TR_SATURN_SQ_SUN_001",
+    "trigger": {"transit": "Saturn", "aspect": "square", "natal": "Sun"},
+    "meaning": "период ответственности, ограничений, проверки зрелости",
+    "domains": ["general", "career"]
+  }
+]

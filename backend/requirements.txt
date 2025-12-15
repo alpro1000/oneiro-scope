@@ -33,6 +33,9 @@ openai-whisper==20231117
 vosk==0.3.45
 
 # Lunar calculations
+pyswisseph==2.10.3.2
+geopy==2.4.1
+timezonefinder==6.5.5
 ephem==4.1.5
 
 # NLP
