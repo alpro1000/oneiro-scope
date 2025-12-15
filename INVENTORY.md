@@ -4,18 +4,19 @@
 |---|---:|---:|
 | . | 12 | 11 |
 | oneiro-scope | 0 | 0 |
-| scripts | 0 | 2 |
+| scripts | 0 | 3 |
 | .github | 1 | 0 |
 | .github/workflows | 0 | 5 |
 | geopy | 1 | 1 |
 | geopy/geocoders | 0 | 1 |
 | assets | 0 | 2 |
 | .claude | 0 | 1 |
-| backend | 7 | 5 |
+| backend | 8 | 5 |
 | backend/api | 1 | 1 |
 | backend/api/v1 | 0 | 5 |
 | backend/models | 0 | 6 |
-| backend/services | 2 | 0 |
+| backend/services | 3 | 0 |
+| backend/services/lunar | 0 | 3 |
 | backend/services/astrology | 5 | 13 |
 | backend/services/astrology/ai | 0 | 3 |
 | backend/services/astrology/policies | 0 | 2 |
@@ -26,8 +27,9 @@
 | backend/services/dreams/ai | 0 | 2 |
 | backend/services/dreams/knowledge_base | 0 | 1 |
 | backend/app | 0 | 2 |
+| backend/data | 0 | 1 |
 | backend/core | 0 | 6 |
-| backend/tests | 0 | 1 |
+| backend/tests | 0 | 3 |
 | backend/alembic | 1 | 2 |
 | backend/alembic/versions | 0 | 1 |
 | etl | 1 | 4 |
@@ -58,4 +60,4 @@
 | frontend/styles | 0 | 2 |
 | styles | 0 | 2 |
 
-**ИТОГО:** папок = 54, файлов = 152
+**ИТОГО:** папок = 56, файлов = 159

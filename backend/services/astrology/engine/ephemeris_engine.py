@@ -37,7 +37,12 @@ class EphemerisEngine:
     """Configure Swiss Ephemeris with swieph/moseph modes and capture provenance."""
 
     def __init__(self, ephe_path: Optional[str] = None):
-        self.ephe_path = ephe_path or os.getenv("SWISSEPH_EPHE_PATH") or os.getenv("SE_EPHE_PATH")
+        self.ephe_path = (
+            ephe_path
+            or os.getenv("SWISSEPH_EPHE_PATH")
+            or os.getenv("SWISSEPH_PATH")
+            or os.getenv("SE_EPHE_PATH")
+        )
         self.config = self._configure()
 
     def _configure(self) -> EphemerisConfig:

@@ -10,6 +10,9 @@ from __future__ import annotations
 import math
 from datetime import datetime
 
+SUN = 0
+MOON = 1
+
 FLG_SWIEPH = 2
 FLG_SPEED = 256
 
@@ -27,7 +30,8 @@ def julday(year: int, month: int, day: int, ut: float) -> float:
 
 def calc_ut(jd: float, body: int, flags: int):
     # Return predictable but deterministic values: lon increases with jd and body
-    longitude = (jd * 0.1 + body * 3) % 360
+    speed_factor = 0.1 + (body * 0.02)
+    longitude = (jd * speed_factor + body * 3) % 360
     latitude = 0.0
     distance = 1.0
     speed = 1.0
