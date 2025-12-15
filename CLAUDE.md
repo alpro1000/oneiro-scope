@@ -155,6 +155,18 @@ REDIS_URL=redis://localhost:6379  # Optional
 NEXT_PUBLIC_API_URL=http://localhost:8000
 ```
 
+### Render deployment env vars
+
+When deploying via `render.yaml`, the frontend and backend must exchange full HTTPS URLs using
+`RENDER_EXTERNAL_URL` to keep SSR from calling `localhost`:
+
+- `NEXT_PUBLIC_API_URL`, `ASTROLOGY_API_URL`, `DREAMS_API_URL`, `LUNAR_API_URL`, and
+  `NEXT_PUBLIC_LUNAR_API_URL` should all come from the backend service `RENDER_EXTERNAL_URL`.
+- `ALLOWED_ORIGINS` on the backend should point to the frontend `RENDER_EXTERNAL_URL`.
+
+After updating envs on Render, trigger **Clear build cache & Deploy** for the frontend so the
+`NEXT_PUBLIC_*` values are baked into the build.
+
 ### LLM Provider Cost Comparison
 
 | Provider | Model | Cost (per 1M tokens) | Speed | Quality |
