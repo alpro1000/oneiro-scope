@@ -30,14 +30,14 @@
 | docs/architecture | 1 | 5 |
 | docs/architecture/modules | 0 | 3 |
 | data | 0 | 2 |
-| frontend | 11 | 11 |
+| frontend | 11 | 12 |
 | frontend/stories | 0 | 1 |
 | frontend/e2e | 0 | 1 |
 | frontend/types | 0 | 2 |
 | frontend/components | 0 | 2 |
-| frontend/lib | 0 | 6 |
+| frontend/lib | 0 | 7 |
 | frontend/messages | 0 | 2 |
-| frontend/app | 3 | 1 |
+| frontend/app | 3 | 2 |
 | frontend/app/api | 1 | 0 |
 | frontend/app/api/lunar | 0 | 1 |
 | frontend/app/(calendar) | 0 | 1 |
@@ -52,4 +52,4 @@
 | frontend/styles | 0 | 2 |
 | styles | 0 | 2 |
 
-**ИТОГО:** папок = 48, файлов = 132
+**ИТОГО:** папок = 48, файлов = 135

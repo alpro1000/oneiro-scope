@@ -4,6 +4,8 @@
  * Client for interacting with the dream analysis backend service.
  */
 
+import { resolveApiBase } from './api-base';
+
 // Types for API requests/responses
 export interface DreamAnalysisRequest {
   dream_text: string;
@@ -81,14 +83,15 @@ export interface DreamArchetype {
 
 // API base URL resolution
 function getDreamsApiBase(): string {
-  if (typeof window === 'undefined') {
-    // Server-side
-    return process.env.DREAMS_API_URL
-      ?? process.env.NEXT_PUBLIC_API_URL
-      ?? 'http://localhost:8000';
-  }
-  // Client-side
-  return process.env.NEXT_PUBLIC_API_URL ?? '';
+  const isServer = typeof window === 'undefined';
+
+  return resolveApiBase({
+    serviceName: 'Dreams API',
+    isServer,
+    serverEnvVars: [process.env.DREAMS_API_URL, process.env.NEXT_PUBLIC_API_URL],
+    clientEnvVars: [process.env.NEXT_PUBLIC_API_URL],
+    relativeFallback: '/api',
+  });
 }
 
 /**

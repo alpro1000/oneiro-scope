@@ -143,7 +143,7 @@
     {
       "path": "frontend",
       "dirs": 11,
-      "files": 11
+      "files": 12
     },
     {
       "path": "frontend/stories",
@@ -168,7 +168,7 @@
     {
       "path": "frontend/lib",
       "dirs": 0,
-      "files": 6
+      "files": 7
     },
     {
       "path": "frontend/messages",
@@ -178,7 +178,7 @@
     {
       "path": "frontend/app",
       "dirs": 3,
-      "files": 1
+      "files": 2
     },
     {
       "path": "frontend/app/api",
@@ -247,5 +247,5 @@
     }
   ],
   "total_dirs": 48,
-  "total_files": 132
+  "total_files": 135
 }
