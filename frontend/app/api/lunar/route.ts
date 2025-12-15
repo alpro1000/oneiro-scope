@@ -1,14 +1,6 @@
 import {NextRequest, NextResponse} from 'next/server';
 import {getLunarDay} from '../../../lib/lunar-server';
 
-const MOCK_FALLBACK = {
-  phase: 'Full Moon',
-  phase_key: 'Full',
-  description: 'Mock data: a night for celebrating completed cycles and intuitive insights.',
-  recommendation: 'Share your reflections, record vivid dreams, and rest under the bright moon.',
-  source: 'mock'
-} as const;
-
 function resolveDate(searchParams: URLSearchParams): string {
   const param = searchParams.get('date');
   if (param && /^\d{4}-\d{2}-\d{2}$/.test(param)) {
@@ -35,15 +27,16 @@ export async function GET(request: NextRequest) {
     const payload = await getLunarDay({date, locale, tz});
     return NextResponse.json({...payload, source: payload.source ?? 'backend'});
   } catch (error) {
-    console.error('Failed to load lunar data, falling back to mock payload.', error);
+    console.error('Failed to load lunar data from backend.', error);
     return NextResponse.json(
       {
         date,
-        lunar_day: 15,
         locale,
-        ...MOCK_FALLBACK
+        tz,
+        source: 'mock',
+        error: 'Backend lunar service unavailable'
       },
-      {status: 200}
+      {status: 502}
     );
   }
 }

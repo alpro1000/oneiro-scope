@@ -1,0 +1,248 @@
+{
+  "ru": [
+    null,
+    {
+      "type": "без фиксированной категории",
+      "notes": "Лучшее время формулировать намерения; если снится — трактуйте как ориентир, не как прогноз."
+    },
+    {
+      "type": "без отдельной метки",
+      "notes": "День про щедрость и планирование; спец. категории снов нет."
+    },
+    {
+      "type": "проверочные; склонные к воплощению",
+      "notes": "Преодоление во сне → в жизни проверка/шанс реализации."
+    },
+    {
+      "type": "предостерегающие; родовые",
+      "notes": "Темы семьи/предков; требовательные к вниманию сны."
+    },
+    {
+      "type": "нейтрально-позитивные",
+      "notes": "Благоприятный фон; строгих правил нет."
+    },
+    {
+      "type": "предвосхищающие; интуитивные",
+      "notes": "Хорошо ловятся линии будущего; уединение помогает."
+    },
+    {
+      "type": "высокоинформативные",
+      "notes": "Часто сбываются; фиксируйте детали."
+    },
+    {
+      "type": "пророческие про призвание",
+      "notes": "Намёки на предназначение, долгий курс."
+    },
+    {
+      "type": "без явной категории",
+      "notes": "День напряжённый; спец. правил по снам нет."
+    },
+    {
+      "type": "в основном «пустые»",
+      "notes": "Без сильных признаков информативность низкая; с акцентами — род/семья."
+    },
+    {
+      "type": "маркер на завтрашние «вещие»",
+      "notes": "Сигнал, что 12-е может быть значимым."
+    },
+    {
+      "type": "светлые и сбывающиеся",
+      "notes": "Чистые, доброкачественные сны."
+    },
+    {
+      "type": "инсайты и указатели",
+      "notes": "Озарения; импульс тянется на следующую ночь."
+    },
+    {
+      "type": "эмоциональная разрядка",
+      "notes": "Неприятные сюжеты как выпуск напряжения."
+    },
+    {
+      "type": "без фиксированной категории",
+      "notes": "День с предостережениями; тип снов не задан."
+    },
+    {
+      "type": "очистительные",
+      "notes": "Снимают внутреннее напряжение."
+    },
+    {
+      "type": "нейтрально-рабочие",
+      "notes": "Без спец. ожиданий по снам."
+    },
+    {
+      "type": "энергетические (не предсказательные)",
+      "notes": "Для практик силы/света."
+    },
+    {
+      "type": "преимущественно неинформативные",
+      "notes": "Можно не задерживаться на расшифровке."
+    },
+    {
+      "type": "без отдельной метки",
+      "notes": "Фокус на воле; тип не задан."
+    },
+    {
+      "type": "восстановительные (на следующую ночь)",
+      "notes": "Ночью далее — исцеление без новой инфы."
+    },
+    {
+      "type": "познавательные; обучающие",
+      "notes": "Приносят знания и рабочие подсказки."
+    },
+    {
+      "type": "инверсионные («наоборот»)",
+      "notes": "Трактовка «наоборот» (учитывать контекст)."
+    },
+    {
+      "type": "диагностические",
+      "notes": "Отражают состояние тела/сексуальности."
+    },
+    {
+      "type": "тишина / минимум сигналов",
+      "notes": "Чаще пауза восприятия."
+    },
+    {
+      "type": "про самооценку",
+      "notes": "Зеркалят самооценку и заботу о себе."
+    },
+    {
+      "type": "интуитивно-пророческие (две ночи)",
+      "notes": "Озарения сегодня и завтра."
+    },
+    {
+      "type": "уравновешенные",
+      "notes": "Гармоничный фон; без жёсткой метки."
+    },
+    {
+      "type": "пограничные; «ритуальные»",
+      "notes": "Переходные сюжеты; отдельной классификации нет."
+    },
+    {
+      "type": "итоговые пророческие",
+      "notes": "Много информации; подсвечивают ошибки и рост."
+    }
+  ],
+  "en": [
+    null,
+    {
+      "type": "no fixed category",
+      "notes": "Best time to set intentions and plans; treat any dream as a compass, not a forecast."
+    },
+    {
+      "type": "no separate label",
+      "notes": "A day of generosity/planning; no specific dream category."
+    },
+    {
+      "type": "testing; likely to materialize",
+      "notes": "Overcoming hurdles in a dream → life will test you; scenario is actionable."
+    },
+    {
+      "type": "cautionary; ancestral",
+      "notes": "Family/ancestors themes; dreams warn of risks and require attentiveness."
+    },
+    {
+      "type": "neutral-positive",
+      "notes": "Favorable backdrop; no strict rules."
+    },
+    {
+      "type": "anticipatory; intuitive",
+      "notes": "Future lines are easier to grasp; solitude sharpens clarity."
+    },
+    {
+      "type": "highly informative",
+      "notes": "Often come true; capture details."
+    },
+    {
+      "type": "prophetic about vocation",
+      "notes": "Hints at calling and long-term direction."
+    },
+    {
+      "type": "no clear category",
+      "notes": "Tense day; no special dream rules."
+    },
+    {
+      "type": "mostly “empty”",
+      "notes": "Without strong markers there’s little meaning; with accents — family/lineage themes."
+    },
+    {
+      "type": "marker for tomorrow’s ‘prophetic’",
+      "notes": "Signal that the 12th may be significant."
+    },
+    {
+      "type": "bright and fulfilled",
+      "notes": "Quiet, clear dreams, often confirmed."
+    },
+    {
+      "type": "insights and pointers",
+      "notes": "Epiphanies; momentum continues into the next night."
+    },
+    {
+      "type": "emotional discharge",
+      "notes": "Unpleasant plots release tension rather than predict events."
+    },
+    {
+      "type": "no fixed category",
+      "notes": "Warnings in the day; no specific dream type."
+    },
+    {
+      "type": "cleansing",
+      "notes": "Helps release inner strain."
+    },
+    {
+      "type": "neutral, worklike",
+      "notes": "No special expectations."
+    },
+    {
+      "type": "energetic (not predictive)",
+      "notes": "Good for power/light practice."
+    },
+    {
+      "type": "mostly non-informative",
+      "notes": "You can skip decoding."
+    },
+    {
+      "type": "no separate label",
+      "notes": "Resolve and will; no set dream type."
+    },
+    {
+      "type": "restorative (next night)",
+      "notes": "Next night brings little info but supports recharge/healing."
+    },
+    {
+      "type": "knowledge-bearing; instructive",
+      "notes": "Brings know-how and practical hints."
+    },
+    {
+      "type": "inverted (‘opposite’)",
+      "notes": "Interpret in reverse (consider context)."
+    },
+    {
+      "type": "diagnostic",
+      "notes": "Reflects state of body/sexual energy."
+    },
+    {
+      "type": "quiet / minimal signals",
+      "notes": "Often a pause and sensory rest."
+    },
+    {
+      "type": "about self-esteem",
+      "notes": "Highlights self-worth, boundaries, self-care."
+    },
+    {
+      "type": "intuitive-prophetic (two nights)",
+      "notes": "Insights today and tomorrow."
+    },
+    {
+      "type": "balanced",
+      "notes": "Harmonious background; no rigid label."
+    },
+    {
+      "type": "liminal; ‘ritual’",
+      "notes": "Transitional motifs; no separate classification."
+    },
+    {
+      "type": "final prophetic",
+      "notes": "Rich in information; show mistakes and growth points."
+    }
+  ]
+}
