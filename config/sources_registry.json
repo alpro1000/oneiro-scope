@@ -1,0 +1,14 @@
+[
+  {
+    "name": "DReAMy",
+    "url": "https://github.com/lorenzoscottb/DReAMy",
+    "license": "MIT",
+    "role": "semantic enrichment and embedding generation"
+  },
+  {
+    "name": "pyswisseph",
+    "url": "https://github.com/astrorigin/pyswisseph",
+    "license": "BSD",
+    "role": "lunar and astro calculations"
+  }
+]
