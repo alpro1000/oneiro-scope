@@ -1,130 +1,164 @@
 <!doctype html>
 <html lang="ru">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
-  <title>Lunar Dream Calendar — Лунный календарь снов</title>
-  <meta name="description" content="Лунный календарь снов: дата → лунные сутки → тип → заметки (оценочно). Мультиязычно, с выбором часового пояса.">
-  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Noto+Sans:wght@400;700&display=swap" rel="stylesheet">
-  <link href="styles/tokens.css" rel="stylesheet">
-  <link href="styles/site.css" rel="stylesheet">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>OneiroScope — проводник в мир снов и звезд</title>
+  <meta name="description" content="OneiroScope — научный подход к толкованию снов и астрологии. Записывайте сны, отслеживайте фазы Луны и получайте прогнозы." />
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet" />
+  <link href="styles/tokens.css" rel="stylesheet" />
+  <link href="styles/site.css" rel="stylesheet" />
 </head>
 <body>
-<header>
-  <div class="wrap">
-    <a class="brand" href="#" aria-label="Home">
-      <!-- Монохромный SVG-серп: динамически меняем фазу через JS -->
-      <svg id="moonSvg" class="moonIco" viewBox="0 0 100 100" aria-hidden="true">
-        <defs>
-          <mask id="moonMask">
-            <rect x="0" y="0" width="100" height="100" fill="black"/>
-            <!-- Светлая часть -->
-            <circle cx="50" cy="50" r="48" fill="white"/>
-            <!-- Тень (сдвигаем cx скриптом под фазу) -->
-            <circle id="shadowCircle" cx="50" cy="50" r="48" fill="black"/>
-          </mask>
-        </defs>
-        <circle cx="50" cy="50" r="48" fill="currentColor" mask="url(#moonMask)"/>
-      </svg>
-      <span id="brandName">Lunar Dream Calendar</span>
-    </a>
-    <a href="#dreambook" id="navDreambook" class="navlink btn">Сонник</a>
-
-    <div class="controls">
-      <select id="lang" class="select" aria-label="Language"></select>
-      <select id="tz" class="select" aria-label="Time zone"></select>
-      <button id="prev" class="btn" aria-label="Previous month">←</button>
-      <div id="monthLabel" class="muted" style="min-width:200px;font-weight:700"></div>
-      <button id="next" class="btn" aria-label="Next month">→</button>
-      <button id="today" class="btn today" aria-label="Сегодня">Сегодня</button>
-    </div>
-  </div>
-</header>
-
-<main class="wrap">
-  <!-- КАЛЕНДАРЬ -->
-  <section class="card" id="calendarCard">
-    <h1 id="title" class="gold">Лунный календарь снов</h1>
-    <h2 id="subtitle" class="muted">Таблица: дата → лунные сутки → тип снов → заметки (оценочно).</h2>
-
-    <div class="row">
-      <span id="tzLabel" class="muted">Часовой пояс:</span>
-      <code id="tzActive" class="tz-active"></code>
-      <span class="muted" style="margin-left:auto" id="legend">Выделено — текущая дата</span>
-    </div>
-
-    <div class="table-wrap">
-      <div class="scroll">
-        <table aria-label="Lunar dream table">
-          <thead>
-            <tr>
-              <th id="thDate">Дата</th>
-              <th id="thDay">Лунные сутки</th>
-              <th id="thType">Тип снов</th>
-              <th id="thNotes">Краткие пометки</th>
-            </tr>
-          </thead>
-          <tbody id="tbody"></tbody>
-        </table>
+  <header>
+    <div class="header__inner">
+      <a class="brand" href="#top">
+        <span class="brand-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M13 3a9 9 0 0 0 0 18 9 9 0 1 1 0-18Z" />
+          </svg>
+        </span>
+        <span>OneiroScope</span>
+      </a>
+      <button class="nav-toggle" aria-label="Переключить меню">☰</button>
+      <nav>
+        <ul class="nav__list">
+          <li><a class="nav__link" href="#dreams">Сны</a></li>
+          <li><a class="nav__link" href="#astrology">Астрология</a></li>
+          <li><a class="nav__link" href="#blog">Блог</a></li>
+          <li><a class="nav__link" href="#about">О нас</a></li>
+          <li><a class="nav__link" href="#profile">Профиль</a></li>
+        </ul>
+      </nav>
+      <div class="controls">
+        <button class="lang-toggle" aria-label="Switch language">RU / EN</button>
+        <button class="login-btn">Войти</button>
       </div>
     </div>
+  </header>
 
-    <p id="sources" class="muted footnote" style="margin-top:10px">
-      Примечание: возраст Луны рассчитывается приближённо по выбранному часовому поясу; типы/заметки — по заданной таблице (оценочно).
-    </p>
-  </section>
+  <main id="top" class="wrap">
+    <section class="hero" id="about">
+      <div>
+        <div class="hero__eyebrow">Эзотерика • Научный взгляд</div>
+        <h1 class="hero__title">OneiroScope: ваш проводник в мир снов и звезд</h1>
+        <p class="hero__subtitle">Записывайте сновидения, отслеживайте лунные фазы и получайте точечные рекомендации, основанные на данных. Путешествуйте по космосу собственного подсознания в темном, стеклянном интерфейсе.</p>
+        <div class="cta-row">
+          <button class="btn-primary">Начать путешествие</button>
+          <button class="btn-ghost">Узнать больше</button>
+        </div>
+        <div class="tagline">
+          <span class="tag">Нейро-анализ снов</span>
+          <span class="tag">Лунный календарь</span>
+          <span class="tag">Виджет астрологии</span>
+        </div>
+      </div>
+      <div class="hero__visual">
+        <div class="glass-card">
+          <h3>Сегодня</h3>
+          <p>Луна: Убывающий серп • 48% освещенности</p>
+          <div class="planets">
+            <div class="planet" aria-hidden="true"></div>
+            <div class="planet orange" aria-hidden="true"></div>
+            <div class="planet" aria-hidden="true"></div>
+          </div>
+          <div class="stat-pill">+2400 записанных снов за неделю</div>
+          <div class="orbit" aria-hidden="true"></div>
+        </div>
+      </div>
+    </section>
 
-  <!-- РАЗБОР СНА -->
-  <section id="interpret" class="card">
-    <h2 class="gold" id="interpretTitle">Разбор сна (оценочно)</h2>
-    <p class="muted" id="interpretIntro">Вставьте текст сна — покажем связанные символы и краткие пояснения из современного корпуса.</p>
+    <section id="dreams">
+      <h2 class="section-title">Исследуйте ваши сновидения</h2>
+      <p class="section-subtitle">Две ключевые карточки расскажут о главном функционале OneiroScope.</p>
+      <div class="card-grid">
+        <article class="feature-card violet">
+          <div class="icon-circle" aria-hidden="true">💤</div>
+          <h3>Анализ снов</h3>
+          <ul>
+            <li>Глубокий разбор символов и образов</li>
+            <li>Связка с фазой Луны и контекстом</li>
+            <li>История заметок и трекер эмоций</li>
+          </ul>
+          <a class="white-btn" href="#">Записать сон</a>
+        </article>
+        <article class="feature-card orange" id="astrology">
+          <div class="icon-circle" aria-hidden="true">🪐</div>
+          <h3>Астрология</h3>
+          <ul>
+            <li>Прогноз на неделю по вашему знаку</li>
+            <li>Синхронизация с персональным календарем</li>
+            <li>Лунные сутки, освещенность и рекомендации</li>
+          </ul>
+          <a class="white-btn" href="#">Узнать прогноз</a>
+        </article>
+      </div>
+    </section>
 
-    <textarea id="dreamText" rows="5" placeholder="Опишите ваш сон…"
-      class="input-area"></textarea>
+    <section class="moon-card" id="blog">
+      <div class="moon-img" aria-hidden="true"></div>
+      <div class="moon-meta">
+        <h3>Текущая лунная фаза</h3>
+        <div class="meta-row">
+          <span class="meta-pill">Убывающий серп</span>
+          <span class="meta-pill">48% освещенности</span>
+          <span class="meta-pill">Телец</span>
+        </div>
+        <p class="section-subtitle">Получайте рекомендации по ритуалам, записям и практике осознанных снов в зависимости от текущей фазы.</p>
+        <a class="more-link" href="#">Подробнее &gt;</a>
+      </div>
+    </section>
 
-    <div class="bar">
-      <label id="lunarLabel" class="muted">Лунные сутки (опц.):</label>
-      <select id="lunarHint" class="select"></select>
-      <button id="analyzeBtn" class="btn strong">Разобрать сон</button>
-      <span id="interpretStatus" class="muted" style="margin-left:auto"></span>
-    </div>
-
-    <div id="interpretResult" class="interpret-result" style="display:none">
-      <div id="hitSymbols" class="chips"></div>
-      <div id="explain"></div>
-      <div id="advices" class="muted" style="margin-top:6px"></div>
-    </div>
-  </section>
-
-  <!-- СОВРЕМЕННЫЙ СОННИК -->
-  <section class="card" id="dreambook" style="padding-top:8px;">
-    <h2 class="gold" id="dbTitle" style="margin-top:0">Современный сонник</h2>
-    <input id="dreamSearch" type="search"
-           placeholder="Найдите символ… (например, вода, полёт)"
-           class="input-search">
-    <div id="dreamCount" class="muted" style="margin-bottom:8px;"></div>
-    <div class="table-wrap">
-      <table id="dreamTable" class="db-table">
-        <thead>
-          <tr>
-            <th id="dbThSymbol">Символ</th>
-            <th id="dbThSummary">Кратко</th>
-            <th id="dbThConf">Уверенность</th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
-    </div>
-  </section>
+    <section class="voice" id="profile">
+      <h3>Голосовой ввод</h3>
+      <p>Расскажите свой сон вслух — мы превратим его в структурированную запись и подскажем символику.</p>
+      <div class="mic-wrapper">
+        <span class="wave-ring" aria-hidden="true"></span>
+        <span class="wave-ring" aria-hidden="true"></span>
+        <span class="wave-ring" aria-hidden="true"></span>
+        <button class="mic-button" aria-label="Начать запись">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 3a3 3 0 0 0-3 3v5a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3Z" />
+            <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+            <line x1="12" y1="19" x2="12" y2="22" />
+          </svg>
+        </button>
+      </div>
+    </section>
+  </main>
 
   <footer>
-    <p id="footerText">© <span id="year"></span> • Все толкования — оценочно; не медицинский совет.</p>
+    <div class="footer-left">
+      <div class="footer-logo">
+        <span class="brand-icon" aria-hidden="true"></span>
+        <span>OneiroScope</span>
+      </div>
+      <div class="footer-links">
+        <a href="#">Контакты</a>
+        <a href="#">Политика</a>
+        <a href="#">Условия</a>
+      </div>
+    </div>
+    <div class="audio-bars" aria-hidden="true">
+      <span></span><span></span><span></span><span></span><span></span>
+    </div>
+    <div class="footer-right">
+      <div class="socials">
+        <a href="#" aria-label="Telegram">↗</a>
+        <a href="#" aria-label="YouTube">▶</a>
+        <a href="#" aria-label="Instagram">◎</a>
+      </div>
+      <span>© 2025 OneiroScope</span>
+    </div>
   </footer>
-</main>
 
-<script src="scripts/calendar.js"></script>
-<script src="scripts/dreambook.js"></script>
+  <script>
+    const navToggle = document.querySelector('.nav-toggle');
+    const navList = document.querySelector('.nav__list');
+    navToggle.addEventListener('click', () => navList.classList.toggle('is-open'));
+  </script>
 </body>
 </html>

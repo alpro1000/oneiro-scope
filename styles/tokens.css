@@ -1,16 +1,18 @@
 :root{
-  --bg:#0E1114;       /* базовый фон */
-  --panel:#141A1E;    /* карточки/хедер */
-  --ink:#EDEFF2;      /* основной текст */
-  --muted:#9CA6B1;    /* вторичный текст */
-  --gold:#C3A56A;     /* золото-акцент */
-  --accent:#0B6E4F;   /* бирюзовый акцент */
-  --border:#1B232A;   /* границы/зебра */
-  --zebra:#12181D;    /* зебра (чуть темнее панели на 2–3%) */
-
-  --radius:14px;
-  --shadow:0 10px 28px rgba(0,0,0,.45);
-  --fs:18px; --lh:1.7;
-  --font:"Inter","Noto Sans",system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans",sans-serif;
-  --mono:ui-monospace,"SFMono-Regular",Menlo,Consolas,monospace;
+  --bg:#0B0E17;
+  --panel:rgba(17,19,34,0.72);
+  --panel-strong:rgba(23,27,47,0.86);
+  --ink:#F7F9FF;
+  --muted:#A0AEC0;
+  --violet-start:#6A4C93;
+  --violet-end:#9069C6;
+  --orange-start:#E67E22;
+  --orange-end:#F39C12;
+  --pink:#FF4D6D;
+  --border:rgba(255,255,255,0.1);
+  --shadow:0 20px 60px rgba(0,0,0,0.55);
+  --radius:20px;
+  --font:"Manrope", "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --fs:18px;
+  --lh:1.6;
 }
