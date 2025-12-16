@@ -14,7 +14,7 @@
 | .github/workflows | 0 | 6 |
 | geopy | 1 | 1 |
 | geopy/geocoders | 0 | 1 |
-| assets | 0 | 2 |
+| assets | 0 | 3 |
 | .claude | 0 | 1 |
 | backend | 8 | 5 |
 | backend/api | 1 | 1 |
@@ -68,4 +68,4 @@
 | frontend/styles | 0 | 2 |
 | styles | 0 | 2 |
 
-**ИТОГО:** папок = 64, файлов = 173
+**ИТОГО:** папок = 64, файлов = 174

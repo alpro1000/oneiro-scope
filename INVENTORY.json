@@ -63,7 +63,7 @@
     {
       "path": "assets",
       "dirs": 0,
-      "files": 2
+      "files": 3
     },
     {
       "path": ".claude",
@@ -327,5 +327,5 @@
     }
   ],
   "total_dirs": 64,
-  "total_files": 173
+  "total_files": 174
 }
