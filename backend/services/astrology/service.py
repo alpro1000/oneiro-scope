@@ -23,7 +23,7 @@ from .schemas import (
 from .ephemeris import SwissEphemeris
 from .natal_chart import NatalChartCalculator
 from .transits import TransitCalculator
-from .geocoder import Geocoder
+from .geocoder import Geocoder, GeocodingError
 from .interpreter import AstrologyInterpreter
 
 logger = logging.getLogger(__name__)
@@ -71,7 +71,10 @@ class AstrologyService:
         logger.info(f"Calculating natal chart for {request.birth_place}")
 
         # Geocode birth place
-        location = await self.geocoder.geocode(request.birth_place)
+        try:
+            location = self.geocoder.geocode(request.birth_place)
+        except GeocodingError as exc:
+            raise ValueError(f"Geocoding failed: {exc}") from exc
         if not location:
             raise ValueError(f"Could not geocode location: {request.birth_place}")
 
