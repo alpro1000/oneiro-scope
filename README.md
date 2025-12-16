@@ -15,6 +15,19 @@
 - **Данные и сервисы**: PostgreSQL + Redis (Docker Compose), шина LLM-провайдеров, базы знаний для астрологии и снов.
 - **Инфраструктура**: `render.yaml` blueprint поднимает Postgres, Redis, backend и frontend на Render; локальная разработка через Docker Compose или standalone.
 
+### Новые интеграции (DReAMy + pyswisseph)
+- Семантическое обогащение на базе [DReAMy](https://github.com/lorenzoscottb/DReAMy) (эмбеддинги, токенизация, тематические теги).
+- Астрономические метаданные через [pyswisseph](https://github.com/astrorigin/pyswisseph) (фазы Луны и расчёты по дате).
+- Источник атрибуции для интеграций: `config/sources_registry.json`.
+
+#### Запуск обогащённого ETL
+```bash
+pip install -r requirements.txt
+python etl/pipeline.py            # сохранит data/dreams_enriched.parquet
+python etl/pipeline.py --check    # прогон без сохранения
+pytest tests/test_integration_dreamy_swisseph.py
+```
+
 ## Быстрый старт
 ### Требования
 - Node.js 18+, npm

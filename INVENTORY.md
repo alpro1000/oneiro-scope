@@ -2,11 +2,16 @@
 
 | Путь | Папок | Файлов |
 |---|---:|---:|
-| . | 12 | 11 |
+| . | 16 | 12 |
 | oneiro-scope | 0 | 0 |
+| external | 2 | 0 |
+| external/pyswisseph | 1 | 1 |
+| external/pyswisseph/swisseph | 0 | 1 |
+| external/DReAMy | 1 | 1 |
+| external/DReAMy/dreamy | 0 | 3 |
 | scripts | 0 | 3 |
 | .github | 1 | 0 |
-| .github/workflows | 0 | 5 |
+| .github/workflows | 0 | 6 |
 | geopy | 1 | 1 |
 | geopy/geocoders | 0 | 1 |
 | assets | 0 | 2 |
@@ -32,12 +37,15 @@
 | backend/tests | 0 | 3 |
 | backend/alembic | 1 | 2 |
 | backend/alembic/versions | 0 | 1 |
-| etl | 1 | 4 |
+| etl | 1 | 5 |
 | etl/input | 0 | 1 |
 | docs | 1 | 5 |
 | docs/architecture | 1 | 5 |
 | docs/architecture/modules | 0 | 3 |
+| pandas | 0 | 1 |
 | data | 0 | 2 |
+| tests | 0 | 2 |
+| config | 0 | 1 |
 | frontend | 11 | 12 |
 | frontend/stories | 0 | 1 |
 | frontend/e2e | 0 | 1 |
@@ -60,4 +68,4 @@
 | frontend/styles | 0 | 2 |
 | styles | 0 | 2 |
 
-**ИТОГО:** папок = 56, файлов = 160
+**ИТОГО:** папок = 64, файлов = 173

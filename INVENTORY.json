@@ -2,13 +2,38 @@
   "tree": [
     {
       "path": ".",
-      "dirs": 12,
-      "files": 11
+      "dirs": 16,
+      "files": 12
     },
     {
       "path": "oneiro-scope",
       "dirs": 0,
       "files": 0
+    },
+    {
+      "path": "external",
+      "dirs": 2,
+      "files": 0
+    },
+    {
+      "path": "external/pyswisseph",
+      "dirs": 1,
+      "files": 1
+    },
+    {
+      "path": "external/pyswisseph/swisseph",
+      "dirs": 0,
+      "files": 1
+    },
+    {
+      "path": "external/DReAMy",
+      "dirs": 1,
+      "files": 1
+    },
+    {
+      "path": "external/DReAMy/dreamy",
+      "dirs": 0,
+      "files": 3
     },
     {
       "path": "scripts",
@@ -23,7 +48,7 @@
     {
       "path": ".github/workflows",
       "dirs": 0,
-      "files": 5
+      "files": 6
     },
     {
       "path": "geopy",
@@ -153,7 +178,7 @@
     {
       "path": "etl",
       "dirs": 1,
-      "files": 4
+      "files": 5
     },
     {
       "path": "etl/input",
@@ -176,9 +201,24 @@
       "files": 3
     },
     {
+      "path": "pandas",
+      "dirs": 0,
+      "files": 1
+    },
+    {
       "path": "data",
       "dirs": 0,
       "files": 2
+    },
+    {
+      "path": "tests",
+      "dirs": 0,
+      "files": 2
+    },
+    {
+      "path": "config",
+      "dirs": 0,
+      "files": 1
     },
     {
       "path": "frontend",
@@ -286,6 +326,6 @@
       "files": 2
     }
   ],
-  "total_dirs": 56,
-  "total_files": 160
+  "total_dirs": 64,
+  "total_files": 173
 }

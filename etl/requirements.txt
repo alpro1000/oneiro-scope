@@ -4,4 +4,7 @@ html2text
 tqdm
 pyyaml
 rapidfuzz
-
+pandas
+pyarrow
+-e ../external/DReAMy
+-e ../external/pyswisseph

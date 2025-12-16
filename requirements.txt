@@ -1,0 +1,4 @@
+-e ./external/DReAMy
+-e ./external/pyswisseph
+pandas
+pyarrow
