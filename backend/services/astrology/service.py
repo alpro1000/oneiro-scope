@@ -72,7 +72,7 @@ class AstrologyService:
 
         # Geocode birth place
         try:
-            location = self.geocoder.geocode(request.birth_place)
+            location = await self.geocoder.geocode(request.birth_place)
         except GeocodingError as exc:
             raise ValueError(f"Geocoding failed: {exc}") from exc
         if not location:
