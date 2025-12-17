@@ -29,9 +29,20 @@ def julday(year: int, month: int, day: int, ut: float) -> float:
 
 
 def calc_ut(jd: float, body: int, flags: int):
-    # Return predictable but deterministic values: lon increases with jd and body
-    speed_factor = 0.1 + (body * 0.02)
-    longitude = (jd * speed_factor + body * 3) % 360
+    # Return realistic astronomical values for Sun and Moon
+    # Sun moves ~1°/day (360° / 365.25 days)
+    # Moon moves ~13.2°/day (360° / 27.32 days = synodic month)
+
+    if body == SUN:
+        # Sun: ~0.9856°/day starting from vernal equinox reference
+        longitude = (jd * 0.9856 + 280.0) % 360.0
+    elif body == MOON:
+        # Moon: ~13.176°/day (360° / 27.32 days)
+        longitude = (jd * 13.176 + 210.0) % 360.0
+    else:
+        # Other bodies: placeholder
+        longitude = (jd * 0.5 + body * 30) % 360.0
+
     latitude = 0.0
     distance = 1.0
     speed = 1.0
