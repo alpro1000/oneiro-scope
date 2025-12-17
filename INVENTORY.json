@@ -257,8 +257,8 @@
     },
     {
       "path": "frontend/app",
-      "dirs": 3,
-      "files": 2
+      "dirs": 2,
+      "files": 1
     },
     {
       "path": "frontend/app/api",
@@ -267,11 +267,6 @@
     },
     {
       "path": "frontend/app/api/lunar",
-      "dirs": 0,
-      "files": 1
-    },
-    {
-      "path": "frontend/app/(calendar)",
       "dirs": 0,
       "files": 1
     },
@@ -326,6 +321,6 @@
       "files": 2
     }
   ],
-  "total_dirs": 64,
-  "total_files": 175
+  "total_dirs": 63,
+  "total_files": 173
 }
