@@ -31,10 +31,37 @@ def _resolve_date(date_str: Optional[str], tz: str) -> date:
     return datetime.now(tzinfo).date()
 
 
+@router.get("/timezones")
+async def get_timezones():
+    """Get list of popular timezones for lunar calendar."""
+    timezones = [
+        {"value": "Europe/Moscow", "label": "Москва (UTC+3)", "region": "Европа", "utc_offset": "+03:00"},
+        {"value": "Europe/Kiev", "label": "Киев (UTC+2)", "region": "Европа", "utc_offset": "+02:00"},
+        {"value": "Asia/Almaty", "label": "Алматы (UTC+6)", "region": "Азия", "utc_offset": "+06:00"},
+        {"value": "Europe/Minsk", "label": "Минск (UTC+3)", "region": "Европа", "utc_offset": "+03:00"},
+        {"value": "Asia/Yekaterinburg", "label": "Екатеринбург (UTC+5)", "region": "Азия", "utc_offset": "+05:00"},
+        {"value": "Asia/Novosibirsk", "label": "Новосибирск (UTC+7)", "region": "Азия", "utc_offset": "+07:00"},
+        {"value": "Asia/Vladivostok", "label": "Владивосток (UTC+10)", "region": "Азия", "utc_offset": "+10:00"},
+        {"value": "Europe/Prague", "label": "Прага (UTC+1)", "region": "Европа", "utc_offset": "+01:00"},
+        {"value": "Europe/Berlin", "label": "Берлин (UTC+1)", "region": "Европа", "utc_offset": "+01:00"},
+        {"value": "Europe/Paris", "label": "Париж (UTC+1)", "region": "Европа", "utc_offset": "+01:00"},
+        {"value": "Europe/London", "label": "Лондон (UTC+0)", "region": "Европа", "utc_offset": "+00:00"},
+        {"value": "America/New_York", "label": "Нью-Йорк (UTC-5)", "region": "Америка", "utc_offset": "-05:00"},
+        {"value": "America/Los_Angeles", "label": "Лос-Анджелес (UTC-8)", "region": "Америка", "utc_offset": "-08:00"},
+        {"value": "America/Chicago", "label": "Чикаго (UTC-6)", "region": "Америка", "utc_offset": "-06:00"},
+        {"value": "Asia/Tokyo", "label": "Токио (UTC+9)", "region": "Азия", "utc_offset": "+09:00"},
+        {"value": "Asia/Shanghai", "label": "Шанхай (UTC+8)", "region": "Азия", "utc_offset": "+08:00"},
+        {"value": "Asia/Dubai", "label": "Дубай (UTC+4)", "region": "Азия", "utc_offset": "+04:00"},
+        {"value": "Australia/Sydney", "label": "Сидней (UTC+11)", "region": "Австралия", "utc_offset": "+11:00"},
+        {"value": "UTC", "label": "UTC (универсальное время)", "region": "Общее", "utc_offset": "+00:00"},
+    ]
+    return {"timezones": timezones}
+
+
 @router.get("/lunar")
 async def get_lunar_day(
     date: Optional[str] = Query(None, description="Date in YYYY-MM-DD format"),
-    tz: str = Query("UTC", description="IANA timezone (e.g. Europe/Moscow)"),
+    tz: str = Query("Europe/Moscow", description="IANA timezone (e.g. Europe/Moscow)"),
     locale: str = Query("en", description="Language code")
 ):
     target_date = _resolve_date(date, tz)

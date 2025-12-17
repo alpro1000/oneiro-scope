@@ -108,5 +108,11 @@
     "processing": "Processing...",
     "error": "Microphone access denied",
     "notSupported": "Voice input not supported in your browser"
+  },
+  "TimezoneSelector": {
+    "label": "Timezone",
+    "description": "Select your timezone for accurate lunar day calculation",
+    "loading": "Loading...",
+    "error": "Loading error"
   }
 }

@@ -2,7 +2,7 @@
 
 | Путь | Папок | Файлов |
 |---|---:|---:|
-| . | 16 | 15 |
+| . | 16 | 17 |
 | oneiro-scope | 0 | 0 |
 | external | 2 | 0 |
 | external/pyswisseph | 1 | 1 |
@@ -40,7 +40,7 @@
 | backend/alembic/versions | 0 | 1 |
 | etl | 1 | 5 |
 | etl/input | 0 | 1 |
-| docs | 1 | 8 |
+| docs | 1 | 10 |
 | docs/architecture | 1 | 5 |
 | docs/architecture/modules | 0 | 3 |
 | pandas | 0 | 1 |
@@ -51,7 +51,7 @@
 | frontend/stories | 0 | 1 |
 | frontend/e2e | 0 | 1 |
 | frontend/types | 0 | 2 |
-| frontend/components | 0 | 2 |
+| frontend/components | 0 | 3 |
 | frontend/lib | 0 | 7 |
 | frontend/messages | 0 | 2 |
 | frontend/app | 2 | 1 |
@@ -68,4 +68,4 @@
 | frontend/styles | 0 | 2 |
 | styles | 0 | 2 |
 
-**ИТОГО:** папок = 64, файлов = 180
+**ИТОГО:** папок = 64, файлов = 185

@@ -3,7 +3,7 @@
     {
       "path": ".",
       "dirs": 16,
-      "files": 15
+      "files": 17
     },
     {
       "path": "oneiro-scope",
@@ -193,7 +193,7 @@
     {
       "path": "docs",
       "dirs": 1,
-      "files": 8
+      "files": 10
     },
     {
       "path": "docs/architecture",
@@ -248,7 +248,7 @@
     {
       "path": "frontend/components",
       "dirs": 0,
-      "files": 2
+      "files": 3
     },
     {
       "path": "frontend/lib",
@@ -327,5 +327,5 @@
     }
   ],
   "total_dirs": 64,
-  "total_files": 180
+  "total_files": 185
 }
