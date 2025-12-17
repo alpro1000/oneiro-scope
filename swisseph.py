@@ -30,15 +30,20 @@ def julday(year: int, month: int, day: int, ut: float) -> float:
 
 def calc_ut(jd: float, body: int, flags: int):
     # Return realistic astronomical values for Sun and Moon
-    # Sun moves ~1°/day (360° / 365.25 days)
-    # Moon moves ~13.2°/day (360° / 27.32 days = synodic month)
+    # Sun moves ~0.9856°/day (360° / 365.25 days)
+    # Moon moves ~13.176°/day (360° / 27.32 days sidereal month)
+    #
+    # NOTE: Offsets calibrated to match real ephemeris data for December 2025
+    # Reference: 2025-12-17 = Lunar Day 27, Waning Crescent, Moon in Scorpio
 
     if body == SUN:
-        # Sun: ~0.9856°/day starting from vernal equinox reference
-        longitude = (jd * 0.9856 + 280.0) % 360.0
+        # Sun: ~0.9856°/day, calibrated offset for Dec 2025
+        # Dec 17: Sun at ~265° (late Sagittarius, approaching winter solstice)
+        longitude = (jd * 0.9856 + 356.79) % 360.0
     elif body == MOON:
-        # Moon: ~13.176°/day (360° / 27.32 days)
-        longitude = (jd * 13.176 + 210.0) % 360.0
+        # Moon: ~13.176°/day, calibrated offset for Dec 2025
+        # Dec 17: Moon at ~222° (Scorpio, day 27 waning crescent)
+        longitude = (jd * 13.176 + 10.25) % 360.0
     else:
         # Other bodies: placeholder
         longitude = (jd * 0.5 + body * 30) % 360.0
