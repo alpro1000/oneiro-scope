@@ -16,10 +16,11 @@
 | geopy/geocoders | 0 | 1 |
 | assets | 0 | 2 |
 | .claude | 0 | 1 |
-| backend | 8 | 5 |
+| backend | 9 | 5 |
 | backend/api | 1 | 1 |
 | backend/api/v1 | 0 | 5 |
 | backend/models | 0 | 6 |
+| backend/utils | 0 | 2 |
 | backend/services | 3 | 0 |
 | backend/services/lunar | 0 | 3 |
 | backend/services/astrology | 5 | 13 |
@@ -34,7 +35,7 @@
 | backend/app | 0 | 2 |
 | backend/data | 0 | 1 |
 | backend/core | 0 | 6 |
-| backend/tests | 0 | 3 |
+| backend/tests | 0 | 4 |
 | backend/alembic | 1 | 2 |
 | backend/alembic/versions | 0 | 1 |
 | etl | 1 | 5 |
@@ -67,4 +68,4 @@
 | frontend/styles | 0 | 2 |
 | styles | 0 | 2 |
 
-**ИТОГО:** папок = 63, файлов = 177
+**ИТОГО:** папок = 64, файлов = 180
