@@ -5,6 +5,7 @@ import {AnimatePresence, motion} from 'framer-motion';
 import {useTranslations} from 'next-intl';
 import {fetchLunarDayClient} from '../lib/lunar-client';
 import type {LunarDayPayload} from '../lib/lunar-server';
+import TimezoneSelector, {getStoredTimezone} from './TimezoneSelector';
 
 function formatDateLabel(dateIso: string, locale: string): string {
   const date = new Date(dateIso);
@@ -38,15 +39,46 @@ type Status = 'idle' | 'loading' | 'ready' | 'error';
 
 export default function LunarWidget({initialData, locale}: Props) {
   const t = useTranslations('LunarWidget');
+  const [timezone, setTimezone] = useState<string>('Europe/Moscow');
+  const [currentData, setCurrentData] = useState<LunarDayPayload>(initialData);
   const [expanded, setExpanded] = useState(false);
   const [status, setStatus] = useState<Status>('idle');
   const [monthData, setMonthData] = useState<LunarDayPayload[]>([]);
   const [error, setError] = useState<string | null>(null);
   const cacheRef = useRef<Map<string, LunarDayPayload>>(new Map([[initialData.date, initialData]]));
 
+  // Load timezone from localStorage on mount
+  useEffect(() => {
+    const stored = getStoredTimezone();
+    setTimezone(stored);
+  }, []);
+
+  // Reload current day when timezone changes
+  useEffect(() => {
+    let cancelled = false;
+    const reloadCurrentDay = async () => {
+      try {
+        const response = await fetchLunarDayClient(initialData.date, locale, timezone);
+        if (!cancelled) {
+          setCurrentData(response);
+          cacheRef.current.set(response.date, response);
+        }
+      } catch (err) {
+        console.error('Failed to reload lunar day:', err);
+      }
+    };
+
+    if (timezone !== initialData.timezone) {
+      reloadCurrentDay();
+      // Clear month data to force reload
+      setMonthData([]);
+      setStatus('idle');
+    }
+  }, [timezone, initialData.date, initialData.timezone, locale]);
+
   const formattedDate = useMemo(
-    () => formatDateLabel(initialData.date, locale),
-    [initialData.date, locale]
+    () => formatDateLabel(currentData.date, locale),
+    [currentData.date, locale]
   );
 
   useEffect(() => {
@@ -64,13 +96,13 @@ export default function LunarWidget({initialData, locale}: Props) {
       try {
         setStatus('loading');
         setError(null);
-        const dates = getMonthDateList(initialData.date);
+        const dates = getMonthDateList(currentData.date);
         const promises = dates.map(async (iso) => {
           const cached = cacheRef.current.get(iso);
-          if (cached) {
+          if (cached && cached.timezone === timezone) {
             return cached;
           }
-          const response = await fetchLunarDayClient(iso, locale);
+          const response = await fetchLunarDayClient(iso, locale, timezone);
           cacheRef.current.set(response.date, response);
           return response;
         });
@@ -93,7 +125,7 @@ export default function LunarWidget({initialData, locale}: Props) {
     return () => {
       cancelled = true;
     };
-  }, [expanded, initialData.date, locale, monthData.length, status]);
+  }, [expanded, currentData.date, locale, monthData.length, status, timezone]);
 
   useEffect(() => {
     if (!expanded) {
@@ -109,24 +141,36 @@ export default function LunarWidget({initialData, locale}: Props) {
       className="w-full max-w-3xl rounded-lg border border-gold-soft bg-surface p-6 shadow-gold backdrop-blur-lg transition-[box-shadow,transform] duration-lunar ease-lunar hover:shadow-[0_32px_64px_-28px_rgba(195,165,106,0.75)]"
       aria-live="polite"
     >
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-6">
+        {/* Timezone Selector */}
+        <TimezoneSelector value={timezone} onChange={setTimezone} />
+
+        {/* Current Day Info */}
         <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
           <div className="flex flex-col gap-2">
             <span className="text-sm uppercase tracking-[0.3em] text-gold">{t('phase')}</span>
             <h2 className="text-3xl font-semibold text-ink">
-              {initialData.phase}
+              {currentData.phase}
             </h2>
             <p className="text-sm text-ink-muted">{t('updated', {date: formattedDate})}</p>
           </div>
           <div className="flex flex-col items-start gap-2 rounded-md border border-gold-soft bg-surfaceStrong px-4 py-3">
-            <span className="text-xs font-medium uppercase tracking-[0.25em] text-gold">{t('lunarDay', {day: initialData.lunar_day})}</span>
-            <span className="text-sm text-ink-muted">{initialData.description}</span>
+            <span className="text-xs font-medium uppercase tracking-[0.25em] text-gold">
+              {t('lunarDay', {day: currentData.lunar_day})}
+            </span>
+            <span className="text-sm text-ink-muted">{currentData.description}</span>
           </div>
         </div>
+
+        {/* Recommendation */}
         <div className="rounded-md border border-gold-soft bg-surfaceStrong p-4 text-sm leading-relaxed text-ink">
-          <h3 className="mb-2 text-sm font-semibold uppercase tracking-[0.2em] text-gold">{t('recommendation')}</h3>
-          <p>{initialData.recommendation}</p>
+          <h3 className="mb-2 text-sm font-semibold uppercase tracking-[0.2em] text-gold">
+            {t('recommendation')}
+          </h3>
+          <p>{currentData.recommendation}</p>
         </div>
+
+        {/* Toggle Month Button */}
         <button
           type="button"
           className="inline-flex items-center justify-center gap-2 self-start rounded-full border border-gold px-4 py-2 text-sm font-medium text-gold transition-colors duration-lunar ease-lunar hover:bg-gold hover:text-bg focus:outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2 focus-visible:ring-offset-bg"
@@ -167,7 +211,7 @@ export default function LunarWidget({initialData, locale}: Props) {
                     </thead>
                     <tbody>
                       {monthRows.map((day) => {
-                        const isToday = day.date === initialData.date;
+                        const isToday = day.date === currentData.date;
                         return (
                           <tr
                             key={day.date}
