@@ -96,6 +96,16 @@ oneiro-scope/
 | GET | `/event-types` | List supported event types |
 | GET | `/retrograde` | Get retrograde planets for date |
 
+### Lunar Service (`/api/v1/lunar`)
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/lunar` | Get lunar day info for date (supports timezone parameter) |
+| GET | `/timezones` | Get list of popular timezones for lunar calendar |
+
+**Timezone Support:**
+The lunar calendar now supports timezone selection for accurate lunar day calculation. Default timezone: `Europe/Moscow`.
+
 ### Dreams Service (`/api/v1/dreams`)
 
 | Method | Endpoint | Description |
@@ -150,6 +160,16 @@ ANTHROPIC_API_KEY=sk-ant-...      # Claude Haiku: $0.25 per 1M tokens
 # Database
 DATABASE_URL=sqlite:///./oneiroscope.db
 REDIS_URL=redis://localhost:6379  # Optional
+
+# GeoNames API (for geocoding)
+# Register free account at https://www.geonames.org/login
+# Free tier: 30,000 requests/day
+GEONAMES_USERNAME=your_geonames_username
+GEONAMES_LANG=ru
+
+# Lunar Calendar
+# Default timezone for lunar day calculations (matches Russian lunar calendars)
+LUNAR_DEFAULT_TZ=Europe/Moscow
 
 # Frontend
 NEXT_PUBLIC_API_URL=http://localhost:8000

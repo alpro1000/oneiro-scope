@@ -40,7 +40,7 @@
 | backend/alembic/versions | 0 | 1 |
 | etl | 1 | 5 |
 | etl/input | 0 | 1 |
-| docs | 1 | 10 |
+| docs | 1 | 11 |
 | docs/architecture | 1 | 5 |
 | docs/architecture/modules | 0 | 3 |
 | pandas | 0 | 1 |
@@ -68,4 +68,4 @@
 | frontend/styles | 0 | 2 |
 | styles | 0 | 2 |
 
-**ИТОГО:** папок = 64, файлов = 185
+**ИТОГО:** папок = 64, файлов = 186
