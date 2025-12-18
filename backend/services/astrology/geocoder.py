@@ -64,8 +64,10 @@ class Geocoder:
             # Use GeoNames API for geocoding
             result = await geonames_lookup(query)
 
-            # Get timezone from coordinates
-            timezone_name = self._timezone_for(result["lat"], result["lon"])
+            # Get timezone: prefer GeoNames response, fallback to TimezoneFinder
+            timezone_name = result.get("timezone")
+            if not timezone_name:
+                timezone_name = self._timezone_for(result["lat"], result["lon"])
 
             # Create response hash for provenance
             payload = json.dumps(result, sort_keys=True).encode("utf-8")

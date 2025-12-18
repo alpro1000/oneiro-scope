@@ -6,5 +6,6 @@ export default createMiddleware({
 });
 
 export const config = {
-  matcher: ['/((?!_next|.*\\..*).*)']
+  // Skip /api routes and static files from locale prefixing
+  matcher: ['/((?!_next|api|.*\\..*).*)']
 };
