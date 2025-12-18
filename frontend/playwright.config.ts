@@ -1,5 +1,11 @@
 import {defineConfig, devices} from '@playwright/test';
 
+// Polyfill for TransformStream (required for Playwright 1.57+ with MCP)
+if (typeof globalThis.TransformStream === 'undefined') {
+  const {TransformStream} = require('node:stream/web');
+  globalThis.TransformStream = TransformStream;
+}
+
 export default defineConfig({
   testDir: './e2e',
   timeout: 30_000,

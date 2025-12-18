@@ -14,7 +14,8 @@ test.describe('LunarWidget', () => {
           description: `Dream focus for ${date}`,
           recommendation: `Notes for ${date}`,
           locale: url.searchParams.get('locale') ?? 'en',
-          source: 'playwright-suite'
+          source: 'playwright-suite',
+          timezone: url.searchParams.get('tz') ?? 'Europe/Moscow'
         }),
         headers: {'Content-Type': 'application/json'}
       });
