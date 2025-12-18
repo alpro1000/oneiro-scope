@@ -1,6 +1,6 @@
 import {render, screen, waitFor} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import {NextIntlProvider} from 'next-intl';
+import {NextIntlClientProvider} from 'next-intl';
 import LunarWidget from '@/components/LunarWidget';
 import type {LunarDayPayload} from '@/lib/lunar-server';
 import messages from '../messages/en.json';
@@ -19,9 +19,9 @@ describe('LunarWidget', () => {
 
   it('renders the current lunar day summary', () => {
     render(
-      <NextIntlProvider locale="en" messages={messages}>
+      <NextIntlClientProvider locale="en" messages={messages}>
         <LunarWidget initialData={baseDay} locale="en" />
-      </NextIntlProvider>
+      </NextIntlClientProvider>
     );
 
     expect(screen.getByText(baseDay.phase)).toBeInTheDocument();
@@ -48,9 +48,9 @@ describe('LunarWidget', () => {
     });
 
     render(
-      <NextIntlProvider locale="en" messages={messages}>
+      <NextIntlClientProvider locale="en" messages={messages}>
         <LunarWidget initialData={baseDay} locale="en" />
-      </NextIntlProvider>
+      </NextIntlClientProvider>
     );
 
     await user.click(screen.getByRole('button', {name: messages.LunarWidget.showMonth}));

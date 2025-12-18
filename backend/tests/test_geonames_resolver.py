@@ -1,5 +1,6 @@
 """Tests for GeoNames resolver utility."""
 
+import os
 import pytest
 from backend.utils.geonames_resolver import (
     geonames_lookup,
@@ -8,7 +9,15 @@ from backend.utils.geonames_resolver import (
     clear_cache,
 )
 
+# Skip tests that require real GeoNames API unless GEONAMES_USERNAME is set
+GEONAMES_AVAILABLE = os.getenv("GEONAMES_USERNAME", "demo") != "demo"
+requires_geonames = pytest.mark.skipif(
+    not GEONAMES_AVAILABLE,
+    reason="Requires GEONAMES_USERNAME env var for real API access"
+)
 
+
+@requires_geonames
 @pytest.mark.asyncio
 async def test_geonames_lookup_latin():
     """Test GeoNames lookup with Latin city name."""
@@ -22,6 +31,7 @@ async def test_geonames_lookup_latin():
     assert result["geonameId"] is not None
 
 
+@requires_geonames
 @pytest.mark.asyncio
 async def test_geonames_lookup_russian():
     """Test GeoNames lookup with Russian city name."""
@@ -34,6 +44,7 @@ async def test_geonames_lookup_russian():
     assert 37.0 < result["lon"] < 38.0
 
 
+@requires_geonames
 @pytest.mark.asyncio
 async def test_geonames_lookup_multilang_consistency():
     """Test that Russian and Latin names resolve to same location."""
@@ -46,6 +57,7 @@ async def test_geonames_lookup_multilang_consistency():
     assert ru["country"] == en["country"] == "Russia"
 
 
+@requires_geonames
 @pytest.mark.asyncio
 async def test_geonames_lookup_not_found():
     """Test GeoNames lookup with invalid place name."""
@@ -53,6 +65,7 @@ async def test_geonames_lookup_not_found():
         await geonames_lookup("NonexistentCityName12345")
 
 
+@requires_geonames
 @pytest.mark.asyncio
 async def test_geonames_cache():
     """Test that GeoNames results are cached."""
@@ -95,6 +108,7 @@ def test_transliterate_russian():
     assert transliterate_russian("Moscow") == "Moscow"
 
 
+@requires_geonames
 @pytest.mark.asyncio
 async def test_geonames_lookup_european_cities():
     """Test GeoNames with various European cities."""

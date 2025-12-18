@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import {useParams} from 'next/navigation';
 import {useTranslations} from 'next-intl';
+import LanguageSwitcher from './LanguageSwitcher';
 
 export default function Header() {
   const params = useParams();
@@ -43,13 +44,16 @@ export default function Header() {
           </div>
         </Link>
 
-        {/* Navigation */}
-        <nav className="flex items-center gap-1 sm:gap-2">
-          <NavLink href={`/${locale}`} label={t('home')} />
-          <NavLink href={`/${locale}/calendar`} label={t('calendar')} />
-          <NavLink href={`/${locale}/astrology`} label={t('astrology')} />
-          <NavLink href={`/${locale}/dreams`} label={t('dreams')} />
-        </nav>
+        {/* Navigation + Language Switcher */}
+        <div className="flex items-center gap-4">
+          <nav className="flex items-center gap-1 sm:gap-2">
+            <NavLink href={`/${locale}`} label={t('home')} />
+            <NavLink href={`/${locale}/calendar`} label={t('calendar')} />
+            <NavLink href={`/${locale}/astrology`} label={t('astrology')} />
+            <NavLink href={`/${locale}/dreams`} label={t('dreams')} />
+          </nav>
+          <LanguageSwitcher />
+        </div>
       </div>
     </header>
   );

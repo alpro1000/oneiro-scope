@@ -37,12 +37,17 @@ def test_provenance_contains_hashes(temp_ephe_dir: Path):
     assert files[0].sha256
 
 
-def test_strict_geocode_requires_coords_or_api(monkeypatch):
+@pytest.mark.asyncio
+async def test_strict_geocode_requires_place_query(monkeypatch):
+    """Test that geocoder requires a valid place query."""
     geocoder = Geocoder()
-    geocoder._nominatim = None
     with pytest.raises(GeocodingError) as exc:
-        geocoder.geocode("Prague")
-    assert "GEOCODER_NOT_AVAILABLE" in str(exc.value)
+        await geocoder.geocode("")
+    assert "PLACE_QUERY_REQUIRED" in str(exc.value)
+
+    with pytest.raises(GeocodingError) as exc:
+        await geocoder.geocode("   ")
+    assert "PLACE_QUERY_REQUIRED" in str(exc.value)
 
 
 def test_houses_null_without_birth_time():
