@@ -129,6 +129,7 @@ async def geonames_lookup(place_name: str) -> Dict:
         "lang": GEONAMES_LANG,
         "username": GEONAMES_USER,
         "featureClass": "P",  # Populated places (cities, towns)
+        "style": "FULL",  # Include timezone info in response
     }
 
     logger.info(f"GeoNames API query: {query} (lang={GEONAMES_LANG})")
