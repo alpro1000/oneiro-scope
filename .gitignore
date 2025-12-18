@@ -10,8 +10,10 @@ dist/
 downloads/
 eggs/
 .eggs/
-lib/
-lib64/
+/lib/
+/lib64/
+backend/lib/
+backend/lib64/
 parts/
 sdist/
 var/
@@ -24,9 +26,6 @@ MANIFEST
 venv/
 ENV/
 env/
-
-# Exception: Allow frontend/lib (Next.js source code)
-!frontend/lib/
 
 # Node
 node_modules/

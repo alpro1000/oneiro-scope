@@ -55,8 +55,9 @@
 | frontend/lib | 0 | 7 |
 | frontend/messages | 0 | 2 |
 | frontend/app | 2 | 1 |
-| frontend/app/api | 1 | 0 |
+| frontend/app/api | 2 | 0 |
 | frontend/app/api/lunar | 0 | 1 |
+| frontend/app/api/timezones | 0 | 1 |
 | frontend/app/[locale] | 3 | 2 |
 | frontend/app/[locale]/astrology | 0 | 1 |
 | frontend/app/[locale]/(calendar) | 1 | 0 |
@@ -68,4 +69,4 @@
 | frontend/styles | 0 | 2 |
 | styles | 0 | 2 |
 
-**ИТОГО:** папок = 64, файлов = 186
+**ИТОГО:** папок = 65, файлов = 187
