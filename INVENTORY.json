@@ -248,7 +248,7 @@
     {
       "path": "frontend/components",
       "dirs": 0,
-      "files": 4
+      "files": 5
     },
     {
       "path": "frontend/lib",
@@ -337,5 +337,5 @@
     }
   ],
   "total_dirs": 66,
-  "total_files": 191
+  "total_files": 192
 }
