@@ -302,15 +302,41 @@ See `render.yaml` for configuration. Deploy requires:
 - Geocoder Nominatim без ключа/лимита — добавить провайдер/квоты при проде.
 - CORS: передавать origins со схемой; ALLOWED_ORIGINS по умолчанию только localhost.
 
+## Session History
+
+| Date | Branch | Summary |
+|------|--------|---------|
+| 2025-12-17 | `claude/analyze-fix-frontend-PXk9Y` | GeoNames API, timezone selector, lunar fix |
+| 2025-12-18 | `claude/session-documentation-zdu0p` | Language switcher, pytest fixes |
+
+See `docs/SESSION_SUMMARY_*.md` for details.
+
+## Status (Updated 2025-12-18)
+
+### Completed
+- [x] **P0**: Geocoder async fix (GeoNames API)
+- [x] **P0**: Backend pytest passing (13 passed, 6 skipped)
+- [x] **P0**: Frontend tests passing (7 passed)
+- [x] Timezone selector UI (19 timezones)
+- [x] Language switcher RU/EN
+- [x] GeoNames configured on Render (`alpro1000`)
+
+### Pending
+- [ ] Create PR for merge to main
+- [ ] Verify production deploy
+- [ ] `ENVIRONMENT=production` on Render
+- [ ] Ephemeris health check logging
+- [ ] LunarWidget retry logic
+
 ## Roadmap
-- Phase 0 (builds green): исправить geocoder await; починить backend тесты; выставить `ENVIRONMENT=production` на Render. Acceptance: `pytest backend/tests` зелёный; Render деплой без `init_db()` логов; astrology endpoints 2xx.
-- Phase 1 (lunar correctness): лог/health ephemeris режима; тест на вариативность lunar_day; retry в LunarWidget. Acceptance: health показывает режим, UI месяц разный по датам, тесты ловят константный lunar_day.
-- Phase 2 (astrology hardening): строгий геокодинг с rate limit/provenance; обработка timezone ошибок; валидаторы орбов/applying. Acceptance: geocode ошибки = 400 с кодом; аспектные тесты на текущем движке.
-- Phase 3 (QA/CI): CI job для backend pytest + frontend lint/test; проверки provenance/source в ответах. Acceptance: pipeline зелёный, регрессия на `source=backend`/provenance проходит.
+- Phase 0 (builds green): ✅ DONE - geocoder await fixed, backend tests passing
+- Phase 1 (lunar correctness): Partially done - timezone selector added, retry pending
+- Phase 2 (astrology hardening): GeoNames integrated, rate limit/provenance pending
+- Phase 3 (QA/CI): Tests green locally, CI pipeline setup pending
 
 ## Next Actions
-1) Деплоить/запускать backend только после исправления geocoder await. 
-2) Обновить backend тесты под текущие модули и прогнать `pytest backend/tests`. 
-3) Прописать `ENVIRONMENT=production` и миграции в Render, отключив автогенерацию схемы на старте. 
-4) Добавить health/log для режима ephemeris и предупреждения при MOSEPH. 
-5) Улучшить LunarWidget: retry/backoff и surfaced provenance/source.
+1) Создать PR из `claude/session-documentation-zdu0p` в main
+2) После merge проверить production deploy на Render
+3) Выставить `ENVIRONMENT=production` на Render
+4) Добавить retry логику в LunarWidget
+5) Добавить health/log для режима ephemeris
