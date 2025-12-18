@@ -10,7 +10,10 @@ const config = createJestConfig({
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/$1'
   },
-  transformIgnorePatterns: ['node_modules/(?!(framer-motion)/)']
+  transformIgnorePatterns: ['node_modules/(?!(framer-motion)/)'],
+  testPathIgnorePatterns: ['/node_modules/', '/e2e/', '/.next/'],
+  // Only run unit tests from __tests__ directory, exclude e2e tests
+  testMatch: ['**/__tests__/**/*.test.{ts,tsx}']
 });
 
 export default config;
