@@ -31,7 +31,8 @@ export const Default: Story = {
       description: 'Intuitive dreams with a focus on gentle planning.',
       recommendation: 'Write down subtle feelings, revisit your intentions, move slowly.',
       locale: 'en',
-      source: 'storybook'
+      source: 'storybook',
+      timezone: 'Europe/Moscow'
     }
   }
 };

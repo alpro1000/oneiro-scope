@@ -10,6 +10,13 @@ export type LunarDayPayload = {
   recommendation: string;
   locale: string;
   source: string;
+  timezone: string;
+  // Optional fields returned by backend but not always used
+  phase_angle?: number;
+  illumination?: number;
+  age?: number;
+  moon_sign?: string;
+  provenance?: string;
 };
 
 type FetchArgs = {
