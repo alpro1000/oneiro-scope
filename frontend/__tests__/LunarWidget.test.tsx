@@ -13,7 +13,8 @@ describe('LunarWidget', () => {
     description: 'Intuitive dreams',
     recommendation: 'Write down subtle details and emotions.',
     locale: 'en',
-    source: 'test-suite'
+    source: 'test-suite',
+    timezone: 'Europe/Moscow'
   };
 
   it('renders the current lunar day summary', () => {
