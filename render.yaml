@@ -20,6 +20,9 @@ services:
       - key: PYTHON_VERSION
         value: "3.11.9"
 
+      - key: ENVIRONMENT
+        value: production
+
       - key: DATABASE_URL
         fromDatabase:
           name: oneiroscope-postgres
@@ -43,6 +46,12 @@ services:
           type: web
           name: oneiroscope-frontend
           envVarKey: RENDER_EXTERNAL_URL
+
+      - key: LUNAR_DEFAULT_TZ
+        value: Europe/Moscow
+
+      - key: GEONAMES_USERNAME
+        sync: false
 
       - key: GROQ_API_KEY
         sync: false
