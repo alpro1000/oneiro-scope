@@ -238,7 +238,7 @@
     {
       "path": "frontend/e2e",
       "dirs": 0,
-      "files": 1
+      "files": 2
     },
     {
       "path": "frontend/types",
@@ -337,5 +337,5 @@
     }
   ],
   "total_dirs": 66,
-  "total_files": 190
+  "total_files": 191
 }

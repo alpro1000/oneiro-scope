@@ -53,26 +53,26 @@ jobs:
           python etl/etl_dreams.py --sources dreambank,sddb_zenodo,dryad,donders,monash --out dreams_curated.jsonl
 
           # JSONL -> JSON (массив); лёгкая валидация и усечение размера при необходимости
-          python - <<EOF
-import json, os, sys
-p_in = "dreams_curated.jsonl"
-rows=[]
-with open(p_in, "r", encoding="utf-8") as f:
-    for line in f:
-        line=line.strip()
-        if not line: continue
-        try:
-            rows.append(json.loads(line))
-        except Exception:
-            pass
-# необязательный лимит, чтобы не раздувать GitHub Pages (оставь как есть или сними лимит)
-MAX_ROWS = 8000
-if len(rows) > MAX_ROWS:
-    rows = rows[:MAX_ROWS]
-with open("data/dreams_curated.json", "w", encoding="utf-8") as f:
-    json.dump(rows, f, ensure_ascii=False, indent=2)
-print(f"✔ rows: {len(rows)} -> data/dreams_curated.json")
-EOF
+          python - <<'EOF'
+          import json, os, sys
+          p_in = "dreams_curated.jsonl"
+          rows=[]
+          with open(p_in, "r", encoding="utf-8") as f:
+              for line in f:
+                  line=line.strip()
+                  if not line: continue
+                  try:
+                      rows.append(json.loads(line))
+                  except Exception:
+                      pass
+          # необязательный лимит, чтобы не раздувать GitHub Pages (оставь как есть или сними лимит)
+          MAX_ROWS = 8000
+          if len(rows) > MAX_ROWS:
+              rows = rows[:MAX_ROWS]
+          with open("data/dreams_curated.json", "w", encoding="utf-8") as f:
+              json.dump(rows, f, ensure_ascii=False, indent=2)
+          print(f"✔ rows: {len(rows)} -> data/dreams_curated.json")
+          EOF
 
       - name: Sanity check
         run: |
