@@ -193,10 +193,22 @@ export default function LunarWidget({initialData, locale}: Props) {
             <div className="mt-6 rounded-lg border border-gold-soft bg-surfaceStrong p-4">
               {isLoading && <p className="text-sm text-ink-muted">{t('loading')}</p>}
               {status === 'error' && (
-                <p role="alert" className="text-sm text-danger">
-                  {t('error')}
-                  {error ? ` — ${error}` : ''}
-                </p>
+                <div className="flex flex-col items-start gap-3">
+                  <p role="alert" className="text-sm text-danger">
+                    {t('error')}
+                    {error ? ` — ${error}` : ''}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setStatus('idle');
+                      setError(null);
+                    }}
+                    className="rounded-md border border-gold px-3 py-1.5 text-sm font-medium text-gold transition-colors hover:bg-gold hover:text-bg"
+                  >
+                    {t('retry')}
+                  </button>
+                </div>
               )}
               {status === 'ready' && (
                 <div className="relative overflow-x-auto">
