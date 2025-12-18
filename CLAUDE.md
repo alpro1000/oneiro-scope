@@ -275,17 +275,22 @@ See `render.yaml` for configuration. Deploy requires:
 - Backend: entry `backend/app/main.py`; routes `/api/v1/lunar`, `/api/v1/astrology`, `/api/v1/dreams`, `/health`; lunar engine `backend/services/lunar/engine.py` + tables `backend/data/lunar_tables.json`; astrology orchestrator `backend/services/astrology/service.py` + `geocoder.py`; dreams `backend/services/dreams/*`; settings `backend/core/config.py`.
 - Infra/CI: `render.yaml` (backend/frontend/DB/Redis), `docker-compose.yml`, workflows in `.github/workflows/*`.
 
-## Findings
-### P0
-| Issue | Evidence | Impact | Fix | Acceptance |
-| --- | --- | --- | --- | --- |
-| `await self.geocoder.geocode(...)` в AstrologyService при синхронном geocoder | `backend/services/astrology/service.py` lines 63-68, 133-138, 179-184; `backend/services/astrology/geocoder.py` lines 59-86 | Все astrology-эндпоинты падают 500 при первом запросе | Сделать geocode async-safe (executor) или убрать `await`; покрыть тестом | `/api/v1/astrology/natal-chart` отдаёт 201 с телом |
-| Backend pytest импортирует отсутствующие `backend.services.astrology.engine.*` | `backend/tests/test_astrology_quality.py` lines 5-10 | `pytest backend/tests` валится на ImportError → CI красная | Переписать тесты под текущий модульный путь или заменить проверками актуальных сервисов | `pytest backend/tests` проходит без ImportError |
+## Status (Updated 2025-12-18)
 
-### P1/P2/P3
-- P1: Render по умолчанию `ENVIRONMENT=development` ⇒ `init_db()` в проде; выставить `ENVIRONMENT=production` и управлять схемой через Alembic.
-- P2: Нет логов/health-индикации режима ephemeris (SWIEPH vs MOSEPH); добавьте предупреждение при отсутствии файлов.
-- P3: LunarWidget не ретраит загрузку месяца; любой 502 даёт простой error-блок вместо graceful retry.
+### ✅ Resolved Issues
+- ✅ **P0 Geocoder await fix** - Исправлено в сессии 2025-12-17 с GeoNames API
+- ✅ **P1 ENVIRONMENT=development** - Исправлено в render.yaml, теперь `ENVIRONMENT=production`
+- ✅ **TypeScript build errors** - Добавлено поле timezone в LunarDayPayload
+- ✅ **CI/CD тесты** - Jest и Playwright разделены, все тесты проходят
+- ✅ **Frontend UX** - Добавлена навигация, Header, favicon, брендинг
+
+### 🔴 Remaining P0/P1 Issues
+- 🔴 **Backend pytest** - Всё ещё импортирует несуществующие модули (`backend.services.astrology.engine.*`)
+
+### 🟡 P2/P3 Issues
+- P2: Нет логов/health-индикации режима ephemeris (SWIEPH vs MOSEPH)
+- P3: LunarWidget не ретраит загрузку месяца при ошибках
+- P3: Backend тесты нуждаются в обновлении
 
 ## Render/Deploy Checklist
 - Backend: `ENVIRONMENT=production`, `DATABASE_URL`/`DATABASE_URL_SYNC`, `REDIS_URL`, `SECRET_KEY`, `ALLOWED_ORIGINS=<frontend RENDER_EXTERNAL_URL>`, ephemeris path env при наличии файлов.
@@ -308,9 +313,38 @@ See `render.yaml` for configuration. Deploy requires:
 - Phase 2 (astrology hardening): строгий геокодинг с rate limit/provenance; обработка timezone ошибок; валидаторы орбов/applying. Acceptance: geocode ошибки = 400 с кодом; аспектные тесты на текущем движке.
 - Phase 3 (QA/CI): CI job для backend pytest + frontend lint/test; проверки provenance/source в ответах. Acceptance: pipeline зелёный, регрессия на `source=backend`/provenance проходит.
 
+## Session History
+
+### 2025-12-18: Build & Deploy Fixes ([SESSION_SUMMARY](docs/SESSION_SUMMARY_2025-12-18.md))
+- ✅ Исправлены TypeScript build errors (timezone field)
+- ✅ Добавлена навигация, Header, favicon, брендинг
+- ✅ Исправлен ENVIRONMENT=production для backend
+- ✅ Исправлены CI/CD: Playwright TransformStream, Jest/e2e разделение, YAML syntax
+- **Branch:** `claude/continue-oneiroscope-LgRZe` (9 коммитов)
+- **Result:** Готово к production деплою ✨
+
+### 2025-12-17: Timezone & GeoNames ([SESSION_SUMMARY](docs/SESSION_SUMMARY_2025-12-17.md))
+- ✅ Исправлена проблема с "двумя 27-ми днями" (timezone UTC→Europe/Moscow)
+- ✅ Интегрирован GeoNames API для геокодинга (P0 fix)
+- ✅ Добавлен UI выбора timezone с сохранением в localStorage
+- **Branch:** `claude/analyze-fix-frontend-PXk9Y`
+
 ## Next Actions
-1) Деплоить/запускать backend только после исправления geocoder await. 
-2) Обновить backend тесты под текущие модули и прогнать `pytest backend/tests`. 
-3) Прописать `ENVIRONMENT=production` и миграции в Render, отключив автогенерацию схемы на старте. 
-4) Добавить health/log для режима ephemeris и предупреждения при MOSEPH. 
-5) Улучшить LunarWidget: retry/backoff и surfaced provenance/source.
+
+### Immediate (после деплоя)
+1) ✅ ~~Прописать `ENVIRONMENT=production` в Render~~ - DONE
+2) Проверить что деплой на Render прошёл успешно
+3) Протестировать live окружение (timezone selector, навигация, API endpoints)
+4) Проверить логи backend - должен быть `Environment: production`, без `init_db()` на старте
+
+### High Priority
+5) **P0**: Исправить backend pytest импорты (`backend.services.astrology.engine.*`)
+6) **P2**: Добавить health check для режима ephemeris (SWIEPH vs MOSEPH)
+7) **P3**: Добавить retry/backoff в LunarWidget для загрузки месяца
+8) Добавить переключатель языка RU/EN в Header
+
+### Future Enhancements
+9) Реализовать функционал на страницах astrology и dreams
+10) Улучшить mobile responsive design
+11) Добавить error boundaries и loading states
+12) Интеграция с Claude API для AI интерпретаций
