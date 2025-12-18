@@ -25,6 +25,9 @@ venv/
 ENV/
 env/
 
+# Exception: Allow frontend/lib (Next.js source code)
+!frontend/lib/
+
 # Node
 node_modules/
 npm-debug.log*
