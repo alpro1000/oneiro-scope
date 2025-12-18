@@ -1,6 +1,7 @@
 import {NextIntlClientProvider} from 'next-intl';
 import {ReactNode} from 'react';
 import {notFound} from 'next/navigation';
+import Header from '../../components/Header';
 
 import '../../styles/tokens.css';
 import '../../styles/globals.css';
@@ -27,6 +28,7 @@ export default async function LocaleLayout({
     <html lang={locale}>
       <body className="bg-bg text-ink antialiased">
         <NextIntlClientProvider locale={locale} messages={messages}>
+          <Header />
           {children}
         </NextIntlClientProvider>
       </body>
