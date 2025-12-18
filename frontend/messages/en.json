@@ -114,5 +114,12 @@
     "description": "Select your timezone for accurate lunar day calculation",
     "loading": "Loading...",
     "error": "Loading error"
+  },
+  "Header": {
+    "tagline": "Astrology & Dreams",
+    "home": "Home",
+    "calendar": "Calendar",
+    "astrology": "Astrology",
+    "dreams": "Dreams"
   }
 }

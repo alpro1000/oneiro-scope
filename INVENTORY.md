@@ -47,14 +47,14 @@
 | data | 0 | 2 |
 | tests | 0 | 2 |
 | config | 0 | 1 |
-| frontend | 11 | 12 |
+| frontend | 12 | 12 |
 | frontend/stories | 0 | 1 |
 | frontend/e2e | 0 | 1 |
 | frontend/types | 0 | 2 |
-| frontend/components | 0 | 3 |
+| frontend/components | 0 | 4 |
 | frontend/lib | 0 | 7 |
 | frontend/messages | 0 | 2 |
-| frontend/app | 2 | 1 |
+| frontend/app | 2 | 2 |
 | frontend/app/api | 2 | 0 |
 | frontend/app/api/lunar | 0 | 1 |
 | frontend/app/api/timezones | 0 | 1 |
@@ -63,10 +63,11 @@
 | frontend/app/[locale]/(calendar) | 1 | 0 |
 | frontend/app/[locale]/(calendar)/calendar | 0 | 1 |
 | frontend/app/[locale]/dreams | 0 | 1 |
+| frontend/public | 0 | 1 |
 | frontend/.storybook | 0 | 2 |
 | frontend/i18n | 0 | 1 |
 | frontend/__tests__ | 0 | 2 |
 | frontend/styles | 0 | 2 |
 | styles | 0 | 2 |
 
-**ИТОГО:** папок = 65, файлов = 187
+**ИТОГО:** папок = 66, файлов = 190
