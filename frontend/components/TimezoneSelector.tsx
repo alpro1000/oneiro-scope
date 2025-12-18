@@ -42,7 +42,7 @@ export default function TimezoneSelector({value, onChange, className = ''}: Prop
       try {
         setLoading(true);
         setError(null);
-        const response = await fetch('/api/v1/timezones');
+        const response = await fetch('/api/timezones');
         if (!response.ok) {
           throw new Error('Failed to fetch timezones');
         }
