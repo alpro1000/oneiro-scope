@@ -227,7 +227,7 @@
     },
     {
       "path": "frontend",
-      "dirs": 11,
+      "dirs": 12,
       "files": 12
     },
     {
@@ -248,7 +248,7 @@
     {
       "path": "frontend/components",
       "dirs": 0,
-      "files": 3
+      "files": 4
     },
     {
       "path": "frontend/lib",
@@ -263,7 +263,7 @@
     {
       "path": "frontend/app",
       "dirs": 2,
-      "files": 1
+      "files": 2
     },
     {
       "path": "frontend/app/api",
@@ -306,6 +306,11 @@
       "files": 1
     },
     {
+      "path": "frontend/public",
+      "dirs": 0,
+      "files": 1
+    },
+    {
       "path": "frontend/.storybook",
       "dirs": 0,
       "files": 2
@@ -331,6 +336,6 @@
       "files": 2
     }
   ],
-  "total_dirs": 65,
-  "total_files": 187
+  "total_dirs": 66,
+  "total_files": 190
 }
