@@ -1,3 +1,6 @@
+// Setup polyfills BEFORE importing Playwright
+import './setup';
+
 import {test, expect} from '@playwright/test';
 
 test.describe('LunarWidget', () => {
