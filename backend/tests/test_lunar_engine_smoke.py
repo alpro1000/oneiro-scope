@@ -19,6 +19,7 @@ def test_lunar_engine_changes_between_dates():
 
     assert "jd_ut" in day_one.provenance
     assert day_one.provenance["ephemeris_engine"] in {"swisseph_swieph", "swisseph_moseph"}
+    assert day_one.provenance["flags"] in {"SWIEPH|SPEED", "MOSEPH|SPEED"}
 
 
 def test_ephemeris_alias(monkeypatch, tmp_path: Path):
@@ -32,4 +33,5 @@ def test_ephemeris_alias(monkeypatch, tmp_path: Path):
     result = compute_lunar("2024-02-01", "UTC")
     assert result.provenance["ephemeris_engine"] == "swisseph_swieph"
     assert result.provenance["ephemeris_files"], "Expected ephemeris hashes when path is present"
+    assert result.provenance["flags"] == "SWIEPH|SPEED"
 

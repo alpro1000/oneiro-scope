@@ -5,6 +5,7 @@ from __future__ import annotations
 import glob
 import hashlib
 import os
+from datetime import datetime, timedelta, timezone
 from dataclasses import dataclass, field
 from typing import Iterable, Optional
 
@@ -16,6 +17,13 @@ EPHE_PATTERNS = (
     "seas*.se*",
     "semo*.se*",
 )
+
+
+def _fallback_julday(year: int, month: int, day: int, ut: float) -> float:
+    """Compute Julian day without Swiss Ephemeris dependencies."""
+
+    dt = datetime(year, month, day, tzinfo=timezone.utc) + timedelta(hours=ut)
+    return dt.timestamp() / 86400.0 + 2440587.5
 
 
 @dataclass
@@ -48,12 +56,18 @@ class EphemerisEngine:
     def _configure(self) -> EphemerisConfig:
         engine_mode = "swisseph_moseph"
         ephe_files: list[EphemerisFileInfo] = []
+        flags = getattr(swe, "FLG_SPEED", 0)
+        flags_text_parts = ["SPEED"]
         if self.ephe_path and os.path.isdir(self.ephe_path):
             swe.set_ephe_path(self.ephe_path)
             engine_mode = "swisseph_swieph"
             ephe_files = list(self._hash_ephemeris_files(self.ephe_path))
-        flags = swe.FLG_SWIEPH | swe.FLG_SPEED
-        flags_text = "SWIEPH|SPEED"
+            flags |= getattr(swe, "FLG_SWIEPH", 0)
+            flags_text_parts.insert(0, "SWIEPH")
+        else:
+            flags |= getattr(swe, "FLG_MOSEPH", getattr(swe, "FLG_SWIEPH", 0))
+            flags_text_parts.insert(0, "MOSEPH")
+        flags_text = "|".join(flags_text_parts)
         return EphemerisConfig(engine_mode, flags, flags_text, ephe_files)
 
     @staticmethod
@@ -70,7 +84,16 @@ class EphemerisEngine:
         return self.config.ephemeris_engine
 
     def julday(self, year: int, month: int, day: int, ut: float) -> float:
-        return swe.julday(year, month, day, ut)
+        try:
+            jd = swe.julday(year, month, day, ut)
+        except TypeError:
+            jd = swe.julday(year, month, day)
+        except Exception:
+            return _fallback_julday(year, month, day, ut)
+
+        if jd < 2_000_000:
+            return _fallback_julday(year, month, day, ut)
+        return jd
 
     def calc_body(self, jd_ut: float, body: int, flags: Optional[int] = None):
         return swe.calc_ut(jd_ut, body, flags or self.config.flags)

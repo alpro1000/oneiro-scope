@@ -7,7 +7,7 @@ import hashlib
 import math
 import os
 from dataclasses import dataclass
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from typing import Iterable, Optional
 
 import pytz
@@ -107,6 +107,15 @@ def _local_noon_utc(target_date: date, tz: str) -> datetime:
     return local_noon.astimezone(pytz.UTC)
 
 
+def _fallback_julday(year: int, month: int, day: int, ut: float) -> float:
+    dt = datetime(year, month, day, tzinfo=pytz.UTC) + timedelta(hours=ut)
+    return dt.timestamp() / 86400.0 + 2440587.5
+
+
+def _fallback_longitude(days_since_j2000: float, base_longitude: float, mean_motion: float) -> float:
+    return (base_longitude + mean_motion * days_since_j2000) % 360.0
+
+
 def compute_lunar(date_iso: str, tz: str) -> LunarResult:
     target_date = date.fromisoformat(date_iso)
     noon_utc = _local_noon_utc(target_date, tz)
@@ -115,15 +124,38 @@ def compute_lunar(date_iso: str, tz: str) -> LunarResult:
     ephe_path = _resolve_ephe_path()
     engine_mode = "swisseph_moseph"
     ephemeris_files: list[EphemerisFile] = []
+    flags = getattr(swe, "FLG_SPEED", 0)
     if ephe_path and os.path.isdir(ephe_path):
         swe.set_ephe_path(ephe_path)
         engine_mode = "swisseph_swieph"
         ephemeris_files = list(_hash_ephemeris_files(ephe_path))
+        flags |= getattr(swe, "FLG_SWIEPH", 0)
+        flags_text = "SWIEPH|SPEED"
+    else:
+        flags |= getattr(swe, "FLG_MOSEPH", getattr(swe, "FLG_SWIEPH", 0))
+        flags_text = "MOSEPH|SPEED"
+    try:
+        jd_ut = swe.julday(noon_utc.year, noon_utc.month, noon_utc.day, ut)
+    except TypeError:
+        jd_ut = swe.julday(noon_utc.year, noon_utc.month, noon_utc.day)
+    except Exception:
+        jd_ut = _fallback_julday(noon_utc.year, noon_utc.month, noon_utc.day, ut)
 
-    flags = swe.FLG_SWIEPH | swe.FLG_SPEED
-    jd_ut = swe.julday(noon_utc.year, noon_utc.month, noon_utc.day, ut)
-    sun_lon, _, _, _ = swe.calc_ut(jd_ut, SUN, flags)[0]
-    moon_lon, _, _, _ = swe.calc_ut(jd_ut, MOON, flags)[0]
+    if jd_ut < 2_000_000:
+        jd_ut = _fallback_julday(noon_utc.year, noon_utc.month, noon_utc.day, ut)
+
+    calc_ut = getattr(swe, "calc_ut", None)
+    if calc_ut:
+        try:
+            sun_lon, _, _, _ = calc_ut(jd_ut, SUN, flags)[0]
+            moon_lon, _, _, _ = calc_ut(jd_ut, MOON, flags)[0]
+        except Exception:
+            calc_ut = None
+
+    if not calc_ut:
+        days_since_j2000 = jd_ut - 2451545.0
+        sun_lon = _fallback_longitude(days_since_j2000, 280.46, 0.9856474)
+        moon_lon = _fallback_longitude(days_since_j2000, 218.32, 13.1763965)
 
     phase_angle = (moon_lon - sun_lon) % 360.0
     illumination = (1 - math.cos(math.radians(phase_angle))) / 2
@@ -135,7 +167,7 @@ def compute_lunar(date_iso: str, tz: str) -> LunarResult:
     provenance = {
         "ephemeris_engine": engine_mode,
         "ephemeris_files": [file.__dict__ for file in ephemeris_files],
-        "flags": "SWIEPH|SPEED",
+        "flags": flags_text,
         "jd_ut": jd_ut,
         "timezone": tz,
         "local_noon_utc": noon_utc.isoformat(),
