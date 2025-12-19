@@ -1,15 +1,26 @@
 import {NextResponse} from 'next/server';
 import {resolveLunarApiBase} from '../../../lib/lunar-endpoint';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET() {
   try {
     const base = resolveLunarApiBase(true);
     const url = `${base}/api/v1/lunar/timezones`;
 
-    const response = await fetch(url, {
-      headers: {Accept: 'application/json'},
-      next: {revalidate: 3600} // Cache for 1 hour
-    });
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 5000);
+
+    let response: Response;
+    try {
+      response = await fetch(url, {
+        headers: {Accept: 'application/json'},
+        next: {revalidate: 3600}, // Cache for 1 hour
+        signal: controller.signal
+      });
+    } finally {
+      clearTimeout(timeout);
+    }
 
     if (!response.ok) {
       throw new Error(`Backend responded with ${response.status}`);
