@@ -2,7 +2,7 @@
 
 | Путь | Папок | Файлов |
 |---|---:|---:|
-| . | 16 | 18 |
+| . | 14 | 16 |
 | oneiro-scope | 0 | 0 |
 | external | 2 | 0 |
 | external/pyswisseph | 1 | 1 |
@@ -12,8 +12,6 @@
 | scripts | 0 | 3 |
 | .github | 1 | 0 |
 | .github/workflows | 0 | 6 |
-| geopy | 1 | 1 |
-| geopy/geocoders | 0 | 1 |
 | assets | 0 | 2 |
 | .claude | 0 | 1 |
 | backend | 9 | 5 |
@@ -43,7 +41,6 @@
 | docs | 1 | 12 |
 | docs/architecture | 1 | 5 |
 | docs/architecture/modules | 0 | 3 |
-| pandas | 0 | 1 |
 | data | 0 | 2 |
 | tests | 0 | 2 |
 | config | 0 | 1 |
@@ -70,4 +67,4 @@
 | frontend/styles | 0 | 2 |
 | styles | 0 | 2 |
 
-**ИТОГО:** папок = 66, файлов = 194
+**ИТОГО:** папок = 63, файлов = 189

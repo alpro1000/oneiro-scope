@@ -2,8 +2,8 @@
   "tree": [
     {
       "path": ".",
-      "dirs": 16,
-      "files": 18
+      "dirs": 14,
+      "files": 16
     },
     {
       "path": "oneiro-scope",
@@ -49,16 +49,6 @@
       "path": ".github/workflows",
       "dirs": 0,
       "files": 6
-    },
-    {
-      "path": "geopy",
-      "dirs": 1,
-      "files": 1
-    },
-    {
-      "path": "geopy/geocoders",
-      "dirs": 0,
-      "files": 1
     },
     {
       "path": "assets",
@@ -206,11 +196,6 @@
       "files": 3
     },
     {
-      "path": "pandas",
-      "dirs": 0,
-      "files": 1
-    },
-    {
       "path": "data",
       "dirs": 0,
       "files": 2
@@ -336,6 +321,6 @@
       "files": 2
     }
   ],
-  "total_dirs": 66,
-  "total_files": 194
+  "total_dirs": 63,
+  "total_files": 189
 }
