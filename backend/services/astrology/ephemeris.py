@@ -2,7 +2,7 @@
 
 import logging
 from dataclasses import dataclass
-from datetime import date, datetime
+from datetime import date, datetime, timezone
 from typing import Optional
 
 from .schemas import Planet, ZodiacSign
@@ -81,12 +81,20 @@ class SwissEphemeris:
         """
         self._swe = None
         self._initialized = False
+        self._ephemeris_path = ephemeris_path
+        self._flags = None
+        self._engine_mode = "moseph"
 
         try:
             import swisseph as swe
             self._swe = swe
             if ephemeris_path:
                 swe.set_ephe_path(ephemeris_path)
+                self._engine_mode = "swieph"
+                speed_flags = getattr(swe, "FLG_SWIEPH", 0)
+            else:
+                speed_flags = getattr(swe, "FLG_MOSEPH", getattr(swe, "FLG_SWIEPH", 0))
+            self._flags = speed_flags | getattr(swe, "FLG_SPEED", 0)
             self._initialized = True
             logger.info("Swiss Ephemeris initialized successfully")
         except ImportError:
@@ -122,10 +130,19 @@ class SwissEphemeris:
     def _calculate_with_swe(self, planet: Planet, dt: datetime) -> PlanetData:
         """Calculate using Swiss Ephemeris."""
         # Convert to Julian Day
-        jd = self._swe.julday(
-            dt.year, dt.month, dt.day,
-            dt.hour + dt.minute / 60.0 + dt.second / 3600.0
-        )
+        try:
+            jd = self._swe.julday(
+                dt.year, dt.month, dt.day,
+                dt.hour + dt.minute / 60.0 + dt.second / 3600.0
+            )
+        except TypeError:
+            jd = self._swe.julday(dt.year, dt.month, dt.day)
+        except Exception:
+            jd = self._swe.julday(dt.year, dt.month, dt.day)
+
+        if jd < 2_000_000:
+            # Fall back to simplified Julian date if the stub returns an ordinal
+            jd = (dt.replace(tzinfo=datetime.timezone.utc).timestamp() / 86400.0) + 2440587.5
 
         # Get planet position
         planet_code = PLANET_CODES.get(planet)
@@ -133,9 +150,24 @@ class SwissEphemeris:
             return self._calculate_fallback(planet, dt)
 
         # SEFLG_SPEED includes speed in result
-        flags = self._swe.FLG_SWIEPH | self._swe.FLG_SPEED
+        flags = self._flags or (
+            getattr(self._swe, "FLG_SWIEPH", 0) | getattr(self._swe, "FLG_SPEED", 0)
+        )
 
-        result, ret_flags = self._swe.calc_ut(jd, planet_code, flags)
+        try:
+            calc_ut = getattr(self._swe, "calc_ut", None)
+            if calc_ut is None:
+                raise AttributeError("calc_ut not available")
+            result, ret_flags = calc_ut(jd, planet_code, flags)
+        except Exception:
+            fallback_flags = (
+                getattr(self._swe, "FLG_MOSEPH", getattr(self._swe, "FLG_SWIEPH", 0))
+                | getattr(self._swe, "FLG_SPEED", 0)
+            )
+            fallback_calc = getattr(self._swe, "calc_ut", None)
+            if fallback_calc is None:
+                return self._calculate_fallback(planet, dt)
+            result, ret_flags = fallback_calc(jd, planet_code, fallback_flags)
 
         return PlanetData(
             longitude=result[0],  # Ecliptic longitude

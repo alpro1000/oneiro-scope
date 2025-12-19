@@ -77,7 +77,9 @@ def test_llm_numeric_hallucination_detection():
 def test_ephemeris_engine_modes(temp_ephe_dir: Path, monkeypatch):
     engine_with_path = EphemerisEngine(str(temp_ephe_dir))
     assert engine_with_path.engine_mode == "swisseph_swieph"
+    assert engine_with_path.config.flags_text == "SWIEPH|SPEED"
 
     monkeypatch.delenv("SWISSEPH_EPHE_PATH", raising=False)
     engine_no_path = EphemerisEngine(None)
     assert engine_no_path.engine_mode == "swisseph_moseph"
+    assert engine_no_path.config.flags_text == "MOSEPH|SPEED"
