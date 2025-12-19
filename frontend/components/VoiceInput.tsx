@@ -31,6 +31,12 @@ export default function VoiceInput({
 
   const recognitionRef = useRef<SpeechRecognition | null>(null);
   const transcriptRef = useRef<string>('');
+  const stateRef = useRef<RecordingState>('idle');
+
+  // Keep stateRef in sync with state
+  useEffect(() => {
+    stateRef.current = state;
+  }, [state]);
 
   // Check if Web Speech API is supported
   useEffect(() => {
@@ -99,7 +105,8 @@ export default function VoiceInput({
     };
 
     recognition.onend = () => {
-      if (state === 'listening') {
+      // Use ref to get current state (avoids stale closure)
+      if (stateRef.current === 'listening') {
         setState('processing');
 
         // Short delay to simulate processing
@@ -119,7 +126,7 @@ export default function VoiceInput({
       setState('error');
       setErrorMessage(t('error'));
     }
-  }, [isSupported, language, onTranscript, state, t]);
+  }, [isSupported, language, onTranscript, t]);
 
   const stopRecording = useCallback(() => {
     if (recognitionRef.current) {
