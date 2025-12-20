@@ -123,9 +123,15 @@ class SwissEphemeris:
             PlanetData with longitude, latitude, distance, speed
         """
         if self._swe and planet in PLANET_CODES:
-            return self._calculate_with_swe(planet, dt)
-        else:
-            return self._calculate_fallback(planet, dt)
+            try:
+                return self._calculate_with_swe(planet, dt)
+            except Exception as exc:  # pragma: no cover - defensive fallback
+                logger.warning(
+                    "Swiss Ephemeris failed (%s). Falling back to approximate calculations.",
+                    exc,
+                )
+
+        return self._calculate_fallback(planet, dt)
 
     def _calculate_with_swe(self, planet: Planet, dt: datetime) -> PlanetData:
         """Calculate using Swiss Ephemeris."""
@@ -159,7 +165,7 @@ class SwissEphemeris:
             if calc_ut is None:
                 raise AttributeError("calc_ut not available")
             result, ret_flags = calc_ut(jd, planet_code, flags)
-        except Exception:
+        except Exception as exc:
             fallback_flags = (
                 getattr(self._swe, "FLG_MOSEPH", getattr(self._swe, "FLG_SWIEPH", 0))
                 | getattr(self._swe, "FLG_SPEED", 0)
@@ -167,7 +173,12 @@ class SwissEphemeris:
             fallback_calc = getattr(self._swe, "calc_ut", None)
             if fallback_calc is None:
                 return self._calculate_fallback(planet, dt)
-            result, ret_flags = fallback_calc(jd, planet_code, fallback_flags)
+            try:
+                result, ret_flags = fallback_calc(jd, planet_code, fallback_flags)
+            except Exception as swe_exc:
+                raise RuntimeError(
+                    f"Swiss Ephemeris calc_ut failed with flags {fallback_flags}: {swe_exc}"
+                ) from swe_exc
 
         return PlanetData(
             longitude=result[0],  # Ecliptic longitude
