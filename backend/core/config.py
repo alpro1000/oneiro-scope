@@ -20,15 +20,15 @@ class Settings(BaseSettings):
     DEBUG: bool = True
     LOG_LEVEL: str = "INFO"
 
-    # Database
-    DATABASE_URL: str
-    DATABASE_URL_SYNC: str
+    # Database (optional in test environments)
+    DATABASE_URL: str | None = None
+    DATABASE_URL_SYNC: str | None = None
 
     # Redis
-    REDIS_URL: str
+    REDIS_URL: str | None = None
 
     # Security
-    SECRET_KEY: str
+    SECRET_KEY: str | None = None
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
 

@@ -4,6 +4,8 @@
 import os
 import sys
 
+import pytest
+
 sys.path.insert(0, '/home/user/oneiro-scope')
 
 # Load .env file
@@ -16,6 +18,12 @@ print("=" * 60)
 
 username = os.getenv('GEONAMES_USERNAME')
 lang = os.getenv('GEONAMES_LANG')
+
+if not username or username in {"your_geonames_username", "demo"}:
+    pytest.skip(
+        "GeoNames integration test requires real credentials; skipping in test environment.",
+        allow_module_level=True,
+    )
 
 print(f"\n✓ GEONAMES_USERNAME: {username}")
 print(f"✓ GEONAMES_LANG: {lang}\n")
