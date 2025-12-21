@@ -21,7 +21,7 @@
 | backend/utils | 0 | 2 |
 | backend/services | 3 | 0 |
 | backend/services/lunar | 0 | 3 |
-| backend/services/astrology | 5 | 13 |
+| backend/services/astrology | 5 | 14 |
 | backend/services/astrology/ai | 0 | 3 |
 | backend/services/astrology/policies | 0 | 2 |
 | backend/services/astrology/validators | 0 | 2 |
@@ -42,7 +42,7 @@
 | docs/architecture | 1 | 5 |
 | docs/architecture/modules | 0 | 3 |
 | data | 0 | 2 |
-| tests | 0 | 2 |
+| tests | 0 | 3 |
 | config | 0 | 1 |
 | frontend | 12 | 12 |
 | frontend/stories | 0 | 1 |
@@ -67,4 +67,4 @@
 | frontend/styles | 0 | 2 |
 | styles | 0 | 2 |
 
-**ИТОГО:** папок = 63, файлов = 189
+**ИТОГО:** папок = 63, файлов = 191
