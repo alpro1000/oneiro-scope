@@ -127,7 +127,7 @@
     },
     {
       "path": "backend/services/dreams",
-      "dirs": 2,
+      "dirs": 3,
       "files": 4
     },
     {
@@ -139,6 +139,11 @@
       "path": "backend/services/dreams/knowledge_base",
       "dirs": 0,
       "files": 1
+    },
+    {
+      "path": "backend/services/dreams/data_sources",
+      "dirs": 0,
+      "files": 3
     },
     {
       "path": "backend/app",
@@ -208,7 +213,7 @@
     {
       "path": "config",
       "dirs": 0,
-      "files": 1
+      "files": 2
     },
     {
       "path": "frontend",
@@ -321,6 +326,6 @@
       "files": 2
     }
   ],
-  "total_dirs": 63,
-  "total_files": 192
+  "total_dirs": 64,
+  "total_files": 196
 }

@@ -27,9 +27,10 @@
 | backend/services/astrology/validators | 0 | 2 |
 | backend/services/astrology/engine | 0 | 5 |
 | backend/services/astrology/knowledge_base | 0 | 4 |
-| backend/services/dreams | 2 | 4 |
+| backend/services/dreams | 3 | 4 |
 | backend/services/dreams/ai | 0 | 2 |
 | backend/services/dreams/knowledge_base | 0 | 1 |
+| backend/services/dreams/data_sources | 0 | 3 |
 | backend/app | 0 | 2 |
 | backend/data | 0 | 1 |
 | backend/core | 0 | 6 |
@@ -43,7 +44,7 @@
 | docs/architecture/modules | 0 | 3 |
 | data | 0 | 2 |
 | tests | 0 | 3 |
-| config | 0 | 1 |
+| config | 0 | 2 |
 | frontend | 12 | 12 |
 | frontend/stories | 0 | 1 |
 | frontend/e2e | 0 | 2 |
@@ -67,4 +68,4 @@
 | frontend/styles | 0 | 2 |
 | styles | 0 | 2 |
 
-**ИТОГО:** папок = 63, файлов = 192
+**ИТОГО:** папок = 64, файлов = 196
