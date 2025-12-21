@@ -20,9 +20,17 @@ export default async function CalendarPage({params}: {params: {locale: string}})
 
   const today = new Date();
   const iso = formatDateForApi(today);
-  const initial = await getLunarDay({locale, date: iso, tz: process.env.LUNAR_DEFAULT_TZ});
-
   const t = await getTranslations('CalendarPage');
+
+  let initialError: string | null = null;
+  let initial: Awaited<ReturnType<typeof getLunarDay>> | null = null;
+
+  try {
+    initial = await getLunarDay({locale, date: iso, tz: process.env.LUNAR_DEFAULT_TZ});
+  } catch (error) {
+    console.error('Failed to load initial lunar day', error);
+    initialError = error instanceof Error ? error.message : 'Unknown error';
+  }
 
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-5xl flex-col items-center gap-8 px-4 py-12">
@@ -32,7 +40,16 @@ export default async function CalendarPage({params}: {params: {locale: string}})
         </h1>
         <p className="max-w-2xl text-base text-ink-muted sm:text-lg">{t('subtitle')}</p>
       </header>
-      <LunarWidget initialData={initial} locale={locale} />
+      {initialError ? (
+        <div className="w-full max-w-3xl rounded-lg border border-danger/40 bg-danger/5 p-6 text-center text-ink">
+          <p className="text-lg font-semibold text-danger">{t('error.title')}</p>
+          <p className="mt-2 text-sm text-ink-muted">{t('error.subtitle')}</p>
+          <p className="mt-4 text-xs text-ink-muted">{initialError}</p>
+          <p className="mt-6 text-sm text-ink-muted">{t('error.cta')}</p>
+        </div>
+      ) : (
+        initial && <LunarWidget initialData={initial} locale={locale} />
+      )}
     </main>
   );
 }
