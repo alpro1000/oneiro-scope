@@ -12,11 +12,13 @@ from typing import List, Dict, Optional, Tuple
 from collections import Counter
 
 from backend.services.dreams.schemas import (
-    DreamSymbol,
-    DreamCategory,
     ContentAnalysis,
+    DreamCategory,
+    DreamSymbol,
     EmotionType,
     CharacterType,
+    PhysiologicalCorrelation,
+    PhysiologicalEvent,
 )
 
 
@@ -108,13 +110,19 @@ class DreamAnalyzer:
             ),
         }
 
-    def analyze(self, dream_text: str, locale: str = "ru") -> Tuple[
+    def analyze(
+        self,
+        dream_text: str,
+        locale: str = "ru",
+        physiological_events: Optional[List[PhysiologicalEvent]] = None,
+    ) -> Tuple[
         List[DreamSymbol],
         ContentAnalysis,
         EmotionType,
         float,
         List[str],
-        List[str]
+        List[str],
+        List[PhysiologicalCorrelation],
     ]:
         """
         Perform full content analysis on dream text.
@@ -144,7 +152,12 @@ class DreamAnalyzer:
         # Extract archetypes
         archetypes = self._extract_archetypes(symbols)
 
-        return symbols, content, emotion, intensity, themes, archetypes
+        physiological_correlations = self._cross_index_physiology(
+            archetypes,
+            physiological_events,
+        )
+
+        return symbols, content, emotion, intensity, themes, archetypes, physiological_correlations
 
     def _find_symbols(self, text: str, locale: str) -> List[DreamSymbol]:
         """Find and interpret symbols in dream text"""
@@ -356,6 +369,46 @@ class DreamAnalyzer:
                 seen.add(symbol.archetype)
 
         return archetypes
+
+    def _cross_index_physiology(
+        self,
+        archetypes: List[str],
+        physiological_events: Optional[List[PhysiologicalEvent]],
+    ) -> List[PhysiologicalCorrelation]:
+        """Correlate archetypes with available physiological markers."""
+
+        if not physiological_events:
+            return []
+
+        stage_counts = Counter(
+            event.sleep_stage for event in physiological_events if event.sleep_stage
+        )
+        channel_counts = Counter(
+            channel
+            for event in physiological_events
+            for channel in event.channel_names
+        )
+
+        correlations: List[PhysiologicalCorrelation] = []
+        for archetype in archetypes:
+            dominant_stage = [stage_counts.most_common(1)[0][0]] if stage_counts else []
+            dominant_channels = [name for name, _ in channel_counts.most_common(3)]
+            evidence = len(physiological_events)
+            rationale = (
+                f"Archetype '{archetype}' co-occurs with {dominant_stage[0] if dominant_stage else 'unspecified stage'} "
+                f"and signals across {', '.join(dominant_channels) if dominant_channels else 'unknown channels'}."
+            )
+            correlations.append(
+                PhysiologicalCorrelation(
+                    archetype=archetype,
+                    sleep_stages=dominant_stage,
+                    channel_summary=dominant_channels,
+                    evidence_count=evidence,
+                    rationale=rationale,
+                )
+            )
+
+        return correlations
 
     def get_word_count(self, text: str) -> int:
         """Count words in dream text"""
