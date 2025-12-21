@@ -6,5 +6,6 @@ pyyaml
 rapidfuzz
 pandas
 pyarrow
--e ../external/DReAMy
--e ../external/pyswisseph
+# Paths are resolved from the repository root to avoid pip CWD quirks.
+-e ./external/DReAMy
+-e ./external/pyswisseph
