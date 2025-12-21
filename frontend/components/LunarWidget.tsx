@@ -4,6 +4,7 @@ import {useEffect, useMemo, useRef, useState} from 'react';
 import {AnimatePresence, motion} from 'framer-motion';
 import {useTranslations} from 'next-intl';
 import {fetchLunarDayClient} from '../lib/lunar-client';
+import {buildMockLunarDay} from '../lib/lunar-mock';
 import type {LunarDayPayload} from '../lib/lunar-server';
 import TimezoneSelector, {getStoredTimezone} from './TimezoneSelector';
 
@@ -114,7 +115,12 @@ export default function LunarWidget({initialData, locale}: Props) {
         }
       } catch (err) {
         if (!cancelled) {
-          setStatus('error');
+          console.warn('Falling back to mock month data due to lunar API error.', err);
+          const fallback = getMonthDateList(currentData.date).map((iso) =>
+            buildMockLunarDay({date: iso, locale, tz: timezone})
+          );
+          setMonthData(fallback);
+          setStatus('ready');
           setError(err instanceof Error ? err.message : 'Unknown error');
         }
       }
