@@ -13,12 +13,15 @@ async function fetchWithRetry(
 ): Promise<Response> {
   let lastError: Error | null = null;
 
-  for (let attempt = 0; attempt < retries; attempt++) {
+  // "retries" here really means attempts, so ensure we try at least once
+  const attempts = Math.max(1, retries);
+
+  for (let attempt = 0; attempt < attempts; attempt++) {
     try {
       const response = await fetch(url, options);
 
       // Retry on server errors (5xx)
-      if (response.status >= 500 && attempt < retries - 1) {
+      if (response.status >= 500 && attempt < attempts - 1) {
         const delay = baseDelay * Math.pow(2, attempt);
         await new Promise((resolve) => setTimeout(resolve, delay));
         continue;
@@ -29,7 +32,7 @@ async function fetchWithRetry(
       lastError = err instanceof Error ? err : new Error(String(err));
 
       // Don't retry on last attempt
-      if (attempt < retries - 1) {
+      if (attempt < attempts - 1) {
         const delay = baseDelay * Math.pow(2, attempt);
         await new Promise((resolve) => setTimeout(resolve, delay));
       }
@@ -42,7 +45,8 @@ async function fetchWithRetry(
 export async function fetchLunarDayClient(
   date: string,
   locale: string,
-  timezone?: string
+  timezone?: string,
+  options?: {retries?: number; baseDelay?: number}
 ): Promise<LunarDayPayload> {
   const base = resolveLunarApiBase(false);
   const tz = timezone ?? Intl.DateTimeFormat().resolvedOptions().timeZone ?? 'Europe/Moscow';
@@ -50,8 +54,8 @@ export async function fetchLunarDayClient(
   const response = await fetchWithRetry(
     url,
     {headers: {Accept: 'application/json'}},
-    3, // retries
-    1000 // 1s base delay
+    options?.retries ?? 3, // attempts
+    options?.baseDelay ?? 1000 // 1s base delay
   );
 
   if (!response.ok) {

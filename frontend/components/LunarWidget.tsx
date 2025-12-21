@@ -59,7 +59,10 @@ export default function LunarWidget({initialData, locale}: Props) {
     let cancelled = false;
     const reloadCurrentDay = async () => {
       try {
-        const response = await fetchLunarDayClient(initialData.date, locale, timezone);
+        const response = await fetchLunarDayClient(initialData.date, locale, timezone, {
+          retries: 1,
+          baseDelay: 250
+        });
         if (!cancelled) {
           setCurrentData(response);
           cacheRef.current.set(response.date, response);
@@ -103,7 +106,10 @@ export default function LunarWidget({initialData, locale}: Props) {
           if (cached && cached.timezone === timezone) {
             return cached;
           }
-          const response = await fetchLunarDayClient(iso, locale, timezone);
+          const response = await fetchLunarDayClient(iso, locale, timezone, {
+            retries: 1,
+            baseDelay: 250
+          });
           cacheRef.current.set(response.date, response);
           return response;
         });
