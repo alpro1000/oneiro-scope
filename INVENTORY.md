@@ -49,7 +49,7 @@
 | frontend/e2e | 0 | 2 |
 | frontend/types | 0 | 2 |
 | frontend/components | 0 | 5 |
-| frontend/lib | 0 | 7 |
+| frontend/lib | 0 | 8 |
 | frontend/messages | 0 | 2 |
 | frontend/app | 2 | 2 |
 | frontend/app/api | 2 | 0 |
@@ -67,4 +67,4 @@
 | frontend/styles | 0 | 2 |
 | styles | 0 | 2 |
 
-**ИТОГО:** папок = 63, файлов = 191
+**ИТОГО:** папок = 63, файлов = 192

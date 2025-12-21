@@ -238,7 +238,7 @@
     {
       "path": "frontend/lib",
       "dirs": 0,
-      "files": 7
+      "files": 8
     },
     {
       "path": "frontend/messages",
@@ -322,5 +322,5 @@
     }
   ],
   "total_dirs": 63,
-  "total_files": 191
+  "total_files": 192
 }
