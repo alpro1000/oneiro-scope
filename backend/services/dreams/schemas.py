@@ -9,8 +9,8 @@ complex nested models.
 from __future__ import annotations
 
 from enum import Enum
-from typing import Optional
-from datetime import date
+from typing import Optional, List
+from datetime import date, datetime
 
 from pydantic import BaseModel, Field
 
@@ -24,11 +24,24 @@ class DreamCategory(str, Enum):
     OBJECTS = "objects"
 
 
+class CharacterType(str, Enum):
+    """Simplified character taxonomy for analysis ratios."""
+
+    MALE = "male"
+    FEMALE = "female"
+    ANIMAL = "animal"
+
+
 class DreamSymbol(BaseModel):
     """Minimal representation of a dream symbol."""
 
     symbol: str = Field(..., description="Symbol name")
     category: DreamCategory = Field(DreamCategory.OBJECTS, description="Symbol category")
+    frequency: int = Field(0, description="How many times the symbol appeared")
+    significance: float = Field(0.0, description="Relative significance of the symbol")
+    interpretation_ru: Optional[str] = Field(None, description="Russian interpretation")
+    interpretation_en: Optional[str] = Field(None, description="English interpretation")
+    archetype: Optional[str] = Field(None, description="Linked Jungian archetype")
 
 
 class EmotionType(str, Enum):
@@ -37,15 +50,30 @@ class EmotionType(str, Enum):
     HAPPINESS = "happiness"
     SADNESS = "sadness"
     FEAR = "fear"
+    ANGER = "anger"
+    APPREHENSION = "apprehension"
+    CONFUSION = "confusion"
     NEUTRAL = "neutral"
 
 
 class ContentAnalysis(BaseModel):
     """Lightweight content analysis summary."""
 
+    male_characters: int = 0
+    female_characters: int = 0
+    animal_characters: int = 0
+    friendly_interactions: int = 0
+    aggressive_interactions: int = 0
+    sexual_interactions: int = 0
+    successes: int = 0
+    failures: int = 0
+    misfortunes: int = 0
+    good_fortunes: int = 0
     positive_emotions: int = 0
     negative_emotions: int = 0
-    themes: list[str] = Field(default_factory=list)
+    male_female_ratio: Optional[float] = None
+    aggression_friendliness_ratio: Optional[float] = None
+    success_failure_ratio: Optional[float] = None
 
 
 class LunarContext(BaseModel):
@@ -53,8 +81,63 @@ class LunarContext(BaseModel):
 
     lunar_day: int = 1
     lunar_phase: str = "new"
+    moon_sign: Optional[str] = None
     interpretation_ru: Optional[str] = None
     interpretation_en: Optional[str] = None
+
+
+class PhysiologicalEvent(BaseModel):
+    """Physiological recording snippet aligned with a dream event."""
+
+    participant_id: Optional[str] = None
+    sleep_stage: Optional[str] = None
+    channel_names: List[str] = Field(default_factory=list)
+    sampling_rate: float = 0.0
+    start_time: Optional[datetime] = None
+    duration_seconds: Optional[float] = None
+    notes: Optional[str] = None
+    provenance: Optional["DataProvenance"] = None
+
+
+class PhysiologicalCorrelation(BaseModel):
+    """Lightweight correlation summary between physiology and archetypes."""
+
+    archetype: str
+    sleep_stages: List[str] = Field(default_factory=list)
+    channel_summary: List[str] = Field(default_factory=list)
+    evidence_count: int = 0
+    rationale: Optional[str] = None
+
+
+class DataProvenance(BaseModel):
+    """Provenance metadata for ingested dream or physiology records."""
+
+    dataset: str
+    loader: str
+    uri: str
+    record_count: int
+    ingested_at: datetime
+
+
+class DreamSourceMetadata(BaseModel):
+    """Metadata describing the origin of a dream narrative."""
+
+    dataset: str
+    source: str
+    gender: Optional[str] = None
+    age: Optional[str] = None
+    date: Optional[str] = None
+    locale: str = "en"
+    sleep_stage: Optional[str] = None
+    participant_id: Optional[str] = None
+
+
+class DreamSourceRecord(BaseModel):
+    """A dream narrative and its provenance."""
+
+    dream_text: str
+    metadata: DreamSourceMetadata
+    provenance: DataProvenance
 
 
 class DreamAnalysisRequest(BaseModel):
@@ -63,6 +146,11 @@ class DreamAnalysisRequest(BaseModel):
     dream_text: str = Field(..., min_length=1, description="Dream narrative text")
     dream_date: Optional[date] = Field(None, description="Date of the dream if known")
     locale: str = Field(default="ru", description="Response language")
+    dreamer_gender: Optional[str] = Field(None, description="Self-reported gender")
+    dreamer_age_group: Optional[str] = Field(None, description="Age group")
+    physiological_events: Optional[List[PhysiologicalEvent]] = Field(
+        None, description="Physiology aligned to the dream",
+    )
 
 
 class DreamAnalysisResponse(BaseModel):
@@ -70,15 +158,37 @@ class DreamAnalysisResponse(BaseModel):
 
     status: str = Field(default="success")
     dream_id: Optional[str] = None
+    analyzed_at: Optional[datetime] = None
+    word_count: int = 0
+    primary_emotion: Optional[EmotionType] = None
+    emotion_intensity: float = 0.0
+    symbols: List[DreamSymbol] = Field(default_factory=list)
+    content_analysis: Optional[ContentAnalysis] = None
+    lunar_context: Optional[LunarContext] = None
     summary: Optional[str] = None
+    interpretation: Optional[str] = None
+    themes: List[str] = Field(default_factory=list)
+    archetypes: List[str] = Field(default_factory=list)
+    physiological_correlations: List[PhysiologicalCorrelation] = Field(default_factory=list)
+    recommendations: List[str] = Field(default_factory=list)
+    methodology: str = Field(
+        default="Hall/Van de Castle content analysis with Jungian archetypes and lunar context",
+        description="Short description of the analysis pipeline",
+    )
 
 
 __all__ = [
     "DreamCategory",
+    "CharacterType",
     "DreamSymbol",
     "EmotionType",
     "ContentAnalysis",
     "LunarContext",
+    "PhysiologicalEvent",
+    "PhysiologicalCorrelation",
+    "DataProvenance",
+    "DreamSourceMetadata",
+    "DreamSourceRecord",
     "DreamAnalysisRequest",
     "DreamAnalysisResponse",
 ]
