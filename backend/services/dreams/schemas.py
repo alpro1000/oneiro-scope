@@ -63,6 +63,60 @@ class DreamSymbol(BaseModel):
     archetype: Optional[str] = Field(None, description="Jungian archetype if applicable")
 
 
+class DreamSourceMetadata(BaseModel):
+    """Metadata describing the origin of a dream record."""
+
+    dataset: str = Field(..., description="Dataset name (SDDb, DreamBank, etc.)")
+    source: Optional[str] = Field(None, description="Specific collection or cohort")
+    gender: Optional[str] = Field(None, description="Reported gender")
+    age: Optional[int] = Field(None, description="Age in years")
+    date: Optional[date] = Field(None, description="When the dream was recorded")
+    locale: Optional[str] = Field(None, description="Locale for text processing")
+    sleep_stage: Optional[str] = Field(None, description="Sleep stage (REM/N1/N2/N3)")
+    participant_id: Optional[str] = Field(None, description="Subject or participant identifier")
+
+
+class DataProvenance(BaseModel):
+    """Tracks lineage of ingested dream or physiological data."""
+
+    dataset: str = Field(..., description="Dataset name")
+    loader: str = Field(..., description="Connector or loader class name")
+    uri: str = Field(..., description="Source URI or file path")
+    ingested_at: datetime = Field(..., description="Timestamp when data was ingested")
+    record_count: Optional[int] = Field(None, description="Number of rows or events ingested")
+
+
+class DreamSourceRecord(BaseModel):
+    """Standardized representation of a dream narrative from external datasets."""
+
+    dream_text: str
+    metadata: DreamSourceMetadata
+    provenance: DataProvenance
+
+
+class PhysiologicalEvent(BaseModel):
+    """Physiological signal summary used for cross-indexing."""
+
+    participant_id: Optional[str] = Field(None, description="Subject identifier")
+    sleep_stage: Optional[str] = Field(None, description="Sleep stage for the event")
+    channel_names: List[str] = Field(default_factory=list, description="Channels included in the recording")
+    sampling_rate: float = Field(0.0, description="Sampling rate in Hz")
+    start_time: Optional[datetime] = Field(None, description="Recording start time")
+    duration_seconds: Optional[float] = Field(None, description="Recording duration in seconds")
+    notes: Optional[str] = Field(None, description="Additional context about the event")
+    provenance: Optional[DataProvenance] = Field(None, description="Lineage for this event")
+
+
+class PhysiologicalCorrelation(BaseModel):
+    """Correlation summary between archetypes and physiological events."""
+
+    archetype: str = Field(..., description="Archetype identified in the dream")
+    sleep_stages: List[str] = Field(default_factory=list, description="Stages co-occurring with the archetype")
+    channel_summary: List[str] = Field(default_factory=list, description="Relevant channels or signals")
+    evidence_count: int = Field(0, description="How many events support the link")
+    rationale: str = Field(..., description="Text explanation of the link")
+
+
 class DreamAnalysisRequest(BaseModel):
     """Request to analyze a dream"""
     dream_text: str = Field(
@@ -89,6 +143,10 @@ class DreamAnalysisRequest(BaseModel):
         default="ru",
         pattern="^(en|ru)$",
         description="Response language"
+    )
+    physiological_events: List[PhysiologicalEvent] = Field(
+        default_factory=list,
+        description="Optional physiological events aligned with the dream",
     )
 
     model_config = {
@@ -173,6 +231,15 @@ class DreamAnalysisResponse(BaseModel):
     # Psychological insights
     themes: List[str] = Field(default_factory=list, description="Main themes")
     archetypes: List[str] = Field(default_factory=list, description="Jungian archetypes")
+
+    physiological_correlations: List[PhysiologicalCorrelation] = Field(
+        default_factory=list,
+        description="Links between dream archetypes and physiological markers",
+    )
+    source_provenance: List[DataProvenance] = Field(
+        default_factory=list,
+        description="Lineage for any external datasets used in the analysis",
+    )
 
     # Recommendations
     recommendations: List[str] = Field(default_factory=list)

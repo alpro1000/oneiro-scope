@@ -48,9 +48,18 @@ class DreamService:
         """
 
         # Step 1-4: Analyze dream content
-        symbols, content, emotion, intensity, themes, archetypes = self.analyzer.analyze(
+        (
+            symbols,
+            content,
+            emotion,
+            intensity,
+            themes,
+            archetypes,
+            physiological_correlations,
+        ) = self.analyzer.analyze(
             request.dream_text,
             request.locale,
+            request.physiological_events,
         )
 
         # Step 5: Get lunar context if date provided
@@ -89,6 +98,7 @@ class DreamService:
             interpretation=interpretation,
             themes=themes,
             archetypes=archetypes,
+            physiological_correlations=physiological_correlations,
             recommendations=recommendations,
         )
 
