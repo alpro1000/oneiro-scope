@@ -6,7 +6,7 @@ export const dynamic = 'force-dynamic';
 export async function GET() {
   try {
     const base = resolveLunarApiBase(true);
-    const url = `${base}/api/v1/lunar/timezones`;
+    const url = `${base}/timezones`;
 
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 5000);
