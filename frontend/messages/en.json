@@ -46,8 +46,8 @@
     }
   },
   "LunarWidget": {
-    "showMonth": "Show month",
-    "hideMonth": "Hide month",
+    "showMonth": "📅 Show month",
+    "hideMonth": "📅 Hide month",
     "loading": "Loading month...",
     "error": "We couldn't load the lunar calendar. Please try again.",
     "retry": "Retry",
