@@ -1,6 +1,6 @@
 """Transaction model"""
 
-from sqlalchemy import Column, String, Integer, DateTime, ForeignKey, JSON
+from sqlalchemy import Column, String, Integer, DateTime, ForeignKey, JSON, Text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
@@ -35,7 +35,7 @@ class Transaction(Base):
 
     # Description
     description = Column(Text, nullable=True)
-    metadata = Column(JSON, default={}, nullable=False)
+    metadata_json = Column("metadata", JSON, default=dict, nullable=False)
 
     # Dreams purchased
     dreams_purchased = Column(Integer, nullable=True)
