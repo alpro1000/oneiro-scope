@@ -98,7 +98,7 @@
     {
       "path": "backend/services/astrology",
       "dirs": 5,
-      "files": 14
+      "files": 15
     },
     {
       "path": "backend/services/astrology/ai",
@@ -208,7 +208,7 @@
     {
       "path": "tests",
       "dirs": 0,
-      "files": 3
+      "files": 4
     },
     {
       "path": "config",
@@ -327,5 +327,5 @@
     }
   ],
   "total_dirs": 64,
-  "total_files": 196
+  "total_files": 198
 }
