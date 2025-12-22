@@ -321,11 +321,20 @@ def main():
     ap.add_argument("--config", default=os.path.join(ROOT,"etl","sources_config.yml"))
     ap.add_argument("--symbols", default=os.path.join(ROOT,"etl","symbols_map.json"))
     ap.add_argument("--out", default=OUT_PATH)
+    ap.add_argument("--sources", help="Comma-separated sources to enable (overrides config)")
     args = ap.parse_args()
 
     logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
 
     cfg = load_yaml(args.config)
+
+    if args.sources:
+        requested = {s.strip() for s in args.sources.split(",") if s.strip()}
+        for name in cfg.get("sources", {}):
+            cfg["sources"][name]["enabled"] = name in requested
+        unknown = sorted(requested - set(cfg.get("sources", {})))
+        if unknown:
+            logging.warning(f"Неизвестные источники в --sources: {', '.join(unknown)}")
     symbols_map = load_symbols(args.symbols)
     min_len = int(cfg.get("limits",{}).get("min_text_len",100))
     per_max = int(cfg.get("limits",{}).get("per_source_max",5000))
