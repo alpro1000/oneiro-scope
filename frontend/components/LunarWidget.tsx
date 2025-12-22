@@ -146,7 +146,18 @@ export default function LunarWidget({initialData, locale}: Props) {
   }, [expanded]);
 
   const isLoading = status === 'loading';
-  const monthRows = expanded && status === 'ready' ? monthData : [];
+  const monthRows = useMemo(() => {
+    if (!expanded) return [];
+
+    // Keep the current day visible immediately after expanding while
+    // the rest of the month is loading. This avoids empty table states
+    // when the backend is unreachable and we fall back to mocked data.
+    if (status !== 'ready') {
+      return [currentData];
+    }
+
+    return monthData;
+  }, [expanded, status, monthData, currentData]);
 
   return (
     <section
