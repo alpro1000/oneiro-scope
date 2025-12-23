@@ -53,7 +53,7 @@
       "language": "Избегай категоричных утверждений — сны многозначны. Используй мягкие формулировки: 'возможно', 'может указывать на', 'часто связано с'.",
       "prohibited": [
         "эзотерика",
-        "астрология",
+        "астрологические предсказания судьбы",
         "гадание",
         "фатализм",
         "мистические предсказания"
@@ -65,7 +65,7 @@
       "language": "Avoid categorical statements — dreams are multi-layered. Use soft language: 'possibly', 'may indicate', 'often associated with'.",
       "prohibited": [
         "mysticism",
-        "astrology",
+        "astrological fate predictions",
         "fortune telling",
         "determinism",
         "supernatural predictions"

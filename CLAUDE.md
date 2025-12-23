@@ -387,7 +387,7 @@ POST /api/v1/dreams/analyze
 │   • JSON prompt (auto-locale)           │
 │   • dream_interpreter_system.json       │
 │   • 4-step validation (meaningful?)     │
-│   • Prohibited: эзотерика, астрология   │
+│   • Prohibited: эзотерика, гадание      │
 │   • Confidence indicators               │
 │   • REM/NREM + DreamBase methodology    │
 │   • Fallback to inline prompts          │
