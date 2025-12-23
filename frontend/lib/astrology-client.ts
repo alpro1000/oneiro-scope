@@ -15,12 +15,17 @@ export interface NatalChartRequest {
 }
 
 export interface PlanetPosition {
-  name: string;
-  symbol: string;
-  degree: number;
+  // Backend returns 'planet' field with lowercase enum values like "sun", "moon"
+  planet: string;
+  // Sign is also lowercase enum value like "aries", "taurus"
   sign: string;
-  sign_symbol: string;
+  // Absolute degree (0-359.99)
+  degree: number;
+  // Degree within sign (0-29.99)
+  sign_degree: number;
+  // House number (1-12), null if birth time not provided
   house?: number;
+  // Whether planet is in retrograde motion
   retrograde: boolean;
 }
 
