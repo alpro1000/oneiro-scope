@@ -128,7 +128,7 @@
     {
       "path": "backend/services/dreams",
       "dirs": 3,
-      "files": 4
+      "files": 5
     },
     {
       "path": "backend/services/dreams/ai",
@@ -138,7 +138,7 @@
     {
       "path": "backend/services/dreams/knowledge_base",
       "dirs": 0,
-      "files": 1
+      "files": 2
     },
     {
       "path": "backend/services/dreams/data_sources",
@@ -327,5 +327,5 @@
     }
   ],
   "total_dirs": 64,
-  "total_files": 199
+  "total_files": 201
 }
