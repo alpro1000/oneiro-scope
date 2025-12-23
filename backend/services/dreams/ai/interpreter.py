@@ -287,7 +287,71 @@ RECOMMENDATIONS:
 - Recommendation 2
 - Recommendation 3"""
 
-        return json.dumps(system_context, ensure_ascii=False, indent=2) + format_instructions
+        return self._format_system_context_as_text(system_context, lang) + format_instructions
+
+    def _format_system_context_as_text(self, context: dict, lang: str) -> str:
+        """Convert system context dict to readable plain text prompt."""
+        lines = []
+
+        # Role and description
+        lines.append(f"Role: {context.get('role', 'dream_interpreter')}")
+        if context.get('description'):
+            lines.append(f"Description: {context['description']}")
+        if context.get('version'):
+            lines.append(f"Version: {context['version']}")
+        lines.append("")
+
+        # Objective
+        if context.get('objective'):
+            lines.append("OBJECTIVE:")
+            lines.append(context['objective'])
+            lines.append("")
+
+        # Methodology
+        if context.get('methodology'):
+            lines.append("METHODOLOGY:")
+            for method in context['methodology']:
+                lines.append(f"• {method}")
+            lines.append("")
+
+        # Stages
+        if context.get('stages'):
+            if lang == "ru":
+                lines.append("ЭТАПЫ АНАЛИЗА:")
+            else:
+                lines.append("ANALYSIS STAGES:")
+
+            for stage_key, stage_text in context['stages'].items():
+                stage_num = stage_key.split('_')[0] if '_' in stage_key else stage_key
+                if isinstance(stage_text, list):
+                    # Array format (v2.1 validation)
+                    lines.append(f"{stage_num}. {stage_key.replace('_', ' ').title()}:")
+                    for step in stage_text:
+                        lines.append(f"   • {step}")
+                else:
+                    # String format
+                    lines.append(f"{stage_num}. {stage_text}")
+            lines.append("")
+
+        # Style
+        if context.get('style'):
+            if lang == "ru":
+                lines.append("СТИЛЬ:")
+            else:
+                lines.append("STYLE:")
+            lines.append(context['style'])
+            lines.append("")
+
+        # Notes
+        if context.get('notes'):
+            if lang == "ru":
+                lines.append("ВАЖНЫЕ ЗАМЕЧАНИЯ:")
+            else:
+                lines.append("IMPORTANT NOTES:")
+            lines.append(context['notes'])
+            lines.append("")
+
+        return "\n".join(lines)
 
     def _build_system_prompt_inline(self, locale: str) -> str:
         """Build inline system prompt (fallback)."""
