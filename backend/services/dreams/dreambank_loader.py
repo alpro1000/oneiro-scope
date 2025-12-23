@@ -134,102 +134,115 @@ class DreamBankLoader:
 
         # Calculate derived values from content analysis
         total_human = content_analysis.get("male_characters", 0) + content_analysis.get("female_characters", 0)
-        male_percent = (content_analysis.get("male_characters", 0) / total_human * 100) if total_human > 0 else 50
+        # Use None instead of default 50 when no human characters present
+        male_percent = (content_analysis.get("male_characters", 0) / total_human * 100) if total_human > 0 else None
 
         friendly = content_analysis.get("friendly_interactions", 0)
         aggressive = content_analysis.get("aggressive_interactions", 0)
-        af_ratio = (aggressive / friendly) if friendly > 0 else (float(aggressive) if aggressive > 0 else 0)
+        # Calculate A/F ratio properly: None if friendly=0 (can't compare), 0 if both=0
+        if friendly > 0:
+            af_ratio = aggressive / friendly
+        elif aggressive == 0:
+            af_ratio = 0.0  # No interactions at all
+        else:
+            af_ratio = None  # Can't calculate ratio (would be infinity)
 
         positive_emotions = content_analysis.get("positive_emotions", 0)
         negative_emotions = content_analysis.get("negative_emotions", 0)
         total_emotions = positive_emotions + negative_emotions
-        negative_percent = (negative_emotions / total_emotions * 100) if total_emotions > 0 else 50
+        # Use None instead of 50 when no emotions present
+        negative_percent = (negative_emotions / total_emotions * 100) if total_emotions > 0 else None
 
         successes = content_analysis.get("successes", 0)
         failures = content_analysis.get("failures", 0)
         total_outcomes = successes + failures
-        success_percent = (successes / total_outcomes * 100) if total_outcomes > 0 else 50
+        # Use None instead of 50 when no outcomes present
+        success_percent = (successes / total_outcomes * 100) if total_outcomes > 0 else None
 
-        # Compare male/female character ratio
-        norm_male_percent = self.norms.get(gender_used.value, {}).get("characters", {}).get("male_percent", 50)
-        dev = self._calculate_deviation(
-            user_value=male_percent,
-            norm_value=norm_male_percent,
-            indicator="male_female_percent",
-            descriptions={
-                "ru": "Процент мужских персонажей",
-                "en": "Male character percentage"
-            }
-        )
-        deviations.append(dev)
-        if dev.significance != "normal":
-            if male_percent > norm_male_percent:
-                notable_findings_ru.append(f"Повышенное присутствие мужских персонажей ({male_percent:.0f}% vs норма {norm_male_percent}%)")
-                notable_findings_en.append(f"Higher male character presence ({male_percent:.0f}% vs norm {norm_male_percent}%)")
-            else:
-                notable_findings_ru.append(f"Пониженное присутствие мужских персонажей ({male_percent:.0f}% vs норма {norm_male_percent}%)")
-                notable_findings_en.append(f"Lower male character presence ({male_percent:.0f}% vs norm {norm_male_percent}%)")
+        # Compare male/female character ratio (skip if no human characters)
+        if male_percent is not None:
+            norm_male_percent = self.norms.get(gender_used.value, {}).get("characters", {}).get("male_percent", 50)
+            dev = self._calculate_deviation(
+                user_value=male_percent,
+                norm_value=norm_male_percent,
+                indicator="male_female_percent",
+                descriptions={
+                    "ru": "Процент мужских персонажей",
+                    "en": "Male character percentage"
+                }
+            )
+            deviations.append(dev)
+            if dev.significance != "normal":
+                if male_percent > norm_male_percent:
+                    notable_findings_ru.append(f"Повышенное присутствие мужских персонажей ({male_percent:.0f}% vs норма {norm_male_percent}%)")
+                    notable_findings_en.append(f"Higher male character presence ({male_percent:.0f}% vs norm {norm_male_percent}%)")
+                else:
+                    notable_findings_ru.append(f"Пониженное присутствие мужских персонажей ({male_percent:.0f}% vs норма {norm_male_percent}%)")
+                    notable_findings_en.append(f"Lower male character presence ({male_percent:.0f}% vs norm {norm_male_percent}%)")
 
-        # Compare aggression/friendliness ratio
-        norm_af_ratio = self.norms.get(gender_used.value, {}).get("social_interactions", {}).get("aggression_friendliness_ratio", 0.5)
-        dev = self._calculate_deviation(
-            user_value=af_ratio,
-            norm_value=norm_af_ratio,
-            indicator="aggression_friendliness_index",
-            descriptions={
-                "ru": "Индекс агрессия/дружелюбие",
-                "en": "Aggression/Friendliness index"
-            },
-            is_ratio=True
-        )
-        deviations.append(dev)
-        if dev.significance != "normal":
-            if af_ratio > norm_af_ratio:
-                notable_findings_ru.append(f"Повышенный уровень агрессии в социальных взаимодействиях (A/F={af_ratio:.2f} vs норма {norm_af_ratio:.2f})")
-                notable_findings_en.append(f"Higher aggression in social interactions (A/F={af_ratio:.2f} vs norm {norm_af_ratio:.2f})")
-            else:
-                notable_findings_ru.append(f"Пониженный уровень агрессии, больше дружелюбия (A/F={af_ratio:.2f} vs норма {norm_af_ratio:.2f})")
-                notable_findings_en.append(f"Lower aggression, more friendliness (A/F={af_ratio:.2f} vs norm {norm_af_ratio:.2f})")
+        # Compare aggression/friendliness ratio (skip if can't calculate)
+        if af_ratio is not None:
+            norm_af_ratio = self.norms.get(gender_used.value, {}).get("social_interactions", {}).get("aggression_friendliness_ratio", 0.5)
+            dev = self._calculate_deviation(
+                user_value=af_ratio,
+                norm_value=norm_af_ratio,
+                indicator="aggression_friendliness_index",
+                descriptions={
+                    "ru": "Индекс агрессия/дружелюбие",
+                    "en": "Aggression/Friendliness index"
+                },
+                is_ratio=True
+            )
+            deviations.append(dev)
+            if dev.significance != "normal":
+                if af_ratio > norm_af_ratio:
+                    notable_findings_ru.append(f"Повышенный уровень агрессии в социальных взаимодействиях (A/F={af_ratio:.2f} vs норма {norm_af_ratio:.2f})")
+                    notable_findings_en.append(f"Higher aggression in social interactions (A/F={af_ratio:.2f} vs norm {norm_af_ratio:.2f})")
+                else:
+                    notable_findings_ru.append(f"Пониженный уровень агрессии, больше дружелюбия (A/F={af_ratio:.2f} vs норма {norm_af_ratio:.2f})")
+                    notable_findings_en.append(f"Lower aggression, more friendliness (A/F={af_ratio:.2f} vs norm {norm_af_ratio:.2f})")
 
-        # Compare negative emotions percentage
-        norm_negative = self.norms.get(gender_used.value, {}).get("emotions", {}).get("negative_percent", 80)
-        dev = self._calculate_deviation(
-            user_value=negative_percent,
-            norm_value=norm_negative,
-            indicator="negative_emotions_percent",
-            descriptions={
-                "ru": "Процент негативных эмоций",
-                "en": "Negative emotions percentage"
-            }
-        )
-        deviations.append(dev)
-        if dev.significance != "normal":
-            if negative_percent > norm_negative:
-                notable_findings_ru.append(f"Выше среднего количество негативных эмоций ({negative_percent:.0f}%)")
-                notable_findings_en.append(f"Higher than average negative emotions ({negative_percent:.0f}%)")
-            else:
-                notable_findings_ru.append(f"Ниже среднего количество негативных эмоций, более позитивный сон ({negative_percent:.0f}%)")
-                notable_findings_en.append(f"Lower than average negative emotions, more positive dream ({negative_percent:.0f}%)")
+        # Compare negative emotions percentage (skip if no emotions)
+        if negative_percent is not None:
+            norm_negative = self.norms.get(gender_used.value, {}).get("emotions", {}).get("negative_percent", 80)
+            dev = self._calculate_deviation(
+                user_value=negative_percent,
+                norm_value=norm_negative,
+                indicator="negative_emotions_percent",
+                descriptions={
+                    "ru": "Процент негативных эмоций",
+                    "en": "Negative emotions percentage"
+                }
+            )
+            deviations.append(dev)
+            if dev.significance != "normal":
+                if negative_percent > norm_negative:
+                    notable_findings_ru.append(f"Выше среднего количество негативных эмоций ({negative_percent:.0f}%)")
+                    notable_findings_en.append(f"Higher than average negative emotions ({negative_percent:.0f}%)")
+                else:
+                    notable_findings_ru.append(f"Ниже среднего количество негативных эмоций, более позитивный сон ({negative_percent:.0f}%)")
+                    notable_findings_en.append(f"Lower than average negative emotions, more positive dream ({negative_percent:.0f}%)")
 
-        # Compare success/failure ratio
-        norm_success = self.norms.get(gender_used.value, {}).get("success_failure", {}).get("success_percent", 50)
-        dev = self._calculate_deviation(
-            user_value=success_percent,
-            norm_value=norm_success,
-            indicator="dreamer_success_percent",
-            descriptions={
-                "ru": "Процент успехов сновидца",
-                "en": "Dreamer success percentage"
-            }
-        )
-        deviations.append(dev)
-        if dev.significance != "normal":
-            if success_percent > norm_success:
-                notable_findings_ru.append(f"Повышенный процент успехов в сновидении ({success_percent:.0f}% vs норма {norm_success}%)")
-                notable_findings_en.append(f"Higher success rate in dream ({success_percent:.0f}% vs norm {norm_success}%)")
-            else:
-                notable_findings_ru.append(f"Пониженный процент успехов, больше неудач ({success_percent:.0f}% vs норма {norm_success}%)")
-                notable_findings_en.append(f"Lower success rate, more failures ({success_percent:.0f}% vs norm {norm_success}%)")
+        # Compare success/failure ratio (skip if no outcomes)
+        if success_percent is not None:
+            norm_success = self.norms.get(gender_used.value, {}).get("success_failure", {}).get("success_percent", 50)
+            dev = self._calculate_deviation(
+                user_value=success_percent,
+                norm_value=norm_success,
+                indicator="dreamer_success_percent",
+                descriptions={
+                    "ru": "Процент успехов сновидца",
+                    "en": "Dreamer success percentage"
+                }
+            )
+            deviations.append(dev)
+            if dev.significance != "normal":
+                if success_percent > norm_success:
+                    notable_findings_ru.append(f"Повышенный процент успехов в сновидении ({success_percent:.0f}% vs норма {norm_success}%)")
+                    notable_findings_en.append(f"Higher success rate in dream ({success_percent:.0f}% vs norm {norm_success}%)")
+                else:
+                    notable_findings_ru.append(f"Пониженный процент успехов, больше неудач ({success_percent:.0f}% vs норма {norm_success}%)")
+                    notable_findings_en.append(f"Lower success rate, more failures ({success_percent:.0f}% vs norm {norm_success}%)")
 
         # Calculate overall typicality score
         total_deviation = sum(abs(d.deviation) for d in deviations)
