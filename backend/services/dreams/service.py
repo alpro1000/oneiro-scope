@@ -23,6 +23,15 @@ from backend.services.dreams.dreambank_loader import get_dreambank_loader
 
 logger = logging.getLogger(__name__)
 
+# Optional lunar service import (graceful degradation if not available)
+try:
+    from backend.services.lunar.lunar_service import LunarService
+    LUNAR_SERVICE_AVAILABLE = True
+except ImportError:
+    logger.warning("LunarService not available, lunar context will be disabled")
+    LunarService = None
+    LUNAR_SERVICE_AVAILABLE = False
+
 
 class DreamService:
     """
@@ -180,10 +189,12 @@ class DreamService:
         locale: str,
     ) -> Optional[LunarContext]:
         """Get lunar context for dream date"""
-        try:
-            # Import lunar service
-            from backend.services.lunar.lunar_service import LunarService
+        # Check if lunar service is available
+        if not LUNAR_SERVICE_AVAILABLE or LunarService is None:
+            logger.debug("Lunar service not available, skipping lunar context")
+            return None
 
+        try:
             lunar_service = LunarService()
             lunar_data = lunar_service.get_lunar_day(dream_date)
 
@@ -201,7 +212,9 @@ class DreamService:
                 interpretation_ru=lunar_dream_meanings["ru"],
                 interpretation_en=lunar_dream_meanings["en"],
             )
-        except Exception:
+        except Exception as e:
+            # Lunar context is optional, log error but continue
+            logger.warning(f"Failed to get lunar context: {e}")
             return None
 
     def _get_lunar_dream_meaning(
