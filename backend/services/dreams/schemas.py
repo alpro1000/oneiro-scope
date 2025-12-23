@@ -16,12 +16,18 @@ from pydantic import BaseModel, Field
 
 
 class DreamCategory(str, Enum):
-    """Basic dream category taxonomy."""
+    """Hall/Van de Castle dream content categories."""
 
     CHARACTERS = "characters"
+    SOCIAL_INTERACTIONS = "social_interactions"
+    ACTIVITIES = "activities"
+    STRIVING = "striving"
+    MISFORTUNES = "misfortunes"
+    GOOD_FORTUNES = "good_fortunes"
     EMOTIONS = "emotions"
     SETTINGS = "settings"
     OBJECTS = "objects"
+    DESCRIPTIVE_ELEMENTS = "descriptive_elements"
 
 
 class CharacterType(str, Enum):
@@ -153,6 +159,40 @@ class DreamAnalysisRequest(BaseModel):
     )
 
 
+class NormDeviation(BaseModel):
+    """Single indicator deviation from Hall/Van de Castle norms"""
+    indicator: str = Field(..., description="Norm indicator name")
+    user_value: float = Field(..., description="User's dream value")
+    norm_value: float = Field(..., description="Expected norm value")
+    deviation: float = Field(..., description="Deviation in percentage points")
+    significance: str = Field(..., description="significant/moderate/normal")
+    description_ru: str = Field(..., description="Russian description")
+    description_en: str = Field(..., description="English description")
+
+
+class NormComparisonResult(BaseModel):
+    """Comparison of dream content to Hall/Van de Castle norms"""
+    gender_used: str = Field(..., description="Gender norms used (male/female)")
+    overall_typicality: float = Field(
+        ...,
+        ge=0,
+        le=100,
+        description="How typical the dream is (0-100%)"
+    )
+    deviations: List[NormDeviation] = Field(
+        default_factory=list,
+        description="List of deviations from norms"
+    )
+    notable_findings_ru: List[str] = Field(
+        default_factory=list,
+        description="Notable findings in Russian"
+    )
+    notable_findings_en: List[str] = Field(
+        default_factory=list,
+        description="Notable findings in English"
+    )
+
+
 class DreamAnalysisResponse(BaseModel):
     """Simplified analysis response used in tests."""
 
@@ -165,6 +205,13 @@ class DreamAnalysisResponse(BaseModel):
     symbols: List[DreamSymbol] = Field(default_factory=list)
     content_analysis: Optional[ContentAnalysis] = None
     lunar_context: Optional[LunarContext] = None
+
+    # Norm comparison (Hall/Van de Castle)
+    norm_comparison: Optional[NormComparisonResult] = Field(
+        None,
+        description="Comparison to Hall/Van de Castle norms based on dreamer gender"
+    )
+
     summary: Optional[str] = None
     interpretation: Optional[str] = None
     themes: List[str] = Field(default_factory=list)

@@ -2,9 +2,11 @@
 Dream Analysis Service
 
 Main service orchestrating dream analysis using scientific methodology.
+Integrates Hall/Van de Castle content analysis with DreamBank normative data.
 """
 
 import uuid
+import logging
 from datetime import datetime, date
 from typing import Optional
 
@@ -12,9 +14,14 @@ from backend.services.dreams.schemas import (
     DreamAnalysisRequest,
     DreamAnalysisResponse,
     LunarContext,
+    NormComparisonResult,
+    NormDeviation,
 )
 from backend.services.dreams.analyzer import DreamAnalyzer
 from backend.services.dreams.ai.interpreter import DreamInterpreter
+from backend.services.dreams.dreambank_loader import get_dreambank_loader
+
+logger = logging.getLogger(__name__)
 
 
 class DreamService:
@@ -23,6 +30,7 @@ class DreamService:
 
     Combines:
     - Hall/Van de Castle content analysis
+    - DreamBank normative data comparison
     - Symbol recognition from knowledge base
     - AI-powered interpretation
     - Lunar calendar context
@@ -31,6 +39,8 @@ class DreamService:
     def __init__(self):
         self.analyzer = DreamAnalyzer()
         self.interpreter = DreamInterpreter()
+        self.dreambank = get_dreambank_loader()
+        logger.info("DreamService initialized with DreamBank norms")
 
     async def analyze_dream(
         self,
@@ -43,11 +53,12 @@ class DreamService:
         1. Content analysis (Hall/Van de Castle)
         2. Symbol recognition
         3. Emotion detection
-        4. Lunar context (if date provided)
-        5. AI interpretation
+        4. Norm comparison (DreamBank)
+        5. Lunar context (if date provided)
+        6. AI interpretation
         """
 
-        # Step 1-4: Analyze dream content
+        # Step 1-3: Analyze dream content (includes physiological correlations)
         (
             symbols,
             content,
@@ -62,6 +73,12 @@ class DreamService:
             request.physiological_events,
         )
 
+        # Step 4: Compare to Hall/Van de Castle norms
+        norm_comparison = self._compare_to_norms(
+            content=content,
+            gender=request.dreamer_gender,
+        )
+
         # Step 5: Get lunar context if date provided
         lunar_context = None
         if request.dream_date:
@@ -70,7 +87,15 @@ class DreamService:
                 request.locale,
             )
 
-        # Step 6: Generate AI interpretation
+        # Get norm context for AI interpretation
+        norm_context = None
+        if norm_comparison:
+            norm_context = self.dreambank.get_interpretation_context(
+                norm_comparison,
+                request.locale,
+            )
+
+        # Step 6: Generate AI interpretation with norm context
         summary, interpretation, recommendations = await self.interpreter.generate_interpretation(
             dream_text=request.dream_text,
             symbols=symbols,
@@ -80,8 +105,31 @@ class DreamService:
             themes=themes,
             archetypes=archetypes,
             lunar_context=lunar_context,
+            norm_context=norm_context,
             locale=request.locale,
         )
+
+        # Convert norm comparison to Pydantic model
+        norm_result = None
+        if norm_comparison:
+            norm_result = NormComparisonResult(
+                gender_used=norm_comparison.gender_used.value,
+                overall_typicality=norm_comparison.overall_typicality,
+                deviations=[
+                    NormDeviation(
+                        indicator=d.indicator,
+                        user_value=d.user_value,
+                        norm_value=d.norm_value,
+                        deviation=d.deviation,
+                        significance=d.significance,
+                        description_ru=d.description_ru,
+                        description_en=d.description_en,
+                    )
+                    for d in norm_comparison.deviations
+                ],
+                notable_findings_ru=norm_comparison.notable_findings_ru,
+                notable_findings_en=norm_comparison.notable_findings_en,
+            )
 
         # Build response
         return DreamAnalysisResponse(
@@ -94,6 +142,7 @@ class DreamService:
             symbols=symbols,
             content_analysis=content,
             lunar_context=lunar_context,
+            norm_comparison=norm_result,
             summary=summary,
             interpretation=interpretation,
             themes=themes,
@@ -101,6 +150,29 @@ class DreamService:
             physiological_correlations=physiological_correlations,
             recommendations=recommendations,
         )
+
+    def _compare_to_norms(
+        self,
+        content,
+        gender: Optional[str],
+    ):
+        """Compare content analysis to Hall/Van de Castle norms"""
+        try:
+            content_dict = {
+                "male_characters": content.male_characters,
+                "female_characters": content.female_characters,
+                "animal_characters": content.animal_characters,
+                "friendly_interactions": content.friendly_interactions,
+                "aggressive_interactions": content.aggressive_interactions,
+                "successes": content.successes,
+                "failures": content.failures,
+                "positive_emotions": content.positive_emotions,
+                "negative_emotions": content.negative_emotions,
+            }
+            return self.dreambank.compare_to_norms(content_dict, gender)
+        except Exception as e:
+            logger.warning(f"Failed to compare to norms: {e}")
+            return None
 
     async def _get_lunar_context(
         self,

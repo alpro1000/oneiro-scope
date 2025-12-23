@@ -57,10 +57,14 @@ class DreamInterpreter:
         themes: List[str],
         archetypes: List[str],
         lunar_context: Optional[LunarContext],
+        norm_context: Optional[str] = None,
         locale: str = "ru",
     ) -> tuple[str, str, List[str]]:
         """
         Generate AI interpretation of the dream.
+
+        Args:
+            norm_context: Optional text describing deviations from Hall/Van de Castle norms
 
         Returns:
             - Summary (brief)
@@ -70,7 +74,7 @@ class DreamInterpreter:
         try:
             return await self._call_llm(
                 dream_text, symbols, content, emotion, emotion_intensity,
-                themes, archetypes, lunar_context, locale
+                themes, archetypes, lunar_context, norm_context, locale
             )
         except Exception as e:
             # Fallback on API error
@@ -88,6 +92,7 @@ class DreamInterpreter:
         themes: List[str],
         archetypes: List[str],
         lunar_context: Optional[LunarContext],
+        norm_context: Optional[str],
         locale: str,
     ) -> tuple[str, str, List[str]]:
         """Call LLM provider for interpretation"""
@@ -95,7 +100,7 @@ class DreamInterpreter:
         system_prompt = self._build_system_prompt(locale)
         user_prompt = self._build_user_prompt(
             dream_text, symbols, content, emotion, emotion_intensity,
-            themes, archetypes, lunar_context, locale
+            themes, archetypes, lunar_context, norm_context, locale
         )
 
         # Use universal LLM provider
@@ -155,6 +160,7 @@ Be empathetic but scientific. Avoid categorical statements — dreams are multi-
         themes: List[str],
         archetypes: List[str],
         lunar_context: Optional[LunarContext],
+        norm_context: Optional[str],
         locale: str,
     ) -> str:
         """Build user prompt with dream data"""
@@ -177,6 +183,13 @@ Emotions: {content.positive_emotions} positive, {content.negative_emotions} nega
             else:
                 lunar_info = f"\nLunar context: Day {lunar_context.lunar_day}, phase: {lunar_context.lunar_phase}"
 
+        norm_info = ""
+        if norm_context:
+            if locale == "ru":
+                norm_info = f"\n\nСРАВНЕНИЕ С НОРМАМИ (DreamBank):\n{norm_context}"
+            else:
+                norm_info = f"\n\nNORM COMPARISON (DreamBank):\n{norm_context}"
+
         if locale == "ru":
             return f"""Проанализируй этот сон:
 
@@ -191,9 +204,9 @@ Emotions: {content.positive_emotions} positive, {content.negative_emotions} nega
 ОСНОВНАЯ ЭМОЦИЯ: {emotion.value} (интенсивность: {emotion_intensity:.1f})
 ТЕМЫ: {', '.join(themes) if themes else 'не определены'}
 АРХЕТИПЫ: {', '.join(archetypes) if archetypes else 'не определены'}
-{lunar_info}
+{lunar_info}{norm_info}
 
-Дай интерпретацию в указанном формате."""
+Дай интерпретацию в указанном формате. Если есть отклонения от норм, учти их в анализе."""
 
         return f"""Analyze this dream:
 
@@ -208,9 +221,9 @@ CONTENT ANALYSIS:
 PRIMARY EMOTION: {emotion.value} (intensity: {emotion_intensity:.1f})
 THEMES: {', '.join(themes) if themes else 'not identified'}
 ARCHETYPES: {', '.join(archetypes) if archetypes else 'not identified'}
-{lunar_info}
+{lunar_info}{norm_info}
 
-Provide interpretation in the specified format."""
+Provide interpretation in the specified format. If there are deviations from norms, incorporate them into your analysis."""
 
     def _parse_response(self, text: str, locale: str) -> tuple[str, str, List[str]]:
         """Parse Claude's response into components"""

@@ -42,6 +42,10 @@ ephem==4.1.5
 # NLP
 spacy==3.7.2
 
+# Dream Analysis
+dreamy-nlp>=0.1.0
+pandas>=2.0.0
+
 # Vector DB
 pgvector==0.2.4
 
