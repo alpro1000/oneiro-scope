@@ -308,10 +308,11 @@ See `render.yaml` for configuration. Deploy requires:
 |------|--------|---------|
 | 2025-12-17 | `claude/analyze-fix-frontend-PXk9Y` | GeoNames API, timezone selector, lunar fix |
 | 2025-12-18 | `claude/session-documentation-zdu0p` | Language switcher, pytest fixes |
+| 2025-12-23 | `claude/oneiroscope-continuation-5S4v3` | DreamBank integration, language auto-detection, JSON prompts |
 
 See `docs/SESSION_SUMMARY_*.md` for details.
 
-## Status (Updated 2025-12-18)
+## Status (Updated 2025-12-23)
 
 ### Completed
 - [x] **P0**: Geocoder async fix (GeoNames API)
@@ -320,6 +321,10 @@ See `docs/SESSION_SUMMARY_*.md` for details.
 - [x] Timezone selector UI (19 timezones)
 - [x] Language switcher RU/EN
 - [x] GeoNames configured on Render (`alpro1000`)
+- [x] **DreamBank**: Hall/Van de Castle norm comparison integrated
+- [x] **Symbols**: Expanded from 15 to 50 dream symbols
+- [x] **Language Detection**: Auto-detect RU/EN in dream text
+- [x] **JSON Prompts**: Bilingual prompt system for LLM
 
 ### Pending
 - [ ] Create PR for merge to main
@@ -332,11 +337,56 @@ See `docs/SESSION_SUMMARY_*.md` for details.
 - Phase 0 (builds green): ✅ DONE - geocoder await fixed, backend tests passing
 - Phase 1 (lunar correctness): Partially done - timezone selector added, retry pending
 - Phase 2 (astrology hardening): GeoNames integrated, rate limit/provenance pending
+- Phase 3 (dreams enhancement): ✅ DONE - DreamBank norms, language detection, JSON prompts
 - Phase 3 (QA/CI): Tests green locally, CI pipeline setup pending
 
 ## Next Actions
-1) Создать PR из `claude/session-documentation-zdu0p` в main
+1) Создать PR из `claude/oneiroscope-continuation-5S4v3` в main
 2) После merge проверить production deploy на Render
 3) Выставить `ENVIRONMENT=production` на Render
 4) Добавить retry логику в LunarWidget
 5) Добавить health/log для режима ephemeris
+
+## Dream Analysis Architecture (2025-12-23)
+
+```
+POST /api/v1/dreams/analyze
+         │
+         ▼
+┌─────────────────────────────────────────┐
+│        _preprocess_dream_text()         │
+│   • Remove repeated chars (ссс→сс)      │
+│   • Normalize whitespace                │
+│   • _detect_language() → ru/en          │
+└─────────────────────────────────────────┘
+         │
+         ▼
+┌─────────────────────────────────────────┐
+│         DreamAnalyzer.analyze()         │
+│   • 50 symbols (symbols.json)           │
+│   • Content analysis (H/VdC)            │
+│   • Emotion + themes + archetypes       │
+└─────────────────────────────────────────┘
+         │
+         ▼
+┌─────────────────────────────────────────┐
+│    DreamBankLoader.compare_to_norms()   │
+│   • hvdc_norms.json (1966 study)        │
+│   • Male/Female character ratio         │
+│   • Aggression/Friendliness index       │
+│   • Typicality score 0-100%             │
+└─────────────────────────────────────────┘
+         │
+         ▼
+┌─────────────────────────────────────────┐
+│       DreamInterpreter (LLM)            │
+│   • JSON prompt (auto-locale)           │
+│   • dream_interpreter_system.json       │
+│   • Fallback to inline prompts          │
+└─────────────────────────────────────────┘
+         │
+         ▼
+    DreamAnalysisResponse
+    (symbols, content, norm_comparison,
+     interpretation, recommendations)
+```
