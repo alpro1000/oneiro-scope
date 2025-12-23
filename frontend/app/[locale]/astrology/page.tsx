@@ -603,7 +603,7 @@ export default function AstrologyPage() {
                       <div className="text-4xl font-bold text-amber-400 mb-1">
                         {forecastResult.favorability_score}%
                       </div>
-                      <div className="text-slate-300">{forecastResult.level}</div>
+                      <div className="text-slate-300">{forecastResult.favorability_level}</div>
 
                       {/* Progress bar */}
                       <div className="w-full h-2 bg-slate-700 rounded-full mt-3 overflow-hidden">
@@ -665,11 +665,19 @@ export default function AstrologyPage() {
                       </div>
                     )}
 
-                    {/* Interpretation */}
-                    {forecastResult.interpretation && (
-                      <p className="text-slate-300 mb-4 text-sm italic">
-                        {forecastResult.interpretation}
-                      </p>
+                    {/* Lunar info */}
+                    {forecastResult.lunar_phase && (
+                      <div className="mb-4 p-3 bg-slate-700/50 rounded-lg">
+                        <div className="flex items-center gap-3 text-sm text-slate-300">
+                          <span>☽ {forecastResult.lunar_phase}</span>
+                          <span>{locale === 'ru' ? `День ${forecastResult.lunar_day}` : `Day ${forecastResult.lunar_day}`}</span>
+                          {forecastResult.retrograde_planets && forecastResult.retrograde_planets.length > 0 && (
+                            <span className="text-amber-400">
+                              ℞ {forecastResult.retrograde_planets.join(', ')}
+                            </span>
+                          )}
+                        </div>
+                      </div>
                     )}
 
                     {/* Alternative dates */}

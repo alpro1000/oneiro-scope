@@ -30,58 +30,76 @@ export interface PlanetPosition {
 }
 
 export interface Aspect {
+  // Backend returns planet enums as lowercase strings
   planet1: string;
   planet2: string;
-  aspect_type: string;
-  angle: number;
-  orb: number;
-  applying: boolean;
+  aspect_type: string;  // conjunction, sextile, square, trine, opposition, quincunx
+  orb: number;          // Orb in degrees (0-10)
+  applying: boolean;    // True if aspect is forming
+  // Note: No "angle" field in backend - aspect_type determines the angle
+}
+
+export interface House {
+  number: number;        // 1-12
+  sign: string;          // lowercase zodiac sign
+  degree: number;        // 0-29.99
+  planets: string[];     // planets in this house
 }
 
 export interface NatalChartResponse {
-  status: 'success' | 'error';
-  birth_data: {
-    date: string;
-    time?: string;
-    place: string;
-    coords: { lat: number; lon: number };
-    timezone: string;
-  };
-  planets: PlanetPosition[];
-  houses?: Array<{ number: number; sign: string; degree: number }>;
-  aspects: Aspect[];
+  // Backend returns flat structure, not nested birth_data
+  id: string;
+  user_id?: string;
+  birth_date: string;      // YYYY-MM-DD
+  birth_time?: string;     // HH:MM:SS or null
+  birth_place: string;
+  latitude: number;        // Decimal
+  longitude: number;       // Decimal
+  timezone: string;
+  // Zodiac signs (lowercase enum values)
   sun_sign: string;
   moon_sign: string;
-  ascendant?: string;
+  ascendant?: string;      // Requires birth_time
+  midheaven?: string;      // Requires birth_time
+  // Chart data
+  planets: PlanetPosition[];
+  houses?: House[];        // Requires birth_time
+  aspects: Aspect[];
+  // LLM interpretation
   interpretation?: string;
-  calculated_at: string;
+  // Metadata
+  created_at: string;      // Backend field name (not "calculated_at")
+  calculation_method: string;
+}
+
+export interface TransitInfo {
+  transiting_planet: string;
+  natal_planet: string;
+  aspect: string;           // AspectType enum value
+  exact_date: string;
+  orb: number;
+  description: string;
 }
 
 export interface HoroscopeResponse {
-  status: 'success' | 'error';
-  period: string;
+  id: string;
+  user_id?: string;
+  natal_chart_id?: string;
+  period: string;           // daily, weekly, monthly, yearly
   period_start: string;
   period_end: string;
-  sun_sign?: string;
-  moon_sign?: string;
-  current_transits: Array<{
-    planet: string;
-    sign: string;
-    degree: number;
-    retrograde: boolean;
-  }>;
-  retrograde_planets: string[];
+  // Transits (backend field name is "transits", not "current_transits")
+  transits: TransitInfo[];
+  retrograde_planets: string[];  // Planet enum values as strings
   lunar_phase: string;
   lunar_day: number;
+  // LLM interpretation - backend has separate fields, not nested "sections"
   summary: string;
-  sections?: {
-    general?: string;
-    personal?: string;
-    social?: string;
-    warnings?: string;
-  };
+  love_and_relationships?: string;
+  career_and_finance?: string;
+  health_and_wellness?: string;
   recommendations: string[];
-  generated_at: string;
+  created_at: string;       // Backend field name (not "generated_at")
 }
 
 export interface EventForecastRequest {
@@ -94,17 +112,27 @@ export interface EventForecastRequest {
 }
 
 export interface EventForecastResponse {
-  status: 'success' | 'error';
+  id: string;
+  user_id?: string;
+  natal_chart_id?: string;
   event_date: string;
   event_type: string;
-  favorability_score: number;
-  level: string;
+  event_location?: string;
+  // Favorability
+  favorability_score: number;      // 0-100
+  favorability_level: string;      // Backend field name (not "level")
+  // Transits and planetary info
+  transits: TransitInfo[];
+  retrograde_planets: string[];
+  lunar_phase: string;
+  lunar_day: number;
+  // Analysis
   positive_factors: string[];
   risk_factors: string[];
   recommendations: string[];
-  alternative_dates: string[];
-  interpretation: string;
-  calculated_at: string;
+  alternative_dates?: string[];    // Only when score < 50
+  created_at: string;              // Backend field name (not "calculated_at")
+  // Note: Backend doesn't have "interpretation" field
 }
 
 // API base URL resolution
