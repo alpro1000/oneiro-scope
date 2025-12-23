@@ -468,7 +468,14 @@ ARCHETYPES: {', '.join(archetypes) if archetypes else 'not identified'}
 Provide interpretation in the specified format. If there are deviations from norms, incorporate them into your analysis."""
 
     def _parse_response(self, text: str, locale: str) -> tuple[str, str, List[str]]:
-        """Parse Claude's response into components"""
+        """
+        Parse LLM response into components with flexible parsing.
+
+        Supports:
+        - Case-insensitive section headers
+        - Multiple bullet styles (-, *, •, 1., 2., etc.)
+        - Partial parsing if sections missing
+        """
         summary = ""
         interpretation = ""
         recommendations = []
@@ -476,12 +483,18 @@ Provide interpretation in the specified format. If there are deviations from nor
         lines = text.strip().split("\n")
         current_section = None
 
+        # Regex patterns for bullet points (flexible)
+        bullet_pattern = re.compile(r'^[-*•]\s*(.+)$')
+        numbered_pattern = re.compile(r'^\d+[\.)]\s*(.+)$')
+
         for line in lines:
             line = line.strip()
             if not line:
                 continue
 
             upper = line.upper()
+
+            # Detect section headers (case-insensitive)
             if upper.startswith("SUMMARY:") or upper.startswith("РЕЗЮМЕ:"):
                 current_section = "summary"
                 summary = line.split(":", 1)[1].strip() if ":" in line else ""
@@ -490,12 +503,35 @@ Provide interpretation in the specified format. If there are deviations from nor
                 interpretation = line.split(":", 1)[1].strip() if ":" in line else ""
             elif upper.startswith("RECOMMENDATIONS:") or upper.startswith("РЕКОМЕНДАЦИИ:"):
                 current_section = "recommendations"
+
+            # Accumulate content for current section
             elif current_section == "summary":
                 summary += " " + line
             elif current_section == "interpretation":
                 interpretation += " " + line
-            elif current_section == "recommendations" and line.startswith("-"):
-                recommendations.append(line[1:].strip())
+            elif current_section == "recommendations":
+                # Try multiple bullet formats
+                bullet_match = bullet_pattern.match(line)
+                numbered_match = numbered_pattern.match(line)
+
+                if bullet_match:
+                    recommendations.append(bullet_match.group(1).strip())
+                elif numbered_match:
+                    recommendations.append(numbered_match.group(1).strip())
+                elif line and not line.endswith(":"):
+                    # Assume it's a recommendation without bullet
+                    recommendations.append(line)
+
+        # Fallback: if parsing failed, try to extract raw text
+        if not summary and not interpretation:
+            logger.warning("LLM response parsing failed, using raw text")
+            # Use first 2 sentences as summary, rest as interpretation
+            sentences = text.split(". ")
+            if len(sentences) >= 2:
+                summary = ". ".join(sentences[:2]) + "."
+                interpretation = ". ".join(sentences[2:])
+            else:
+                interpretation = text
 
         return summary.strip(), interpretation.strip(), recommendations
 

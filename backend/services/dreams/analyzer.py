@@ -85,13 +85,20 @@ class DreamAnalyzer:
         # Interaction patterns
         self.interaction_patterns = {
             "friendly": re.compile(
-                r'\b(help|love|hug|kiss|friend|together|'
-                r'помочь|любовь|обнять|поцелуй|друг|вместе)\b',
+                r'\b(help|friend|together|support|kindness|'
+                r'помочь|друг|вместе|поддержка|доброта)\b',
                 re.IGNORECASE
             ),
             "aggressive": re.compile(
                 r'\b(fight|attack|hit|kill|angry|chase|'
                 r'драка|атака|ударить|убить|злой|погоня)\b',
+                re.IGNORECASE
+            ),
+            "sexual": re.compile(
+                r'\b(kiss|hug|embrace|love|romance|intimacy|intimate|caress|passion|'
+                r'flirt|seduce|lover|romantic|attraction|desire|'
+                r'поцелуй|целовать|обнимать|объятия|любовь|романтика|интимность|'
+                r'ласка|страсть|флирт|соблазн|возлюбленн|романтичн|влечение|желание)\b',
                 re.IGNORECASE
             ),
         }
@@ -193,6 +200,7 @@ class DreamAnalyzer:
         # Interaction types
         friendly = len(self.interaction_patterns["friendly"].findall(text))
         aggressive = len(self.interaction_patterns["aggressive"].findall(text))
+        sexual = len(self.interaction_patterns["sexual"].findall(text))
 
         # Outcomes
         successes = len(self.outcome_patterns["success"].findall(text))
@@ -233,7 +241,7 @@ class DreamAnalyzer:
             animal_characters=animal_chars,
             friendly_interactions=friendly,
             aggressive_interactions=aggressive,
-            sexual_interactions=0,  # Would need explicit detection
+            sexual_interactions=sexual,  # Keyword-based detection (H/VdC methodology)
             successes=successes,
             failures=failures,
             misfortunes=failures,  # Simplified
