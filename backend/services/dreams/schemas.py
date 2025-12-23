@@ -16,12 +16,18 @@ from pydantic import BaseModel, Field
 
 
 class DreamCategory(str, Enum):
-    """Basic dream category taxonomy."""
+    """Hall/Van de Castle dream content categories."""
 
     CHARACTERS = "characters"
+    SOCIAL_INTERACTIONS = "social_interactions"
+    ACTIVITIES = "activities"
+    STRIVING = "striving"
+    MISFORTUNES = "misfortunes"
+    GOOD_FORTUNES = "good_fortunes"
     EMOTIONS = "emotions"
     SETTINGS = "settings"
     OBJECTS = "objects"
+    DESCRIPTIVE_ELEMENTS = "descriptive_elements"
 
 
 class CharacterType(str, Enum):
