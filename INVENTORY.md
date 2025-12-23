@@ -28,7 +28,8 @@
 | backend/services/astrology/engine | 0 | 5 |
 | backend/services/astrology/knowledge_base | 0 | 4 |
 | backend/services/dreams | 3 | 5 |
-| backend/services/dreams/ai | 0 | 2 |
+| backend/services/dreams/ai | 1 | 2 |
+| backend/services/dreams/ai/prompts | 0 | 1 |
 | backend/services/dreams/knowledge_base | 0 | 2 |
 | backend/services/dreams/data_sources | 0 | 3 |
 | backend/app | 0 | 2 |
@@ -39,7 +40,7 @@
 | backend/alembic/versions | 0 | 1 |
 | etl | 1 | 5 |
 | etl/input | 0 | 1 |
-| docs | 1 | 13 |
+| docs | 1 | 14 |
 | docs/architecture | 1 | 5 |
 | docs/architecture/modules | 0 | 3 |
 | data | 0 | 2 |
@@ -68,4 +69,4 @@
 | frontend/styles | 0 | 2 |
 | styles | 0 | 2 |
 
-**ИТОГО:** папок = 64, файлов = 201
+**ИТОГО:** папок = 65, файлов = 203

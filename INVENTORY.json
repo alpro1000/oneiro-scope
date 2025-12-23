@@ -132,8 +132,13 @@
     },
     {
       "path": "backend/services/dreams/ai",
-      "dirs": 0,
+      "dirs": 1,
       "files": 2
+    },
+    {
+      "path": "backend/services/dreams/ai/prompts",
+      "dirs": 0,
+      "files": 1
     },
     {
       "path": "backend/services/dreams/knowledge_base",
@@ -188,7 +193,7 @@
     {
       "path": "docs",
       "dirs": 1,
-      "files": 13
+      "files": 14
     },
     {
       "path": "docs/architecture",
@@ -326,6 +331,6 @@
       "files": 2
     }
   ],
-  "total_dirs": 64,
-  "total_files": 201
+  "total_dirs": 65,
+  "total_files": 203
 }
