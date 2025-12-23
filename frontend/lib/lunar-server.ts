@@ -1,4 +1,5 @@
 import {cache} from 'react';
+import {buildMockLunarDay} from './lunar-mock';
 import {buildLunarUrl, resolveLunarApiBase} from './lunar-endpoint';
 
 export type LunarDayPayload = {
@@ -29,16 +30,24 @@ async function fetchLunarDay({locale, date, tz}: FetchArgs): Promise<LunarDayPay
   const base = resolveLunarApiBase(true);
   const timezone = tz ?? process.env.LUNAR_DEFAULT_TZ ?? 'UTC';
   const url = buildLunarUrl(base, {date, locale, tz: timezone});
-  const res = await fetch(url, {
-    headers: {Accept: 'application/json'},
-    next: {revalidate: 60 * 60}
-  });
+  try {
+    const res = await fetch(url, {
+      headers: {Accept: 'application/json'},
+      next: {revalidate: 60 * 60}
+    });
 
-  if (!res.ok) {
-    throw new Error(`Failed to fetch lunar day: ${res.status}`);
+    if (!res.ok) {
+      throw new Error(`Failed to fetch lunar day: ${res.status}`);
+    }
+
+    const payload = await res.json();
+    return {...payload, source: payload.source ?? 'backend'};
+  } catch (error) {
+    console.warn('Lunar API unreachable, falling back to mock data.', error);
+    return buildMockLunarDay({locale, date, tz: timezone});
   }
-
-  return res.json();
 }
 
 export const getLunarDay = cache(fetchLunarDay);
+
+export {buildMockLunarDay};

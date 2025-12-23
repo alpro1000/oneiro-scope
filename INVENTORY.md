@@ -21,15 +21,16 @@
 | backend/utils | 0 | 2 |
 | backend/services | 3 | 0 |
 | backend/services/lunar | 0 | 3 |
-| backend/services/astrology | 5 | 13 |
+| backend/services/astrology | 5 | 15 |
 | backend/services/astrology/ai | 0 | 3 |
 | backend/services/astrology/policies | 0 | 2 |
 | backend/services/astrology/validators | 0 | 2 |
 | backend/services/astrology/engine | 0 | 5 |
 | backend/services/astrology/knowledge_base | 0 | 4 |
-| backend/services/dreams | 2 | 4 |
+| backend/services/dreams | 3 | 4 |
 | backend/services/dreams/ai | 0 | 2 |
 | backend/services/dreams/knowledge_base | 0 | 1 |
+| backend/services/dreams/data_sources | 0 | 3 |
 | backend/app | 0 | 2 |
 | backend/data | 0 | 1 |
 | backend/core | 0 | 6 |
@@ -38,18 +39,18 @@
 | backend/alembic/versions | 0 | 1 |
 | etl | 1 | 5 |
 | etl/input | 0 | 1 |
-| docs | 1 | 12 |
+| docs | 1 | 13 |
 | docs/architecture | 1 | 5 |
 | docs/architecture/modules | 0 | 3 |
 | data | 0 | 2 |
-| tests | 0 | 2 |
-| config | 0 | 1 |
+| tests | 0 | 4 |
+| config | 0 | 2 |
 | frontend | 12 | 12 |
 | frontend/stories | 0 | 1 |
 | frontend/e2e | 0 | 2 |
 | frontend/types | 0 | 2 |
 | frontend/components | 0 | 5 |
-| frontend/lib | 0 | 7 |
+| frontend/lib | 0 | 8 |
 | frontend/messages | 0 | 2 |
 | frontend/app | 2 | 2 |
 | frontend/app/api | 2 | 0 |
@@ -67,4 +68,4 @@
 | frontend/styles | 0 | 2 |
 | styles | 0 | 2 |
 
-**ИТОГО:** папок = 63, файлов = 189
+**ИТОГО:** папок = 64, файлов = 199

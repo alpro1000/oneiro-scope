@@ -98,7 +98,7 @@
     {
       "path": "backend/services/astrology",
       "dirs": 5,
-      "files": 13
+      "files": 15
     },
     {
       "path": "backend/services/astrology/ai",
@@ -127,7 +127,7 @@
     },
     {
       "path": "backend/services/dreams",
-      "dirs": 2,
+      "dirs": 3,
       "files": 4
     },
     {
@@ -139,6 +139,11 @@
       "path": "backend/services/dreams/knowledge_base",
       "dirs": 0,
       "files": 1
+    },
+    {
+      "path": "backend/services/dreams/data_sources",
+      "dirs": 0,
+      "files": 3
     },
     {
       "path": "backend/app",
@@ -183,7 +188,7 @@
     {
       "path": "docs",
       "dirs": 1,
-      "files": 12
+      "files": 13
     },
     {
       "path": "docs/architecture",
@@ -203,12 +208,12 @@
     {
       "path": "tests",
       "dirs": 0,
-      "files": 2
+      "files": 4
     },
     {
       "path": "config",
       "dirs": 0,
-      "files": 1
+      "files": 2
     },
     {
       "path": "frontend",
@@ -238,7 +243,7 @@
     {
       "path": "frontend/lib",
       "dirs": 0,
-      "files": 7
+      "files": 8
     },
     {
       "path": "frontend/messages",
@@ -321,6 +326,6 @@
       "files": 2
     }
   ],
-  "total_dirs": 63,
-  "total_files": 189
+  "total_dirs": 64,
+  "total_files": 199
 }

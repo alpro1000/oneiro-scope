@@ -19,6 +19,9 @@ from dreamy.preprocessing import preprocess_dream
 from dreamy.embedder import DreamEmbedder
 import swisseph as swe
 
+SUN = getattr(swe, "SUN", 0)
+MOON = getattr(swe, "MOON", 1)
+
 RAW_DATA_PATH = REPO_ROOT / "data" / "dreams_curated.json"
 ENRICHED_PATH = REPO_ROOT / "data" / "dreams_enriched.parquet"
 
@@ -95,7 +98,15 @@ def enrich_with_astrology(df: pd.DataFrame) -> pd.DataFrame:
 def _lunar_phase_from_date(date_str: str) -> float:
     year, month, day = map(int, str(date_str).split("-"))
     jd = swe.julday(year, month, day)
-    phase = swe.lun_phase(jd)
+    try:
+        phase = swe.lun_phase(jd)
+    except AttributeError:
+        # Fallback: approximate phase using Sun/Moon longitudes when lun_phase
+        # is unavailable in the minimal swisseph build bundled with tests.
+        moon_lon = swe.calc_ut(jd, MOON)[0][0]
+        sun_lon = swe.calc_ut(jd, SUN)[0][0]
+        phase = ((moon_lon - sun_lon) % 360) / 360
+
     # keep within [0, 1]
     return max(0.0, min(1.0, float(phase)))
 

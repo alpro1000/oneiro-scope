@@ -58,10 +58,19 @@ class DreamService:
         6. AI interpretation
         """
 
-        # Step 1-3: Analyze dream content
-        symbols, content, emotion, intensity, themes, archetypes = self.analyzer.analyze(
+        # Step 1-3: Analyze dream content (includes physiological correlations)
+        (
+            symbols,
+            content,
+            emotion,
+            intensity,
+            themes,
+            archetypes,
+            physiological_correlations,
+        ) = self.analyzer.analyze(
             request.dream_text,
             request.locale,
+            request.physiological_events,
         )
 
         # Step 4: Compare to Hall/Van de Castle norms
@@ -138,6 +147,7 @@ class DreamService:
             interpretation=interpretation,
             themes=themes,
             archetypes=archetypes,
+            physiological_correlations=physiological_correlations,
             recommendations=recommendations,
         )
 

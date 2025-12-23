@@ -4,6 +4,7 @@ import {useEffect, useMemo, useRef, useState} from 'react';
 import {AnimatePresence, motion} from 'framer-motion';
 import {useTranslations} from 'next-intl';
 import {fetchLunarDayClient} from '../lib/lunar-client';
+import {buildMockLunarDay} from '../lib/lunar-mock';
 import type {LunarDayPayload} from '../lib/lunar-server';
 import TimezoneSelector, {getStoredTimezone} from './TimezoneSelector';
 
@@ -58,7 +59,10 @@ export default function LunarWidget({initialData, locale}: Props) {
     let cancelled = false;
     const reloadCurrentDay = async () => {
       try {
-        const response = await fetchLunarDayClient(initialData.date, locale, timezone);
+        const response = await fetchLunarDayClient(initialData.date, locale, timezone, {
+          retries: 1,
+          baseDelay: 250
+        });
         if (!cancelled) {
           setCurrentData(response);
           cacheRef.current.set(response.date, response);
@@ -102,7 +106,10 @@ export default function LunarWidget({initialData, locale}: Props) {
           if (cached && cached.timezone === timezone) {
             return cached;
           }
-          const response = await fetchLunarDayClient(iso, locale, timezone);
+          const response = await fetchLunarDayClient(iso, locale, timezone, {
+            retries: 1,
+            baseDelay: 250
+          });
           cacheRef.current.set(response.date, response);
           return response;
         });
@@ -114,7 +121,12 @@ export default function LunarWidget({initialData, locale}: Props) {
         }
       } catch (err) {
         if (!cancelled) {
-          setStatus('error');
+          console.warn('Falling back to mock month data due to lunar API error.', err);
+          const fallback = getMonthDateList(currentData.date).map((iso) =>
+            buildMockLunarDay({date: iso, locale, tz: timezone})
+          );
+          setMonthData(fallback);
+          setStatus('ready');
           setError(err instanceof Error ? err.message : 'Unknown error');
         }
       }
@@ -134,7 +146,18 @@ export default function LunarWidget({initialData, locale}: Props) {
   }, [expanded]);
 
   const isLoading = status === 'loading';
-  const monthRows = expanded && status === 'ready' ? monthData : [];
+  const monthRows = useMemo(() => {
+    if (!expanded) return [];
+
+    // Keep the current day visible immediately after expanding while
+    // the rest of the month is loading. This avoids empty table states
+    // when the backend is unreachable and we fall back to mocked data.
+    if (status !== 'ready') {
+      return [currentData];
+    }
+
+    return monthData;
+  }, [expanded, status, monthData, currentData]);
 
   return (
     <section

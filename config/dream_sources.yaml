@@ -1,0 +1,16 @@
+# Configuration for external dream research datasets
+# Paths or URLs can point to local files, cloud storage, or published APIs.
+
+datasets:
+  sddb:
+    path_or_url: data/sddb/sddb.csv
+    description: "Sleep and Dream Database (text + demographics)"
+  dreambank:
+    path_or_url: data/dreambank/dreambank.jsonl
+    description: "DreamBank narratives with category labels"
+  dreams:
+    path_or_url: data/dreams/polysomnography.edf
+    description: "DREAMS PSG archive (EDF)"
+  dream:
+    path_or_url: data/dream/eeg_recording.edf
+    description: "DREAM EEG + narrative bundles"
