@@ -227,6 +227,26 @@ class DreamInterpreter:
 
         lang = "ru" if locale == "ru" else "en"
 
+        # Parse style (handle both old string format and new dict format)
+        style_data = prompt_data["style"].get(lang)
+        if isinstance(style_data, dict):
+            # New format (v2.1+): extract readable instructions
+            style_parts = []
+            if "tone" in style_data:
+                style_parts.append(f"Tone: {style_data['tone']}")
+            if "language" in style_data:
+                style_parts.append(style_data["language"])
+            if "prohibited" in style_data:
+                prohibited_list = ", ".join(style_data["prohibited"])
+                prohib_text = "Prohibited" if lang == "en" else "Запрещено"
+                style_parts.append(f"{prohib_text}: {prohibited_list}")
+            if "confidence" in style_data:
+                style_parts.append(style_data["confidence"])
+            style_text = " ".join(style_parts)
+        else:
+            # Old format (v2.0): direct string
+            style_text = style_data
+
         # Build structured context
         system_context = {
             "role": prompt_data.get("role", "scientific_dream_interpreter"),
@@ -241,7 +261,7 @@ class DreamInterpreter:
                 "interpretation": prompt_data["stages"]["4_interpretation"].get(lang)
             },
             "output_format": prompt_data["output_format"],
-            "style": prompt_data["style"].get(lang),
+            "style": style_text,
             "notes": prompt_data["notes"].get(lang)
         }
 

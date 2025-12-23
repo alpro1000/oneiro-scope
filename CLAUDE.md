@@ -210,10 +210,12 @@ After updating envs on Render, trigger **Clear build cache & Deploy** for the fr
 - **Event Forecast**: Favorability based on transits, Moon phase, retrogrades
 
 ### Dreams Service
-- **Hall/Van de Castle**: Content analysis system (Case Western Reserve University)
-- **DreamBank**: Research corpus comparison
+- **Hall/Van de Castle**: Content analysis system (Case Western Reserve University, 1966)
+- **DreamBank/DreamBase**: Research corpus comparison & normative data
+- **REM/NREM Models**: Neurocognitive theory of sleep and dream function
 - **Jungian Archetypes**: Shadow, Anima/Animus, Self, Hero, Transformation
-- **Lunar Context**: Dream significance by lunar day
+- **Lunar Context**: Dream significance by lunar day and circadian influence
+- **AI Interpreter v2.1**: JSON-based bilingual prompts with validation & confidence scoring
 
 ---
 
@@ -309,6 +311,7 @@ See `render.yaml` for configuration. Deploy requires:
 | 2025-12-17 | `claude/analyze-fix-frontend-PXk9Y` | GeoNames API, timezone selector, lunar fix |
 | 2025-12-18 | `claude/session-documentation-zdu0p` | Language switcher, pytest fixes |
 | 2025-12-23 | `claude/oneiroscope-continuation-5S4v3` | DreamBank integration, language auto-detection, JSON prompts |
+| 2025-12-23 | `claude/dream-interpreter-setup-nK52c` | Dream interpreter v2.1 upgrade (REM/NREM, prohibited list, validation) |
 
 See `docs/SESSION_SUMMARY_*.md` for details.
 
@@ -325,6 +328,7 @@ See `docs/SESSION_SUMMARY_*.md` for details.
 - [x] **Symbols**: Expanded from 15 to 50 dream symbols
 - [x] **Language Detection**: Auto-detect RU/EN in dream text
 - [x] **JSON Prompts**: Bilingual prompt system for LLM
+- [x] **Interpreter v2.1**: REM/NREM models, DreamBase, prohibited list, 4-step validation, confidence scoring
 
 ### Pending
 - [ ] Create PR for merge to main
@@ -347,7 +351,7 @@ See `docs/SESSION_SUMMARY_*.md` for details.
 4) Добавить retry логику в LunarWidget
 5) Добавить health/log для режима ephemeris
 
-## Dream Analysis Architecture (2025-12-23)
+## Dream Analysis Architecture (Updated 2025-12-23)
 
 ```
 POST /api/v1/dreams/analyze
@@ -379,9 +383,13 @@ POST /api/v1/dreams/analyze
          │
          ▼
 ┌─────────────────────────────────────────┐
-│       DreamInterpreter (LLM)            │
+│       DreamInterpreter (LLM) v2.1       │
 │   • JSON prompt (auto-locale)           │
 │   • dream_interpreter_system.json       │
+│   • 4-step validation (meaningful?)     │
+│   • Prohibited: эзотерика, гадание      │
+│   • Confidence indicators               │
+│   • REM/NREM + DreamBase methodology    │
 │   • Fallback to inline prompts          │
 └─────────────────────────────────────────┘
          │
