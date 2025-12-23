@@ -3,11 +3,23 @@ Dream AI Interpreter
 
 Uses multiple LLM providers for generating meaningful dream interpretations
 based on analyzed content and scientific methodology.
+
+Features:
+- Automatic language detection (RU/EN)
+- JSON-based bilingual prompts
+- Hall/Van de Castle norm comparison
+- Jungian archetypal analysis
 """
 
+import json
+import re
+import logging
+from pathlib import Path
 from typing import List, Optional
 
 from backend.core.llm_provider import UniversalLLMProvider, LLMProvider
+
+logger = logging.getLogger(__name__)
 from backend.services.dreams.schemas import (
     DreamSymbol,
     ContentAnalysis,
@@ -46,6 +58,69 @@ class DreamInterpreter:
             temperature=temperature,
             preferred_provider=preferred_provider,
         )
+
+        # Path to prompts directory
+        self._prompts_dir = Path(__file__).parent / "prompts"
+
+    def _detect_language(self, text: str) -> str:
+        """
+        Detect dream text language (ru/en) using letter statistics.
+
+        Uses simple heuristics robust to mixed-language texts.
+
+        Args:
+            text: Dream text to analyze
+
+        Returns:
+            'ru' or 'en'
+        """
+        if not text or len(text.strip()) < 10:
+            return "ru"  # default
+
+        # Count Cyrillic and Latin letters
+        cyr = len(re.findall(r"[а-яА-ЯёЁ]", text))
+        lat = len(re.findall(r"[a-zA-Z]", text))
+
+        # Detection logic
+        if cyr > lat * 1.5:
+            detected = "ru"
+        elif lat > cyr * 1.5:
+            detected = "en"
+        else:
+            # Mixed or unclear → default to Russian
+            detected = "ru"
+
+        logger.debug(f"Language detection: cyr={cyr}, lat={lat}, detected={detected}")
+        return detected
+
+    def _preprocess_dream_text(self, text: str) -> str:
+        """
+        Preprocess dream text before analysis.
+
+        - Removes excessive repeated characters ("ссссон" → "сон")
+        - Normalizes whitespace
+        - Removes control characters
+
+        Args:
+            text: Raw dream text
+
+        Returns:
+            Cleaned dream text
+        """
+        if not text:
+            return ""
+
+        # Remove control characters (except newlines and tabs)
+        text = re.sub(r'[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]', '', text)
+
+        # Reduce repeated characters (3+ same chars → 2)
+        text = re.sub(r'(.)\1{2,}', r'\1\1', text)
+
+        # Normalize whitespace
+        text = re.sub(r'[ \t]+', ' ', text)
+        text = re.sub(r'\n{3,}', '\n\n', text)
+
+        return text.strip()
 
     async def generate_interpretation(
         self,
@@ -97,7 +172,11 @@ class DreamInterpreter:
     ) -> tuple[str, str, List[str]]:
         """Call LLM provider for interpretation"""
 
-        system_prompt = self._build_system_prompt(locale)
+        # Preprocess dream text
+        clean_dream = self._preprocess_dream_text(dream_text)
+
+        # Build prompts with auto-detection
+        system_prompt = self._build_system_prompt(locale, dream_text=clean_dream)
         user_prompt = self._build_user_prompt(
             dream_text, symbols, content, emotion, emotion_intensity,
             themes, archetypes, lunar_context, norm_context, locale
@@ -111,8 +190,87 @@ class DreamInterpreter:
 
         return self._parse_response(response_text, locale)
 
-    def _build_system_prompt(self, locale: str) -> str:
-        """Build system prompt for Claude"""
+    def _build_system_prompt(self, locale: str, dream_text: Optional[str] = None) -> str:
+        """
+        Build system prompt for LLM with auto-detection support.
+
+        Args:
+            locale: Explicit locale ('ru' or 'en') or None for auto-detection
+            dream_text: Dream text for language detection (optional)
+
+        Returns:
+            System prompt string
+        """
+        # Auto-detect language if dream_text provided and locale seems wrong
+        if dream_text:
+            detected = self._detect_language(dream_text)
+            # Only override if explicit locale doesn't match detected
+            if locale not in ("ru", "en"):
+                locale = detected
+            logger.debug(f"Using locale: {locale} (detected: {detected})")
+
+        # Try JSON-based prompt first
+        prompt_file = self._prompts_dir / "dream_interpreter_system.json"
+        if prompt_file.exists():
+            try:
+                return self._build_system_prompt_from_json(prompt_file, locale)
+            except Exception as e:
+                logger.warning(f"Failed to load JSON prompt: {e}, using fallback")
+
+        # Fallback to inline prompts
+        return self._build_system_prompt_inline(locale)
+
+    def _build_system_prompt_from_json(self, prompt_file: Path, locale: str) -> str:
+        """Build system prompt from JSON file."""
+        with open(prompt_file, "r", encoding="utf-8") as f:
+            prompt_data = json.load(f)
+
+        lang = "ru" if locale == "ru" else "en"
+
+        # Build structured context
+        system_context = {
+            "role": prompt_data.get("role", "scientific_dream_interpreter"),
+            "description": prompt_data.get("description"),
+            "version": prompt_data.get("version"),
+            "objective": prompt_data["objectives"].get(lang),
+            "methodology": prompt_data.get("methodology"),
+            "stages": {
+                "validation_normalization": prompt_data["stages"]["1_validation_normalization"].get(lang),
+                "emotional_analysis": prompt_data["stages"]["2_emotional_analysis"].get(lang),
+                "symbolic_archetypal_analysis": prompt_data["stages"]["3_symbolic_archetypal_analysis"].get(lang),
+                "interpretation": prompt_data["stages"]["4_interpretation"].get(lang)
+            },
+            "output_format": prompt_data["output_format"],
+            "style": prompt_data["style"].get(lang),
+            "notes": prompt_data["notes"].get(lang)
+        }
+
+        # Add response format instructions
+        if lang == "ru":
+            format_instructions = """
+
+Формат ответа:
+РЕЗЮМЕ: [1-2 предложения]
+ИНТЕРПРЕТАЦИЯ: [подробный анализ 3-5 абзацев]
+РЕКОМЕНДАЦИИ:
+- Рекомендация 1
+- Рекомендация 2
+- Рекомендация 3"""
+        else:
+            format_instructions = """
+
+Response format:
+SUMMARY: [1-2 sentences]
+INTERPRETATION: [detailed analysis 3-5 paragraphs]
+RECOMMENDATIONS:
+- Recommendation 1
+- Recommendation 2
+- Recommendation 3"""
+
+        return json.dumps(system_context, ensure_ascii=False, indent=2) + format_instructions
+
+    def _build_system_prompt_inline(self, locale: str) -> str:
+        """Build inline system prompt (fallback)."""
         if locale == "ru":
             return """Ты — научный интерпретатор снов, использующий методологию Hall/Van de Castle и базу DreamBank.
 
