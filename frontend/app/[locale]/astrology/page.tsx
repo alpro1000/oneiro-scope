@@ -17,6 +17,39 @@ import {
 
 type Tab = 'natalChart' | 'horoscope' | 'eventForecast';
 
+// Planet symbols and display names
+const PLANET_DATA: Record<string, { symbol: string; en: string; ru: string }> = {
+  sun: { symbol: '☉', en: 'Sun', ru: 'Солнце' },
+  moon: { symbol: '☽', en: 'Moon', ru: 'Луна' },
+  mercury: { symbol: '☿', en: 'Mercury', ru: 'Меркурий' },
+  venus: { symbol: '♀', en: 'Venus', ru: 'Венера' },
+  mars: { symbol: '♂', en: 'Mars', ru: 'Марс' },
+  jupiter: { symbol: '♃', en: 'Jupiter', ru: 'Юпитер' },
+  saturn: { symbol: '♄', en: 'Saturn', ru: 'Сатурн' },
+  uranus: { symbol: '♅', en: 'Uranus', ru: 'Уран' },
+  neptune: { symbol: '♆', en: 'Neptune', ru: 'Нептун' },
+  pluto: { symbol: '♇', en: 'Pluto', ru: 'Плутон' },
+  north_node: { symbol: '☊', en: 'North Node', ru: 'Сев. Узел' },
+  south_node: { symbol: '☋', en: 'South Node', ru: 'Юж. Узел' },
+  chiron: { symbol: '⚷', en: 'Chiron', ru: 'Хирон' },
+};
+
+// Zodiac sign symbols and display names
+const SIGN_DATA: Record<string, { symbol: string; en: string; ru: string }> = {
+  aries: { symbol: '♈', en: 'Aries', ru: 'Овен' },
+  taurus: { symbol: '♉', en: 'Taurus', ru: 'Телец' },
+  gemini: { symbol: '♊', en: 'Gemini', ru: 'Близнецы' },
+  cancer: { symbol: '♋', en: 'Cancer', ru: 'Рак' },
+  leo: { symbol: '♌', en: 'Leo', ru: 'Лев' },
+  virgo: { symbol: '♍', en: 'Virgo', ru: 'Дева' },
+  libra: { symbol: '♎', en: 'Libra', ru: 'Весы' },
+  scorpio: { symbol: '♏', en: 'Scorpio', ru: 'Скорпион' },
+  sagittarius: { symbol: '♐', en: 'Sagittarius', ru: 'Стрелец' },
+  capricorn: { symbol: '♑', en: 'Capricorn', ru: 'Козерог' },
+  aquarius: { symbol: '♒', en: 'Aquarius', ru: 'Водолей' },
+  pisces: { symbol: '♓', en: 'Pisces', ru: 'Рыбы' },
+};
+
 export default function AstrologyPage() {
   const t = useTranslations('AstrologyPage');
   const params = useParams();
@@ -310,16 +343,31 @@ export default function AstrologyPage() {
                     <div className="grid grid-cols-2 gap-4 mb-4">
                       <div>
                         <span className="text-amber-400 text-sm">☉ {locale === 'ru' ? 'Солнце' : 'Sun'}</span>
-                        <p className="text-white font-medium">{natalResult.sun_sign}</p>
+                        <p className="text-white font-medium">
+                          {(() => {
+                            const signInfo = SIGN_DATA[natalResult.sun_sign?.toLowerCase()] || { symbol: '', en: natalResult.sun_sign, ru: natalResult.sun_sign };
+                            return `${signInfo.symbol} ${locale === 'ru' ? signInfo.ru : signInfo.en}`;
+                          })()}
+                        </p>
                       </div>
                       <div>
                         <span className="text-amber-400 text-sm">☽ {locale === 'ru' ? 'Луна' : 'Moon'}</span>
-                        <p className="text-white font-medium">{natalResult.moon_sign}</p>
+                        <p className="text-white font-medium">
+                          {(() => {
+                            const signInfo = SIGN_DATA[natalResult.moon_sign?.toLowerCase()] || { symbol: '', en: natalResult.moon_sign, ru: natalResult.moon_sign };
+                            return `${signInfo.symbol} ${locale === 'ru' ? signInfo.ru : signInfo.en}`;
+                          })()}
+                        </p>
                       </div>
                       {natalResult.ascendant && (
                         <div>
                           <span className="text-amber-400 text-sm">↑ {locale === 'ru' ? 'Асцендент' : 'Ascendant'}</span>
-                          <p className="text-white font-medium">{natalResult.ascendant}</p>
+                          <p className="text-white font-medium">
+                            {(() => {
+                              const signInfo = SIGN_DATA[natalResult.ascendant?.toLowerCase()] || { symbol: '', en: natalResult.ascendant, ru: natalResult.ascendant };
+                              return `${signInfo.symbol} ${locale === 'ru' ? signInfo.ru : signInfo.en}`;
+                            })()}
+                          </p>
                         </div>
                       )}
                     </div>
@@ -331,14 +379,25 @@ export default function AstrologyPage() {
                           {locale === 'ru' ? 'Планеты' : 'Planets'}
                         </h4>
                         <div className="grid grid-cols-2 md:grid-cols-3 gap-2 text-sm">
-                          {natalResult.planets.slice(0, 10).map((planet) => (
-                            <div key={planet.name} className="flex items-center gap-1 text-slate-300">
-                              <span>{planet.symbol}</span>
-                              <span>{planet.name}</span>
-                              <span className="text-amber-400">{planet.sign}</span>
-                              {planet.retrograde && <span className="text-red-400">℞</span>}
-                            </div>
-                          ))}
+                          {natalResult.planets.slice(0, 10).map((planet: any) => {
+                            // Get planet key - backend returns 'planet' field with lowercase values
+                            const planetKey = planet.planet || planet.name || '';
+                            const planetInfo = PLANET_DATA[planetKey.toLowerCase()] || { symbol: '●', en: planetKey, ru: planetKey };
+                            // Get sign key - backend returns lowercase sign values
+                            const signKey = planet.sign || '';
+                            const signInfo = SIGN_DATA[signKey.toLowerCase()] || { symbol: '', en: signKey, ru: signKey };
+
+                            return (
+                              <div key={planetKey} className="flex items-center gap-1 text-slate-300">
+                                <span className="text-amber-300">{planetInfo.symbol}</span>
+                                <span>{locale === 'ru' ? planetInfo.ru : planetInfo.en}</span>
+                                <span className="text-amber-400">
+                                  {signInfo.symbol} {locale === 'ru' ? signInfo.ru : signInfo.en}
+                                </span>
+                                {planet.retrograde && <span className="text-red-400">℞</span>}
+                              </div>
+                            );
+                          })}
                         </div>
                       </div>
                     )}
