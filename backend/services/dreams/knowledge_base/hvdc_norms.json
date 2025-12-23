@@ -1,0 +1,239 @@
+{
+  "metadata": {
+    "source": "Hall & Van de Castle (1966) - The Content Analysis of Dreams",
+    "sample": "500 dreams from 100 male and 500 dreams from 100 female college students",
+    "institution": "Case Western Reserve University",
+    "years": "1947-1950",
+    "citation": "Domhoff, G.W. & Schneider, A. (2008). Studying dream content using the archive and search engine on DreamBank.net. Consciousness and Cognition, 17, 1238-1247."
+  },
+  "norms": {
+    "male": {
+      "characters": {
+        "male_percent": 67,
+        "female_percent": 33,
+        "animal_percent": 6,
+        "familiar_percent": 45,
+        "unfamiliar_percent": 55,
+        "description": "Men dream about male characters twice as often as female characters"
+      },
+      "social_interactions": {
+        "aggression_friendliness_ratio": 0.59,
+        "aggression_per_dream": 0.47,
+        "friendliness_per_dream": 0.38,
+        "sexuality_per_dream": 0.12,
+        "description": "Men show more aggression than friendliness in dreams"
+      },
+      "emotions": {
+        "negative_percent": 80,
+        "apprehension_percent": 40,
+        "anger_percent": 18,
+        "sadness_percent": 6,
+        "confusion_percent": 8,
+        "happiness_percent": 20,
+        "description": "Negative emotions dominate, especially apprehension"
+      },
+      "success_failure": {
+        "success_percent": 51,
+        "failure_percent": 49,
+        "description": "Nearly equal success and failure rates"
+      },
+      "misfortune": {
+        "misfortune_per_dream": 0.36,
+        "good_fortune_per_dream": 0.06,
+        "description": "Misfortunes are 6x more common than good fortunes"
+      },
+      "physical_aggression_percent": 50,
+      "dreamer_involved_aggression_percent": 80
+    },
+    "female": {
+      "characters": {
+        "male_percent": 48,
+        "female_percent": 52,
+        "animal_percent": 4,
+        "familiar_percent": 58,
+        "unfamiliar_percent": 42,
+        "description": "Women dream equally about male and female characters"
+      },
+      "social_interactions": {
+        "aggression_friendliness_ratio": 0.32,
+        "aggression_per_dream": 0.29,
+        "friendliness_per_dream": 0.43,
+        "sexuality_per_dream": 0.04,
+        "description": "Women show more friendliness than aggression"
+      },
+      "emotions": {
+        "negative_percent": 80,
+        "apprehension_percent": 43,
+        "anger_percent": 10,
+        "sadness_percent": 10,
+        "confusion_percent": 10,
+        "happiness_percent": 20,
+        "description": "Negative emotions dominate, more sadness than men"
+      },
+      "success_failure": {
+        "success_percent": 42,
+        "failure_percent": 58,
+        "description": "Women report more failures than successes"
+      },
+      "misfortune": {
+        "misfortune_per_dream": 0.33,
+        "good_fortune_per_dream": 0.06,
+        "description": "Similar misfortune ratio to men"
+      },
+      "physical_aggression_percent": 34,
+      "dreamer_involved_aggression_percent": 67
+    }
+  },
+  "indicators": {
+    "male_female_percent": {
+      "formula": "male_characters / total_human_characters * 100",
+      "male_norm": 67,
+      "female_norm": 48,
+      "description_ru": "Процент мужских персонажей среди всех людей во сне",
+      "description_en": "Percentage of male characters among all human dream characters"
+    },
+    "familiarity_percent": {
+      "formula": "familiar_characters / total_characters * 100",
+      "male_norm": 45,
+      "female_norm": 58,
+      "description_ru": "Процент знакомых персонажей",
+      "description_en": "Percentage of familiar characters"
+    },
+    "friends_percent": {
+      "formula": "friends / familiar_characters * 100",
+      "male_norm": 31,
+      "female_norm": 37,
+      "description_ru": "Процент друзей среди знакомых",
+      "description_en": "Percentage of friends among familiar characters"
+    },
+    "family_percent": {
+      "formula": "family_members / familiar_characters * 100",
+      "male_norm": 12,
+      "female_norm": 19,
+      "description_ru": "Процент членов семьи среди знакомых",
+      "description_en": "Percentage of family members among familiar characters"
+    },
+    "aggression_friendliness_index": {
+      "formula": "aggression_count / friendliness_count",
+      "male_norm": 0.59,
+      "female_norm": 0.32,
+      "description_ru": "Индекс агрессия/дружелюбие (A/F)",
+      "description_en": "Aggression/Friendliness ratio (A/F index)"
+    },
+    "befriender_percent": {
+      "formula": "dreamer_initiated_friendliness / total_friendliness * 100",
+      "male_norm": 50,
+      "female_norm": 47,
+      "description_ru": "Процент дружеских взаимодействий, инициированных сновидцем",
+      "description_en": "Percentage of friendly interactions initiated by dreamer"
+    },
+    "aggressor_percent": {
+      "formula": "dreamer_initiated_aggression / total_aggression * 100",
+      "male_norm": 40,
+      "female_norm": 33,
+      "description_ru": "Процент агрессии, инициированной сновидцем",
+      "description_en": "Percentage of aggression initiated by dreamer"
+    },
+    "victimization_percent": {
+      "formula": "dreamer_as_victim / dreamer_involved_aggression * 100",
+      "male_norm": 60,
+      "female_norm": 67,
+      "description_ru": "Процент случаев, когда сновидец - жертва агрессии",
+      "description_en": "Percentage of aggression where dreamer is victim"
+    },
+    "physical_aggression_percent": {
+      "formula": "physical_aggression / total_aggression * 100",
+      "male_norm": 50,
+      "female_norm": 34,
+      "description_ru": "Процент физической агрессии",
+      "description_en": "Percentage of physical aggression"
+    },
+    "negative_emotions_percent": {
+      "formula": "negative_emotions / total_emotions * 100",
+      "male_norm": 80,
+      "female_norm": 80,
+      "description_ru": "Процент негативных эмоций",
+      "description_en": "Percentage of negative emotions"
+    },
+    "dreamer_success_percent": {
+      "formula": "dreamer_successes / (dreamer_successes + dreamer_failures) * 100",
+      "male_norm": 51,
+      "female_norm": 42,
+      "description_ru": "Процент успехов сновидца",
+      "description_en": "Dreamer's success percentage"
+    },
+    "torso_anatomy_percent": {
+      "formula": "torso_body_parts / total_body_parts * 100",
+      "male_norm": 31,
+      "female_norm": 20,
+      "description_ru": "Процент упоминаний торса среди частей тела",
+      "description_en": "Percentage of torso among body part references"
+    },
+    "negative_descriptors_percent": {
+      "formula": "negative_descriptors / total_descriptors * 100",
+      "male_norm": 58,
+      "female_norm": 55,
+      "description_ru": "Процент негативных описаний",
+      "description_en": "Percentage of negative descriptors"
+    }
+  },
+  "interpretation_thresholds": {
+    "significant_deviation": 15,
+    "moderate_deviation": 10,
+    "description": "Deviation from norm in percentage points to consider significant"
+  },
+  "categories": {
+    "characters": {
+      "human": ["male", "female", "indefinite"],
+      "animal": ["domestic", "wild", "mythical"],
+      "creature": ["monster", "ghost", "fictional"]
+    },
+    "social_interactions": {
+      "aggressive": {
+        "levels": ["covert", "verbal", "physical"],
+        "roles": ["aggressor", "victim", "witness", "mutual"]
+      },
+      "friendly": {
+        "types": ["helping", "gift_giving", "socialize", "protect"],
+        "roles": ["befriender", "recipient", "witness", "mutual"]
+      },
+      "sexual": {
+        "types": ["implicit", "explicit"],
+        "roles": ["initiator", "recipient", "mutual"]
+      }
+    },
+    "activities": {
+      "physical": ["walking", "running", "sports", "manual_work"],
+      "movement": ["flying", "falling", "driving", "swimming"],
+      "verbal": ["talking", "singing", "arguing", "calling"],
+      "expressive": ["crying", "laughing", "dancing"],
+      "visual": ["watching", "looking", "seeing"],
+      "cognitive": ["thinking", "deciding", "remembering"]
+    },
+    "emotions": {
+      "negative": ["anger", "apprehension", "sadness", "confusion"],
+      "positive": ["happiness", "excitement", "relief"]
+    },
+    "settings": {
+      "indoor": ["home", "building", "vehicle"],
+      "outdoor": ["nature", "urban", "water"],
+      "ambiguous": ["unknown", "transitional"]
+    },
+    "objects": {
+      "household": ["furniture", "appliances", "tools"],
+      "nature": ["plants", "weather", "celestial"],
+      "body": ["head", "torso", "limbs", "extremities"],
+      "clothing": ["everyday", "special", "accessories"],
+      "vehicles": ["car", "plane", "boat", "train"],
+      "money": ["cash", "valuables", "transactions"]
+    },
+    "modifiers": {
+      "intensity": ["extreme", "moderate", "slight"],
+      "size": ["large", "small", "normal"],
+      "age": ["old", "young", "same_age"],
+      "density": ["crowded", "sparse", "normal"],
+      "velocity": ["fast", "slow", "normal"],
+      "linearity": ["straight", "curved", "chaotic"]
+    }
+  }
+}

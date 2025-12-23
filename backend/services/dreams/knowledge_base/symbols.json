@@ -2,7 +2,7 @@
   "symbols": [
     {
       "id": "flying",
-      "keywords": ["fly", "flying", "soar", "float", "levitate", "летать", "полёт", "парить"],
+      "keywords": ["fly", "flying", "soar", "float", "levitate", "hover", "glide", "летать", "полёт", "парить", "левитация", "взлетать"],
       "category": "activities",
       "archetype": "liberation",
       "significance": 0.85,
@@ -11,7 +11,7 @@
     },
     {
       "id": "falling",
-      "keywords": ["fall", "falling", "drop", "plunge", "падать", "падение", "обрыв"],
+      "keywords": ["fall", "falling", "drop", "plunge", "stumble", "trip", "падать", "падение", "обрыв", "срываться", "споткнуться"],
       "category": "misfortunes",
       "archetype": "loss_of_control",
       "significance": 0.8,
@@ -20,7 +20,7 @@
     },
     {
       "id": "water",
-      "keywords": ["water", "ocean", "sea", "river", "lake", "swim", "вода", "океан", "море", "река", "озеро", "плавать"],
+      "keywords": ["water", "ocean", "sea", "river", "lake", "swim", "wave", "flood", "rain", "вода", "океан", "море", "река", "озеро", "плавать", "волна", "наводнение", "дождь"],
       "category": "settings",
       "archetype": "unconscious",
       "significance": 0.75,
@@ -29,7 +29,7 @@
     },
     {
       "id": "death",
-      "keywords": ["death", "dead", "die", "dying", "funeral", "смерть", "мёртвый", "умирать", "похороны"],
+      "keywords": ["death", "dead", "die", "dying", "funeral", "grave", "corpse", "смерть", "мёртвый", "умирать", "похороны", "могила", "труп"],
       "category": "misfortunes",
       "archetype": "transformation",
       "significance": 0.9,
@@ -38,7 +38,7 @@
     },
     {
       "id": "chase",
-      "keywords": ["chase", "chasing", "pursue", "run", "escape", "погоня", "преследование", "бежать", "убегать"],
+      "keywords": ["chase", "chasing", "pursue", "run", "escape", "flee", "hunt", "погоня", "преследование", "бежать", "убегать", "охота", "догонять"],
       "category": "activities",
       "archetype": "shadow",
       "significance": 0.85,
@@ -47,7 +47,7 @@
     },
     {
       "id": "teeth",
-      "keywords": ["teeth", "tooth", "losing teeth", "зубы", "зуб", "выпадают зубы"],
+      "keywords": ["teeth", "tooth", "losing teeth", "dental", "bite", "зубы", "зуб", "выпадают зубы", "кусать", "стоматолог"],
       "category": "objects",
       "archetype": "vulnerability",
       "significance": 0.8,
@@ -56,7 +56,7 @@
     },
     {
       "id": "house",
-      "keywords": ["house", "home", "room", "building", "дом", "квартира", "комната", "здание"],
+      "keywords": ["house", "home", "room", "building", "apartment", "door", "window", "дом", "квартира", "комната", "здание", "дверь", "окно"],
       "category": "settings",
       "archetype": "self",
       "significance": 0.7,
@@ -65,7 +65,7 @@
     },
     {
       "id": "animal",
-      "keywords": ["animal", "dog", "cat", "bird", "snake", "животное", "собака", "кошка", "птица", "змея"],
+      "keywords": ["animal", "dog", "cat", "bird", "snake", "horse", "wolf", "bear", "lion", "животное", "собака", "кошка", "птица", "змея", "лошадь", "волк", "медведь", "лев"],
       "category": "characters",
       "archetype": "instinct",
       "significance": 0.7,
@@ -74,7 +74,7 @@
     },
     {
       "id": "naked",
-      "keywords": ["naked", "nude", "undressed", "голый", "обнажённый", "без одежды"],
+      "keywords": ["naked", "nude", "undressed", "bare", "exposed", "голый", "обнажённый", "без одежды", "раздетый"],
       "category": "descriptive_elements",
       "archetype": "vulnerability",
       "significance": 0.75,
@@ -83,7 +83,7 @@
     },
     {
       "id": "exam",
-      "keywords": ["exam", "test", "school", "unprepared", "экзамен", "тест", "школа", "не готов"],
+      "keywords": ["exam", "test", "school", "unprepared", "classroom", "экзамен", "тест", "школа", "не готов", "класс", "университет"],
       "category": "activities",
       "archetype": "self_evaluation",
       "significance": 0.75,
@@ -92,7 +92,7 @@
     },
     {
       "id": "baby",
-      "keywords": ["baby", "infant", "child", "pregnancy", "ребёнок", "младенец", "малыш", "беременность"],
+      "keywords": ["baby", "infant", "child", "pregnancy", "birth", "newborn", "ребёнок", "младенец", "малыш", "беременность", "рождение"],
       "category": "characters",
       "archetype": "new_beginning",
       "significance": 0.8,
@@ -101,7 +101,7 @@
     },
     {
       "id": "vehicle",
-      "keywords": ["car", "drive", "vehicle", "bus", "train", "машина", "ехать", "автобус", "поезд", "транспорт"],
+      "keywords": ["car", "drive", "vehicle", "bus", "train", "plane", "crash", "машина", "ехать", "автобус", "поезд", "транспорт", "самолёт", "авария"],
       "category": "objects",
       "archetype": "life_direction",
       "significance": 0.7,
@@ -110,7 +110,7 @@
     },
     {
       "id": "moon",
-      "keywords": ["moon", "lunar", "moonlight", "луна", "лунный", "лунный свет"],
+      "keywords": ["moon", "lunar", "moonlight", "луна", "лунный", "лунный свет", "полнолуние"],
       "category": "settings",
       "archetype": "feminine",
       "significance": 0.8,
@@ -119,7 +119,7 @@
     },
     {
       "id": "money",
-      "keywords": ["money", "cash", "wealth", "rich", "poor", "деньги", "богатство", "бедность"],
+      "keywords": ["money", "cash", "wealth", "rich", "poor", "bank", "gold", "деньги", "богатство", "бедность", "банк", "золото", "кошелёк"],
       "category": "objects",
       "archetype": "self_worth",
       "significance": 0.7,
@@ -128,39 +128,361 @@
     },
     {
       "id": "wedding",
-      "keywords": ["wedding", "marriage", "bride", "groom", "свадьба", "брак", "невеста", "жених"],
+      "keywords": ["wedding", "marriage", "bride", "groom", "свадьба", "брак", "невеста", "жених", "кольцо"],
       "category": "activities",
       "archetype": "union",
       "significance": 0.75,
       "interpretation_en": "Wedding dreams represent union, commitment, or integration of different aspects of self. May also reflect thoughts about relationships or major life changes.",
       "interpretation_ru": "Сны о свадьбе символизируют союз, обязательства или интеграцию разных аспектов личности. Также могут отражать мысли об отношениях или важных жизненных переменах."
+    },
+    {
+      "id": "snake",
+      "keywords": ["snake", "serpent", "viper", "cobra", "змея", "змей", "гадюка", "кобра", "питон"],
+      "category": "characters",
+      "archetype": "transformation",
+      "significance": 0.85,
+      "interpretation_en": "Snakes in dreams can represent transformation, healing, hidden fears, or sexuality. Context and your feelings toward the snake are key to interpretation.",
+      "interpretation_ru": "Змеи во снах могут символизировать трансформацию, исцеление, скрытые страхи или сексуальность. Контекст и ваши чувства к змее ключевы для интерпретации."
+    },
+    {
+      "id": "fire",
+      "keywords": ["fire", "flame", "burn", "smoke", "огонь", "пламя", "гореть", "пожар", "дым"],
+      "category": "objects",
+      "archetype": "transformation",
+      "significance": 0.8,
+      "interpretation_en": "Fire in dreams can symbolize passion, anger, transformation, or destruction. Controlled fire suggests creative energy, while uncontrolled fire may indicate overwhelming emotions.",
+      "interpretation_ru": "Огонь во снах может символизировать страсть, гнев, трансформацию или разрушение. Контролируемый огонь указывает на творческую энергию, неконтролируемый — на переполняющие эмоции."
+    },
+    {
+      "id": "mirror",
+      "keywords": ["mirror", "reflection", "glass", "зеркало", "отражение", "стекло"],
+      "category": "objects",
+      "archetype": "self",
+      "significance": 0.75,
+      "interpretation_en": "Mirrors in dreams represent self-reflection and self-perception. Distorted reflections may indicate unclear self-image or denial of certain aspects of yourself.",
+      "interpretation_ru": "Зеркала во снах представляют самоанализ и самовосприятие. Искажённые отражения могут указывать на неясный образ себя или отрицание некоторых аспектов личности."
+    },
+    {
+      "id": "blood",
+      "keywords": ["blood", "bleeding", "wound", "injury", "кровь", "кровотечение", "рана", "травма"],
+      "category": "objects",
+      "archetype": "life_force",
+      "significance": 0.8,
+      "interpretation_en": "Blood in dreams often represents life force, passion, or emotional pain. Losing blood may indicate feeling drained, while seeing others' blood might reflect concern for them.",
+      "interpretation_ru": "Кровь во снах часто представляет жизненную силу, страсть или эмоциональную боль. Потеря крови может означать чувство истощения, кровь других — беспокойство о них."
+    },
+    {
+      "id": "spider",
+      "keywords": ["spider", "web", "паук", "паутина"],
+      "category": "characters",
+      "archetype": "feminine",
+      "significance": 0.75,
+      "interpretation_en": "Spiders in dreams often represent creativity, feminine power, or feeling trapped. The web can symbolize intricate situations or being caught in someone's manipulations.",
+      "interpretation_ru": "Пауки во снах часто представляют творчество, женскую силу или чувство ловушки. Паутина может символизировать запутанные ситуации или манипуляции."
+    },
+    {
+      "id": "stairs",
+      "keywords": ["stairs", "staircase", "steps", "climb", "descend", "лестница", "ступени", "подниматься", "спускаться"],
+      "category": "settings",
+      "archetype": "progress",
+      "significance": 0.7,
+      "interpretation_en": "Stairs in dreams represent progress, transition, or personal growth. Ascending suggests advancement, while descending may indicate exploring the unconscious or regression.",
+      "interpretation_ru": "Лестницы во снах представляют прогресс, переход или личностный рост. Подъём указывает на продвижение, спуск — на исследование бессознательного или регресс."
+    },
+    {
+      "id": "bridge",
+      "keywords": ["bridge", "crossing", "мост", "переход", "переправа"],
+      "category": "settings",
+      "archetype": "transition",
+      "significance": 0.75,
+      "interpretation_en": "Bridges in dreams symbolize transitions, connections, or overcoming obstacles. A broken bridge may indicate fear of change or inability to reach goals.",
+      "interpretation_ru": "Мосты во снах символизируют переходы, связи или преодоление препятствий. Разрушенный мост может указывать на страх перемен или невозможность достичь целей."
+    },
+    {
+      "id": "forest",
+      "keywords": ["forest", "woods", "trees", "jungle", "лес", "деревья", "джунгли", "роща"],
+      "category": "settings",
+      "archetype": "unconscious",
+      "significance": 0.7,
+      "interpretation_en": "Forests in dreams often represent the unconscious mind, the unknown, or a spiritual journey. Being lost in a forest suggests confusion about life direction.",
+      "interpretation_ru": "Леса во снах часто представляют бессознательное, неизвестное или духовное путешествие. Заблудиться в лесу указывает на путаницу в жизненном направлении."
+    },
+    {
+      "id": "phone",
+      "keywords": ["phone", "telephone", "call", "text", "message", "телефон", "звонок", "сообщение", "смартфон"],
+      "category": "objects",
+      "archetype": "communication",
+      "significance": 0.65,
+      "interpretation_en": "Phones in dreams relate to communication and connection. Not being able to dial or hear suggests communication difficulties or feeling disconnected from others.",
+      "interpretation_ru": "Телефоны во снах связаны с общением и связью. Невозможность дозвониться или услышать указывает на трудности в общении или чувство изоляции."
+    },
+    {
+      "id": "lost",
+      "keywords": ["lost", "missing", "cannot find", "searching", "потерян", "пропал", "не могу найти", "искать"],
+      "category": "striving",
+      "archetype": "searching",
+      "significance": 0.75,
+      "interpretation_en": "Being lost in dreams reflects feeling directionless in life, searching for purpose, or anxiety about making wrong decisions.",
+      "interpretation_ru": "Потеряться во сне отражает чувство потери направления в жизни, поиск цели или тревогу о неправильных решениях."
+    },
+    {
+      "id": "late",
+      "keywords": ["late", "running late", "missing", "deadline", "опаздывать", "опоздание", "не успеть"],
+      "category": "striving",
+      "archetype": "anxiety",
+      "significance": 0.7,
+      "interpretation_en": "Dreams about being late often reflect anxiety about missing opportunities, not meeting expectations, or feeling behind in life compared to others.",
+      "interpretation_ru": "Сны об опоздании часто отражают тревогу об упущенных возможностях, невыполнении ожиданий или чувство отставания от других."
+    },
+    {
+      "id": "war",
+      "keywords": ["war", "battle", "fight", "soldier", "army", "война", "битва", "сражение", "солдат", "армия"],
+      "category": "activities",
+      "archetype": "conflict",
+      "significance": 0.8,
+      "interpretation_en": "War in dreams represents inner conflict, struggle with others, or feeling under attack in waking life. May indicate need to defend boundaries.",
+      "interpretation_ru": "Война во снах представляет внутренний конфликт, борьбу с другими или чувство атаки в реальной жизни. Может указывать на необходимость защиты границ."
+    },
+    {
+      "id": "hospital",
+      "keywords": ["hospital", "doctor", "nurse", "surgery", "больница", "врач", "медсестра", "операция", "лечение"],
+      "category": "settings",
+      "archetype": "healing",
+      "significance": 0.75,
+      "interpretation_en": "Hospitals in dreams may indicate need for healing, concern about health, or dealing with emotional wounds. Can also represent places of transformation.",
+      "interpretation_ru": "Больницы во снах могут указывать на потребность в исцелении, беспокойство о здоровье или работу с эмоциональными ранами. Также места трансформации."
+    },
+    {
+      "id": "celebrity",
+      "keywords": ["celebrity", "famous", "star", "знаменитость", "звезда", "известный", "актёр"],
+      "category": "characters",
+      "archetype": "aspiration",
+      "significance": 0.65,
+      "interpretation_en": "Celebrities in dreams often represent qualities you admire or desire. May indicate aspirations, need for recognition, or projection of ideal self.",
+      "interpretation_ru": "Знаменитости во снах часто представляют качества, которыми вы восхищаетесь. Могут указывать на стремления, потребность в признании или проекцию идеального я."
+    },
+    {
+      "id": "ocean",
+      "keywords": ["ocean", "sea", "waves", "beach", "shore", "океан", "море", "волны", "пляж", "берег"],
+      "category": "settings",
+      "archetype": "unconscious",
+      "significance": 0.8,
+      "interpretation_en": "The ocean represents the vast unconscious, emotions, and the unknown. Calm seas suggest peace, while storms indicate emotional turmoil.",
+      "interpretation_ru": "Океан представляет огромное бессознательное, эмоции и неизвестное. Спокойное море указывает на мир, шторм — на эмоциональные потрясения."
+    },
+    {
+      "id": "flying_machine",
+      "keywords": ["airplane", "plane", "helicopter", "самолёт", "вертолёт", "авиация"],
+      "category": "objects",
+      "archetype": "aspiration",
+      "significance": 0.7,
+      "interpretation_en": "Airplanes in dreams represent high aspirations, spiritual journey, or desire to escape. Plane crashes may indicate fear of failure or loss of control.",
+      "interpretation_ru": "Самолёты во снах представляют высокие стремления, духовное путешествие или желание сбежать. Крушение может указывать на страх неудачи или потери контроля."
+    },
+    {
+      "id": "darkness",
+      "keywords": ["dark", "darkness", "night", "shadow", "темнота", "тьма", "ночь", "тень", "мрак"],
+      "category": "settings",
+      "archetype": "shadow",
+      "significance": 0.75,
+      "interpretation_en": "Darkness in dreams often represents the unknown, fear, or the shadow self. May indicate depression, uncertainty, or hidden aspects of personality.",
+      "interpretation_ru": "Темнота во снах часто представляет неизвестное, страх или теневую сторону личности. Может указывать на депрессию, неопределённость или скрытые аспекты."
+    },
+    {
+      "id": "light",
+      "keywords": ["light", "bright", "sun", "shine", "свет", "яркий", "солнце", "сияние", "луч"],
+      "category": "settings",
+      "archetype": "consciousness",
+      "significance": 0.75,
+      "interpretation_en": "Light in dreams symbolizes consciousness, enlightenment, hope, or divine presence. Moving toward light suggests spiritual growth or clarity.",
+      "interpretation_ru": "Свет во снах символизирует сознание, просветление, надежду или божественное присутствие. Движение к свету указывает на духовный рост или ясность."
+    },
+    {
+      "id": "food",
+      "keywords": ["food", "eat", "eating", "meal", "hungry", "еда", "есть", "кушать", "обед", "голодный"],
+      "category": "objects",
+      "archetype": "nourishment",
+      "significance": 0.65,
+      "interpretation_en": "Food in dreams represents nourishment of body, mind, or soul. Inability to eat may indicate unfulfilled needs or emotional hunger.",
+      "interpretation_ru": "Еда во снах представляет питание тела, разума или души. Невозможность поесть может указывать на неудовлетворённые потребности или эмоциональный голод."
+    },
+    {
+      "id": "key",
+      "keywords": ["key", "lock", "unlock", "ключ", "замок", "отпереть", "открыть"],
+      "category": "objects",
+      "archetype": "solution",
+      "significance": 0.7,
+      "interpretation_en": "Keys in dreams represent solutions, access, or secrets. Finding a key suggests discovering answers, while losing one indicates missed opportunities.",
+      "interpretation_ru": "Ключи во снах представляют решения, доступ или секреты. Найти ключ — обнаружить ответы, потерять — упустить возможности."
+    },
+    {
+      "id": "road",
+      "keywords": ["road", "path", "highway", "street", "дорога", "путь", "шоссе", "улица", "тропа"],
+      "category": "settings",
+      "archetype": "life_path",
+      "significance": 0.7,
+      "interpretation_en": "Roads in dreams represent life's journey and choices. Crossroads indicate decisions, while blocked roads suggest obstacles to progress.",
+      "interpretation_ru": "Дороги во снах представляют жизненный путь и выбор. Перекрёстки указывают на решения, заблокированные дороги — на препятствия."
+    },
+    {
+      "id": "stranger",
+      "keywords": ["stranger", "unknown person", "mysterious", "незнакомец", "неизвестный", "чужой", "таинственный"],
+      "category": "characters",
+      "archetype": "shadow",
+      "significance": 0.7,
+      "interpretation_en": "Strangers in dreams often represent unknown aspects of yourself or parts of your psyche you haven't fully acknowledged.",
+      "interpretation_ru": "Незнакомцы во снах часто представляют неизвестные аспекты вас самих или части психики, которые вы не полностью признали."
+    },
+    {
+      "id": "mother",
+      "keywords": ["mother", "mom", "mama", "мать", "мама", "мамочка", "родительница"],
+      "category": "characters",
+      "archetype": "feminine",
+      "significance": 0.8,
+      "interpretation_en": "Mother in dreams represents nurturing, protection, the feminine principle, or your relationship with your actual mother and caregiving.",
+      "interpretation_ru": "Мать во снах представляет заботу, защиту, женское начало или ваши отношения с реальной матерью и опеку."
+    },
+    {
+      "id": "father",
+      "keywords": ["father", "dad", "papa", "отец", "папа", "батя"],
+      "category": "characters",
+      "archetype": "masculine",
+      "significance": 0.8,
+      "interpretation_en": "Father in dreams represents authority, protection, the masculine principle, or your relationship with your actual father and discipline.",
+      "interpretation_ru": "Отец во снах представляет авторитет, защиту, мужское начало или ваши отношения с реальным отцом и дисциплину."
+    },
+    {
+      "id": "ex_partner",
+      "keywords": ["ex", "ex-girlfriend", "ex-boyfriend", "former lover", "бывший", "бывшая", "экс"],
+      "category": "characters",
+      "archetype": "past",
+      "significance": 0.75,
+      "interpretation_en": "Ex-partners in dreams often represent unresolved feelings, lessons from past relationships, or qualities you associate with that person.",
+      "interpretation_ru": "Бывшие партнёры во снах часто представляют нерешённые чувства, уроки прошлых отношений или качества, которые вы связываете с этим человеком."
+    },
+    {
+      "id": "swimming",
+      "keywords": ["swim", "swimming", "drown", "drowning", "плавать", "плыть", "тонуть", "утопать"],
+      "category": "activities",
+      "archetype": "emotional_navigation",
+      "significance": 0.75,
+      "interpretation_en": "Swimming in dreams reflects how you navigate emotions. Drowning suggests being overwhelmed, while swimming easily indicates emotional competence.",
+      "interpretation_ru": "Плавание во снах отражает, как вы справляетесь с эмоциями. Утопание указывает на подавленность, лёгкое плавание — на эмоциональную компетентность."
+    },
+    {
+      "id": "running",
+      "keywords": ["run", "running", "sprint", "jog", "бежать", "бег", "спринт"],
+      "category": "activities",
+      "archetype": "escape",
+      "significance": 0.7,
+      "interpretation_en": "Running in dreams can indicate escape from something, pursuit of goals, or anxiety. Inability to run suggests feeling stuck or powerless.",
+      "interpretation_ru": "Бег во снах может указывать на побег от чего-то, преследование целей или тревогу. Невозможность бежать указывает на чувство застревания или бессилия."
+    },
+    {
+      "id": "mountain",
+      "keywords": ["mountain", "hill", "climb", "summit", "peak", "гора", "холм", "восхождение", "вершина", "пик"],
+      "category": "settings",
+      "archetype": "achievement",
+      "significance": 0.75,
+      "interpretation_en": "Mountains in dreams represent challenges, goals, and achievements. Climbing suggests effort toward goals, reaching the top indicates success.",
+      "interpretation_ru": "Горы во снах представляют вызовы, цели и достижения. Восхождение указывает на усилия к целям, достижение вершины — на успех."
+    },
+    {
+      "id": "storm",
+      "keywords": ["storm", "thunder", "lightning", "tornado", "hurricane", "гроза", "шторм", "гром", "молния", "торнадо", "ураган"],
+      "category": "settings",
+      "archetype": "chaos",
+      "significance": 0.8,
+      "interpretation_en": "Storms in dreams represent emotional turmoil, conflict, or powerful forces beyond your control. May indicate need to weather a difficult period.",
+      "interpretation_ru": "Штормы во снах представляют эмоциональные потрясения, конфликты или мощные силы вне вашего контроля. Могут указывать на необходимость пережить трудный период."
+    },
+    {
+      "id": "garden",
+      "keywords": ["garden", "flowers", "plants", "grow", "bloom", "сад", "цветы", "растения", "расти", "цвести"],
+      "category": "settings",
+      "archetype": "growth",
+      "significance": 0.7,
+      "interpretation_en": "Gardens in dreams represent personal growth, fertility, and the rewards of nurturing. A neglected garden may indicate neglected aspects of life.",
+      "interpretation_ru": "Сады во снах представляют личностный рост, плодородие и награды заботы. Запущенный сад может указывать на запущенные аспекты жизни."
+    },
+    {
+      "id": "book",
+      "keywords": ["book", "reading", "library", "книга", "чтение", "библиотека", "читать"],
+      "category": "objects",
+      "archetype": "knowledge",
+      "significance": 0.65,
+      "interpretation_en": "Books in dreams represent knowledge, learning, and life lessons. An unreadable book may suggest hidden knowledge or difficulty understanding something.",
+      "interpretation_ru": "Книги во снах представляют знания, обучение и жизненные уроки. Нечитаемая книга может указывать на скрытые знания или трудности понимания."
+    },
+    {
+      "id": "pregnancy",
+      "keywords": ["pregnant", "pregnancy", "expecting", "беременность", "беременная", "ожидать ребёнка"],
+      "category": "activities",
+      "archetype": "creation",
+      "significance": 0.8,
+      "interpretation_en": "Pregnancy in dreams often symbolizes creativity, new ideas, or projects developing. Represents something new being created in your life.",
+      "interpretation_ru": "Беременность во снах часто символизирует творчество, новые идеи или развивающиеся проекты. Представляет нечто новое, создаваемое в вашей жизни."
+    },
+    {
+      "id": "mask",
+      "keywords": ["mask", "disguise", "hidden face", "маска", "маскировка", "скрытое лицо"],
+      "category": "objects",
+      "archetype": "persona",
+      "significance": 0.75,
+      "interpretation_en": "Masks in dreams represent the persona, hidden identity, or deception. May indicate you or others are hiding true feelings or intentions.",
+      "interpretation_ru": "Маски во снах представляют персону, скрытую идентичность или обман. Могут указывать, что вы или другие скрываете истинные чувства или намерения."
+    },
+    {
+      "id": "jewel",
+      "keywords": ["jewel", "diamond", "gem", "treasure", "драгоценность", "алмаз", "самоцвет", "сокровище", "украшение"],
+      "category": "objects",
+      "archetype": "self",
+      "significance": 0.75,
+      "interpretation_en": "Jewels in dreams represent something precious - talents, qualities, or aspects of self that are valuable. May indicate self-worth or hidden potential.",
+      "interpretation_ru": "Драгоценности во снах представляют что-то ценное — таланты, качества или аспекты личности. Могут указывать на самооценку или скрытый потенциал."
     }
   ],
   "emotions": {
-    "positive": ["happy", "joy", "love", "excitement", "peace", "счастье", "радость", "любовь", "волнение", "покой"],
-    "negative": ["fear", "anxiety", "anger", "sadness", "confusion", "страх", "тревога", "гнев", "печаль", "смятение"],
-    "neutral": ["curiosity", "surprise", "любопытство", "удивление"]
+    "positive": ["happy", "joy", "love", "excitement", "peace", "relief", "hope", "pride", "счастье", "радость", "любовь", "волнение", "покой", "облегчение", "надежда", "гордость"],
+    "negative": ["fear", "anxiety", "anger", "sadness", "confusion", "guilt", "shame", "frustration", "страх", "тревога", "гнев", "печаль", "смятение", "вина", "стыд", "разочарование"],
+    "neutral": ["curiosity", "surprise", "wonder", "любопытство", "удивление", "изумление"]
   },
   "archetypes": {
     "shadow": {
-      "description_en": "The dark, rejected aspects of personality",
-      "description_ru": "Тёмные, отвергаемые аспекты личности"
+      "description_en": "The dark, rejected aspects of personality that we don't acknowledge",
+      "description_ru": "Тёмные, отвергаемые аспекты личности, которые мы не признаём"
     },
     "anima_animus": {
       "description_en": "The feminine (anima) or masculine (animus) aspect in the unconscious",
       "description_ru": "Женский (анима) или мужской (анимус) аспект в бессознательном"
     },
     "self": {
-      "description_en": "The unified totality of the psyche",
-      "description_ru": "Объединённая целостность психики"
+      "description_en": "The unified totality of the psyche, representing wholeness and integration",
+      "description_ru": "Объединённая целостность психики, представляющая целостность и интеграцию"
     },
     "transformation": {
-      "description_en": "The process of psychological change and growth",
-      "description_ru": "Процесс психологического изменения и роста"
+      "description_en": "The process of psychological change, death and rebirth",
+      "description_ru": "Процесс психологического изменения, смерти и перерождения"
     },
     "hero": {
       "description_en": "The aspect that overcomes challenges and achieves goals",
       "description_ru": "Аспект, преодолевающий трудности и достигающий целей"
+    },
+    "wise_old_man": {
+      "description_en": "Inner wisdom, guidance, and knowledge",
+      "description_ru": "Внутренняя мудрость, руководство и знания"
+    },
+    "great_mother": {
+      "description_en": "Nurturing, protection, but also devouring aspects",
+      "description_ru": "Забота, защита, но также поглощающие аспекты"
+    },
+    "trickster": {
+      "description_en": "The playful, mischievous aspect that breaks rules and creates chaos",
+      "description_ru": "Игривый, озорной аспект, нарушающий правила и создающий хаос"
+    },
+    "child": {
+      "description_en": "Innocence, potential, new beginnings, but also vulnerability",
+      "description_ru": "Невинность, потенциал, новые начинания, но также уязвимость"
     }
   }
 }

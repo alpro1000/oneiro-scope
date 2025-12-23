@@ -144,6 +144,40 @@ class LunarContext(BaseModel):
     interpretation_en: str = Field(...)
 
 
+class NormDeviation(BaseModel):
+    """Single indicator deviation from Hall/Van de Castle norms"""
+    indicator: str = Field(..., description="Norm indicator name")
+    user_value: float = Field(..., description="User's dream value")
+    norm_value: float = Field(..., description="Expected norm value")
+    deviation: float = Field(..., description="Deviation in percentage points")
+    significance: str = Field(..., description="significant/moderate/normal")
+    description_ru: str = Field(..., description="Russian description")
+    description_en: str = Field(..., description="English description")
+
+
+class NormComparisonResult(BaseModel):
+    """Comparison of dream content to Hall/Van de Castle norms"""
+    gender_used: str = Field(..., description="Gender norms used (male/female)")
+    overall_typicality: float = Field(
+        ...,
+        ge=0,
+        le=100,
+        description="How typical the dream is (0-100%)"
+    )
+    deviations: List[NormDeviation] = Field(
+        default_factory=list,
+        description="List of deviations from norms"
+    )
+    notable_findings_ru: List[str] = Field(
+        default_factory=list,
+        description="Notable findings in Russian"
+    )
+    notable_findings_en: List[str] = Field(
+        default_factory=list,
+        description="Notable findings in English"
+    )
+
+
 class DreamAnalysisResponse(BaseModel):
     """Complete dream analysis response"""
     status: str = Field(default="success")
@@ -165,6 +199,12 @@ class DreamAnalysisResponse(BaseModel):
 
     # Lunar context (if date provided)
     lunar_context: Optional[LunarContext] = Field(None)
+
+    # Norm comparison (Hall/Van de Castle)
+    norm_comparison: Optional[NormComparisonResult] = Field(
+        None,
+        description="Comparison to Hall/Van de Castle norms based on dreamer gender"
+    )
 
     # AI interpretation
     summary: str = Field(..., description="Brief summary")
