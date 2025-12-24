@@ -57,6 +57,7 @@ POPULAR_CITIES = {
     # Europe
     "london": {"name": "London", "country": "United Kingdom", "lat": 51.5085, "lon": -0.1257, "timezone": "Europe/London"},
     "paris": {"name": "Paris", "country": "France", "lat": 48.8566, "lon": 2.3522, "timezone": "Europe/Paris"},
+    "париж": {"name": "Paris", "country": "France", "lat": 48.8566, "lon": 2.3522, "timezone": "Europe/Paris"},
     "berlin": {"name": "Berlin", "country": "Germany", "lat": 52.5200, "lon": 13.4050, "timezone": "Europe/Berlin"},
     "madrid": {"name": "Madrid", "country": "Spain", "lat": 40.4168, "lon": -3.7038, "timezone": "Europe/Madrid"},
     "rome": {"name": "Rome", "country": "Italy", "lat": 41.9028, "lon": 12.4964, "timezone": "Europe/Rome"},
