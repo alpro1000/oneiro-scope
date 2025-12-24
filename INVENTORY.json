@@ -198,7 +198,7 @@
     {
       "path": "docs",
       "dirs": 1,
-      "files": 18
+      "files": 21
     },
     {
       "path": "docs/architecture",
@@ -337,5 +337,5 @@
     }
   ],
   "total_dirs": 66,
-  "total_files": 214
+  "total_files": 217
 }
