@@ -2,7 +2,8 @@
 
 **Дата**: 2025-12-24
 **Текущий статус**: ✅ Ready for Production
-**Текущая ветка**: `claude/improve-dream-interpreter-OYIOs`
+**Текущая ветка**: `claude/session-startup-docs-hXgKs`
+**Claude-mem**: ✅ Installed & Running (v8.0.6, PID 12153)
 
 ---
 
@@ -55,6 +56,53 @@ Deployment steps:
   3. Monitor logs for any errors
   4. Run health checks
 ```
+
+---
+
+## 🧠 CLAUDE-MEM SYSTEM (Installed & Active)
+
+### ✅ Status:
+```bash
+Version:        8.0.6 (upgraded from 7.3.4)
+Worker PID:     12153
+Port:           37777
+Health:         http://localhost:37777/api/health → {"status":"ok"}
+Database:       ~/.claude-mem/claude-mem.db
+Logs:           ~/.claude-mem/logs/worker-2025-12-24.log
+MCP Server:     ✅ Connected
+```
+
+### 🎯 What it does:
+- 🧠 **Persistent Memory**: Context saved across sessions
+- 📝 **Auto Observations**: Every tool use recorded
+- 🔍 **Skill Search**: "What did we do last session?"
+- 💡 **Context Injection**: 50 observations loaded at start
+- 📊 **Web UI**: http://localhost:37777 (sessions, observations)
+
+### 📋 Configuration:
+```json
+{
+  "CLAUDE_MEM_MODEL": "claude-sonnet-4-5",
+  "CLAUDE_MEM_CONTEXT_OBSERVATIONS": "50",
+  "CLAUDE_MEM_MODE": "code",
+  "CLAUDE_MEM_LOG_LEVEL": "INFO"
+}
+```
+
+### 🔧 Управление:
+```bash
+# Check status
+curl http://localhost:37777/api/health
+
+# View logs
+tail -f ~/.claude-mem/logs/worker-2025-12-24.log
+
+# Restart worker
+cd ~/.claude/plugins/marketplaces/thedotmack
+npm run worker:restart
+```
+
+**Result**: Claude will now remember ALL sessions automatically! 🎉
 
 ---
 
