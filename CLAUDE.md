@@ -312,10 +312,11 @@ See `render.yaml` for configuration. Deploy requires:
 | 2025-12-18 | `claude/session-documentation-zdu0p` | Language switcher, pytest fixes |
 | 2025-12-23 | `claude/oneiroscope-continuation-5S4v3` | DreamBank integration, language auto-detection, JSON prompts |
 | 2025-12-23 | `claude/dream-interpreter-setup-nK52c` | Dream interpreter v2.1 upgrade (REM/NREM, prohibited list, validation) |
+| **2025-12-24** | `claude/dream-interpreter-setup-nK52c` | **Narrative-first semantic engine, contextual validation, 7 modern symbols** |
 
 See `docs/SESSION_SUMMARY_*.md` for details.
 
-## Status (Updated 2025-12-23)
+## Status (Updated 2025-12-24)
 
 ### Completed
 - [x] **P0**: Geocoder async fix (GeoNames API)
@@ -325,10 +326,15 @@ See `docs/SESSION_SUMMARY_*.md` for details.
 - [x] Language switcher RU/EN
 - [x] GeoNames configured on Render (`alpro1000`)
 - [x] **DreamBank**: Hall/Van de Castle norm comparison integrated
-- [x] **Symbols**: Expanded from 15 to 50 dream symbols
+- [x] **Symbols**: Expanded from 15 to 56 dream symbols (+7 modern)
 - [x] **Language Detection**: Auto-detect RU/EN in dream text
 - [x] **JSON Prompts**: Bilingual prompt system for LLM
 - [x] **Interpreter v2.1**: REM/NREM models, DreamBase, prohibited list, 4-step validation, confidence scoring
+- [x] **Narrative-First Approach**: LLM analyzes full dream semantics before trusting symbols
+- [x] **Contextual Validation**: Programmatic filtering of false positives (house from car door)
+- [x] **Modern Symbols**: surveillance, boundaries, control, escape_liberation, privacy, autonomy, technology
+- [x] **Test Suite**: 14 regression tests for dream interpreter (9/14 passing - 64%)
+- [x] **Documentation**: Full v2.1 architecture spec (550 lines)
 
 ### Pending
 - [ ] Create PR for merge to main
@@ -344,12 +350,22 @@ See `docs/SESSION_SUMMARY_*.md` for details.
 - Phase 3 (dreams enhancement): ✅ DONE - DreamBank norms, language detection, JSON prompts
 - Phase 3 (QA/CI): Tests green locally, CI pipeline setup pending
 
-## Next Actions
-1) Создать PR из `claude/oneiroscope-continuation-5S4v3` в main
+## Next Actions (Updated 2025-12-24)
+
+### Immediate
+1) Создать PR из `claude/dream-interpreter-setup-nK52c` в main
 2) После merge проверить production deploy на Render
 3) Выставить `ENVIRONMENT=production` на Render
-4) Добавить retry логику в LunarWidget
-5) Добавить health/log для режима ephemeris
+
+### Phase 2 - Dream Interpreter Enhancements
+1) **JSON Output Schema**: Add confidence, tone, semantic_sources metadata
+2) **Lemmatization**: Integrate pymorphy2 for Russian morphological analysis
+3) **Test Coverage**: Expand to 100% pass rate (currently 64%)
+4) **A/B Testing**: Deploy v2.1 to production, collect user feedback
+
+### Backlog
+- [ ] Добавить retry логику в LunarWidget
+- [ ] Добавить health/log для режима ephemeris
 
 ## Dream Analysis Architecture (Updated 2025-12-23)
 
