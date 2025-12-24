@@ -6,6 +6,7 @@ Provides async geocoding using the official GeoNames API with:
 - Automatic transliteration fallback
 - LRU caching to reduce API calls
 - Language detection for smart query handling
+- Fallback to built-in popular cities database
 """
 
 import os
@@ -22,6 +23,26 @@ logger = logging.getLogger(__name__)
 GEONAMES_USER = os.getenv("GEONAMES_USERNAME", "demo")  # 'demo' for testing only
 GEONAMES_LANG = os.getenv("GEONAMES_LANG", "ru")
 BASE_URL = "http://api.geonames.org/searchJSON"
+
+# Built-in popular cities database (fallback when GeoNames API fails)
+# Format: {"city_name_lower": {"name": "DisplayName", "country": "CountryName", "lat": 55.0, "lon": 37.0, "timezone": "Europe/Moscow"}}
+POPULAR_CITIES = {
+    "москва": {"name": "Moscow", "country": "Russia", "lat": 55.75222, "lon": 37.61556, "timezone": "Europe/Moscow"},
+    "moscow": {"name": "Moscow", "country": "Russia", "lat": 55.75222, "lon": 37.61556, "timezone": "Europe/Moscow"},
+    "санкт-петербург": {"name": "Saint Petersburg", "country": "Russia", "lat": 59.93863, "lon": 30.31413, "timezone": "Europe/Moscow"},
+    "saint petersburg": {"name": "Saint Petersburg", "country": "Russia", "lat": 59.93863, "lon": 30.31413, "timezone": "Europe/Moscow"},
+    "st petersburg": {"name": "Saint Petersburg", "country": "Russia", "lat": 59.93863, "lon": 30.31413, "timezone": "Europe/Moscow"},
+    "london": {"name": "London", "country": "United Kingdom", "lat": 51.5085, "lon": -0.1257, "timezone": "Europe/London"},
+    "paris": {"name": "Paris", "country": "France", "lat": 48.8566, "lon": 2.3522, "timezone": "Europe/Paris"},
+    "berlin": {"name": "Berlin", "country": "Germany", "lat": 52.5200, "lon": 13.4050, "timezone": "Europe/Berlin"},
+    "new york": {"name": "New York", "country": "United States", "lat": 40.7128, "lon": -74.0060, "timezone": "America/New_York"},
+    "ny": {"name": "New York", "country": "United States", "lat": 40.7128, "lon": -74.0060, "timezone": "America/New_York"},
+    "tokyo": {"name": "Tokyo", "country": "Japan", "lat": 35.6762, "lon": 139.6503, "timezone": "Asia/Tokyo"},
+    "sydney": {"name": "Sydney", "country": "Australia", "lat": -33.8688, "lon": 151.2093, "timezone": "Australia/Sydney"},
+    "dubai": {"name": "Dubai", "country": "United Arab Emirates", "lat": 25.2048, "lon": 55.2708, "timezone": "Asia/Dubai"},
+    "bangkok": {"name": "Bangkok", "country": "Thailand", "lat": 13.7563, "lon": 100.5018, "timezone": "Asia/Bangkok"},
+    "singapore": {"name": "Singapore", "country": "Singapore", "lat": 1.3521, "lon": 103.8198, "timezone": "Asia/Singapore"},
+}
 
 # HTTP client with connection pooling
 _http_client: Optional[httpx.AsyncClient] = None
@@ -95,6 +116,9 @@ async def geonames_lookup(place_name: str) -> Dict:
     """
     Lookup location using GeoNames API with multilingual support.
 
+    Tries GeoNames API first, then transliteration fallback (for Russian),
+    then falls back to built-in popular cities database.
+
     Args:
         place_name: City or place name in Russian or Latin
 
@@ -106,11 +130,11 @@ async def geonames_lookup(place_name: str) -> Dict:
             "country": "Russia",
             "lat": 55.75222,
             "lon": 37.61556,
-            "geonameId": 524901
+            "geonameId": 524901 or None (if from built-in database)
         }
 
     Raises:
-        ValueError: If place not found
+        ValueError: If place not found in all sources
         httpx.HTTPError: If API request fails
     """
     # Check cache first
@@ -121,6 +145,10 @@ async def geonames_lookup(place_name: str) -> Dict:
 
     client = get_http_client()
     query = place_name.strip()
+
+    # Warn if using demo account
+    if GEONAMES_USER == "demo":
+        logger.warning(f"[GeoNames] ⚠️  Using DEMO account - API access limited. Set GEONAMES_USERNAME env var for production!")
 
     # Try original query first
     params = {
@@ -162,6 +190,28 @@ async def geonames_lookup(place_name: str) -> Dict:
         error_msg = f"Place not found: {place_name}"
         logger.warning(f"[GeoNames] ERROR: {error_msg}")
         logger.warning(f"[GeoNames] Total results received: {len(data.get('geonames', []))}")
+
+        # Try fallback to built-in popular cities database
+        logger.info(f"[GeoNames] Trying fallback to popular cities database...")
+        city_key = query.lower().strip()
+        if city_key in POPULAR_CITIES:
+            city_data = POPULAR_CITIES[city_key]
+            result = {
+                "input": place_name,
+                "resolved_name": city_data["name"],
+                "country": city_data["country"],
+                "lat": city_data["lat"],
+                "lon": city_data["lon"],
+                "geonameId": None,  # No GeoNames ID for built-in database
+                "timezone": city_data["timezone"],
+            }
+            # Cache successful result
+            _location_cache[cache_key] = result
+            logger.info(f"[GeoNames] ✓ FALLBACK SUCCESS: '{place_name}' → '{result['resolved_name']}' ({result['country']})")
+            logger.debug(f"[GeoNames] Using built-in popular cities database")
+            return result
+
+        logger.error(f"[GeoNames] ✗ Fallback also failed - city '{place_name}' not found in built-in database")
         raise ValueError(error_msg)
 
     place = data["geonames"][0]
