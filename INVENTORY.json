@@ -62,7 +62,7 @@
     },
     {
       "path": "backend",
-      "dirs": 9,
+      "dirs": 10,
       "files": 5
     },
     {
@@ -82,6 +82,11 @@
     },
     {
       "path": "backend/utils",
+      "dirs": 0,
+      "files": 2
+    },
+    {
+      "path": "backend/middleware",
       "dirs": 0,
       "files": 2
     },
@@ -168,7 +173,7 @@
     {
       "path": "backend/tests",
       "dirs": 0,
-      "files": 5
+      "files": 7
     },
     {
       "path": "backend/alembic",
@@ -193,7 +198,7 @@
     {
       "path": "docs",
       "dirs": 1,
-      "files": 15
+      "files": 16
     },
     {
       "path": "docs/architecture",
@@ -331,6 +336,6 @@
       "files": 2
     }
   ],
-  "total_dirs": 65,
-  "total_files": 207
+  "total_dirs": 66,
+  "total_files": 212
 }

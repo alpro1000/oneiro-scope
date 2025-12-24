@@ -14,11 +14,12 @@
 | .github/workflows | 0 | 6 |
 | assets | 0 | 2 |
 | .claude | 0 | 1 |
-| backend | 9 | 5 |
+| backend | 10 | 5 |
 | backend/api | 1 | 1 |
 | backend/api/v1 | 0 | 5 |
 | backend/models | 0 | 6 |
 | backend/utils | 0 | 2 |
+| backend/middleware | 0 | 2 |
 | backend/services | 3 | 0 |
 | backend/services/lunar | 0 | 3 |
 | backend/services/astrology | 5 | 15 |
@@ -35,12 +36,12 @@
 | backend/app | 0 | 2 |
 | backend/data | 0 | 1 |
 | backend/core | 0 | 6 |
-| backend/tests | 0 | 5 |
+| backend/tests | 0 | 7 |
 | backend/alembic | 1 | 2 |
 | backend/alembic/versions | 0 | 1 |
 | etl | 1 | 5 |
 | etl/input | 0 | 1 |
-| docs | 1 | 15 |
+| docs | 1 | 16 |
 | docs/architecture | 1 | 5 |
 | docs/architecture/modules | 0 | 3 |
 | data | 0 | 2 |
@@ -69,4 +70,4 @@
 | frontend/styles | 0 | 2 |
 | styles | 0 | 2 |
 
-**ИТОГО:** папок = 65, файлов = 207
+**ИТОГО:** папок = 66, файлов = 212
