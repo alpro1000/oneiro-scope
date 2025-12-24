@@ -84,6 +84,7 @@ class DreamBankLoader:
 
     def _set_default_norms(self):
         """Set hardcoded default norms if file not available"""
+        logger.info("Using hardcoded default HVDC norms (fallback mode)")
         self.norms = {
             "male": {
                 "characters": {"male_percent": 67, "female_percent": 33},

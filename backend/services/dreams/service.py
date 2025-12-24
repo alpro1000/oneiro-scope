@@ -6,9 +6,11 @@ Integrates Hall/Van de Castle content analysis with DreamBank normative data.
 """
 
 import uuid
+import json
 import logging
 from datetime import datetime, date
-from typing import Optional
+from typing import Optional, Dict
+from pathlib import Path
 
 from backend.services.dreams.schemas import (
     DreamAnalysisRequest,
@@ -49,7 +51,19 @@ class DreamService:
         self.analyzer = DreamAnalyzer()
         self.interpreter = DreamInterpreter()
         self.dreambank = get_dreambank_loader()
+        self._lunar_meanings = self._load_lunar_meanings()
         logger.info("DreamService initialized with DreamBank norms")
+
+    def _load_lunar_meanings(self) -> Dict:
+        """Load lunar dream meanings from knowledge base"""
+        kb_path = Path(__file__).parent / "knowledge_base" / "symbols.json"
+        try:
+            with open(kb_path, "r", encoding="utf-8") as f:
+                data = json.load(f)
+                return data.get("lunar_dream_meanings", {})
+        except (FileNotFoundError, json.JSONDecodeError) as e:
+            logger.warning(f"Failed to load lunar meanings: {e}, using empty dict")
+            return {}
 
     async def analyze_dream(
         self,
@@ -67,6 +81,24 @@ class DreamService:
         6. AI interpretation
         """
 
+        # Validate dream text
+        dream_text = request.dream_text.strip()
+
+        if not dream_text:
+            raise ValueError("Dream text cannot be empty or contain only whitespace")
+
+        if len(dream_text) < 10:
+            raise ValueError(
+                f"Dream text too short ({len(dream_text)} characters). "
+                f"Minimum length is 10 characters for meaningful analysis."
+            )
+
+        if len(dream_text) > 10000:
+            raise ValueError(
+                f"Dream text too long ({len(dream_text)} characters). "
+                f"Maximum length is 10,000 characters. Please split into separate dreams."
+            )
+
         # Step 1-3: Analyze dream content (includes physiological correlations)
         (
             symbols,
@@ -77,7 +109,7 @@ class DreamService:
             archetypes,
             physiological_correlations,
         ) = self.analyzer.analyze(
-            request.dream_text,
+            dream_text,
             request.locale,
             request.physiological_events,
         )
@@ -106,7 +138,7 @@ class DreamService:
 
         # Step 6: Generate AI interpretation with norm context
         summary, interpretation, recommendations = await self.interpreter.generate_interpretation(
-            dream_text=request.dream_text,
+            dream_text=dream_text,
             symbols=symbols,
             content=content,
             emotion=emotion,
@@ -145,7 +177,7 @@ class DreamService:
             status="success",
             dream_id=f"dream_{uuid.uuid4().hex[:12]}",
             analyzed_at=datetime.utcnow(),
-            word_count=self.analyzer.get_word_count(request.dream_text),
+            word_count=self.analyzer.get_word_count(dream_text),
             primary_emotion=emotion,
             emotion_intensity=intensity,
             symbols=symbols,
@@ -179,8 +211,8 @@ class DreamService:
                 "negative_emotions": content.negative_emotions,
             }
             return self.dreambank.compare_to_norms(content_dict, gender)
-        except Exception as e:
-            logger.warning(f"Failed to compare to norms: {e}")
+        except (ValueError, KeyError, AttributeError, TypeError) as e:
+            logger.warning(f"Failed to compare to norms: {e}", exc_info=True)
             return None
 
     async def _get_lunar_context(
@@ -212,9 +244,9 @@ class DreamService:
                 interpretation_ru=lunar_dream_meanings["ru"],
                 interpretation_en=lunar_dream_meanings["en"],
             )
-        except Exception as e:
+        except (ValueError, AttributeError, KeyError, TypeError) as e:
             # Lunar context is optional, log error but continue
-            logger.warning(f"Failed to get lunar context: {e}")
+            logger.warning(f"Failed to get lunar context: {e}", exc_info=True)
             return None
 
     def _get_lunar_dream_meaning(
@@ -223,43 +255,23 @@ class DreamService:
         moon_phase: str,
         locale: str,
     ) -> dict:
-        """Get dream significance based on lunar day"""
+        """Get dream significance based on lunar day from knowledge base"""
 
-        # Simplified lunar dream meanings
-        meanings = {
-            # New Moon (1-3)
-            (1, 3): {
-                "ru": "Сны в период новолуния часто указывают на новые начинания и скрытые желания. Обратите внимание на символы, связанные с зарождением.",
-                "en": "Dreams during new moon often indicate new beginnings and hidden desires. Pay attention to symbols related to birth and creation.",
-            },
-            # Waxing (4-13)
-            (4, 13): {
-                "ru": "Сны на растущей Луне обычно связаны с ростом, развитием и накоплением энергии. Хорошее время для анализа целей.",
-                "en": "Dreams during waxing moon are typically about growth, development, and energy accumulation. Good time to analyze goals.",
-            },
-            # Full Moon (14-16)
-            (14, 16): {
-                "ru": "Полнолуние усиливает яркость и эмоциональность снов. Сны в это время особенно значимы и часто пророческие.",
-                "en": "Full moon enhances dream vividness and emotionality. Dreams during this time are particularly significant and often prophetic.",
-            },
-            # Waning (17-28)
-            (17, 28): {
-                "ru": "Сны на убывающей Луне часто связаны с завершением циклов, отпусканием и очищением. Время для избавления от старого.",
-                "en": "Dreams during waning moon often relate to cycle completion, letting go, and cleansing. Time for releasing the old.",
-            },
-            # Dark Moon (29-30)
-            (29, 30): {
-                "ru": "Сны в тёмную Луну могут быть особенно глубокими и символичными. Время для внутренней работы и самоанализа.",
-                "en": "Dreams during dark moon can be especially deep and symbolic. Time for inner work and self-reflection.",
-            },
-        }
+        # Find matching lunar phase from knowledge base
+        for phase_key, phase_data in self._lunar_meanings.items():
+            if phase_key == "default":
+                continue
 
-        for (start, end), meaning in meanings.items():
-            if start <= lunar_day <= end:
-                return meaning
+            days = phase_data.get("days", [])
+            if lunar_day in days:
+                return {
+                    "ru": phase_data.get("ru", ""),
+                    "en": phase_data.get("en", ""),
+                }
 
-        # Default
+        # Fallback to default meaning
+        default = self._lunar_meanings.get("default", {})
         return {
-            "ru": "Лунный день влияет на содержание и значимость снов.",
-            "en": "The lunar day affects dream content and significance.",
+            "ru": default.get("ru", "Лунный день влияет на содержание и значимость снов."),
+            "en": default.get("en", "The lunar day affects dream content and significance."),
         }

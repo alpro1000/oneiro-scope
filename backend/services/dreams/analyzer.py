@@ -31,6 +31,11 @@ class DreamAnalyzer:
     at Case Western Reserve University.
     """
 
+    # Emotion intensity calculation constants
+    EMOTION_INTENSITY_AMPLIFIER = 10.0  # Amplifies emotion density to 0-1 scale
+    EMOTION_INTENSITY_MIN = 0.3  # Minimum baseline intensity for detected emotions
+    EMOTION_INTENSITY_NEUTRAL = 0.3  # Default intensity for neutral emotions
+
     def __init__(self):
         self.knowledge_base = self._load_knowledge_base()
         self._compile_patterns()
@@ -85,13 +90,20 @@ class DreamAnalyzer:
         # Interaction patterns
         self.interaction_patterns = {
             "friendly": re.compile(
-                r'\b(help|love|hug|kiss|friend|together|'
-                r'помочь|любовь|обнять|поцелуй|друг|вместе)\b',
+                r'\b(help|friend|together|support|kindness|'
+                r'помочь|друг|вместе|поддержка|доброта)\b',
                 re.IGNORECASE
             ),
             "aggressive": re.compile(
                 r'\b(fight|attack|hit|kill|angry|chase|'
                 r'драка|атака|ударить|убить|злой|погоня)\b',
+                re.IGNORECASE
+            ),
+            "sexual": re.compile(
+                r'\b(kiss|hug|embrace|love|romance|intimacy|intimate|caress|passion|'
+                r'flirt|seduce|lover|romantic|attraction|desire|'
+                r'поцелуй|целовать|обнимать|объятия|любовь|романтика|интимность|'
+                r'ласка|страсть|флирт|соблазн|возлюбленн|романтичн|влечение|желание)\b',
                 re.IGNORECASE
             ),
         }
@@ -193,6 +205,7 @@ class DreamAnalyzer:
         # Interaction types
         friendly = len(self.interaction_patterns["friendly"].findall(text))
         aggressive = len(self.interaction_patterns["aggressive"].findall(text))
+        sexual = len(self.interaction_patterns["sexual"].findall(text))
 
         # Outcomes
         successes = len(self.outcome_patterns["success"].findall(text))
@@ -233,7 +246,7 @@ class DreamAnalyzer:
             animal_characters=animal_chars,
             friendly_interactions=friendly,
             aggressive_interactions=aggressive,
-            sexual_interactions=0,  # Would need explicit detection
+            sexual_interactions=sexual,  # Keyword-based detection (H/VdC methodology)
             successes=successes,
             failures=failures,
             misfortunes=failures,  # Simplified
@@ -246,7 +259,7 @@ class DreamAnalyzer:
         )
 
     def _analyze_emotions(self, text: str) -> Tuple[EmotionType, float]:
-        """Determine primary emotion and intensity"""
+        """Determine primary emotion and intensity using knowledge base"""
         text_lower = text.lower()
 
         emotion_counts = {
@@ -257,32 +270,32 @@ class DreamAnalyzer:
             EmotionType.CONFUSION: 0,
         }
 
-        # Happiness indicators
-        happiness_words = ["happy", "joy", "love", "peace", "free", "счастлив", "радость", "любовь", "покой", "свобод"]
+        # Load emotion words from knowledge base
+        emotion_types = self.knowledge_base.get("emotions", {}).get("by_type", {})
+
+        # Count emotion indicators from knowledge base
+        happiness_words = emotion_types.get("happiness", [])
         for word in happiness_words:
             if word in text_lower:
                 emotion_counts[EmotionType.HAPPINESS] += 1
 
-        # Sadness indicators
-        sadness_words = ["sad", "cry", "loss", "alone", "grief", "грустн", "плакать", "потеря", "один", "горе"]
+        sadness_words = emotion_types.get("sadness", [])
         for word in sadness_words:
             if word in text_lower:
                 emotion_counts[EmotionType.SADNESS] += 1
 
-        # Anger indicators
-        anger_words = ["angry", "rage", "hate", "fight", "злой", "ярость", "ненавист", "драка"]
+        anger_words = emotion_types.get("anger", [])
         for word in anger_words:
             if word in text_lower:
                 emotion_counts[EmotionType.ANGER] += 1
 
         # Fear/apprehension indicators
-        fear_words = ["fear", "afraid", "scary", "terror", "chase", "страх", "боюсь", "страшн", "ужас", "погоня"]
+        fear_words = emotion_types.get("fear", [])
         for word in fear_words:
             if word in text_lower:
                 emotion_counts[EmotionType.APPREHENSION] += 1
 
-        # Confusion indicators
-        confusion_words = ["confus", "lost", "strange", "weird", "смят", "потерян", "странн"]
+        confusion_words = emotion_types.get("confusion", [])
         for word in confusion_words:
             if word in text_lower:
                 emotion_counts[EmotionType.CONFUSION] += 1
@@ -290,14 +303,17 @@ class DreamAnalyzer:
         # Find primary emotion
         max_count = max(emotion_counts.values())
         if max_count == 0:
-            return EmotionType.NEUTRAL, 0.3
+            return EmotionType.NEUTRAL, self.EMOTION_INTENSITY_NEUTRAL
 
         primary = max(emotion_counts.items(), key=lambda x: x[1])[0]
 
-        # Calculate intensity (normalized)
+        # Calculate intensity (normalized to 0-1 scale)
+        # Formula: (emotion_word_count / total_words) * amplifier
+        # Amplifier converts typical emotion density (1-5%) to 0.1-0.5 range
         word_count = len(text.split())
-        intensity = min(1.0, (max_count / max(1, word_count)) * 10)
-        intensity = max(0.3, intensity)  # Minimum threshold
+        emotion_density = max_count / max(1, word_count)
+        intensity = min(1.0, emotion_density * self.EMOTION_INTENSITY_AMPLIFIER)
+        intensity = max(self.EMOTION_INTENSITY_MIN, intensity)  # Apply minimum threshold
 
         return primary, intensity
 
@@ -307,54 +323,36 @@ class DreamAnalyzer:
         content: ContentAnalysis,
         locale: str
     ) -> List[str]:
-        """Extract main themes from analysis"""
+        """Extract main themes from analysis using knowledge base"""
         themes = []
 
-        # Theme mapping
-        theme_map = {
-            "ru": {
-                "freedom": "Свобода и освобождение",
-                "transformation": "Трансформация и изменения",
-                "relationships": "Отношения и связи",
-                "anxiety": "Тревога и страхи",
-                "self_discovery": "Самопознание",
-                "conflict": "Конфликт и противостояние",
-                "success": "Достижения и успех",
-                "loss": "Потеря и утрата",
-            },
-            "en": {
-                "freedom": "Freedom and liberation",
-                "transformation": "Transformation and change",
-                "relationships": "Relationships and connections",
-                "anxiety": "Anxiety and fears",
-                "self_discovery": "Self-discovery",
-                "conflict": "Conflict and confrontation",
-                "success": "Achievement and success",
-                "loss": "Loss and grief",
-            }
-        }
+        # Load theme translations from knowledge base
+        theme_data = self.knowledge_base.get("themes", {})
 
-        lang = theme_map.get(locale, theme_map["en"])
+        # Helper to get localized theme text
+        def get_theme(theme_key: str) -> str:
+            theme_entry = theme_data.get(theme_key, {})
+            return theme_entry.get(locale, theme_entry.get("en", theme_key))
 
         # Analyze symbols for themes
         symbol_ids = [s.symbol for s in symbols]
 
         if "flying" in symbol_ids:
-            themes.append(lang["freedom"])
+            themes.append(get_theme("freedom"))
         if "death" in symbol_ids or "water" in symbol_ids:
-            themes.append(lang["transformation"])
+            themes.append(get_theme("transformation"))
         if content.friendly_interactions > 0 or content.female_characters + content.male_characters > 2:
-            themes.append(lang["relationships"])
+            themes.append(get_theme("relationships"))
         if "chase" in symbol_ids or "falling" in symbol_ids:
-            themes.append(lang["anxiety"])
+            themes.append(get_theme("anxiety"))
         if "house" in symbol_ids or "naked" in symbol_ids:
-            themes.append(lang["self_discovery"])
+            themes.append(get_theme("self_discovery"))
         if content.aggressive_interactions > content.friendly_interactions:
-            themes.append(lang["conflict"])
+            themes.append(get_theme("conflict"))
         if content.successes > content.failures:
-            themes.append(lang["success"])
+            themes.append(get_theme("success"))
         if content.failures > content.successes:
-            themes.append(lang["loss"])
+            themes.append(get_theme("loss"))
 
         return themes[:5]  # Limit to top 5 themes
 
