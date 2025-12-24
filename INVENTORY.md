@@ -35,12 +35,12 @@
 | backend/app | 0 | 2 |
 | backend/data | 0 | 1 |
 | backend/core | 0 | 6 |
-| backend/tests | 0 | 4 |
+| backend/tests | 0 | 5 |
 | backend/alembic | 1 | 2 |
 | backend/alembic/versions | 0 | 1 |
 | etl | 1 | 5 |
 | etl/input | 0 | 1 |
-| docs | 1 | 14 |
+| docs | 1 | 15 |
 | docs/architecture | 1 | 5 |
 | docs/architecture/modules | 0 | 3 |
 | data | 0 | 2 |
@@ -69,4 +69,4 @@
 | frontend/styles | 0 | 2 |
 | styles | 0 | 2 |
 
-**ИТОГО:** папок = 65, файлов = 205
+**ИТОГО:** папок = 65, файлов = 207

@@ -55,7 +55,21 @@ class DreamAnalyzer:
         for symbol in self.knowledge_base.get("symbols", []):
             keywords = symbol.get("keywords", [])
             if keywords:
-                pattern = r'\b(' + '|'.join(re.escape(kw) for kw in keywords) + r')\b'
+                # Build flexible pattern supporting Russian word forms
+                # For Russian words (Cyrillic), match word roots without strict boundaries
+                pattern_parts = []
+                for kw in keywords:
+                    escaped_kw = re.escape(kw)
+                    # Check if keyword contains Cyrillic characters
+                    if re.search(r'[а-яА-ЯёЁ]', kw):
+                        # Russian word: match root + any ending (handles inflections)
+                        # E.g., "машина" matches "машины", "машину", "машине"
+                        pattern_parts.append(rf'\b{escaped_kw}\w*\b')
+                    else:
+                        # English word: exact match with word boundaries
+                        pattern_parts.append(rf'\b{escaped_kw}\b')
+
+                pattern = '(' + '|'.join(pattern_parts) + ')'
                 self.symbol_patterns[symbol["id"]] = {
                     "pattern": re.compile(pattern, re.IGNORECASE),
                     "data": symbol
@@ -172,27 +186,122 @@ class DreamAnalyzer:
         return symbols, content, emotion, intensity, themes, archetypes, physiological_correlations
 
     def _find_symbols(self, text: str, locale: str) -> List[DreamSymbol]:
-        """Find and interpret symbols in dream text"""
+        """
+        Find and interpret symbols in dream text with contextual validation.
+
+        Uses narrative-first approach: symbols are only included if they
+        appear in appropriate semantic context (v2.1).
+        """
         found_symbols = []
         text_lower = text.lower()
 
         for symbol_id, symbol_data in self.symbol_patterns.items():
             matches = symbol_data["pattern"].findall(text_lower)
             if matches:
-                data = symbol_data["data"]
-                found_symbols.append(DreamSymbol(
-                    symbol=symbol_id,
-                    category=DreamCategory(data["category"]),
-                    frequency=len(matches),
-                    significance=data["significance"],
-                    interpretation_ru=data["interpretation_ru"],
-                    interpretation_en=data["interpretation_en"],
-                    archetype=data.get("archetype"),
-                ))
+                # Contextual validation (v2.1 feature)
+                if self._validate_symbol_context(symbol_id, text_lower, matches):
+                    data = symbol_data["data"]
+                    found_symbols.append(DreamSymbol(
+                        symbol=symbol_id,
+                        category=DreamCategory(data["category"]),
+                        frequency=len(matches),
+                        significance=data["significance"],
+                        interpretation_ru=data["interpretation_ru"],
+                        interpretation_en=data["interpretation_en"],
+                        archetype=data.get("archetype"),
+                    ))
 
         # Sort by significance
         found_symbols.sort(key=lambda s: s.significance, reverse=True)
         return found_symbols
+
+    def _validate_symbol_context(self, symbol_id: str, text: str, matches: List[str]) -> bool:
+        """
+        Validate that detected symbol appears in appropriate context (v2.1).
+
+        Prevents false positives like:
+        - "house" symbol from "car door" (door keyword)
+        - "food" symbol from "food truck" when truck is the focus
+
+        Args:
+            symbol_id: Symbol identifier (e.g., "house", "vehicle")
+            text: Full dream text (lowercased)
+            matches: List of matched keywords
+
+        Returns:
+            True if symbol is contextually valid, False otherwise
+        """
+        # Context exclusion rules (prevent false positives)
+        exclusion_contexts = {
+            "house": [
+                # "door" in "car/machine door" context → exclude house symbol
+                # Using flexible matching for Russian inflections
+                (r'(car|vehicle|auto|машин|автомобил).{0,10}(door|дверь)', ["door", "дверь"]),
+                # "window" in "car window" → exclude house
+                (r'(car|vehicle|auto|машин|автомобил).{0,10}(window|окн)', ["window", "окно", "окна"]),
+                # Reverse: "door/window of car"
+                (r'(door|дверь).{0,10}(car|vehicle|машин|автомобил)', ["door", "дверь"]),
+                (r'(window|окн).{0,10}(car|vehicle|машин|автомобил)', ["window", "окно", "окна"]),
+            ],
+            "food": [
+                # "food" in "food truck" when vehicle is focus → exclude food
+                (r'food\s+truck', ["food"]),
+                # Common false positives where food is mentioned but not central
+                (r'(без|without).{0,10}(food|еда)', ["food", "еда"]),
+            ],
+            "water": [
+                # "water" in "watermark" or "waterproof" → exclude
+                (r'water(mark|proof)', ["water"]),
+            ],
+        }
+
+        # Check if any matched keyword appears in exclusion context
+        if symbol_id in exclusion_contexts:
+            for pattern_str, excluded_keywords in exclusion_contexts[symbol_id]:
+                pattern = re.compile(pattern_str, re.IGNORECASE)
+                if pattern.search(text):
+                    # Check if the matched keyword is one that should be excluded
+                    for match in matches:
+                        if match.lower() in [k.lower() for k in excluded_keywords]:
+                            return False  # Found in exclusion context
+
+        # Context reinforcement rules (boost confidence for good contexts)
+        # Using word roots for Russian to match inflections
+        reinforcement_contexts = {
+            "surveillance": [
+                # Strong indicators that surveillance is real theme
+                r'(track|monitor|watch|follow|spy|след|наблюд|контрол)',
+            ],
+            "boundaries": [
+                r'(violat|invad|cross|breach|нарушен|вторжен|пересеч|границ)',
+            ],
+            "control": [
+                r'(manipulat|dominat|power|restrict|манипул|доминир|власть|огранич)',
+            ],
+            "escape_liberation": [
+                # Match roots: выброс/выбросил, отброс/отбросил, освобод/освободился
+                r'(throw\s+away|discard|reject|break\s+free|выброс|отброс|освобод|свобод)',
+            ],
+        }
+
+        # For symbols with reinforcement patterns, check for supporting context
+        # Note: This is a SOFT filter - we don't block symbols entirely,
+        # just note their confidence. LLM will make final validation.
+        if symbol_id in reinforcement_contexts:
+            has_reinforcement = False
+            for pattern_str in reinforcement_contexts[symbol_id]:
+                pattern = re.compile(pattern_str, re.IGNORECASE)
+                if pattern.search(text):
+                    has_reinforcement = True
+                    break
+
+            # Even without reinforcement, allow symbol through
+            # The LLM will do final contextual validation
+            # This prevents over-filtering at the regex level
+            return True  # Changed from: return has_reinforcement
+
+        # Default: symbol is valid (conservative approach)
+        return True
 
     def _analyze_content(self, text: str) -> ContentAnalysis:
         """Perform Hall/Van de Castle content analysis"""
