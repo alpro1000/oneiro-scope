@@ -31,6 +31,11 @@ class DreamAnalyzer:
     at Case Western Reserve University.
     """
 
+    # Emotion intensity calculation constants
+    EMOTION_INTENSITY_AMPLIFIER = 10.0  # Amplifies emotion density to 0-1 scale
+    EMOTION_INTENSITY_MIN = 0.3  # Minimum baseline intensity for detected emotions
+    EMOTION_INTENSITY_NEUTRAL = 0.3  # Default intensity for neutral emotions
+
     def __init__(self):
         self.knowledge_base = self._load_knowledge_base()
         self._compile_patterns()
@@ -298,14 +303,17 @@ class DreamAnalyzer:
         # Find primary emotion
         max_count = max(emotion_counts.values())
         if max_count == 0:
-            return EmotionType.NEUTRAL, 0.3
+            return EmotionType.NEUTRAL, self.EMOTION_INTENSITY_NEUTRAL
 
         primary = max(emotion_counts.items(), key=lambda x: x[1])[0]
 
-        # Calculate intensity (normalized)
+        # Calculate intensity (normalized to 0-1 scale)
+        # Formula: (emotion_word_count / total_words) * amplifier
+        # Amplifier converts typical emotion density (1-5%) to 0.1-0.5 range
         word_count = len(text.split())
-        intensity = min(1.0, (max_count / max(1, word_count)) * 10)
-        intensity = max(0.3, intensity)  # Minimum threshold
+        emotion_density = max_count / max(1, word_count)
+        intensity = min(1.0, emotion_density * self.EMOTION_INTENSITY_AMPLIFIER)
+        intensity = max(self.EMOTION_INTENSITY_MIN, intensity)  # Apply minimum threshold
 
         return primary, intensity
 
