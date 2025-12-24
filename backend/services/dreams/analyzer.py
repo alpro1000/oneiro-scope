@@ -315,54 +315,36 @@ class DreamAnalyzer:
         content: ContentAnalysis,
         locale: str
     ) -> List[str]:
-        """Extract main themes from analysis"""
+        """Extract main themes from analysis using knowledge base"""
         themes = []
 
-        # Theme mapping
-        theme_map = {
-            "ru": {
-                "freedom": "Свобода и освобождение",
-                "transformation": "Трансформация и изменения",
-                "relationships": "Отношения и связи",
-                "anxiety": "Тревога и страхи",
-                "self_discovery": "Самопознание",
-                "conflict": "Конфликт и противостояние",
-                "success": "Достижения и успех",
-                "loss": "Потеря и утрата",
-            },
-            "en": {
-                "freedom": "Freedom and liberation",
-                "transformation": "Transformation and change",
-                "relationships": "Relationships and connections",
-                "anxiety": "Anxiety and fears",
-                "self_discovery": "Self-discovery",
-                "conflict": "Conflict and confrontation",
-                "success": "Achievement and success",
-                "loss": "Loss and grief",
-            }
-        }
+        # Load theme translations from knowledge base
+        theme_data = self.knowledge_base.get("themes", {})
 
-        lang = theme_map.get(locale, theme_map["en"])
+        # Helper to get localized theme text
+        def get_theme(theme_key: str) -> str:
+            theme_entry = theme_data.get(theme_key, {})
+            return theme_entry.get(locale, theme_entry.get("en", theme_key))
 
         # Analyze symbols for themes
         symbol_ids = [s.symbol for s in symbols]
 
         if "flying" in symbol_ids:
-            themes.append(lang["freedom"])
+            themes.append(get_theme("freedom"))
         if "death" in symbol_ids or "water" in symbol_ids:
-            themes.append(lang["transformation"])
+            themes.append(get_theme("transformation"))
         if content.friendly_interactions > 0 or content.female_characters + content.male_characters > 2:
-            themes.append(lang["relationships"])
+            themes.append(get_theme("relationships"))
         if "chase" in symbol_ids or "falling" in symbol_ids:
-            themes.append(lang["anxiety"])
+            themes.append(get_theme("anxiety"))
         if "house" in symbol_ids or "naked" in symbol_ids:
-            themes.append(lang["self_discovery"])
+            themes.append(get_theme("self_discovery"))
         if content.aggressive_interactions > content.friendly_interactions:
-            themes.append(lang["conflict"])
+            themes.append(get_theme("conflict"))
         if content.successes > content.failures:
-            themes.append(lang["success"])
+            themes.append(get_theme("success"))
         if content.failures > content.successes:
-            themes.append(lang["loss"])
+            themes.append(get_theme("loss"))
 
         return themes[:5]  # Limit to top 5 themes
 

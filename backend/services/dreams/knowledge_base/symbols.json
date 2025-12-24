@@ -1102,5 +1102,39 @@
       "удивление",
       "изумление"
     ]
+  },
+  "themes": {
+    "freedom": {
+      "ru": "Свобода и освобождение",
+      "en": "Freedom and liberation"
+    },
+    "transformation": {
+      "ru": "Трансформация и изменения",
+      "en": "Transformation and change"
+    },
+    "relationships": {
+      "ru": "Отношения и связи",
+      "en": "Relationships and connections"
+    },
+    "anxiety": {
+      "ru": "Тревога и страхи",
+      "en": "Anxiety and fears"
+    },
+    "self_discovery": {
+      "ru": "Самопознание",
+      "en": "Self-discovery"
+    },
+    "conflict": {
+      "ru": "Конфликт и противостояние",
+      "en": "Conflict and confrontation"
+    },
+    "success": {
+      "ru": "Достижения и успех",
+      "en": "Achievement and success"
+    },
+    "loss": {
+      "ru": "Потеря и утрата",
+      "en": "Loss and grief"
+    }
   }
 }
