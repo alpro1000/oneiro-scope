@@ -153,10 +153,11 @@ async def geonames_lookup(place_name: str) -> Dict:
     # Try original query first
     params = {
         "q": query,
-        "maxRows": 1,
+        "maxRows": 10,  # Get top 10 results to choose best match
         "lang": GEONAMES_LANG,
         "username": GEONAMES_USER,
-        "featureClass": "P",  # Populated places (cities, towns)
+        "featureClass": "P",  # Populated places (cities, towns, villages)
+        "isNameRequired": "true",  # Only exact name matches
         "style": "FULL",  # Include timezone info in response
     }
 
@@ -169,7 +170,9 @@ async def geonames_lookup(place_name: str) -> Dict:
     data = response.json()
 
     logger.debug(f"[GeoNames] API response status: {response.status_code}")
-    logger.debug(f"[GeoNames] Response data: {data}")
+    logger.debug(f"[GeoNames] Total results found: {len(data.get('geonames', []))}")
+    if data.get("geonames"):
+        logger.debug(f"[GeoNames] Top result: {data['geonames'][0].get('name')} ({data['geonames'][0].get('countryName')})")
 
     # If not found and text is Russian, try transliteration
     if not data.get("geonames"):
