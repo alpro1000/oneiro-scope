@@ -197,8 +197,8 @@ class DreamService:
                 "negative_emotions": content.negative_emotions,
             }
             return self.dreambank.compare_to_norms(content_dict, gender)
-        except Exception as e:
-            logger.warning(f"Failed to compare to norms: {e}")
+        except (ValueError, KeyError, AttributeError, TypeError) as e:
+            logger.warning(f"Failed to compare to norms: {e}", exc_info=True)
             return None
 
     async def _get_lunar_context(
@@ -230,9 +230,9 @@ class DreamService:
                 interpretation_ru=lunar_dream_meanings["ru"],
                 interpretation_en=lunar_dream_meanings["en"],
             )
-        except Exception as e:
+        except (ValueError, AttributeError, KeyError, TypeError) as e:
             # Lunar context is optional, log error but continue
-            logger.warning(f"Failed to get lunar context: {e}")
+            logger.warning(f"Failed to get lunar context: {e}", exc_info=True)
             return None
 
     def _get_lunar_dream_meaning(

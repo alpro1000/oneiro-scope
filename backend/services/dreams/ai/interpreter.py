@@ -151,8 +151,9 @@ class DreamInterpreter:
                 dream_text, symbols, content, emotion, emotion_intensity,
                 themes, archetypes, lunar_context, norm_context, locale
             )
-        except Exception as e:
-            # Fallback on API error
+        except (ConnectionError, TimeoutError, ValueError, KeyError, json.JSONDecodeError) as e:
+            # Fallback on API or parsing error
+            logger.warning(f"LLM call failed, using fallback: {e}", exc_info=True)
             return self._generate_fallback(
                 symbols, content, emotion, themes, archetypes, lunar_context, locale
             )
@@ -214,8 +215,8 @@ class DreamInterpreter:
         if prompt_file.exists():
             try:
                 return self._build_system_prompt_from_json(prompt_file, locale)
-            except Exception as e:
-                logger.warning(f"Failed to load JSON prompt: {e}, using fallback")
+            except (json.JSONDecodeError, KeyError, ValueError, OSError) as e:
+                logger.warning(f"Failed to load JSON prompt: {e}, using fallback", exc_info=True)
 
         # Fallback to inline prompts
         return self._build_system_prompt_inline(locale)
