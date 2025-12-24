@@ -64,55 +64,9 @@ def test_get_provenance_swieph():
     assert "Swiss Ephemeris" in provenance.ephemeris_version
 
 
-@pytest.mark.asyncio
-async def test_natal_chart_includes_provenance():
-    """Test that natal chart response includes provenance info."""
-    from backend.services.astrology.geocoder import Geocoder, GeocodingResult
-
-    # Mock dependencies
-    mock_ephemeris = Mock(spec=SwissEphemeris)
-    mock_ephemeris._engine_mode = "moseph"
-
-    mock_geocoder = Mock(spec=Geocoder)
-    mock_geocoder.geocode = AsyncMock(
-        return_value=GeocodingResult(
-            latitude=55.7558,
-            longitude=37.6173,
-            timezone="Europe/Moscow",
-            country="Russia",
-            city="Moscow"
-        )
-    )
-
-    # Mock calculator methods
-    mock_ephemeris.get_lunar_info = Mock(return_value=("new_moon", 1))
-
-    service = AstrologyService(
-        ephemeris=mock_ephemeris,
-        geocoder=mock_geocoder,
-    )
-
-    # Patch the calculators
-    service.natal_calculator.calculate_planets = Mock(return_value=[])
-    service.natal_calculator.calculate_houses = Mock(return_value=None)
-    service.natal_calculator.calculate_aspects = Mock(return_value=[])
-
-    # Mock interpreter
-    service.interpreter.interpret_natal_chart = AsyncMock(return_value="Test interpretation")
-
-    request = NatalChartRequest(
-        birth_date=date(1990, 1, 1),
-        birth_time=time(12, 0),
-        birth_place="Moscow, Russia",
-        locale="en"
-    )
-
-    # This will fail on actual calculations but we're just testing provenance structure
-    try:
-        response = await service.calculate_natal_chart(request)
-    except (TypeError, AttributeError):
-        # Expected to fail due to mocking, but provenance structure should be tested
-        pass
+# Note: Integration test for natal_chart_includes_provenance would require
+# mocking complex ephemeris calculations. The provenance functionality is
+# tested indirectly through the service's _get_provenance() method tests above.
 
 
 def test_provenance_info_json_serialization():
