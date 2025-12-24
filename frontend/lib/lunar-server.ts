@@ -5,6 +5,7 @@ import {buildLunarUrl, resolveLunarApiBase} from './lunar-endpoint';
 export type LunarDayPayload = {
   date: string;
   lunar_day: number;
+  lunar_day_start_time?: string; // Time when current lunar day started (HH:MM format)
   phase: string;
   phase_key?: string;
   description: string;

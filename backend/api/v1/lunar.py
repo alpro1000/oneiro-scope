@@ -158,6 +158,7 @@ async def get_lunar_day(
         "illumination": lunar.illumination,
         "age": lunar.moon_age_days,
         "lunar_day": lunar.lunar_day,
+        "lunar_day_start_time": lunar.lunar_day_start_time,
         "moon_sign": moon_sign_label,
         "description": content.get("notes", ""),
         "recommendation": content.get("type", ""),

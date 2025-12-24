@@ -52,6 +52,7 @@
     "error": "We couldn't load the lunar calendar. Please try again.",
     "retry": "Retry",
     "lunarDay": "Lunar day {day}",
+    "lunarDayStarted": "lunar day {day} started",
     "phase": "Phase",
     "description": "Dream energy",
     "recommendation": "Recommendations",
