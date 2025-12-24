@@ -17,6 +17,7 @@ from .schemas import (
     NatalChartRequest,
     NatalChartResponse,
     Planet,
+    ProvenanceInfo,
     TransitInfo,
     ZodiacSign,
 )
@@ -52,6 +53,19 @@ class AstrologyService:
         self.interpreter = interpreter or AstrologyInterpreter()
         self.natal_calculator = NatalChartCalculator(self.ephemeris)
         self.transit_calculator = TransitCalculator(self.ephemeris)
+
+    def _get_provenance(self) -> ProvenanceInfo:
+        """Get provenance information about the calculation."""
+        engine_mode = getattr(self.ephemeris, '_engine_mode', 'unknown')
+        engine_label = "Swiss Ephemeris (SWIEPH)" if engine_mode == "swieph" else "Moshier Algorithm (MOSEPH)"
+
+        return ProvenanceInfo(
+            ephemeris_engine=engine_label,
+            ephemeris_version="Swiss Ephemeris 2.10+ / Moshier Algorithm",
+            calculation_timestamp=datetime.utcnow(),
+            methodology="Placidus houses (natal chart) | Tropical zodiac | Geocentric coordinates",
+            accuracy_statement="<1 arc second for modern dates (1900-2100) | Fallback approximate calculations if ephemeris unavailable"
+        )
 
     async def calculate_natal_chart(
         self,
@@ -138,6 +152,7 @@ class AstrologyService:
             aspects=aspects,
             interpretation=interpretation,
             created_at=datetime.utcnow(),
+            provenance=self._get_provenance(),
         )
 
     async def generate_horoscope(
@@ -209,6 +224,7 @@ class AstrologyService:
             health_and_wellness=sections.get("health"),
             recommendations=recommendations,
             created_at=datetime.utcnow(),
+            provenance=self._get_provenance(),
         )
 
     async def forecast_event(
@@ -296,6 +312,7 @@ class AstrologyService:
             recommendations=recommendations,
             alternative_dates=alternative_dates,
             created_at=datetime.utcnow(),
+            provenance=self._get_provenance(),
         )
 
     def _get_period_boundaries(

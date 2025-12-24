@@ -9,6 +9,27 @@ from uuid import UUID
 from pydantic import BaseModel, Field
 
 
+# ===== Provenance (v2.2 - Phase 2 Hardening) =====
+
+class ProvenanceInfo(BaseModel):
+    """Information about calculation sources and methodology."""
+    ephemeris_engine: str = Field(
+        description="Engine used: swieph (Swiss Ephemeris files) or moseph (Moshier algorithm)"
+    )
+    ephemeris_version: str = Field(
+        description="Version of ephemeris data or algorithm"
+    )
+    calculation_timestamp: datetime = Field(
+        description="UTC timestamp when calculation was performed"
+    )
+    methodology: str = Field(
+        description="Astronomical calculation methodology (e.g., 'Placidus houses')"
+    )
+    accuracy_statement: str = Field(
+        description="Expected accuracy of calculations"
+    )
+
+
 class ZodiacSign(str, Enum):
     """Zodiac signs."""
     ARIES = "aries"
@@ -160,6 +181,10 @@ class NatalChartResponse(BaseModel):
     # Metadata
     created_at: datetime
     calculation_method: str = "swiss_ephemeris"
+    provenance: Optional[ProvenanceInfo] = Field(
+        None,
+        description="Information about calculation sources and methodology"
+    )
 
 
 # ===== Horoscope =====
@@ -209,6 +234,10 @@ class HoroscopeResponse(BaseModel):
 
     # Metadata
     created_at: datetime
+    provenance: Optional[ProvenanceInfo] = Field(
+        None,
+        description="Information about calculation sources and methodology"
+    )
 
 
 # ===== Event Forecast =====
@@ -265,6 +294,10 @@ class EventForecastResponse(BaseModel):
 
     # Metadata
     created_at: datetime
+    provenance: Optional[ProvenanceInfo] = Field(
+        None,
+        description="Information about calculation sources and methodology"
+    )
 
 
 # ===== Voice Input =====

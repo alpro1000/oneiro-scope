@@ -15,6 +15,7 @@ import logging
 from backend.core.config import settings
 from backend.core.database import init_db, close_db
 from backend.core.logging import logger
+from backend.middleware import RateLimitMiddleware
 
 # Import routers
 from backend.api.v1 import lunar, health, astrology, dreams
@@ -55,6 +56,13 @@ app = FastAPI(
 
 
 # Middleware
+
+# Rate Limiting (v2.2 - Phase 2 Hardening)
+app.add_middleware(
+    RateLimitMiddleware,
+    per_user_limit=settings.RATE_LIMIT_PER_USER,
+    global_limit=settings.RATE_LIMIT_GLOBAL,
+)
 
 # CORS
 app.add_middleware(
