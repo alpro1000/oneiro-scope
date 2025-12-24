@@ -2,7 +2,20 @@
   "symbols": [
     {
       "id": "flying",
-      "keywords": ["fly", "flying", "soar", "float", "levitate", "hover", "glide", "летать", "полёт", "парить", "левитация", "взлетать"],
+      "keywords": [
+        "fly",
+        "flying",
+        "soar",
+        "float",
+        "levitate",
+        "hover",
+        "glide",
+        "летать",
+        "полёт",
+        "парить",
+        "левитация",
+        "взлетать"
+      ],
       "category": "activities",
       "archetype": "liberation",
       "significance": 0.85,
@@ -11,7 +24,19 @@
     },
     {
       "id": "falling",
-      "keywords": ["fall", "falling", "drop", "plunge", "stumble", "trip", "падать", "падение", "обрыв", "срываться", "споткнуться"],
+      "keywords": [
+        "fall",
+        "falling",
+        "drop",
+        "plunge",
+        "stumble",
+        "trip",
+        "падать",
+        "падение",
+        "обрыв",
+        "срываться",
+        "споткнуться"
+      ],
       "category": "misfortunes",
       "archetype": "loss_of_control",
       "significance": 0.8,
@@ -20,7 +45,26 @@
     },
     {
       "id": "water",
-      "keywords": ["water", "ocean", "sea", "river", "lake", "swim", "wave", "flood", "rain", "вода", "океан", "море", "река", "озеро", "плавать", "волна", "наводнение", "дождь"],
+      "keywords": [
+        "water",
+        "ocean",
+        "sea",
+        "river",
+        "lake",
+        "swim",
+        "wave",
+        "flood",
+        "rain",
+        "вода",
+        "океан",
+        "море",
+        "река",
+        "озеро",
+        "плавать",
+        "волна",
+        "наводнение",
+        "дождь"
+      ],
       "category": "settings",
       "archetype": "unconscious",
       "significance": 0.75,
@@ -29,7 +73,21 @@
     },
     {
       "id": "death",
-      "keywords": ["death", "dead", "die", "dying", "funeral", "grave", "corpse", "смерть", "мёртвый", "умирать", "похороны", "могила", "труп"],
+      "keywords": [
+        "death",
+        "dead",
+        "die",
+        "dying",
+        "funeral",
+        "grave",
+        "corpse",
+        "смерть",
+        "мёртвый",
+        "умирать",
+        "похороны",
+        "могила",
+        "труп"
+      ],
       "category": "misfortunes",
       "archetype": "transformation",
       "significance": 0.9,
@@ -38,7 +96,21 @@
     },
     {
       "id": "chase",
-      "keywords": ["chase", "chasing", "pursue", "run", "escape", "flee", "hunt", "погоня", "преследование", "бежать", "убегать", "охота", "догонять"],
+      "keywords": [
+        "chase",
+        "chasing",
+        "pursue",
+        "run",
+        "escape",
+        "flee",
+        "hunt",
+        "погоня",
+        "преследование",
+        "бежать",
+        "убегать",
+        "охота",
+        "догонять"
+      ],
       "category": "activities",
       "archetype": "shadow",
       "significance": 0.85,
@@ -47,7 +119,18 @@
     },
     {
       "id": "teeth",
-      "keywords": ["teeth", "tooth", "losing teeth", "dental", "bite", "зубы", "зуб", "выпадают зубы", "кусать", "стоматолог"],
+      "keywords": [
+        "teeth",
+        "tooth",
+        "losing teeth",
+        "dental",
+        "bite",
+        "зубы",
+        "зуб",
+        "выпадают зубы",
+        "кусать",
+        "стоматолог"
+      ],
       "category": "objects",
       "archetype": "vulnerability",
       "significance": 0.8,
@@ -56,7 +139,21 @@
     },
     {
       "id": "house",
-      "keywords": ["house", "home", "room", "building", "apartment", "door", "window", "дом", "квартира", "комната", "здание", "дверь", "окно"],
+      "keywords": [
+        "house",
+        "home",
+        "room",
+        "building",
+        "apartment",
+        "door",
+        "window",
+        "дом",
+        "квартира",
+        "комната",
+        "здание",
+        "дверь",
+        "окно"
+      ],
       "category": "settings",
       "archetype": "self",
       "significance": 0.7,
@@ -65,7 +162,26 @@
     },
     {
       "id": "animal",
-      "keywords": ["animal", "dog", "cat", "bird", "snake", "horse", "wolf", "bear", "lion", "животное", "собака", "кошка", "птица", "змея", "лошадь", "волк", "медведь", "лев"],
+      "keywords": [
+        "animal",
+        "dog",
+        "cat",
+        "bird",
+        "snake",
+        "horse",
+        "wolf",
+        "bear",
+        "lion",
+        "животное",
+        "собака",
+        "кошка",
+        "птица",
+        "змея",
+        "лошадь",
+        "волк",
+        "медведь",
+        "лев"
+      ],
       "category": "characters",
       "archetype": "instinct",
       "significance": 0.7,
@@ -74,7 +190,17 @@
     },
     {
       "id": "naked",
-      "keywords": ["naked", "nude", "undressed", "bare", "exposed", "голый", "обнажённый", "без одежды", "раздетый"],
+      "keywords": [
+        "naked",
+        "nude",
+        "undressed",
+        "bare",
+        "exposed",
+        "голый",
+        "обнажённый",
+        "без одежды",
+        "раздетый"
+      ],
       "category": "descriptive_elements",
       "archetype": "vulnerability",
       "significance": 0.75,
@@ -83,7 +209,19 @@
     },
     {
       "id": "exam",
-      "keywords": ["exam", "test", "school", "unprepared", "classroom", "экзамен", "тест", "школа", "не готов", "класс", "университет"],
+      "keywords": [
+        "exam",
+        "test",
+        "school",
+        "unprepared",
+        "classroom",
+        "экзамен",
+        "тест",
+        "школа",
+        "не готов",
+        "класс",
+        "университет"
+      ],
       "category": "activities",
       "archetype": "self_evaluation",
       "significance": 0.75,
@@ -92,7 +230,19 @@
     },
     {
       "id": "baby",
-      "keywords": ["baby", "infant", "child", "pregnancy", "birth", "newborn", "ребёнок", "младенец", "малыш", "беременность", "рождение"],
+      "keywords": [
+        "baby",
+        "infant",
+        "child",
+        "pregnancy",
+        "birth",
+        "newborn",
+        "ребёнок",
+        "младенец",
+        "малыш",
+        "беременность",
+        "рождение"
+      ],
       "category": "characters",
       "archetype": "new_beginning",
       "significance": 0.8,
@@ -101,7 +251,22 @@
     },
     {
       "id": "vehicle",
-      "keywords": ["car", "drive", "vehicle", "bus", "train", "plane", "crash", "машина", "ехать", "автобус", "поезд", "транспорт", "самолёт", "авария"],
+      "keywords": [
+        "car",
+        "drive",
+        "vehicle",
+        "bus",
+        "train",
+        "plane",
+        "crash",
+        "машина",
+        "ехать",
+        "автобус",
+        "поезд",
+        "транспорт",
+        "самолёт",
+        "авария"
+      ],
       "category": "objects",
       "archetype": "life_direction",
       "significance": 0.7,
@@ -110,7 +275,15 @@
     },
     {
       "id": "moon",
-      "keywords": ["moon", "lunar", "moonlight", "луна", "лунный", "лунный свет", "полнолуние"],
+      "keywords": [
+        "moon",
+        "lunar",
+        "moonlight",
+        "луна",
+        "лунный",
+        "лунный свет",
+        "полнолуние"
+      ],
       "category": "settings",
       "archetype": "feminine",
       "significance": 0.8,
@@ -119,7 +292,21 @@
     },
     {
       "id": "money",
-      "keywords": ["money", "cash", "wealth", "rich", "poor", "bank", "gold", "деньги", "богатство", "бедность", "банк", "золото", "кошелёк"],
+      "keywords": [
+        "money",
+        "cash",
+        "wealth",
+        "rich",
+        "poor",
+        "bank",
+        "gold",
+        "деньги",
+        "богатство",
+        "бедность",
+        "банк",
+        "золото",
+        "кошелёк"
+      ],
       "category": "objects",
       "archetype": "self_worth",
       "significance": 0.7,
@@ -128,7 +315,17 @@
     },
     {
       "id": "wedding",
-      "keywords": ["wedding", "marriage", "bride", "groom", "свадьба", "брак", "невеста", "жених", "кольцо"],
+      "keywords": [
+        "wedding",
+        "marriage",
+        "bride",
+        "groom",
+        "свадьба",
+        "брак",
+        "невеста",
+        "жених",
+        "кольцо"
+      ],
       "category": "activities",
       "archetype": "union",
       "significance": 0.75,
@@ -137,7 +334,17 @@
     },
     {
       "id": "snake",
-      "keywords": ["snake", "serpent", "viper", "cobra", "змея", "змей", "гадюка", "кобра", "питон"],
+      "keywords": [
+        "snake",
+        "serpent",
+        "viper",
+        "cobra",
+        "змея",
+        "змей",
+        "гадюка",
+        "кобра",
+        "питон"
+      ],
       "category": "characters",
       "archetype": "transformation",
       "significance": 0.85,
@@ -146,7 +353,17 @@
     },
     {
       "id": "fire",
-      "keywords": ["fire", "flame", "burn", "smoke", "огонь", "пламя", "гореть", "пожар", "дым"],
+      "keywords": [
+        "fire",
+        "flame",
+        "burn",
+        "smoke",
+        "огонь",
+        "пламя",
+        "гореть",
+        "пожар",
+        "дым"
+      ],
       "category": "objects",
       "archetype": "transformation",
       "significance": 0.8,
@@ -155,7 +372,14 @@
     },
     {
       "id": "mirror",
-      "keywords": ["mirror", "reflection", "glass", "зеркало", "отражение", "стекло"],
+      "keywords": [
+        "mirror",
+        "reflection",
+        "glass",
+        "зеркало",
+        "отражение",
+        "стекло"
+      ],
       "category": "objects",
       "archetype": "self",
       "significance": 0.75,
@@ -164,7 +388,16 @@
     },
     {
       "id": "blood",
-      "keywords": ["blood", "bleeding", "wound", "injury", "кровь", "кровотечение", "рана", "травма"],
+      "keywords": [
+        "blood",
+        "bleeding",
+        "wound",
+        "injury",
+        "кровь",
+        "кровотечение",
+        "рана",
+        "травма"
+      ],
       "category": "objects",
       "archetype": "life_force",
       "significance": 0.8,
@@ -173,7 +406,12 @@
     },
     {
       "id": "spider",
-      "keywords": ["spider", "web", "паук", "паутина"],
+      "keywords": [
+        "spider",
+        "web",
+        "паук",
+        "паутина"
+      ],
       "category": "characters",
       "archetype": "feminine",
       "significance": 0.75,
@@ -182,7 +420,17 @@
     },
     {
       "id": "stairs",
-      "keywords": ["stairs", "staircase", "steps", "climb", "descend", "лестница", "ступени", "подниматься", "спускаться"],
+      "keywords": [
+        "stairs",
+        "staircase",
+        "steps",
+        "climb",
+        "descend",
+        "лестница",
+        "ступени",
+        "подниматься",
+        "спускаться"
+      ],
       "category": "settings",
       "archetype": "progress",
       "significance": 0.7,
@@ -191,7 +439,13 @@
     },
     {
       "id": "bridge",
-      "keywords": ["bridge", "crossing", "мост", "переход", "переправа"],
+      "keywords": [
+        "bridge",
+        "crossing",
+        "мост",
+        "переход",
+        "переправа"
+      ],
       "category": "settings",
       "archetype": "transition",
       "significance": 0.75,
@@ -200,7 +454,16 @@
     },
     {
       "id": "forest",
-      "keywords": ["forest", "woods", "trees", "jungle", "лес", "деревья", "джунгли", "роща"],
+      "keywords": [
+        "forest",
+        "woods",
+        "trees",
+        "jungle",
+        "лес",
+        "деревья",
+        "джунгли",
+        "роща"
+      ],
       "category": "settings",
       "archetype": "unconscious",
       "significance": 0.7,
@@ -209,7 +472,17 @@
     },
     {
       "id": "phone",
-      "keywords": ["phone", "telephone", "call", "text", "message", "телефон", "звонок", "сообщение", "смартфон"],
+      "keywords": [
+        "phone",
+        "telephone",
+        "call",
+        "text",
+        "message",
+        "телефон",
+        "звонок",
+        "сообщение",
+        "смартфон"
+      ],
       "category": "objects",
       "archetype": "communication",
       "significance": 0.65,
@@ -218,7 +491,16 @@
     },
     {
       "id": "lost",
-      "keywords": ["lost", "missing", "cannot find", "searching", "потерян", "пропал", "не могу найти", "искать"],
+      "keywords": [
+        "lost",
+        "missing",
+        "cannot find",
+        "searching",
+        "потерян",
+        "пропал",
+        "не могу найти",
+        "искать"
+      ],
       "category": "striving",
       "archetype": "searching",
       "significance": 0.75,
@@ -227,7 +509,15 @@
     },
     {
       "id": "late",
-      "keywords": ["late", "running late", "missing", "deadline", "опаздывать", "опоздание", "не успеть"],
+      "keywords": [
+        "late",
+        "running late",
+        "missing",
+        "deadline",
+        "опаздывать",
+        "опоздание",
+        "не успеть"
+      ],
       "category": "striving",
       "archetype": "anxiety",
       "significance": 0.7,
@@ -236,7 +526,18 @@
     },
     {
       "id": "war",
-      "keywords": ["war", "battle", "fight", "soldier", "army", "война", "битва", "сражение", "солдат", "армия"],
+      "keywords": [
+        "war",
+        "battle",
+        "fight",
+        "soldier",
+        "army",
+        "война",
+        "битва",
+        "сражение",
+        "солдат",
+        "армия"
+      ],
       "category": "activities",
       "archetype": "conflict",
       "significance": 0.8,
@@ -245,7 +546,17 @@
     },
     {
       "id": "hospital",
-      "keywords": ["hospital", "doctor", "nurse", "surgery", "больница", "врач", "медсестра", "операция", "лечение"],
+      "keywords": [
+        "hospital",
+        "doctor",
+        "nurse",
+        "surgery",
+        "больница",
+        "врач",
+        "медсестра",
+        "операция",
+        "лечение"
+      ],
       "category": "settings",
       "archetype": "healing",
       "significance": 0.75,
@@ -254,7 +565,15 @@
     },
     {
       "id": "celebrity",
-      "keywords": ["celebrity", "famous", "star", "знаменитость", "звезда", "известный", "актёр"],
+      "keywords": [
+        "celebrity",
+        "famous",
+        "star",
+        "знаменитость",
+        "звезда",
+        "известный",
+        "актёр"
+      ],
       "category": "characters",
       "archetype": "aspiration",
       "significance": 0.65,
@@ -263,7 +582,18 @@
     },
     {
       "id": "ocean",
-      "keywords": ["ocean", "sea", "waves", "beach", "shore", "океан", "море", "волны", "пляж", "берег"],
+      "keywords": [
+        "ocean",
+        "sea",
+        "waves",
+        "beach",
+        "shore",
+        "океан",
+        "море",
+        "волны",
+        "пляж",
+        "берег"
+      ],
       "category": "settings",
       "archetype": "unconscious",
       "significance": 0.8,
@@ -272,7 +602,14 @@
     },
     {
       "id": "flying_machine",
-      "keywords": ["airplane", "plane", "helicopter", "самолёт", "вертолёт", "авиация"],
+      "keywords": [
+        "airplane",
+        "plane",
+        "helicopter",
+        "самолёт",
+        "вертолёт",
+        "авиация"
+      ],
       "category": "objects",
       "archetype": "aspiration",
       "significance": 0.7,
@@ -281,7 +618,17 @@
     },
     {
       "id": "darkness",
-      "keywords": ["dark", "darkness", "night", "shadow", "темнота", "тьма", "ночь", "тень", "мрак"],
+      "keywords": [
+        "dark",
+        "darkness",
+        "night",
+        "shadow",
+        "темнота",
+        "тьма",
+        "ночь",
+        "тень",
+        "мрак"
+      ],
       "category": "settings",
       "archetype": "shadow",
       "significance": 0.75,
@@ -290,7 +637,17 @@
     },
     {
       "id": "light",
-      "keywords": ["light", "bright", "sun", "shine", "свет", "яркий", "солнце", "сияние", "луч"],
+      "keywords": [
+        "light",
+        "bright",
+        "sun",
+        "shine",
+        "свет",
+        "яркий",
+        "солнце",
+        "сияние",
+        "луч"
+      ],
       "category": "settings",
       "archetype": "consciousness",
       "significance": 0.75,
@@ -299,7 +656,18 @@
     },
     {
       "id": "food",
-      "keywords": ["food", "eat", "eating", "meal", "hungry", "еда", "есть", "кушать", "обед", "голодный"],
+      "keywords": [
+        "food",
+        "eat",
+        "eating",
+        "meal",
+        "hungry",
+        "еда",
+        "есть",
+        "кушать",
+        "обед",
+        "голодный"
+      ],
       "category": "objects",
       "archetype": "nourishment",
       "significance": 0.65,
@@ -308,7 +676,15 @@
     },
     {
       "id": "key",
-      "keywords": ["key", "lock", "unlock", "ключ", "замок", "отпереть", "открыть"],
+      "keywords": [
+        "key",
+        "lock",
+        "unlock",
+        "ключ",
+        "замок",
+        "отпереть",
+        "открыть"
+      ],
       "category": "objects",
       "archetype": "solution",
       "significance": 0.7,
@@ -317,7 +693,17 @@
     },
     {
       "id": "road",
-      "keywords": ["road", "path", "highway", "street", "дорога", "путь", "шоссе", "улица", "тропа"],
+      "keywords": [
+        "road",
+        "path",
+        "highway",
+        "street",
+        "дорога",
+        "путь",
+        "шоссе",
+        "улица",
+        "тропа"
+      ],
       "category": "settings",
       "archetype": "life_path",
       "significance": 0.7,
@@ -326,7 +712,15 @@
     },
     {
       "id": "stranger",
-      "keywords": ["stranger", "unknown person", "mysterious", "незнакомец", "неизвестный", "чужой", "таинственный"],
+      "keywords": [
+        "stranger",
+        "unknown person",
+        "mysterious",
+        "незнакомец",
+        "неизвестный",
+        "чужой",
+        "таинственный"
+      ],
       "category": "characters",
       "archetype": "shadow",
       "significance": 0.7,
@@ -335,7 +729,15 @@
     },
     {
       "id": "mother",
-      "keywords": ["mother", "mom", "mama", "мать", "мама", "мамочка", "родительница"],
+      "keywords": [
+        "mother",
+        "mom",
+        "mama",
+        "мать",
+        "мама",
+        "мамочка",
+        "родительница"
+      ],
       "category": "characters",
       "archetype": "feminine",
       "significance": 0.8,
@@ -344,7 +746,14 @@
     },
     {
       "id": "father",
-      "keywords": ["father", "dad", "papa", "отец", "папа", "батя"],
+      "keywords": [
+        "father",
+        "dad",
+        "papa",
+        "отец",
+        "папа",
+        "батя"
+      ],
       "category": "characters",
       "archetype": "masculine",
       "significance": 0.8,
@@ -353,7 +762,15 @@
     },
     {
       "id": "ex_partner",
-      "keywords": ["ex", "ex-girlfriend", "ex-boyfriend", "former lover", "бывший", "бывшая", "экс"],
+      "keywords": [
+        "ex",
+        "ex-girlfriend",
+        "ex-boyfriend",
+        "former lover",
+        "бывший",
+        "бывшая",
+        "экс"
+      ],
       "category": "characters",
       "archetype": "past",
       "significance": 0.75,
@@ -362,7 +779,16 @@
     },
     {
       "id": "swimming",
-      "keywords": ["swim", "swimming", "drown", "drowning", "плавать", "плыть", "тонуть", "утопать"],
+      "keywords": [
+        "swim",
+        "swimming",
+        "drown",
+        "drowning",
+        "плавать",
+        "плыть",
+        "тонуть",
+        "утопать"
+      ],
       "category": "activities",
       "archetype": "emotional_navigation",
       "significance": 0.75,
@@ -371,7 +797,15 @@
     },
     {
       "id": "running",
-      "keywords": ["run", "running", "sprint", "jog", "бежать", "бег", "спринт"],
+      "keywords": [
+        "run",
+        "running",
+        "sprint",
+        "jog",
+        "бежать",
+        "бег",
+        "спринт"
+      ],
       "category": "activities",
       "archetype": "escape",
       "significance": 0.7,
@@ -380,7 +814,18 @@
     },
     {
       "id": "mountain",
-      "keywords": ["mountain", "hill", "climb", "summit", "peak", "гора", "холм", "восхождение", "вершина", "пик"],
+      "keywords": [
+        "mountain",
+        "hill",
+        "climb",
+        "summit",
+        "peak",
+        "гора",
+        "холм",
+        "восхождение",
+        "вершина",
+        "пик"
+      ],
       "category": "settings",
       "archetype": "achievement",
       "significance": 0.75,
@@ -389,7 +834,19 @@
     },
     {
       "id": "storm",
-      "keywords": ["storm", "thunder", "lightning", "tornado", "hurricane", "гроза", "шторм", "гром", "молния", "торнадо", "ураган"],
+      "keywords": [
+        "storm",
+        "thunder",
+        "lightning",
+        "tornado",
+        "hurricane",
+        "гроза",
+        "шторм",
+        "гром",
+        "молния",
+        "торнадо",
+        "ураган"
+      ],
       "category": "settings",
       "archetype": "chaos",
       "significance": 0.8,
@@ -398,7 +855,18 @@
     },
     {
       "id": "garden",
-      "keywords": ["garden", "flowers", "plants", "grow", "bloom", "сад", "цветы", "растения", "расти", "цвести"],
+      "keywords": [
+        "garden",
+        "flowers",
+        "plants",
+        "grow",
+        "bloom",
+        "сад",
+        "цветы",
+        "растения",
+        "расти",
+        "цвести"
+      ],
       "category": "settings",
       "archetype": "growth",
       "significance": 0.7,
@@ -407,7 +875,15 @@
     },
     {
       "id": "book",
-      "keywords": ["book", "reading", "library", "книга", "чтение", "библиотека", "читать"],
+      "keywords": [
+        "book",
+        "reading",
+        "library",
+        "книга",
+        "чтение",
+        "библиотека",
+        "читать"
+      ],
       "category": "objects",
       "archetype": "knowledge",
       "significance": 0.65,
@@ -416,7 +892,14 @@
     },
     {
       "id": "pregnancy",
-      "keywords": ["pregnant", "pregnancy", "expecting", "беременность", "беременная", "ожидать ребёнка"],
+      "keywords": [
+        "pregnant",
+        "pregnancy",
+        "expecting",
+        "беременность",
+        "беременная",
+        "ожидать ребёнка"
+      ],
       "category": "activities",
       "archetype": "creation",
       "significance": 0.8,
@@ -425,7 +908,14 @@
     },
     {
       "id": "mask",
-      "keywords": ["mask", "disguise", "hidden face", "маска", "маскировка", "скрытое лицо"],
+      "keywords": [
+        "mask",
+        "disguise",
+        "hidden face",
+        "маска",
+        "маскировка",
+        "скрытое лицо"
+      ],
       "category": "objects",
       "archetype": "persona",
       "significance": 0.75,
@@ -434,7 +924,17 @@
     },
     {
       "id": "jewel",
-      "keywords": ["jewel", "diamond", "gem", "treasure", "драгоценность", "алмаз", "самоцвет", "сокровище", "украшение"],
+      "keywords": [
+        "jewel",
+        "diamond",
+        "gem",
+        "treasure",
+        "драгоценность",
+        "алмаз",
+        "самоцвет",
+        "сокровище",
+        "украшение"
+      ],
       "category": "objects",
       "archetype": "self",
       "significance": 0.75,
@@ -442,11 +942,6 @@
       "interpretation_ru": "Драгоценности во снах представляют что-то ценное — таланты, качества или аспекты личности. Могут указывать на самооценку или скрытый потенциал."
     }
   ],
-  "emotions": {
-    "positive": ["happy", "joy", "love", "excitement", "peace", "relief", "hope", "pride", "счастье", "радость", "любовь", "волнение", "покой", "облегчение", "надежда", "гордость"],
-    "negative": ["fear", "anxiety", "anger", "sadness", "confusion", "guilt", "shame", "frustration", "страх", "тревога", "гнев", "печаль", "смятение", "вина", "стыд", "разочарование"],
-    "neutral": ["curiosity", "surprise", "wonder", "любопытство", "удивление", "изумление"]
-  },
   "archetypes": {
     "shadow": {
       "description_en": "The dark, rejected aspects of personality that we don't acknowledge",
@@ -484,5 +979,128 @@
       "description_en": "Innocence, potential, new beginnings, but also vulnerability",
       "description_ru": "Невинность, потенциал, новые начинания, но также уязвимость"
     }
+  },
+  "emotions": {
+    "by_type": {
+      "happiness": [
+        "happy",
+        "joy",
+        "love",
+        "peace",
+        "free",
+        "delight",
+        "bliss",
+        "счастлив",
+        "радость",
+        "любовь",
+        "покой",
+        "свобод",
+        "восторг",
+        "блаженство"
+      ],
+      "sadness": [
+        "sad",
+        "cry",
+        "loss",
+        "alone",
+        "grief",
+        "sorrow",
+        "melancholy",
+        "грустн",
+        "плакать",
+        "потеря",
+        "один",
+        "горе",
+        "печаль",
+        "тоска"
+      ],
+      "anger": [
+        "angry",
+        "rage",
+        "hate",
+        "fight",
+        "fury",
+        "mad",
+        "злой",
+        "ярость",
+        "ненавист",
+        "драка",
+        "гнев",
+        "бешенство"
+      ],
+      "fear": [
+        "fear",
+        "afraid",
+        "scary",
+        "terror",
+        "chase",
+        "panic",
+        "dread",
+        "страх",
+        "боюсь",
+        "страшн",
+        "ужас",
+        "погоня",
+        "паника",
+        "трепет"
+      ],
+      "confusion": [
+        "confus",
+        "lost",
+        "strange",
+        "weird",
+        "bewilder",
+        "perplex",
+        "смят",
+        "потерян",
+        "странн",
+        "недоумение",
+        "растерян"
+      ]
+    },
+    "positive": [
+      "happy",
+      "joy",
+      "love",
+      "excitement",
+      "peace",
+      "relief",
+      "hope",
+      "pride",
+      "счастье",
+      "радость",
+      "любовь",
+      "волнение",
+      "покой",
+      "облегчение",
+      "надежда",
+      "гордость"
+    ],
+    "negative": [
+      "fear",
+      "anxiety",
+      "anger",
+      "sadness",
+      "confusion",
+      "guilt",
+      "shame",
+      "frustration",
+      "страх",
+      "тревога",
+      "гнев",
+      "печаль",
+      "смятение",
+      "вина",
+      "стыд",
+      "разочарование"
+    ],
+    "neutral": [
+      "curiosity",
+      "surprise",
+      "wonder",
+      "любопытство",
+      "удивление",
+      "изумление"
+    ]
   }
 }

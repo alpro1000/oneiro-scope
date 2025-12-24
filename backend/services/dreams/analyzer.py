@@ -254,7 +254,7 @@ class DreamAnalyzer:
         )
 
     def _analyze_emotions(self, text: str) -> Tuple[EmotionType, float]:
-        """Determine primary emotion and intensity"""
+        """Determine primary emotion and intensity using knowledge base"""
         text_lower = text.lower()
 
         emotion_counts = {
@@ -265,32 +265,32 @@ class DreamAnalyzer:
             EmotionType.CONFUSION: 0,
         }
 
-        # Happiness indicators
-        happiness_words = ["happy", "joy", "love", "peace", "free", "счастлив", "радость", "любовь", "покой", "свобод"]
+        # Load emotion words from knowledge base
+        emotion_types = self.knowledge_base.get("emotions", {}).get("by_type", {})
+
+        # Count emotion indicators from knowledge base
+        happiness_words = emotion_types.get("happiness", [])
         for word in happiness_words:
             if word in text_lower:
                 emotion_counts[EmotionType.HAPPINESS] += 1
 
-        # Sadness indicators
-        sadness_words = ["sad", "cry", "loss", "alone", "grief", "грустн", "плакать", "потеря", "один", "горе"]
+        sadness_words = emotion_types.get("sadness", [])
         for word in sadness_words:
             if word in text_lower:
                 emotion_counts[EmotionType.SADNESS] += 1
 
-        # Anger indicators
-        anger_words = ["angry", "rage", "hate", "fight", "злой", "ярость", "ненавист", "драка"]
+        anger_words = emotion_types.get("anger", [])
         for word in anger_words:
             if word in text_lower:
                 emotion_counts[EmotionType.ANGER] += 1
 
         # Fear/apprehension indicators
-        fear_words = ["fear", "afraid", "scary", "terror", "chase", "страх", "боюсь", "страшн", "ужас", "погоня"]
+        fear_words = emotion_types.get("fear", [])
         for word in fear_words:
             if word in text_lower:
                 emotion_counts[EmotionType.APPREHENSION] += 1
 
-        # Confusion indicators
-        confusion_words = ["confus", "lost", "strange", "weird", "смят", "потерян", "странн"]
+        confusion_words = emotion_types.get("confusion", [])
         for word in confusion_words:
             if word in text_lower:
                 emotion_counts[EmotionType.CONFUSION] += 1
