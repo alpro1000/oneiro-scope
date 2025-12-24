@@ -81,6 +81,12 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
 
     async def dispatch(self, request: Request, call_next):
         """Process request with rate limiting."""
+        # Skip rate limiting for certain endpoints
+        path = request.url.path
+        if path.startswith("/api/v1/lunar") or path == "/health":
+            # Don't rate limit lunar or health endpoints
+            return await call_next(request)
+
         # Get client IP
         client_ip = request.client.host if request.client else "unknown"
 

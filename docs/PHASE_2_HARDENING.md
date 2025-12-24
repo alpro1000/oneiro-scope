@@ -249,12 +249,14 @@ All endpoints now include provenance in responses:
 | `POST /api/v1/astrology/event-forecast` | ✅ provenance field |
 | `GET /api/v1/astrology/retrograde` | Rate limited ⚙️ |
 
-### Rate Limits (Per Endpoint)
+## Rate Limits (Per Endpoint)
 
 - **Natal Chart**: 10/min per IP
 - **Horoscope**: 10/min per IP
 - **Event Forecast**: 10/min per IP
 - **Retrograde**: 10/min per IP
+- **Lunar Calendar** ⚙️ EXEMPT (critical endpoint)
+- **Health Check** ⚙️ EXEMPT (monitoring)
 
 ---
 

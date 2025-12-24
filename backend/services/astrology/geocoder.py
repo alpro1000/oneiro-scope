@@ -57,23 +57,32 @@ class Geocoder:
         Raises:
             GeocodingError: If place not found or geocoding fails
         """
+        logger.info(f"[Geocoder] Starting geocoding for: '{query}'")
+
         if not query or not query.strip():
+            logger.error(f"[Geocoder] Query is empty or invalid")
             raise GeocodingError("PLACE_QUERY_REQUIRED")
 
         try:
             # Use GeoNames API for geocoding
+            logger.debug(f"[Geocoder] Calling geonames_lookup...")
             result = await geonames_lookup(query)
+            logger.debug(f"[Geocoder] geonames_lookup returned: {result}")
 
             # Get timezone: prefer GeoNames response, fallback to TimezoneFinder
             timezone_name = result.get("timezone")
+            logger.debug(f"[Geocoder] GeoNames timezone: {timezone_name}")
+
             if not timezone_name:
+                logger.info(f"[Geocoder] Timezone not in response, using TimezoneFinder...")
                 timezone_name = self._timezone_for(result["lat"], result["lon"])
+                logger.debug(f"[Geocoder] TimezoneFinder returned: {timezone_name}")
 
             # Create response hash for provenance
             payload = json.dumps(result, sort_keys=True).encode("utf-8")
             raw_response_id = hashlib.sha256(payload).hexdigest()
 
-            return GeoLocation(
+            geo_location = GeoLocation(
                 name=result["resolved_name"],
                 latitude=result["lat"],
                 longitude=result["lon"],
@@ -86,12 +95,17 @@ class Geocoder:
                 admin_area=None,  # GeoNames basic API doesn't provide admin area
             )
 
+            logger.info(f"[Geocoder] ✓ SUCCESS: Geocoded '{query}' to {geo_location.name}, {geo_location.country}")
+            logger.debug(f"[Geocoder] Location: {geo_location.latitude}, {geo_location.longitude}, TZ: {geo_location.timezone}")
+
+            return geo_location
+
         except ValueError as exc:
             # GeoNames raised "Place not found"
-            logger.warning(f"GeoNames lookup failed for '{query}': {exc}")
+            logger.warning(f"[Geocoder] ✗ FAILED: Place not found for '{query}': {exc}")
             raise GeocodingError("PLACE_NOT_FOUND") from exc
         except Exception as exc:
-            logger.error(f"Geocoding error for '{query}': {exc}")
+            logger.error(f"[Geocoder] ✗ CRITICAL ERROR: Geocoding error for '{query}': {type(exc).__name__}: {exc}", exc_info=True)
             raise GeocodingError("GEOCODER_ERROR") from exc
 
     def _timezone_for(self, lat: float, lon: float) -> str:
