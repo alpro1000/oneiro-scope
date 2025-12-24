@@ -132,26 +132,36 @@ async def geonames_lookup(place_name: str) -> Dict:
         "style": "FULL",  # Include timezone info in response
     }
 
-    logger.info(f"GeoNames API query: {query} (lang={GEONAMES_LANG})")
+    logger.info(f"[GeoNames] Starting lookup for: '{place_name}'")
+    logger.debug(f"[GeoNames] API params: {params}")
+    logger.debug(f"[GeoNames] Using provider: {GEONAMES_USER}, language: {GEONAMES_LANG}")
+
     response = await client.get(BASE_URL, params=params)
     response.raise_for_status()
     data = response.json()
 
+    logger.debug(f"[GeoNames] API response status: {response.status_code}")
+    logger.debug(f"[GeoNames] Response data: {data}")
+
     # If not found and text is Russian, try transliteration
     if not data.get("geonames"):
         lang = detect_language(place_name)
+        logger.info(f"[GeoNames] No results for '{place_name}', detected language: {lang}")
+
         if lang == "ru":
             translit_query = transliterate_russian(place_name)
-            logger.info(f"GeoNames fallback with transliteration: {translit_query}")
+            logger.info(f"[GeoNames] Trying transliteration fallback: '{place_name}' → '{translit_query}'")
             params["q"] = translit_query
             response = await client.get(BASE_URL, params=params)
             response.raise_for_status()
             data = response.json()
+            logger.debug(f"[GeoNames] Transliterated response: {data}")
 
     # Check if we got results
     if not data.get("geonames"):
         error_msg = f"Place not found: {place_name}"
-        logger.warning(error_msg)
+        logger.warning(f"[GeoNames] ERROR: {error_msg}")
+        logger.warning(f"[GeoNames] Total results received: {len(data.get('geonames', []))}")
         raise ValueError(error_msg)
 
     place = data["geonames"][0]
@@ -167,7 +177,8 @@ async def geonames_lookup(place_name: str) -> Dict:
 
     # Cache successful result
     _location_cache[cache_key] = result
-    logger.info(f"GeoNames resolved: {place_name} → {result['resolved_name']}, {result['country']}")
+    logger.info(f"[GeoNames] ✓ SUCCESS: '{place_name}' → '{result['resolved_name']}' ({result['country']})")
+    logger.debug(f"[GeoNames] Coordinates: {result['lat']}, {result['lon']}, TZ: {result['timezone']}")
 
     return result
 
