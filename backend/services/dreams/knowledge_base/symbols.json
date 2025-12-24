@@ -1136,5 +1136,71 @@
       "ru": "Потеря и утрата",
       "en": "Loss and grief"
     }
+  },
+  "lunar_dream_meanings": {
+    "new_moon": {
+      "days": [
+        1,
+        2,
+        3
+      ],
+      "ru": "Сны в период новолуния часто указывают на новые начинания и скрытые желания. Обратите внимание на символы, связанные с зарождением.",
+      "en": "Dreams during new moon often indicate new beginnings and hidden desires. Pay attention to symbols related to birth and creation."
+    },
+    "waxing": {
+      "days": [
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13
+      ],
+      "ru": "Сны на растущей Луне обычно связаны с ростом, развитием и накоплением энергии. Хорошее время для анализа целей.",
+      "en": "Dreams during waxing moon are typically about growth, development, and energy accumulation. Good time to analyze goals."
+    },
+    "full_moon": {
+      "days": [
+        14,
+        15,
+        16
+      ],
+      "ru": "Полнолуние усиливает яркость и эмоциональность снов. Сны в это время особенно значимы и часто пророческие.",
+      "en": "Full moon enhances dream vividness and emotionality. Dreams during this time are particularly significant and often prophetic."
+    },
+    "waning": {
+      "days": [
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23,
+        24,
+        25,
+        26,
+        27,
+        28
+      ],
+      "ru": "Сны на убывающей Луне часто связаны с завершением циклов, отпусканием и очищением. Время для избавления от старого.",
+      "en": "Dreams during waning moon often relate to cycle completion, letting go, and cleansing. Time for releasing the old."
+    },
+    "dark_moon": {
+      "days": [
+        29,
+        30
+      ],
+      "ru": "Сны в тёмную Луну могут быть особенно глубокими и символичными. Время для внутренней работы и самоанализа.",
+      "en": "Dreams during dark moon can be especially deep and symbolic. Time for inner work and self-reflection."
+    },
+    "default": {
+      "ru": "Лунный день влияет на содержание и значимость снов.",
+      "en": "The lunar day affects dream content and significance."
+    }
   }
 }
