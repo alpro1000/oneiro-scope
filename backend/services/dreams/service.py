@@ -67,6 +67,24 @@ class DreamService:
         6. AI interpretation
         """
 
+        # Validate dream text
+        dream_text = request.dream_text.strip()
+
+        if not dream_text:
+            raise ValueError("Dream text cannot be empty or contain only whitespace")
+
+        if len(dream_text) < 10:
+            raise ValueError(
+                f"Dream text too short ({len(dream_text)} characters). "
+                f"Minimum length is 10 characters for meaningful analysis."
+            )
+
+        if len(dream_text) > 10000:
+            raise ValueError(
+                f"Dream text too long ({len(dream_text)} characters). "
+                f"Maximum length is 10,000 characters. Please split into separate dreams."
+            )
+
         # Step 1-3: Analyze dream content (includes physiological correlations)
         (
             symbols,
@@ -77,7 +95,7 @@ class DreamService:
             archetypes,
             physiological_correlations,
         ) = self.analyzer.analyze(
-            request.dream_text,
+            dream_text,
             request.locale,
             request.physiological_events,
         )
@@ -106,7 +124,7 @@ class DreamService:
 
         # Step 6: Generate AI interpretation with norm context
         summary, interpretation, recommendations = await self.interpreter.generate_interpretation(
-            dream_text=request.dream_text,
+            dream_text=dream_text,
             symbols=symbols,
             content=content,
             emotion=emotion,
@@ -145,7 +163,7 @@ class DreamService:
             status="success",
             dream_id=f"dream_{uuid.uuid4().hex[:12]}",
             analyzed_at=datetime.utcnow(),
-            word_count=self.analyzer.get_word_count(request.dream_text),
+            word_count=self.analyzer.get_word_count(dream_text),
             primary_emotion=emotion,
             emotion_intensity=intensity,
             symbols=symbols,
