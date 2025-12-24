@@ -14,6 +14,8 @@ import {
   type HoroscopeResponse,
   type EventForecastResponse,
 } from '../../../lib/astrology-client';
+import LoadingModal from '../../../components/LoadingModal';
+import CityAutocomplete from '../../../components/CityAutocomplete';
 
 type Tab = 'natalChart' | 'horoscope' | 'eventForecast';
 
@@ -295,12 +297,12 @@ export default function AstrologyPage() {
                     <label className="block text-slate-300 text-sm mb-2">
                       {t('natalChart.birthPlace')} *
                     </label>
-                    <input
-                      type="text"
+                    <CityAutocomplete
                       value={birthPlace}
-                      onChange={(e) => setBirthPlace(e.target.value)}
+                      onChange={setBirthPlace}
                       placeholder={locale === 'ru' ? 'Москва, Россия' : 'Moscow, Russia'}
-                      className="w-full p-3 bg-slate-900/50 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-amber-500"
+                      locale={locale}
+                      disabled={isCalculating}
                     />
                   </div>
 
@@ -553,12 +555,12 @@ export default function AstrologyPage() {
                     <label className="block text-slate-300 text-sm mb-2">
                       {t('eventForecast.eventLocation')}
                     </label>
-                    <input
-                      type="text"
+                    <CityAutocomplete
                       value={eventLocation}
-                      onChange={(e) => setEventLocation(e.target.value)}
+                      onChange={setEventLocation}
                       placeholder={locale === 'ru' ? 'Париж, Франция' : 'Paris, France'}
-                      className="w-full p-3 bg-slate-900/50 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-amber-500"
+                      locale={locale}
+                      disabled={isCalculating}
                     />
                   </div>
 
@@ -715,6 +717,12 @@ export default function AstrologyPage() {
           </div>
         </div>
       </div>
+
+      {/* Loading Modal - blocks all UI during calculations */}
+      <LoadingModal
+        isOpen={isCalculating}
+        message={locale === 'ru' ? 'Рассчитываем...' : 'Calculating...'}
+      />
     </main>
   );
 }

@@ -56,6 +56,7 @@ class LunarResult:
     illumination: float
     moon_age_days: float
     lunar_day: int
+    lunar_day_start_time: Optional[str]  # Time when current lunar day started (HH:MM format)
     moon_sign: str
     phase_key: str
     provenance: dict
@@ -99,6 +100,42 @@ def _phase_key(angle: float) -> str:
 def _moon_sign(longitude: float) -> str:
     index = int(longitude // 30) % 12
     return SIGNS[index]
+
+
+def _calculate_lunar_day_start(moon_age_days: float, target_date: date, tz: str) -> Optional[str]:
+    """
+    Calculate approximate time when current lunar day started.
+
+    Lunar day changes approximately every 24.8 hours.
+    We calculate backwards from moon age to find when this day began.
+    """
+    try:
+        # Get fractional part of lunar day (e.g., 5.3 days -> 0.3)
+        current_lunar_day = max(1, min(30, math.floor(moon_age_days) + 1))
+        fraction_into_day = moon_age_days - (current_lunar_day - 1)
+
+        # Average lunar day is ~24.8 hours
+        # Calculate how many hours ago this day started
+        hours_into_day = fraction_into_day * 24.8
+
+        # Calculate start time by going back from midnight
+        tzinfo = pytz.timezone(tz)
+        midnight_local = tzinfo.localize(
+            datetime(target_date.year, target_date.month, target_date.day, 0, 0)
+        )
+
+        # Lunar day start time
+        day_start = midnight_local + timedelta(hours=hours_into_day)
+
+        # If calculated time is in the future (>24h ahead), go back one day
+        now_local = datetime.now(tzinfo)
+        if day_start > now_local + timedelta(hours=12):
+            day_start -= timedelta(days=1)
+
+        # Format as HH:MM
+        return day_start.strftime("%H:%M")
+    except Exception:
+        return None
 
 
 def _local_noon_utc(target_date: date, tz: str) -> datetime:
@@ -161,6 +198,7 @@ def compute_lunar(date_iso: str, tz: str) -> LunarResult:
     illumination = (1 - math.cos(math.radians(phase_angle))) / 2
     moon_age_days = (phase_angle / 360.0) * SYNODIC_MONTH
     lunar_day = max(1, min(30, math.floor(moon_age_days) + 1))
+    lunar_day_start_time = _calculate_lunar_day_start(moon_age_days, target_date, tz)
     phase = _phase_key(phase_angle)
     moon_sign = _moon_sign(moon_lon)
 
@@ -183,6 +221,7 @@ def compute_lunar(date_iso: str, tz: str) -> LunarResult:
         illumination=illumination,
         moon_age_days=moon_age_days,
         lunar_day=lunar_day,
+        lunar_day_start_time=lunar_day_start_time,
         moon_sign=moon_sign,
         phase_key=phase,
         provenance=provenance,

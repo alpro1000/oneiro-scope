@@ -17,6 +17,76 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
+# Zodiac sign translations
+ZODIAC_SIGNS = {
+    "Aries": {"ru": "Овен", "en": "Aries"},
+    "Taurus": {"ru": "Телец", "en": "Taurus"},
+    "Gemini": {"ru": "Близнецы", "en": "Gemini"},
+    "Cancer": {"ru": "Рак", "en": "Cancer"},
+    "Leo": {"ru": "Лев", "en": "Leo"},
+    "Virgo": {"ru": "Дева", "en": "Virgo"},
+    "Libra": {"ru": "Весы", "en": "Libra"},
+    "Scorpio": {"ru": "Скорпион", "en": "Scorpio"},
+    "Sagittarius": {"ru": "Стрелец", "en": "Sagittarius"},
+    "Capricorn": {"ru": "Козерог", "en": "Capricorn"},
+    "Aquarius": {"ru": "Водолей", "en": "Aquarius"},
+    "Pisces": {"ru": "Рыбы", "en": "Pisces"}
+}
+
+
+# Moon phase translations for human-readable display
+MOON_PHASE_LABELS = {
+    "new_moon": {
+        "ru": "Новолуние",
+        "en": "New Moon"
+    },
+    "waxing_crescent": {
+        "ru": "Растущий серп",
+        "en": "Waxing Crescent"
+    },
+    "first_quarter": {
+        "ru": "Первая четверть",
+        "en": "First Quarter"
+    },
+    "waxing_gibbous": {
+        "ru": "Растущая луна",
+        "en": "Waxing Gibbous"
+    },
+    "full_moon": {
+        "ru": "Полнолуние",
+        "en": "Full Moon"
+    },
+    "waning_gibbous": {
+        "ru": "Убывающая луна",
+        "en": "Waning Gibbous"
+    },
+    "last_quarter": {
+        "ru": "Последняя четверть",
+        "en": "Last Quarter"
+    },
+    "waning_crescent": {
+        "ru": "Убывающий серп",
+        "en": "Waning Crescent"
+    }
+}
+
+
+def get_phase_label(phase_key: str, locale: str) -> str:
+    """Get human-readable moon phase label in specified locale."""
+    phase_translations = MOON_PHASE_LABELS.get(phase_key, {})
+    # Fallback to English if locale not found, then to title-cased key
+    return phase_translations.get(
+        locale,
+        phase_translations.get("en", phase_key.replace("_", " ").title())
+    )
+
+
+def get_zodiac_label(sign: str, locale: str) -> str:
+    """Get zodiac sign label in specified locale."""
+    sign_translations = ZODIAC_SIGNS.get(sign, {})
+    return sign_translations.get(locale, sign_translations.get("en", sign))
+
+
 def _parse_date(date_str: str) -> date:
     try:
         return date.fromisoformat(date_str)
@@ -77,7 +147,8 @@ async def get_lunar_day(
         logger.exception("Unexpected lunar calculation failure")
         raise HTTPException(status_code=500, detail="Failed to compute lunar data") from exc
 
-    phase_label = lunar.phase_key.replace("_", " ").title()
+    phase_label = get_phase_label(lunar.phase_key, locale)
+    moon_sign_label = get_zodiac_label(lunar.moon_sign, locale)
 
     return {
         "date": lunar.date,
@@ -87,7 +158,8 @@ async def get_lunar_day(
         "illumination": lunar.illumination,
         "age": lunar.moon_age_days,
         "lunar_day": lunar.lunar_day,
-        "moon_sign": lunar.moon_sign,
+        "lunar_day_start_time": lunar.lunar_day_start_time,
+        "moon_sign": moon_sign_label,
         "description": content.get("notes", ""),
         "recommendation": content.get("type", ""),
         "locale": locale,

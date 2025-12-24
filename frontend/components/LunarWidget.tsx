@@ -181,6 +181,11 @@ export default function LunarWidget({initialData, locale}: Props) {
             <span className="text-xs font-medium uppercase tracking-[0.25em] text-gold">
               {t('lunarDay', {day: currentData.lunar_day})}
             </span>
+            {currentData.lunar_day_start_time && (
+              <span className="text-xs text-gold-soft">
+                {currentData.lunar_day_start_time} — {t('lunarDayStarted', {day: currentData.lunar_day})}
+              </span>
+            )}
             <span className="text-sm text-ink-muted">{currentData.description}</span>
           </div>
         </div>
