@@ -26,22 +26,72 @@ BASE_URL = "http://api.geonames.org/searchJSON"
 
 # Built-in popular cities database (fallback when GeoNames API fails)
 # Format: {"city_name_lower": {"name": "DisplayName", "country": "CountryName", "lat": 55.0, "lon": 37.0, "timezone": "Europe/Moscow"}}
+# Expanded to include major Russian, Ukrainian, European, Asian, American cities for offline support
 POPULAR_CITIES = {
+    # Russia
     "москва": {"name": "Moscow", "country": "Russia", "lat": 55.75222, "lon": 37.61556, "timezone": "Europe/Moscow"},
     "moscow": {"name": "Moscow", "country": "Russia", "lat": 55.75222, "lon": 37.61556, "timezone": "Europe/Moscow"},
     "санкт-петербург": {"name": "Saint Petersburg", "country": "Russia", "lat": 59.93863, "lon": 30.31413, "timezone": "Europe/Moscow"},
     "saint petersburg": {"name": "Saint Petersburg", "country": "Russia", "lat": 59.93863, "lon": 30.31413, "timezone": "Europe/Moscow"},
     "st petersburg": {"name": "Saint Petersburg", "country": "Russia", "lat": 59.93863, "lon": 30.31413, "timezone": "Europe/Moscow"},
+    "novosibirsk": {"name": "Novosibirsk", "country": "Russia", "lat": 55.0415, "lon": 82.9346, "timezone": "Asia/Novosibirsk"},
+    "новосибирск": {"name": "Novosibirsk", "country": "Russia", "lat": 55.0415, "lon": 82.9346, "timezone": "Asia/Novosibirsk"},
+    "екатеринбург": {"name": "Yekaterinburg", "country": "Russia", "lat": 56.8389, "lon": 60.6057, "timezone": "Asia/Yekaterinburg"},
+    "yekaterinburg": {"name": "Yekaterinburg", "country": "Russia", "lat": 56.8389, "lon": 60.6057, "timezone": "Asia/Yekaterinburg"},
+    "казань": {"name": "Kazan", "country": "Russia", "lat": 55.7894, "lon": 49.1204, "timezone": "Europe/Moscow"},
+    "kazan": {"name": "Kazan", "country": "Russia", "lat": 55.7894, "lon": 49.1204, "timezone": "Europe/Moscow"},
+
+    # Ukraine
+    "киев": {"name": "Kyiv", "country": "Ukraine", "lat": 50.4501, "lon": 30.5234, "timezone": "Europe/Kyiv"},
+    "kyiv": {"name": "Kyiv", "country": "Ukraine", "lat": 50.4501, "lon": 30.5234, "timezone": "Europe/Kyiv"},
+    "kiev": {"name": "Kyiv", "country": "Ukraine", "lat": 50.4501, "lon": 30.5234, "timezone": "Europe/Kyiv"},
+    "запорожье": {"name": "Zaporizhia", "country": "Ukraine", "lat": 47.8389, "lon": 35.1969, "timezone": "Europe/Kyiv"},
+    "zaporizhia": {"name": "Zaporizhia", "country": "Ukraine", "lat": 47.8389, "lon": 35.1969, "timezone": "Europe/Kyiv"},
+    "харків": {"name": "Kharkiv", "country": "Ukraine", "lat": 50.0038, "lon": 36.2304, "timezone": "Europe/Kyiv"},
+    "kharkiv": {"name": "Kharkiv", "country": "Ukraine", "lat": 50.0038, "lon": 36.2304, "timezone": "Europe/Kyiv"},
+    "львів": {"name": "Lviv", "country": "Ukraine", "lat": 49.8397, "lon": 24.0297, "timezone": "Europe/Kyiv"},
+    "lviv": {"name": "Lviv", "country": "Ukraine", "lat": 49.8397, "lon": 24.0297, "timezone": "Europe/Kyiv"},
+    "одеса": {"name": "Odesa", "country": "Ukraine", "lat": 46.4858, "lon": 30.7326, "timezone": "Europe/Kyiv"},
+    "odesa": {"name": "Odesa", "country": "Ukraine", "lat": 46.4858, "lon": 30.7326, "timezone": "Europe/Kyiv"},
+
+    # Europe
     "london": {"name": "London", "country": "United Kingdom", "lat": 51.5085, "lon": -0.1257, "timezone": "Europe/London"},
     "paris": {"name": "Paris", "country": "France", "lat": 48.8566, "lon": 2.3522, "timezone": "Europe/Paris"},
+    "париж": {"name": "Paris", "country": "France", "lat": 48.8566, "lon": 2.3522, "timezone": "Europe/Paris"},
     "berlin": {"name": "Berlin", "country": "Germany", "lat": 52.5200, "lon": 13.4050, "timezone": "Europe/Berlin"},
-    "new york": {"name": "New York", "country": "United States", "lat": 40.7128, "lon": -74.0060, "timezone": "America/New_York"},
-    "ny": {"name": "New York", "country": "United States", "lat": 40.7128, "lon": -74.0060, "timezone": "America/New_York"},
+    "madrid": {"name": "Madrid", "country": "Spain", "lat": 40.4168, "lon": -3.7038, "timezone": "Europe/Madrid"},
+    "rome": {"name": "Rome", "country": "Italy", "lat": 41.9028, "lon": 12.4964, "timezone": "Europe/Rome"},
+    "roma": {"name": "Rome", "country": "Italy", "lat": 41.9028, "lon": 12.4964, "timezone": "Europe/Rome"},
+    "amsterdam": {"name": "Amsterdam", "country": "Netherlands", "lat": 52.3676, "lon": 4.9041, "timezone": "Europe/Amsterdam"},
+    "barcelona": {"name": "Barcelona", "country": "Spain", "lat": 41.3874, "lon": 2.1686, "timezone": "Europe/Madrid"},
+    "vienna": {"name": "Vienna", "country": "Austria", "lat": 48.2082, "lon": 16.3738, "timezone": "Europe/Vienna"},
+    "wien": {"name": "Vienna", "country": "Austria", "lat": 48.2082, "lon": 16.3738, "timezone": "Europe/Vienna"},
+    "prague": {"name": "Prague", "country": "Czech Republic", "lat": 50.0755, "lon": 14.4378, "timezone": "Europe/Prague"},
+
+    # Asia
     "tokyo": {"name": "Tokyo", "country": "Japan", "lat": 35.6762, "lon": 139.6503, "timezone": "Asia/Tokyo"},
-    "sydney": {"name": "Sydney", "country": "Australia", "lat": -33.8688, "lon": 151.2093, "timezone": "Australia/Sydney"},
-    "dubai": {"name": "Dubai", "country": "United Arab Emirates", "lat": 25.2048, "lon": 55.2708, "timezone": "Asia/Dubai"},
     "bangkok": {"name": "Bangkok", "country": "Thailand", "lat": 13.7563, "lon": 100.5018, "timezone": "Asia/Bangkok"},
     "singapore": {"name": "Singapore", "country": "Singapore", "lat": 1.3521, "lon": 103.8198, "timezone": "Asia/Singapore"},
+    "hong kong": {"name": "Hong Kong", "country": "Hong Kong", "lat": 22.2793, "lon": 114.1694, "timezone": "Asia/Hong_Kong"},
+    "dubai": {"name": "Dubai", "country": "United Arab Emirates", "lat": 25.2048, "lon": 55.2708, "timezone": "Asia/Dubai"},
+    "mumbai": {"name": "Mumbai", "country": "India", "lat": 19.0760, "lon": 72.8777, "timezone": "Asia/Kolkata"},
+    "delhi": {"name": "New Delhi", "country": "India", "lat": 28.6139, "lon": 77.2090, "timezone": "Asia/Kolkata"},
+
+    # Americas
+    "new york": {"name": "New York", "country": "United States", "lat": 40.7128, "lon": -74.0060, "timezone": "America/New_York"},
+    "ny": {"name": "New York", "country": "United States", "lat": 40.7128, "lon": -74.0060, "timezone": "America/New_York"},
+    "los angeles": {"name": "Los Angeles", "country": "United States", "lat": 34.0522, "lon": -118.2437, "timezone": "America/Los_Angeles"},
+    "la": {"name": "Los Angeles", "country": "United States", "lat": 34.0522, "lon": -118.2437, "timezone": "America/Los_Angeles"},
+    "chicago": {"name": "Chicago", "country": "United States", "lat": 41.8781, "lon": -87.6298, "timezone": "America/Chicago"},
+    "toronto": {"name": "Toronto", "country": "Canada", "lat": 43.6532, "lon": -79.3832, "timezone": "America/Toronto"},
+    "mexico city": {"name": "Mexico City", "country": "Mexico", "lat": 19.4326, "lon": -99.1332, "timezone": "America/Mexico_City"},
+    "buenos aires": {"name": "Buenos Aires", "country": "Argentina", "lat": -34.6037, "lon": -58.3816, "timezone": "America/Argentina/Buenos_Aires"},
+    "sao paulo": {"name": "São Paulo", "country": "Brazil", "lat": -23.5505, "lon": -46.6333, "timezone": "America/Sao_Paulo"},
+
+    # Oceania
+    "sydney": {"name": "Sydney", "country": "Australia", "lat": -33.8688, "lon": 151.2093, "timezone": "Australia/Sydney"},
+    "melbourne": {"name": "Melbourne", "country": "Australia", "lat": -37.8136, "lon": 144.9631, "timezone": "Australia/Melbourne"},
+    "auckland": {"name": "Auckland", "country": "New Zealand", "lat": -37.0082, "lon": 174.7850, "timezone": "Pacific/Auckland"},
 }
 
 # HTTP client with connection pooling
@@ -153,10 +203,11 @@ async def geonames_lookup(place_name: str) -> Dict:
     # Try original query first
     params = {
         "q": query,
-        "maxRows": 1,
+        "maxRows": 10,  # Get top 10 results to choose best match
         "lang": GEONAMES_LANG,
         "username": GEONAMES_USER,
-        "featureClass": "P",  # Populated places (cities, towns)
+        "featureClass": "P",  # Populated places (cities, towns, villages)
+        "isNameRequired": "true",  # Only exact name matches
         "style": "FULL",  # Include timezone info in response
     }
 
@@ -164,12 +215,19 @@ async def geonames_lookup(place_name: str) -> Dict:
     logger.debug(f"[GeoNames] API params: {params}")
     logger.debug(f"[GeoNames] Using provider: {GEONAMES_USER}, language: {GEONAMES_LANG}")
 
-    response = await client.get(BASE_URL, params=params)
-    response.raise_for_status()
-    data = response.json()
+    data = {}
+    try:
+        response = await client.get(BASE_URL, params=params)
+        response.raise_for_status()
+        data = response.json()
 
-    logger.debug(f"[GeoNames] API response status: {response.status_code}")
-    logger.debug(f"[GeoNames] Response data: {data}")
+        logger.debug(f"[GeoNames] API response status: {response.status_code}")
+        logger.debug(f"[GeoNames] Total results found: {len(data.get('geonames', []))}")
+        if data.get("geonames"):
+            logger.debug(f"[GeoNames] Top result: {data['geonames'][0].get('name')} ({data['geonames'][0].get('countryName')})")
+    except Exception as api_error:
+        logger.warning(f"[GeoNames] API request failed: {type(api_error).__name__}: {api_error}")
+        data = {}
 
     # If not found and text is Russian, try transliteration
     if not data.get("geonames"):
@@ -180,10 +238,14 @@ async def geonames_lookup(place_name: str) -> Dict:
             translit_query = transliterate_russian(place_name)
             logger.info(f"[GeoNames] Trying transliteration fallback: '{place_name}' → '{translit_query}'")
             params["q"] = translit_query
-            response = await client.get(BASE_URL, params=params)
-            response.raise_for_status()
-            data = response.json()
-            logger.debug(f"[GeoNames] Transliterated response: {data}")
+            try:
+                response = await client.get(BASE_URL, params=params)
+                response.raise_for_status()
+                data = response.json()
+                logger.debug(f"[GeoNames] Transliterated response: {data}")
+            except Exception as api_error:
+                logger.warning(f"[GeoNames] Transliteration API request failed: {type(api_error).__name__}: {api_error}")
+                data = {}
 
     # Check if we got results
     if not data.get("geonames"):
