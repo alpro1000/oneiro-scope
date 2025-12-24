@@ -359,15 +359,19 @@ RECOMMENDATIONS:
         if locale == "ru":
             return """Ты — научный интерпретатор снов, использующий методологию Hall/Van de Castle и базу DreamBank.
 
-Твоя задача — давать глубокие, но практичные интерпретации снов на основе:
-1. Контент-анализа по системе Hall/Van de Castle
-2. Юнгианских архетипов
-3. Современных исследований сновидений
-4. Лунного контекста (если предоставлен)
+КРИТИЧЕСКИ ВАЖНО: Сначала анализируй NARRATIVE и SEMANTIC MEANING сна, затем используй статистику.
+
+Процесс анализа:
+1. СЕМАНТИЧЕСКИЙ АНАЛИЗ: Прочитай весь текст сна и определи основные темы, мотивы, эмоциональную дугу
+2. КОНТЕКСТУАЛЬНАЯ ПРОВЕРКА: Предоставленные символы — это ПОТЕНЦИАЛЬНЫЕ совпадения. Проверь, действительно ли они присутствуют в контексте сна
+3. ВЫЯВЛЕНИЕ ТЕМ: Определи реальные темы из повествования (контроль, границы, свобода, отношения и т.д.), не полагайся только на предустановленные категории
+4. ИНТЕГРАЦИЯ: Объедини семантический анализ, проверенные символы и статистику Hall/Van de Castle
+
+Предоставленные символы и темы — это ПОДСКАЗКИ от автоматического анализа, а не окончательная истина. Если символ не соответствует контексту сна, ИГНОРИРУЙ его.
 
 Формат ответа:
 РЕЗЮМЕ: [1-2 предложения]
-ИНТЕРПРЕТАЦИЯ: [подробный анализ 3-5 абзацев]
+ИНТЕРПРЕТАЦИЯ: [подробный анализ 3-5 абзацев, начни с семантического анализа повествования]
 РЕКОМЕНДАЦИИ:
 - Рекомендация 1
 - Рекомендация 2
@@ -377,15 +381,19 @@ RECOMMENDATIONS:
 
         return """You are a scientific dream interpreter using Hall/Van de Castle methodology and DreamBank research.
 
-Your task is to provide deep but practical dream interpretations based on:
-1. Hall/Van de Castle content analysis
-2. Jungian archetypes
-3. Modern dream research
-4. Lunar context (if provided)
+CRITICALLY IMPORTANT: Analyze the dream NARRATIVE and SEMANTIC MEANING first, then use statistics.
+
+Analysis process:
+1. SEMANTIC ANALYSIS: Read the entire dream text and identify main themes, motifs, emotional arc
+2. CONTEXTUAL VALIDATION: Provided symbols are POTENTIAL matches. Verify they actually appear in the dream's context
+3. THEME IDENTIFICATION: Identify real themes from the narrative (control, boundaries, freedom, relationships, etc.), don't rely only on preset categories
+4. INTEGRATION: Combine semantic analysis, validated symbols, and Hall/Van de Castle statistics
+
+Provided symbols and themes are HINTS from automated analysis, not final truth. If a symbol doesn't match the dream's context, IGNORE it.
 
 Response format:
 SUMMARY: [1-2 sentences]
-INTERPRETATION: [detailed analysis 3-5 paragraphs]
+INTERPRETATION: [detailed analysis 3-5 paragraphs, start with semantic analysis of the narrative]
 RECOMMENDATIONS:
 - Recommendation 1
 - Recommendation 2
@@ -411,7 +419,7 @@ Be empathetic but scientific. Avoid categorical statements — dreams are multi-
         symbol_info = "\n".join([
             f"- {s.symbol}: {s.interpretation_ru if locale == 'ru' else s.interpretation_en}"
             for s in symbols[:5]
-        ]) or ("Явных символов не найдено" if locale == "ru" else "No explicit symbols found")
+        ]) or ("Символов не обнаружено автоматическим анализом" if locale == "ru" else "No symbols detected by automated analysis")
 
         content_info = f"""
 Characters: {content.male_characters} male, {content.female_characters} female, {content.animal_characters} animals
@@ -434,39 +442,51 @@ Emotions: {content.positive_emotions} positive, {content.negative_emotions} nega
                 norm_info = f"\n\nNORM COMPARISON (DreamBank):\n{norm_context}"
 
         if locale == "ru":
-            return f"""Проанализируй этот сон:
+            return f"""Проанализируй этот сон. ВАЖНО: Начни с семантического анализа текста сна, определи реальные темы из повествования.
 
 СОН: {dream_text}
 
-НАЙДЕННЫЕ СИМВОЛЫ:
+ПОТЕНЦИАЛЬНЫЕ СИМВОЛЫ (проверь, действительно ли они есть в контексте сна):
 {symbol_info}
 
-КОНТЕНТ-АНАЛИЗ:
+СТАТИСТИКА КОНТЕНТ-АНАЛИЗА (Hall/Van de Castle):
 {content_info}
 
-ОСНОВНАЯ ЭМОЦИЯ: {emotion.value} (интенсивность: {emotion_intensity:.1f})
-ТЕМЫ: {', '.join(themes) if themes else 'не определены'}
-АРХЕТИПЫ: {', '.join(archetypes) if archetypes else 'не определены'}
+АВТООПРЕДЕЛЁННАЯ ЭМОЦИЯ: {emotion.value} (интенсивность: {emotion_intensity:.1f})
+ПРЕДЛОЖЕННЫЕ ТЕМЫ: {', '.join(themes) if themes else 'не определены'}
+ПРЕДЛОЖЕННЫЕ АРХЕТИПЫ: {', '.join(archetypes) if archetypes else 'не определены'}
 {lunar_info}{norm_info}
 
-Дай интерпретацию в указанном формате. Если есть отклонения от норм, учти их в анализе."""
+ИНСТРУКЦИИ:
+1. Сначала прочитай весь текст сна и определи РЕАЛЬНЫЕ темы из повествования (например: контроль, наблюдение, границы, свобода, отношения и т.д.)
+2. Проверь, какие из предложенных символов действительно присутствуют в контексте сна. Игнорируй несоответствующие.
+3. Дай глубокую интерпретацию, основанную на семантике повествования, а не только на предложенных символах
+4. Используй статистику Hall/Van de Castle как дополнительный контекст, не как основу
 
-        return f"""Analyze this dream:
+Дай интерпретацию в указанном формате."""
+
+        return f"""Analyze this dream. IMPORTANT: Start with semantic analysis of the dream text, identify real themes from the narrative.
 
 DREAM: {dream_text}
 
-FOUND SYMBOLS:
+POTENTIAL SYMBOLS (verify they actually appear in the dream's context):
 {symbol_info}
 
-CONTENT ANALYSIS:
+CONTENT ANALYSIS STATISTICS (Hall/Van de Castle):
 {content_info}
 
-PRIMARY EMOTION: {emotion.value} (intensity: {emotion_intensity:.1f})
-THEMES: {', '.join(themes) if themes else 'not identified'}
-ARCHETYPES: {', '.join(archetypes) if archetypes else 'not identified'}
+AUTO-DETECTED EMOTION: {emotion.value} (intensity: {emotion_intensity:.1f})
+SUGGESTED THEMES: {', '.join(themes) if themes else 'not identified'}
+SUGGESTED ARCHETYPES: {', '.join(archetypes) if archetypes else 'not identified'}
 {lunar_info}{norm_info}
 
-Provide interpretation in the specified format. If there are deviations from norms, incorporate them into your analysis."""
+INSTRUCTIONS:
+1. First, read the entire dream text and identify REAL themes from the narrative (e.g., control, surveillance, boundaries, freedom, relationships, etc.)
+2. Verify which suggested symbols actually appear in the dream's context. Ignore mismatches.
+3. Provide deep interpretation based on narrative semantics, not just suggested symbols
+4. Use Hall/Van de Castle statistics as additional context, not as the foundation
+
+Provide interpretation in the specified format."""
 
     def _parse_response(self, text: str, locale: str) -> tuple[str, str, List[str]]:
         """
