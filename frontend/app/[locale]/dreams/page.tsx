@@ -6,6 +6,7 @@ import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import VoiceInput from '../../../components/VoiceInput';
+import LoadingModal from '../../../components/LoadingModal';
 import {
   analyzeDream,
   type DreamAnalysisResponse,
@@ -379,6 +380,12 @@ export default function DreamsPage() {
           </div>
         </div>
       </div>
+
+      {/* Loading Modal - blocks all UI during analysis */}
+      <LoadingModal
+        isOpen={isAnalyzing}
+        message={locale === 'ru' ? 'Анализируем сон...' : 'Analyzing dream...'}
+      />
     </main>
   );
 }
