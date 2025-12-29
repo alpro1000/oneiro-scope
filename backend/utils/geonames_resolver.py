@@ -20,9 +20,12 @@ import httpx
 logger = logging.getLogger(__name__)
 
 # GeoNames API configuration
-GEONAMES_USER = os.getenv("GEONAMES_USERNAME", "demo")  # 'demo' for testing only
+# IMPORTANT: 'demo' username is deactivated by GeoNames!
+# Register free account at https://www.geonames.org/login
+# Then set GEONAMES_USERNAME environment variable
+GEONAMES_USER = os.getenv("GEONAMES_USERNAME")
 GEONAMES_LANG = os.getenv("GEONAMES_LANG", "ru")
-BASE_URL = "http://api.geonames.org/searchJSON"
+BASE_URL = "https://secure.geonames.org/searchJSON"  # HTTPS required for secure API
 
 # Built-in popular cities database (fallback when GeoNames API fails)
 # Format: {"city_name_lower": {"name": "DisplayName", "country": "CountryName", "lat": 55.0, "lon": 37.0, "timezone": "Europe/Moscow"}}
@@ -195,44 +198,44 @@ async def geonames_lookup(place_name: str) -> Dict:
         logger.debug(f"GeoNames cache hit: {place_name}")
         return _location_cache[cache_key]
 
-    client = get_http_client()
     query = place_name.strip()
-
-    # Warn if using demo account
-    if GEONAMES_USER == "demo":
-        logger.warning(f"[GeoNames] ⚠️  Using DEMO account - API access limited. Set GEONAMES_USERNAME env var for production!")
-
-    # Try original query first
-    params = {
-        "q": query,
-        "maxRows": 10,  # Get top 10 results to choose best match
-        "lang": GEONAMES_LANG,
-        "username": GEONAMES_USER,
-        "featureClass": "P",  # Populated places (cities, towns, villages)
-        "isNameRequired": "true",  # Only exact name matches
-        "style": "FULL",  # Include timezone info in response
-    }
-
-    logger.info(f"[GeoNames] Starting lookup for: '{place_name}'")
-    logger.debug(f"[GeoNames] API params: {params}")
-    logger.debug(f"[GeoNames] Using provider: {GEONAMES_USER}, language: {GEONAMES_LANG}")
-
     data = {}
-    try:
-        response = await client.get(BASE_URL, params=params)
-        response.raise_for_status()
-        data = response.json()
 
-        logger.debug(f"[GeoNames] API response status: {response.status_code}")
-        logger.debug(f"[GeoNames] Total results found: {len(data.get('geonames', []))}")
-        if data.get("geonames"):
-            logger.debug(f"[GeoNames] Top result: {data['geonames'][0].get('name')} ({data['geonames'][0].get('countryName')})")
-    except Exception as api_error:
-        logger.warning(f"[GeoNames] API request failed: {type(api_error).__name__}: {api_error}")
-        data = {}
+    # Skip API call if no username configured
+    if not GEONAMES_USER:
+        logger.info(f"[GeoNames] No GEONAMES_USERNAME configured, using fallback database")
+    else:
+        # Try GeoNames API
+        client = get_http_client()
+        params = {
+            "q": query,
+            "maxRows": 10,  # Get top 10 results to choose best match
+            "lang": GEONAMES_LANG,
+            "username": GEONAMES_USER,
+            "featureClass": "P",  # Populated places (cities, towns, villages)
+            "isNameRequired": "true",  # Only exact name matches
+            "style": "FULL",  # Include timezone info in response
+        }
+
+        logger.info(f"[GeoNames] Starting lookup for: '{place_name}'")
+        logger.debug(f"[GeoNames] API params: {params}")
+        logger.debug(f"[GeoNames] Using provider: {GEONAMES_USER}, language: {GEONAMES_LANG}")
+
+        try:
+            response = await client.get(BASE_URL, params=params)
+            response.raise_for_status()
+            data = response.json()
+
+            logger.debug(f"[GeoNames] API response status: {response.status_code}")
+            logger.debug(f"[GeoNames] Total results found: {len(data.get('geonames', []))}")
+            if data.get("geonames"):
+                logger.debug(f"[GeoNames] Top result: {data['geonames'][0].get('name')} ({data['geonames'][0].get('countryName')})")
+        except Exception as api_error:
+            logger.warning(f"[GeoNames] API request failed: {type(api_error).__name__}: {api_error}")
+            data = {}
 
     # If not found and text is Russian, try transliteration
-    if not data.get("geonames"):
+    if not data.get("geonames") and GEONAMES_USER:
         lang = detect_language(place_name)
         logger.info(f"[GeoNames] No results for '{place_name}', detected language: {lang}")
 
@@ -241,6 +244,7 @@ async def geonames_lookup(place_name: str) -> Dict:
             logger.info(f"[GeoNames] Trying transliteration fallback: '{place_name}' → '{translit_query}'")
             params["q"] = translit_query
             try:
+                client = get_http_client()
                 response = await client.get(BASE_URL, params=params)
                 response.raise_for_status()
                 data = response.json()
@@ -344,47 +348,48 @@ async def geonames_search_cities(query: str, max_results: int = 10) -> list[Dict
     if not query or len(query.strip()) < 2:
         raise ValueError("Query must be at least 2 characters")
 
-    client = get_http_client()
     search_query = query.strip()
-
-    # Warn if using demo account
-    if GEONAMES_USER == "demo":
-        logger.warning(f"[GeoNames Search] ⚠️  Using DEMO account - limited API access")
-
-    params = {
-        "q": search_query,
-        "maxRows": max_results,
-        "lang": GEONAMES_LANG,
-        "username": GEONAMES_USER,
-        "featureClass": "P",  # Populated places
-        "orderby": "population",  # Sort by population (largest first)
-        "style": "FULL",
-    }
-
-    logger.info(f"[GeoNames Search] Searching for cities: '{query}'")
-    logger.debug(f"[GeoNames Search] API params: {params}")
-
     results = []
     data = {}
 
-    try:
-        response = await client.get(BASE_URL, params=params)
-        response.raise_for_status()
-        data = response.json()
+    # Skip API call if no username configured
+    if not GEONAMES_USER:
+        logger.info(f"[GeoNames Search] No GEONAMES_USERNAME configured, using fallback database")
+    else:
+        # Try GeoNames API
+        client = get_http_client()
+        params = {
+            "q": search_query,
+            "maxRows": max_results,
+            "lang": GEONAMES_LANG,
+            "username": GEONAMES_USER,
+            "featureClass": "P",  # Populated places
+            "orderby": "population",  # Sort by population (largest first)
+            "style": "FULL",
+        }
 
-        logger.debug(f"[GeoNames Search] Got {len(data.get('geonames', []))} results")
-    except Exception as api_error:
-        logger.warning(f"[GeoNames Search] API request failed: {type(api_error).__name__}: {api_error}")
-        data = {}
+        logger.info(f"[GeoNames Search] Searching for cities: '{query}'")
+        logger.debug(f"[GeoNames Search] API params: {params}")
+
+        try:
+            response = await client.get(BASE_URL, params=params)
+            response.raise_for_status()
+            data = response.json()
+
+            logger.debug(f"[GeoNames Search] Got {len(data.get('geonames', []))} results")
+        except Exception as api_error:
+            logger.warning(f"[GeoNames Search] API request failed: {type(api_error).__name__}: {api_error}")
+            data = {}
 
     # If not found and query is Russian, try transliteration
-    if not data.get("geonames"):
+    if not data.get("geonames") and GEONAMES_USER:
         lang = detect_language(query)
         if lang == "ru":
             translit_query = transliterate_russian(query)
             logger.info(f"[GeoNames Search] Trying transliteration: '{query}' → '{translit_query}'")
             params["q"] = translit_query
             try:
+                client = get_http_client()
                 response = await client.get(BASE_URL, params=params)
                 response.raise_for_status()
                 data = response.json()
