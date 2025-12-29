@@ -56,8 +56,10 @@ POPULAR_CITIES = {
 
     # Europe
     "london": {"name": "London", "country": "United Kingdom", "lat": 51.5085, "lon": -0.1257, "timezone": "Europe/London"},
+    "лондон": {"name": "London", "country": "United Kingdom", "lat": 51.5085, "lon": -0.1257, "timezone": "Europe/London"},
     "paris": {"name": "Paris", "country": "France", "lat": 48.8566, "lon": 2.3522, "timezone": "Europe/Paris"},
     "париж": {"name": "Paris", "country": "France", "lat": 48.8566, "lon": 2.3522, "timezone": "Europe/Paris"},
+    "берлин": {"name": "Berlin", "country": "Germany", "lat": 52.5200, "lon": 13.4050, "timezone": "Europe/Berlin"},
     "berlin": {"name": "Berlin", "country": "Germany", "lat": 52.5200, "lon": 13.4050, "timezone": "Europe/Berlin"},
     "madrid": {"name": "Madrid", "country": "Spain", "lat": 40.4168, "lon": -3.7038, "timezone": "Europe/Madrid"},
     "rome": {"name": "Rome", "country": "Italy", "lat": 41.9028, "lon": 12.4964, "timezone": "Europe/Rome"},
@@ -314,3 +316,129 @@ def clear_cache():
     global _location_cache
     _location_cache.clear()
     logger.info("GeoNames cache cleared")
+
+
+async def geonames_search_cities(query: str, max_results: int = 10) -> list[Dict]:
+    """
+    Search for cities by name for autocomplete.
+
+    Returns a list of cities with their details for display in autocomplete UI.
+
+    Args:
+        query: City name to search
+        max_results: Maximum number of results to return
+
+    Returns:
+        List of city dictionaries with keys:
+        - name: City name
+        - country: Country name
+        - admin_name: Admin division (state/region)
+        - lat: Latitude
+        - lon: Longitude
+        - display: Formatted display string
+        - geoname_id: GeoNames ID (optional)
+
+    Raises:
+        ValueError: If query is too short or invalid
+    """
+    if not query or len(query.strip()) < 2:
+        raise ValueError("Query must be at least 2 characters")
+
+    client = get_http_client()
+    search_query = query.strip()
+
+    # Warn if using demo account
+    if GEONAMES_USER == "demo":
+        logger.warning(f"[GeoNames Search] ⚠️  Using DEMO account - limited API access")
+
+    params = {
+        "q": search_query,
+        "maxRows": max_results,
+        "lang": GEONAMES_LANG,
+        "username": GEONAMES_USER,
+        "featureClass": "P",  # Populated places
+        "orderby": "population",  # Sort by population (largest first)
+        "style": "FULL",
+    }
+
+    logger.info(f"[GeoNames Search] Searching for cities: '{query}'")
+    logger.debug(f"[GeoNames Search] API params: {params}")
+
+    results = []
+    data = {}
+
+    try:
+        response = await client.get(BASE_URL, params=params)
+        response.raise_for_status()
+        data = response.json()
+
+        logger.debug(f"[GeoNames Search] Got {len(data.get('geonames', []))} results")
+    except Exception as api_error:
+        logger.warning(f"[GeoNames Search] API request failed: {type(api_error).__name__}: {api_error}")
+        data = {}
+
+    # If not found and query is Russian, try transliteration
+    if not data.get("geonames"):
+        lang = detect_language(query)
+        if lang == "ru":
+            translit_query = transliterate_russian(query)
+            logger.info(f"[GeoNames Search] Trying transliteration: '{query}' → '{translit_query}'")
+            params["q"] = translit_query
+            try:
+                response = await client.get(BASE_URL, params=params)
+                response.raise_for_status()
+                data = response.json()
+                logger.debug(f"[GeoNames Search] Transliterated search: {len(data.get('geonames', []))} results")
+            except Exception as api_error:
+                logger.warning(f"[GeoNames Search] Transliteration failed: {api_error}")
+                data = {}
+
+    # If still no results from API, try popular cities database
+    if not data.get("geonames"):
+        logger.info(f"[GeoNames Search] No API results, searching popular cities database...")
+        query_lower = search_query.lower()
+
+        # Search in popular cities (case-insensitive prefix match)
+        matching_cities = []
+        for city_key, city_data in POPULAR_CITIES.items():
+            if city_key.startswith(query_lower) or query_lower in city_key:
+                matching_cities.append({
+                    "name": city_data["name"],
+                    "country": city_data["country"],
+                    "admin_name": "",
+                    "lat": city_data["lat"],
+                    "lon": city_data["lon"],
+                    "display": f"{city_data['name']}, {city_data['country']}",
+                    "geoname_id": None,
+                })
+
+        # Sort by relevance (starts with query first)
+        matching_cities.sort(key=lambda c: (
+            not c["name"].lower().startswith(query_lower),
+            c["name"]
+        ))
+
+        results = matching_cities[:max_results]
+        logger.info(f"[GeoNames Search] Found {len(results)} matches in popular cities database")
+        return results
+
+    # Parse GeoNames API results
+    for place in data.get("geonames", [])[:max_results]:
+        admin_name = place.get("adminName1", "")
+        display_parts = [place.get("name", "")]
+        if admin_name:
+            display_parts.append(admin_name)
+        display_parts.append(place.get("countryName", ""))
+
+        results.append({
+            "name": place.get("name", ""),
+            "country": place.get("countryName", ""),
+            "admin_name": admin_name,
+            "lat": float(place["lat"]),
+            "lon": float(place["lng"]),
+            "display": ", ".join(display_parts),
+            "geoname_id": place.get("geonameId"),
+        })
+
+    logger.info(f"[GeoNames Search] ✓ Returning {len(results)} cities for '{query}'")
+    return results

@@ -59,7 +59,7 @@ export default function CityAutocomplete({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Fetch cities from GeoNames API
+  // Fetch cities from backend API
   useEffect(() => {
     const searchCities = async () => {
       if (!value || value.length < 2) {
@@ -78,28 +78,28 @@ export default function CityAutocomplete({
       setShowError(false);
 
       try {
-        // Use GeoNames search API
-        const username = process.env.NEXT_PUBLIC_GEONAMES_USERNAME || 'demo';
-        const url = `https://secure.geonames.org/searchJSON?q=${encodeURIComponent(
+        // Use backend API endpoint for city search
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+        const url = `${apiUrl}/api/v1/astrology/cities/search?query=${encodeURIComponent(
           value
-        )}&maxRows=10&username=${username}&featureClass=P&orderby=population&lang=${locale}`;
+        )}&locale=${locale}&max_results=10`;
 
         const response = await fetch(url, {
           signal: abortControllerRef.current.signal,
         });
 
         if (!response.ok) {
-          throw new Error('GeoNames API error');
+          throw new Error('City search API error');
         }
 
         const data = await response.json();
-        const cities: City[] = (data.geonames || []).map((geo: any) => ({
-          name: geo.name,
-          country: geo.countryName,
-          adminName: geo.adminName1 || '',
-          lat: geo.lat,
-          lon: geo.lng,
-          display: `${geo.name}, ${geo.adminName1 ? geo.adminName1 + ', ' : ''}${geo.countryName}`,
+        const cities: City[] = (data.cities || []).map((city: any) => ({
+          name: city.name,
+          country: city.country,
+          adminName: city.admin_name || '',
+          lat: city.lat,
+          lon: city.lon,
+          display: city.display,
         }));
 
         setSuggestions(cities);

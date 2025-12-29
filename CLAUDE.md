@@ -95,6 +95,14 @@ oneiro-scope/
 | POST | `/event-forecast` | Forecast event favorability |
 | GET | `/event-types` | List supported event types |
 | GET | `/retrograde` | Get retrograde planets for date |
+| GET | `/cities/search` | Search cities for autocomplete (supports RU/EN, multilingual) |
+
+**City Search Autocomplete:**
+The `/cities/search` endpoint provides intelligent city search with:
+- GeoNames API integration (30,000 free requests/day)
+- Automatic transliteration for Russian queries (Моск → Moscow)
+- Fallback to 90+ popular cities database when API unavailable
+- Returns city name, country, coordinates, and formatted display string
 
 ### Lunar Service (`/api/v1/lunar`)
 

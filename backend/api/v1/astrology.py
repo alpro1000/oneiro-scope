@@ -262,3 +262,68 @@ async def get_retrograde_planets(
             for p in retrograde
         ],
     }
+
+
+@router.get(
+    "/cities/search",
+    summary="Search cities for autocomplete",
+    description="""
+    Search for cities by name with autocomplete support.
+
+    **Parameters:**
+    - `query`: City name to search (minimum 2 characters)
+    - `locale`: Language for results (en/ru)
+    - `max_results`: Maximum number of results (default: 10)
+
+    **Returns:**
+    - List of cities with name, country, coordinates, and display format
+
+    **Example:**
+    - Query: "Моск" → Returns: Moscow, Russia (55.75, 37.62)
+    - Query: "Par" → Returns: Paris, France (48.86, 2.35)
+    """,
+)
+async def search_cities(
+    query: str = Query(
+        ...,
+        min_length=2,
+        description="City name to search",
+    ),
+    locale: str = Query(
+        "ru",
+        pattern="^(en|ru)$",
+        description="Language for results",
+    ),
+    max_results: int = Query(
+        10,
+        ge=1,
+        le=50,
+        description="Maximum number of results",
+    ),
+) -> dict:
+    """Search cities for autocomplete."""
+    from backend.utils.geonames_resolver import geonames_search_cities
+
+    try:
+        cities = await geonames_search_cities(query, max_results=max_results)
+
+        return {
+            "query": query,
+            "cities": [
+                {
+                    "name": city["name"],
+                    "country": city["country"],
+                    "admin_name": city.get("admin_name", ""),
+                    "lat": city["lat"],
+                    "lon": city["lon"],
+                    "display": city["display"],
+                    "geoname_id": city.get("geoname_id"),
+                }
+                for city in cities
+            ],
+        }
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to search cities: {str(e)}",
+        )
