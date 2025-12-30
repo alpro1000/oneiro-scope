@@ -320,11 +320,12 @@ See `render.yaml` for configuration. Deploy requires:
 | 2025-12-18 | `claude/session-documentation-zdu0p` | Language switcher, pytest fixes |
 | 2025-12-23 | `claude/oneiroscope-continuation-5S4v3` | DreamBank integration, language auto-detection, JSON prompts |
 | 2025-12-23 | `claude/dream-interpreter-setup-nK52c` | Dream interpreter v2.1 upgrade (REM/NREM, prohibited list, validation) |
-| **2025-12-24** | `claude/dream-interpreter-setup-nK52c` | **Narrative-first semantic engine, contextual validation, 7 modern symbols** |
+| 2025-12-24 | `claude/dream-interpreter-setup-nK52c` | Narrative-first semantic engine, contextual validation, 7 modern symbols |
+| **2025-12-30** | `claude/timezone-geonames-integration-mDyCI` | **AstroReasoner integration, structured natal chart interpretations, enhanced LLM prompts** |
 
 See `docs/SESSION_SUMMARY_*.md` for details.
 
-## Status (Updated 2025-12-24)
+## Status (Updated 2025-12-30)
 
 ### Completed
 - [x] **P0**: Geocoder async fix (GeoNames API)
@@ -343,6 +344,9 @@ See `docs/SESSION_SUMMARY_*.md` for details.
 - [x] **Modern Symbols**: surveillance, boundaries, control, escape_liberation, privacy, autonomy, technology
 - [x] **Test Suite**: 14 regression tests for dream interpreter (9/14 passing - 64%)
 - [x] **Documentation**: Full v2.1 architecture spec (550 lines)
+- [x] **AstroReasoner Integration**: Enhanced LLM prompts for astrology interpretations
+- [x] **Structured Natal Chart**: 6 detailed sections (personality, strengths, challenges, relationships, career, life_purpose)
+- [x] **Context-Aware Horoscopes**: Personalized forecasts based on natal chart data
 
 ### Pending
 - [ ] Create PR for merge to main
@@ -358,14 +362,20 @@ See `docs/SESSION_SUMMARY_*.md` for details.
 - Phase 3 (dreams enhancement): ✅ DONE - DreamBank norms, language detection, JSON prompts
 - Phase 3 (QA/CI): Tests green locally, CI pipeline setup pending
 
-## Next Actions (Updated 2025-12-24)
+## Next Actions (Updated 2025-12-30)
 
 ### Immediate
-1) Создать PR из `claude/dream-interpreter-setup-nK52c` в main
+1) Создать PR из `claude/timezone-geonames-integration-mDyCI` в main
 2) После merge проверить production deploy на Render
 3) Выставить `ENVIRONMENT=production` на Render
 
-### Phase 2 - Dream Interpreter Enhancements
+### Phase 2 - Astrology Frontend Integration
+1) **Structured Interpretation UI**: Display 6 sections in tabs (personality, strengths, challenges, relationships, career, life_purpose)
+2) **Natal Chart Persistence**: Save to localStorage for reuse in horoscopes
+3) **Personalized Horoscopes**: Pass natal_chart_id to horoscope requests
+4) **Transit Visualization**: Show current transits vs natal planets
+
+### Phase 3 - Dream Interpreter Enhancements
 1) **JSON Output Schema**: Add confidence, tone, semantic_sources metadata
 2) **Lemmatization**: Integrate pymorphy2 for Russian morphological analysis
 3) **Test Coverage**: Expand to 100% pass rate (currently 64%)
@@ -374,6 +384,56 @@ See `docs/SESSION_SUMMARY_*.md` for details.
 ### Backlog
 - [ ] Добавить retry логику в LunarWidget
 - [ ] Добавить health/log для режима ephemeris
+
+## Astrology Service Architecture (Updated 2025-12-30)
+
+```
+POST /api/v1/astrology/natal-chart
+         │
+         ▼
+┌─────────────────────────────────────────┐
+│      Geocoder.geocode(birth_place)      │
+│   • GeoNames API (alpro1000)            │
+│   • Transliteration (Москва → Moscow)   │
+│   • Fallback to 90+ cities DB           │
+│   • Returns: lat, lon, timezone         │
+└─────────────────────────────────────────┘
+         │
+         ▼
+┌─────────────────────────────────────────┐
+│    NatalChartCalculator.calculate()     │
+│   • SwissEphemeris (SWIEPH/MOSEPH)      │
+│   • Planet positions (13 planets)       │
+│   • Houses (Placidus system)            │
+│   • Aspects (0°, 60°, 90°, 120°, 180°)  │
+└─────────────────────────────────────────┘
+         │
+         ▼
+┌─────────────────────────────────────────┐
+│  AstroReasoner.interpret_natal_chart()  │
+│   • Enhanced LLM prompts                │
+│   • Birth context (date/time/place)     │
+│   • Multi-provider LLM support          │
+│   • Fallback to template interpretation │
+└─────────────────────────────────────────┘
+         │
+         ▼
+┌─────────────────────────────────────────┐
+│ AstroInterpreter.interpret_structured() │
+│   • Parses 6 sections:                  │
+│     - personality (Sun + Ascendant)     │
+│     - strengths (talents, aspects)      │
+│     - challenges (growth areas)         │
+│     - relationships (Venus, 7th house)  │
+│     - career (MC, 10th house)           │
+│     - life_purpose (Nodes)              │
+└─────────────────────────────────────────┘
+         │
+         ▼
+    NatalChartResponse
+    (planets, houses, aspects, interpretation,
+     structured_interpretation, provenance)
+```
 
 ## Dream Analysis Architecture (Updated 2025-12-23)
 
