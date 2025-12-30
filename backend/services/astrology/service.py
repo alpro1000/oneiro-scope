@@ -27,6 +27,9 @@ from .transits import TransitCalculator
 from .geocoder import Geocoder, GeocodingError
 from .interpreter import AstrologyInterpreter
 
+# Import lunar service for accurate lunar day calculation
+from backend.services.lunar.engine import LunarEngine
+
 logger = logging.getLogger(__name__)
 
 
@@ -47,10 +50,12 @@ class AstrologyService:
         ephemeris: Optional[SwissEphemeris] = None,
         geocoder: Optional[Geocoder] = None,
         interpreter: Optional[AstrologyInterpreter] = None,
+        lunar_engine: Optional[LunarEngine] = None,
     ):
         self.ephemeris = ephemeris or SwissEphemeris()
         self.geocoder = geocoder or Geocoder()
         self.interpreter = interpreter or AstrologyInterpreter()
+        self.lunar_engine = lunar_engine or LunarEngine()
         self.natal_calculator = NatalChartCalculator(self.ephemeris)
         self.transit_calculator = TransitCalculator(self.ephemeris)
 
@@ -194,8 +199,12 @@ class AstrologyService:
                 target_date
             )
 
-        # Get lunar info
-        lunar_phase, lunar_day = self.ephemeris.get_lunar_info(target_date)
+        # Get lunar info with proper timezone handling
+        # Use Europe/Moscow as default for Russian users (matches lunar calendar tradition)
+        timezone_str = "Europe/Moscow"
+        lunar_info = self.lunar_engine.get_lunar_day(target_date, timezone_str)
+        lunar_day = lunar_info["lunar_day"]
+        lunar_phase = lunar_info["phase"]  # "waxing", "full", "waning", "new"
 
         # Generate interpretation
         summary, sections, recommendations = await self.interpreter.interpret_horoscope(
@@ -259,8 +268,11 @@ class AstrologyService:
             request.event_date
         )
 
-        # Get lunar info
-        lunar_phase, lunar_day = self.ephemeris.get_lunar_info(request.event_date)
+        # Get lunar info with proper timezone handling
+        timezone_str = "Europe/Moscow"
+        lunar_info = self.lunar_engine.get_lunar_day(request.event_date, timezone_str)
+        lunar_day = lunar_info["lunar_day"]
+        lunar_phase = lunar_info["phase"]
 
         # Calculate favorability score
         favorability_score, positive_factors, risk_factors = (

@@ -178,6 +178,19 @@ class NatalChartResponse(BaseModel):
     # LLM interpretation
     interpretation: Optional[str] = None
 
+    # Structured interpretation (detailed human-readable breakdown)
+    structured_interpretation: Optional[dict] = Field(
+        None,
+        description="""Detailed interpretation sections:
+        - personality: Core personality traits
+        - strengths: Key strengths and talents
+        - challenges: Areas for growth
+        - relationships: Relationship patterns
+        - career: Career inclinations
+        - life_purpose: Soul purpose and path
+        """
+    )
+
     # Metadata
     created_at: datetime
     calculation_method: str = "swiss_ephemeris"
