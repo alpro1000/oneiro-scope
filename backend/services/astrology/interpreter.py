@@ -2,6 +2,7 @@
 
 import json
 import logging
+import os
 import re
 from typing import Optional
 
@@ -19,6 +20,32 @@ from .schemas import (
 from .ai.astro_reasoner import AstroReasoner
 
 logger = logging.getLogger(__name__)
+
+# Load lunar tables for horoscope generation
+_LUNAR_TABLES = None
+
+
+def _load_lunar_tables():
+    """Load lunar day descriptions from JSON."""
+    global _LUNAR_TABLES
+    if _LUNAR_TABLES is not None:
+        return _LUNAR_TABLES
+
+    lunar_json_path = os.path.join(
+        os.path.dirname(os.path.dirname(__file__)),
+        "data",
+        "lunar_tables.json",
+    )
+
+    try:
+        with open(lunar_json_path, "r", encoding="utf-8") as f:
+            _LUNAR_TABLES = json.load(f)
+        logger.info(f"Loaded lunar tables from {lunar_json_path}")
+    except Exception as e:
+        logger.warning(f"Failed to load lunar tables: {e}")
+        _LUNAR_TABLES = {"ru": [], "en": []}
+
+    return _LUNAR_TABLES
 
 
 # Zodiac sign descriptions
@@ -551,42 +578,129 @@ class AstrologyInterpreter:
         locale: str,
     ) -> tuple[str, dict[str, str], list[str]]:
         """Template-based horoscope interpretation (fallback)."""
+        tables = _load_lunar_tables()
+
+        # Map phase keys to Russian/English
+        phase_names_ru = {
+            "new_moon": "Новолуние",
+            "waxing_crescent": "Растущий серп",
+            "first_quarter": "Первая четверть",
+            "waxing_gibbous": "Растущая Луна",
+            "full_moon": "Полнолуние",
+            "waning_gibbous": "Убывающая Луна",
+            "last_quarter": "Последняя четверть",
+            "waning_crescent": "Убывающий серп",
+        }
+        phase_names_en = {
+            "new_moon": "New Moon",
+            "waxing_crescent": "Waxing Crescent",
+            "first_quarter": "First Quarter",
+            "waxing_gibbous": "Waxing Gibbous",
+            "full_moon": "Full Moon",
+            "waning_gibbous": "Waning Gibbous",
+            "last_quarter": "Last Quarter",
+            "waning_crescent": "Waning Crescent",
+        }
+
         # Summary
         if locale == "ru":
-            summary = f"Лунный день: {lunar_day}. Фаза: {lunar_phase}. "
+            phase_display = phase_names_ru.get(lunar_phase, lunar_phase)
+            summary = f"{lunar_day} лунный день. {phase_display}. "
             if retrograde_planets:
                 retro_names = [PLANET_DESCRIPTIONS[p]["ru"] for p in retrograde_planets]
                 summary += f"Ретроградные планеты: {', '.join(retro_names)}."
         else:
-            summary = f"Lunar day: {lunar_day}. Phase: {lunar_phase}. "
+            phase_display = phase_names_en.get(lunar_phase, lunar_phase)
+            summary = f"Lunar day {lunar_day}. {phase_display}. "
             if retrograde_planets:
                 retro_names = [p.value for p in retrograde_planets]
                 summary += f"Retrograde planets: {', '.join(retro_names)}."
 
-        # Sections
-        sections = {}
-        if locale == "ru":
-            sections["love"] = "Благоприятный период для гармонизации отношений."
-            sections["career"] = "Сосредоточьтесь на текущих задачах."
-            sections["health"] = "Уделите внимание режиму дня."
-        else:
-            sections["love"] = "Favorable period for harmonizing relationships."
-            sections["career"] = "Focus on current tasks."
-            sections["health"] = "Pay attention to your daily routine."
+        # Get lunar day info from tables
+        lunar_info = None
+        if 1 <= lunar_day <= 30:
+            lang_tables = tables.get(locale, tables.get("ru", []))
+            if lunar_day < len(lang_tables):
+                lunar_info = lang_tables[lunar_day]
 
-        # Recommendations
+        # Sections based on lunar phase and day
+        sections = {}
+        recommendations = []
+
+        # Generate sections from lunar data
         if locale == "ru":
+            if lunar_info and isinstance(lunar_info, dict):
+                lunar_type = lunar_info.get("type", "")
+                lunar_notes = lunar_info.get("notes", "")
+                sections["energy"] = f"Энергия дня: {lunar_type}. {lunar_notes}"
+            else:
+                sections["energy"] = f"{lunar_day} лунный день несёт особую энергетику."
+
+            # Love section based on phase
+            if "full_moon" in lunar_phase or "waxing" in lunar_phase:
+                sections["love"] = "Благоприятное время для открытого общения и проявления чувств."
+            elif "waning" in lunar_phase:
+                sections["love"] = "Время для углубления отношений и работы над взаимопониманием."
+            else:
+                sections["love"] = "Период перехода в отношениях. Хороший момент для рефлексии."
+
+            # Career section based on retrograde planets
+            if retrograde_planets:
+                sections["career"] = "Ретроградные планеты советуют пересмотреть планы, завершить старые дела."
+            else:
+                sections["career"] = "Благоприятное время для новых начинаний и активных действий."
+
+            # Health section
+            if lunar_day <= 15:  # Растущая Луна
+                sections["health"] = "Организм набирает силу. Подходит для начала оздоровительных программ."
+            else:  # Убывающая Луна
+                sections["health"] = "Время очищения и детоксикации. Уделите внимание отдыху."
+
+            # Recommendations
             recommendations = [
-                "Планируйте важные дела с учетом лунного цикла",
-                "Прислушивайтесь к интуиции",
-                "Сохраняйте баланс между работой и отдыхом",
+                "Учитывайте фазу Луны при планировании важных дел",
+                f"На {lunar_day} лунный день обратите внимание на интуитивные подсказки",
             ]
-        else:
+
+            if retrograde_planets:
+                recommendations.append("В период ретроградности избегайте поспешных решений")
+
+        else:  # English
+            if lunar_info and isinstance(lunar_info, dict):
+                lunar_type = lunar_info.get("type", "")
+                lunar_notes = lunar_info.get("notes", "")
+                sections["energy"] = f"Day energy: {lunar_type}. {lunar_notes}"
+            else:
+                sections["energy"] = f"Lunar day {lunar_day} carries special energy."
+
+            # Love section based on phase
+            if "full_moon" in lunar_phase or "waxing" in lunar_phase:
+                sections["love"] = "Favorable time for open communication and expressing feelings."
+            elif "waning" in lunar_phase:
+                sections["love"] = "Time for deepening relationships and working on mutual understanding."
+            else:
+                sections["love"] = "Transitional period in relationships. Good moment for reflection."
+
+            # Career section
+            if retrograde_planets:
+                sections["career"] = "Retrograde planets advise reviewing plans and completing old tasks."
+            else:
+                sections["career"] = "Favorable time for new beginnings and active initiatives."
+
+            # Health section
+            if lunar_day <= 15:  # Waxing Moon
+                sections["health"] = "Body is gaining strength. Good for starting wellness programs."
+            else:  # Waning Moon
+                sections["health"] = "Time for cleansing and detoxification. Focus on rest."
+
+            # Recommendations
             recommendations = [
-                "Plan important matters according to the lunar cycle",
-                "Listen to your intuition",
-                "Maintain balance between work and rest",
+                "Consider Moon phase when planning important matters",
+                f"On lunar day {lunar_day}, pay attention to intuitive insights",
             ]
+
+            if retrograde_planets:
+                recommendations.append("During retrograde periods, avoid hasty decisions")
 
         return summary, sections, recommendations
 

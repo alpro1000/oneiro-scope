@@ -286,7 +286,15 @@ See `render.yaml` for configuration. Deploy requires:
 - Infra/CI: `render.yaml` (backend/frontend/DB/Redis), `docker-compose.yml`, workflows in `.github/workflows/*`.
 
 ## Findings
-### P0
+
+### 🔴 P0 - CRITICAL (Found & Fixed 2025-12-30)
+| Issue | Evidence | Impact | Fix | Status |
+| --- | --- | --- | --- | --- |
+| **LunarEngine class не существовал** | `backend/services/astrology/service.py:31` импортирует `LunarEngine`, но класса не было в `backend/services/lunar/engine.py` | ImportError при запуске astrology service → полный отказ сервиса | ✅ Создан класс `LunarEngine` с методами `get_lunar_day()` и `get_lunar_info_for_period()` | **FIXED** |
+| **Гороскоп возвращал моки** | `backend/services/astrology/interpreter.py:569-574` использовал хардкод: `sections["love"] = "Благоприятный период..."` | Все гороскопы неинформативные, пользователи получают одинаковый текст | ✅ Переписан `_template_interpret_horoscope()` для использования `lunar_tables.json` | **FIXED** |
+| **Один промпт для всех периодов** | `prompt_templates.py` имел только `HOROSCOPE_PROMPT` без разбивки по daily/weekly/monthly/yearly | Дневные/недельные/месячные/годовые гороскопы одинаковые по структуре | ✅ Добавлены 4 специализированных промпта | **FIXED** |
+
+### P0 - CRITICAL (Previously Fixed)
 | Issue | Evidence | Impact | Fix | Acceptance |
 | --- | --- | --- | --- | --- |
 | `await self.geocoder.geocode(...)` в AstrologyService при синхронном geocoder | `backend/services/astrology/service.py` lines 63-68, 133-138, 179-184; `backend/services/astrology/geocoder.py` lines 59-86 | Все astrology-эндпоинты падают 500 при первом запросе | Сделать geocode async-safe (executor) или убрать `await`; покрыть тестом | `/api/v1/astrology/natal-chart` отдаёт 201 с телом |
@@ -322,12 +330,20 @@ See `render.yaml` for configuration. Deploy requires:
 | 2025-12-23 | `claude/dream-interpreter-setup-nK52c` | Dream interpreter v2.1 upgrade (REM/NREM, prohibited list, validation) |
 | 2025-12-24 | `claude/dream-interpreter-setup-nK52c` | Narrative-first semantic engine, contextual validation, 7 modern symbols |
 | **2025-12-30** | `claude/timezone-geonames-integration-mDyCI` | **AstroReasoner integration, structured natal chart interpretations, enhanced LLM prompts** |
+| **2025-12-30** | `claude/update-documentation-En0hK` | **🔴 CRITICAL FIXES: LunarEngine class, removed horoscope mocks, added period-specific prompts** |
 
 See `docs/SESSION_SUMMARY_*.md` for details.
 
 ## Status (Updated 2025-12-30)
 
-### Completed
+### Completed (Latest Session)
+- [x] **🔴 CRITICAL FIX**: LunarEngine class created in `backend/services/lunar/engine.py:231-284`
+- [x] **🔴 CRITICAL FIX**: Removed mock data from horoscope interpreter
+- [x] **🔴 CRITICAL FIX**: Added real lunar_tables.json integration for horoscope generation
+- [x] **✨ ENHANCEMENT**: Added 4 specialized prompt templates (daily/weekly/monthly/yearly)
+- [x] **📚 DOCUMENTATION**: Created comprehensive architecture docs (ASTROLOGY_ARCHITECTURE_2025-12-30.md)
+
+### Completed (Previous Sessions)
 - [x] **P0**: Geocoder async fix (GeoNames API)
 - [x] **P0**: Backend pytest passing (13 passed, 6 skipped)
 - [x] **P0**: Frontend tests passing (7 passed)

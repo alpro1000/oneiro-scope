@@ -227,3 +227,59 @@ def compute_lunar(date_iso: str, tz: str) -> LunarResult:
         provenance=provenance,
     )
 
+
+class LunarEngine:
+    """
+    High-level API for lunar calculations.
+
+    Used by astrology service for getting lunar day info.
+    """
+
+    def get_lunar_day(self, target_date: date, timezone: str) -> dict:
+        """
+        Get lunar day information for a specific date.
+
+        Args:
+            target_date: Date to calculate for
+            timezone: Timezone string (e.g., "Europe/Moscow")
+
+        Returns:
+            Dict with keys: lunar_day, phase, moon_sign, illumination, provenance
+        """
+        result = compute_lunar(target_date.isoformat(), timezone)
+
+        return {
+            "lunar_day": result.lunar_day,
+            "phase": result.phase_key,
+            "moon_sign": result.moon_sign,
+            "illumination": result.illumination,
+            "moon_age_days": result.moon_age_days,
+            "lunar_day_start_time": result.lunar_day_start_time,
+            "provenance": result.provenance,
+        }
+
+    def get_lunar_info_for_period(
+        self, start_date: date, end_date: date, timezone: str
+    ) -> list[dict]:
+        """
+        Get lunar info for a date range.
+
+        Args:
+            start_date: Start of period
+            end_date: End of period
+            timezone: Timezone string
+
+        Returns:
+            List of dicts with lunar info for each day
+        """
+        results = []
+        current = start_date
+
+        while current <= end_date:
+            daily_info = self.get_lunar_day(current, timezone)
+            daily_info["date"] = current.isoformat()
+            results.append(daily_info)
+            current += timedelta(days=1)
+
+        return results
+
