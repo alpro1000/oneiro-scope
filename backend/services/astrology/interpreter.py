@@ -1,6 +1,8 @@
 """LLM-based astrological interpretation."""
 
+import json
 import logging
+import re
 from typing import Optional
 
 from .schemas import (
@@ -14,6 +16,7 @@ from .schemas import (
     TransitInfo,
     ZodiacSign,
 )
+from .ai.astro_reasoner import AstroReasoner
 
 logger = logging.getLogger(__name__)
 
@@ -128,9 +131,20 @@ class AstrologyInterpreter:
 
         Args:
             llm_client: LLM client for generating interpretations.
-                       If None, uses template-based fallback.
+                       If None, uses AstroReasoner with template-based fallback.
         """
         self.llm_client = llm_client
+
+        # Initialize AstroReasoner for advanced interpretation
+        try:
+            self.reasoner = AstroReasoner(
+                max_tokens=2000,
+                temperature=0.7,
+            )
+            logger.info("AstroReasoner initialized successfully")
+        except Exception as e:
+            logger.warning(f"Failed to initialize AstroReasoner: {e}")
+            self.reasoner = None
 
     async def interpret_natal_chart(
         self,
@@ -138,6 +152,11 @@ class AstrologyInterpreter:
         houses: Optional[list[House]],
         aspects: list[Aspect],
         locale: str = "ru",
+        birth_date: Optional[str] = None,
+        birth_time: Optional[str] = None,
+        birth_place: Optional[str] = None,
+        coords: Optional[dict] = None,
+        timezone: Optional[str] = None,
     ) -> str:
         """
         Generate interpretation of natal chart.
@@ -147,13 +166,38 @@ class AstrologyInterpreter:
             houses: House cusps (may be None)
             aspects: Aspects between planets
             locale: Language for output
+            birth_date: Birth date string (for enhanced prompts)
+            birth_time: Birth time string (for enhanced prompts)
+            birth_place: Birth place name (for enhanced prompts)
+            coords: Coordinates dict (for enhanced prompts)
+            timezone: Timezone string (for enhanced prompts)
 
         Returns:
             Text interpretation
         """
-        if self.llm_client:
-            return await self._llm_interpret_natal(planets, houses, aspects, locale)
+        # Try AstroReasoner first if available and all data provided
+        if self.reasoner and birth_date and birth_place and coords and timezone:
+            try:
+                planets_dict = self._format_planets_for_reasoner(planets)
+                houses_dict = self._format_houses_for_reasoner(houses) if houses else None
+                aspects_dict = self._format_aspects_for_reasoner(aspects)
 
+                interpretation = await self.reasoner.interpret_natal_chart(
+                    planets=planets_dict,
+                    houses=houses_dict,
+                    aspects=aspects_dict,
+                    birth_date=birth_date,
+                    birth_time=birth_time,
+                    birth_place=birth_place,
+                    coords=coords,
+                    timezone=timezone,
+                    locale=locale,
+                )
+                return interpretation
+            except Exception as e:
+                logger.error(f"AstroReasoner failed, falling back to template: {e}")
+
+        # Fallback to template
         return self._template_interpret_natal(planets, houses, aspects, locale)
 
     async def interpret_horoscope(
@@ -164,6 +208,11 @@ class AstrologyInterpreter:
         lunar_day: int,
         period: HoroscopePeriod,
         locale: str = "ru",
+        sun_sign: Optional[ZodiacSign] = None,
+        moon_sign: Optional[ZodiacSign] = None,
+        ascendant: Optional[ZodiacSign] = None,
+        period_start: Optional[str] = None,
+        period_end: Optional[str] = None,
     ) -> tuple[str, dict[str, str], list[str]]:
         """
         Generate horoscope interpretation.
@@ -171,11 +220,45 @@ class AstrologyInterpreter:
         Returns:
             Tuple of (summary, sections_dict, recommendations_list)
         """
-        if self.llm_client:
-            return await self._llm_interpret_horoscope(
-                transits, retrograde_planets, lunar_phase, lunar_day, period, locale
-            )
+        # Try AstroReasoner first if available
+        if self.reasoner and sun_sign and moon_sign:
+            try:
+                transits_dict = [
+                    {
+                        "transit_planet": PLANET_DESCRIPTIONS.get(t.transiting_planet, {}).get("ru", t.transiting_planet.value),
+                        "natal_planet": PLANET_DESCRIPTIONS.get(t.natal_planet, {}).get("ru", t.natal_planet.value),
+                        "aspect": t.aspect.value,
+                        "orb": t.orb,
+                    }
+                    for t in transits
+                ]
 
+                retro_list = [PLANET_DESCRIPTIONS.get(p, {}).get("ru", p.value) for p in retrograde_planets]
+
+                summary, sections, recommendations = await self.reasoner.interpret_horoscope(
+                    sun_sign=SIGN_DESCRIPTIONS.get(sun_sign, {}).get("ru", sun_sign.value),
+                    moon_sign=SIGN_DESCRIPTIONS.get(moon_sign, {}).get("ru", moon_sign.value),
+                    ascendant=SIGN_DESCRIPTIONS.get(ascendant, {}).get("ru", ascendant.value) if ascendant else None,
+                    transits=transits_dict,
+                    retrograde_planets=retro_list,
+                    lunar_phase=lunar_phase,
+                    lunar_day=lunar_day,
+                    period=period.value,
+                    period_start=period_start or "",
+                    period_end=period_end or "",
+                    locale=locale,
+                )
+
+                # Extract recommendations from sections
+                recommendations_list = sections.get("recommendations", [])
+                if not recommendations_list:
+                    recommendations_list = recommendations
+
+                return summary, sections, recommendations_list
+            except Exception as e:
+                logger.error(f"AstroReasoner horoscope failed, falling back to template: {e}")
+
+        # Fallback to template
         return self._template_interpret_horoscope(
             transits, retrograde_planets, lunar_phase, lunar_day, period, locale
         )
@@ -242,6 +325,170 @@ class AstrologyInterpreter:
                 recommendations.append("Double-check all communications")
 
         return recommendations[:5]  # Limit to 5 recommendations
+
+    async def interpret_natal_structured(
+        self,
+        planets: list[PlanetPosition],
+        houses: Optional[list[House]],
+        aspects: list[Aspect],
+        locale: str = "ru",
+        birth_date: Optional[str] = None,
+        birth_time: Optional[str] = None,
+        birth_place: Optional[str] = None,
+        coords: Optional[dict] = None,
+        timezone: Optional[str] = None,
+    ) -> dict:
+        """
+        Generate structured interpretation of natal chart.
+
+        Returns:
+            Dict with keys: personality, strengths, challenges, relationships, career, life_purpose
+        """
+        # Get full interpretation
+        full_interpretation = await self.interpret_natal_chart(
+            planets=planets,
+            houses=houses,
+            aspects=aspects,
+            locale=locale,
+            birth_date=birth_date,
+            birth_time=birth_time,
+            birth_place=birth_place,
+            coords=coords,
+            timezone=timezone,
+        )
+
+        # Parse structured sections from interpretation
+        sections = self._parse_structured_sections(full_interpretation, locale)
+
+        return sections
+
+    def _parse_structured_sections(self, interpretation: str, locale: str) -> dict:
+        """Parse structured sections from interpretation text."""
+        sections = {
+            "personality": "",
+            "strengths": "",
+            "challenges": "",
+            "relationships": "",
+            "career": "",
+            "life_purpose": "",
+        }
+
+        # Section markers (RU and EN)
+        markers = {
+            "personality": [
+                "общая характеристика", "personality", "личность",
+                "характер", "core", "identity"
+            ],
+            "strengths": [
+                "сильные стороны", "strengths", "таланты",
+                "talents", "abilities", "достоинства"
+            ],
+            "challenges": [
+                "зоны роста", "challenges", "сложности",
+                "трудности", "areas of growth", "проблемы"
+            ],
+            "relationships": [
+                "отношения", "relationships", "любовь",
+                "love", "партнерство", "partnership"
+            ],
+            "career": [
+                "карьера", "career", "профессия",
+                "работа", "work", "profession"
+            ],
+            "life_purpose": [
+                "предназначение", "life purpose", "purpose",
+                "миссия", "mission", "calling"
+            ],
+        }
+
+        # Split by sections
+        lines = interpretation.split("\n")
+        current_section = None
+        current_text = []
+
+        for line in lines:
+            line_clean = line.strip()
+            if not line_clean:
+                continue
+
+            line_lower = line_clean.lower()
+
+            # Check if this line is a section header
+            matched_section = None
+            for section_key, keywords in markers.items():
+                if any(keyword in line_lower for keyword in keywords):
+                    # Check if it looks like a header (starts with #, **, or numbered)
+                    if (line_clean.startswith("#") or
+                        line_clean.startswith("**") or
+                        line_clean.startswith(("1", "2", "3", "4", "5", "6", "7", "8", "9")) or
+                        line_clean.endswith(":")):
+                        matched_section = section_key
+                        break
+
+            if matched_section:
+                # Save previous section
+                if current_section and current_text:
+                    sections[current_section] = "\n".join(current_text).strip()
+                current_section = matched_section
+                current_text = []
+            elif current_section:
+                # Add line to current section
+                current_text.append(line_clean)
+
+        # Save last section
+        if current_section and current_text:
+            sections[current_section] = "\n".join(current_text).strip()
+
+        # Fallback: if sections are empty, try to extract from full text
+        if not any(sections.values()):
+            # Just put everything in personality as fallback
+            sections["personality"] = interpretation
+
+        return sections
+
+    def _format_planets_for_reasoner(self, planets: list[PlanetPosition]) -> list[dict]:
+        """Format planets for AstroReasoner."""
+        result = []
+        for p in planets:
+            sign_info = SIGN_DESCRIPTIONS.get(p.sign, {})
+            planet_info = PLANET_DESCRIPTIONS.get(p.planet, {})
+
+            result.append({
+                "name": planet_info.get("ru", p.planet.value),
+                "sign": sign_info.get("ru", p.sign.value),
+                "sign_degree": p.sign_degree,
+                "retrograde": p.retrograde,
+                "house": p.house,
+            })
+        return result
+
+    def _format_houses_for_reasoner(self, houses: list[House]) -> list[dict]:
+        """Format houses for AstroReasoner."""
+        result = []
+        for h in houses:
+            sign_info = SIGN_DESCRIPTIONS.get(h.sign, {})
+            result.append({
+                "number": h.number,
+                "sign": sign_info.get("ru", h.sign.value),
+                "degree": h.cusp_degree,
+            })
+        return result
+
+    def _format_aspects_for_reasoner(self, aspects: list[Aspect]) -> list[dict]:
+        """Format aspects for AstroReasoner."""
+        result = []
+        for a in aspects:
+            p1_info = PLANET_DESCRIPTIONS.get(a.planet1, {})
+            p2_info = PLANET_DESCRIPTIONS.get(a.planet2, {})
+
+            result.append({
+                "planet1": p1_info.get("ru", a.planet1.value),
+                "planet2": p2_info.get("ru", a.planet2.value),
+                "type": a.aspect_type.value,
+                "orb": a.orb,
+                "applying": a.applying,
+            })
+        return result
 
     def _template_interpret_natal(
         self,
