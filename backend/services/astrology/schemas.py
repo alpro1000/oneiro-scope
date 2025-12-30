@@ -235,7 +235,8 @@ class HoroscopeResponse(BaseModel):
     # Current transits
     transits: list[TransitInfo]
     retrograde_planets: list[Planet]
-    lunar_phase: str
+    lunar_phase: str  # Key like "waxing_gibbous"
+    lunar_phase_display: Optional[str] = None  # Human-readable like "Растущая Луна"
     lunar_day: int
 
     # LLM interpretation

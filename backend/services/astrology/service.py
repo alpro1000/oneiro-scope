@@ -229,6 +229,33 @@ class AstrologyService:
         lunar_day = lunar_info["lunar_day"]
         lunar_phase = lunar_info["phase"]  # "waxing", "full", "waning", "new"
 
+        # Map lunar phase to human-readable name
+        phase_names = {
+            "ru": {
+                "new_moon": "Новолуние",
+                "waxing_crescent": "Растущий серп",
+                "first_quarter": "Первая четверть",
+                "waxing_gibbous": "Растущая Луна",
+                "full_moon": "Полнолуние",
+                "waning_gibbous": "Убывающая Луна",
+                "last_quarter": "Последняя четверть",
+                "waning_crescent": "Убывающий серп",
+            },
+            "en": {
+                "new_moon": "New Moon",
+                "waxing_crescent": "Waxing Crescent",
+                "first_quarter": "First Quarter",
+                "waxing_gibbous": "Waxing Gibbous",
+                "full_moon": "Full Moon",
+                "waning_gibbous": "Waning Gibbous",
+                "last_quarter": "Last Quarter",
+                "waning_crescent": "Waning Crescent",
+            },
+        }
+        lunar_phase_display = phase_names.get(request.locale, phase_names["ru"]).get(
+            lunar_phase, lunar_phase
+        )
+
         # Generate interpretation with enhanced prompts
         sun_sign = natal_chart.sun_sign if natal_chart else None
         moon_sign = natal_chart.moon_sign if natal_chart else None
@@ -258,6 +285,7 @@ class AstrologyService:
             transits=transits,
             retrograde_planets=retrograde_planets,
             lunar_phase=lunar_phase,
+            lunar_phase_display=lunar_phase_display,
             lunar_day=lunar_day,
             summary=summary,
             love_and_relationships=sections.get("love"),
