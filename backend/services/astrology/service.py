@@ -27,6 +27,9 @@ from .transits import TransitCalculator
 from .geocoder import Geocoder, GeocodingError
 from .interpreter import AstrologyInterpreter
 
+# Import lunar service for accurate lunar day calculation
+from backend.services.lunar.engine import LunarEngine
+
 logger = logging.getLogger(__name__)
 
 
@@ -47,10 +50,12 @@ class AstrologyService:
         ephemeris: Optional[SwissEphemeris] = None,
         geocoder: Optional[Geocoder] = None,
         interpreter: Optional[AstrologyInterpreter] = None,
+        lunar_engine: Optional[LunarEngine] = None,
     ):
         self.ephemeris = ephemeris or SwissEphemeris()
         self.geocoder = geocoder or Geocoder()
         self.interpreter = interpreter or AstrologyInterpreter()
+        self.lunar_engine = lunar_engine or LunarEngine()
         self.natal_calculator = NatalChartCalculator(self.ephemeris)
         self.transit_calculator = TransitCalculator(self.ephemeris)
 
@@ -126,13 +131,35 @@ class AstrologyService:
         sun_position = next(p for p in planets if p.planet == Planet.SUN)
         moon_position = next(p for p in planets if p.planet == Planet.MOON)
 
-        # Generate interpretation via LLM
+        # Generate interpretation via LLM with enhanced prompts
         interpretation = await self.interpreter.interpret_natal_chart(
             planets=planets,
             houses=houses,
             aspects=aspects,
             locale=request.locale,
+            birth_date=str(request.birth_date),
+            birth_time=str(birth_time) if request.birth_time else None,
+            birth_place=request.birth_place,
+            coords={"lat": location.latitude, "lon": location.longitude},
+            timezone=location.timezone,
         )
+
+        # Generate structured interpretation
+        structured_interpretation = None
+        try:
+            structured_interpretation = await self.interpreter.interpret_natal_structured(
+                planets=planets,
+                houses=houses,
+                aspects=aspects,
+                locale=request.locale,
+                birth_date=str(request.birth_date),
+                birth_time=str(birth_time) if request.birth_time else None,
+                birth_place=request.birth_place,
+                coords={"lat": location.latitude, "lon": location.longitude},
+                timezone=location.timezone,
+            )
+        except Exception as e:
+            logger.warning(f"Failed to generate structured interpretation: {e}")
 
         return NatalChartResponse(
             id=uuid4(),
@@ -151,6 +178,7 @@ class AstrologyService:
             houses=houses,
             aspects=aspects,
             interpretation=interpretation,
+            structured_interpretation=structured_interpretation,
             created_at=datetime.utcnow(),
             provenance=self._get_provenance(),
         )
@@ -194,10 +222,18 @@ class AstrologyService:
                 target_date
             )
 
-        # Get lunar info
-        lunar_phase, lunar_day = self.ephemeris.get_lunar_info(target_date)
+        # Get lunar info with proper timezone handling
+        # Use Europe/Moscow as default for Russian users (matches lunar calendar tradition)
+        timezone_str = "Europe/Moscow"
+        lunar_info = self.lunar_engine.get_lunar_day(target_date, timezone_str)
+        lunar_day = lunar_info["lunar_day"]
+        lunar_phase = lunar_info["phase"]  # "waxing", "full", "waning", "new"
 
-        # Generate interpretation
+        # Generate interpretation with enhanced prompts
+        sun_sign = natal_chart.sun_sign if natal_chart else None
+        moon_sign = natal_chart.moon_sign if natal_chart else None
+        ascendant = natal_chart.ascendant if natal_chart else None
+
         summary, sections, recommendations = await self.interpreter.interpret_horoscope(
             transits=transits,
             retrograde_planets=retrograde_planets,
@@ -205,6 +241,11 @@ class AstrologyService:
             lunar_day=lunar_day,
             period=request.period,
             locale=request.locale,
+            sun_sign=sun_sign,
+            moon_sign=moon_sign,
+            ascendant=ascendant,
+            period_start=str(period_start),
+            period_end=str(period_end),
         )
 
         return HoroscopeResponse(
@@ -259,8 +300,11 @@ class AstrologyService:
             request.event_date
         )
 
-        # Get lunar info
-        lunar_phase, lunar_day = self.ephemeris.get_lunar_info(request.event_date)
+        # Get lunar info with proper timezone handling
+        timezone_str = "Europe/Moscow"
+        lunar_info = self.lunar_engine.get_lunar_day(request.event_date, timezone_str)
+        lunar_day = lunar_info["lunar_day"]
+        lunar_phase = lunar_info["phase"]
 
         # Calculate favorability score
         favorability_score, positive_factors, risk_factors = (
