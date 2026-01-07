@@ -357,13 +357,23 @@ class AstrologyService:
                 natal_chart,
             )
 
-        # Generate recommendations
+        # Generate recommendations with natal chart context
+        sun_sign = natal_chart.sun_sign if natal_chart else None
+        moon_sign = natal_chart.moon_sign if natal_chart else None
+
         recommendations = await self.interpreter.generate_event_recommendations(
             event_type=request.event_type,
             transits=transits,
             positive_factors=positive_factors,
             risk_factors=risk_factors,
             locale=request.locale,
+            sun_sign=sun_sign,
+            moon_sign=moon_sign,
+            event_date=str(request.event_date),
+            event_location=request.event_location,
+            retrograde_planets=retrograde_planets,
+            lunar_phase=lunar_phase,
+            lunar_day=lunar_day,
         )
 
         return EventForecastResponse(
