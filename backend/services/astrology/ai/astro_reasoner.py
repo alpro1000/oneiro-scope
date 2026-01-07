@@ -11,6 +11,10 @@ from .prompt_templates import (
     SYSTEM_PROMPT,
     NATAL_CHART_PROMPT,
     HOROSCOPE_PROMPT,
+    DAILY_HOROSCOPE_PROMPT,
+    WEEKLY_HOROSCOPE_PROMPT,
+    MONTHLY_HOROSCOPE_PROMPT,
+    YEARLY_HOROSCOPE_PROMPT,
     EVENT_FORECAST_PROMPT,
     format_planets_for_prompt,
     format_aspects_for_prompt,
@@ -30,7 +34,7 @@ class AstroReasoner:
 
     def __init__(
         self,
-        max_tokens: int = 2000,
+        max_tokens: int = 4000,
         temperature: float = 0.7,
         preferred_provider: Optional[LLMProvider] = None,
         knowledge_base_path: Optional[Path] = None,
@@ -39,7 +43,7 @@ class AstroReasoner:
         Initialize AstroReasoner.
 
         Args:
-            max_tokens: Maximum tokens for response
+            max_tokens: Maximum tokens for response (increased to 4000 for detailed interpretations)
             temperature: Temperature for generation (0.0-1.0)
             preferred_provider: Preferred LLM provider (or None for cheapest)
             knowledge_base_path: Path to knowledge base JSON files
@@ -175,7 +179,18 @@ class AstroReasoner:
         transits_str = format_transits_for_prompt(transits, locale)
         retro_str = ", ".join(retrograde_planets) if retrograde_planets else "нет"
 
-        prompt = HOROSCOPE_PROMPT.format(
+        # Select appropriate prompt based on period
+        prompt_template = HOROSCOPE_PROMPT  # default
+        if period.lower() == "daily":
+            prompt_template = DAILY_HOROSCOPE_PROMPT
+        elif period.lower() == "weekly":
+            prompt_template = WEEKLY_HOROSCOPE_PROMPT
+        elif period.lower() == "monthly":
+            prompt_template = MONTHLY_HOROSCOPE_PROMPT
+        elif period.lower() == "yearly":
+            prompt_template = YEARLY_HOROSCOPE_PROMPT
+
+        prompt = prompt_template.format(
             sun_sign=sun_sign,
             moon_sign=moon_sign,
             ascendant=ascendant or "неизвестен",

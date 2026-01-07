@@ -297,6 +297,13 @@ class AstrologyInterpreter:
         positive_factors: list[str],
         risk_factors: list[str],
         locale: str = "ru",
+        sun_sign: Optional[ZodiacSign] = None,
+        moon_sign: Optional[ZodiacSign] = None,
+        event_date: Optional[str] = None,
+        event_location: Optional[str] = None,
+        retrograde_planets: Optional[list[Planet]] = None,
+        lunar_phase: Optional[str] = None,
+        lunar_day: Optional[int] = None,
     ) -> list[str]:
         """
         Generate recommendations for an event.
@@ -304,6 +311,40 @@ class AstrologyInterpreter:
         Returns:
             List of recommendation strings
         """
+        # Try AstroReasoner first if natal chart is available
+        if self.reasoner and sun_sign and moon_sign and event_date:
+            try:
+                transits_dict = [
+                    {
+                        "transit_planet": PLANET_DESCRIPTIONS.get(t.transiting_planet, {}).get("ru", t.transiting_planet.value),
+                        "natal_planet": PLANET_DESCRIPTIONS.get(t.natal_planet, {}).get("ru", t.natal_planet.value),
+                        "aspect": t.aspect.value,
+                        "orb": t.orb,
+                    }
+                    for t in transits
+                ]
+
+                retro_list = [PLANET_DESCRIPTIONS.get(p, {}).get("ru", p.value) for p in (retrograde_planets or [])]
+
+                result = await self.reasoner.interpret_event_forecast(
+                    event_type=event_type.value,
+                    event_date=event_date,
+                    event_location=event_location,
+                    sun_sign=SIGN_DESCRIPTIONS.get(sun_sign, {}).get("ru", sun_sign.value),
+                    moon_sign=SIGN_DESCRIPTIONS.get(moon_sign, {}).get("ru", moon_sign.value),
+                    transits=transits_dict,
+                    retrograde_planets=retro_list,
+                    lunar_phase=lunar_phase or "",
+                    lunar_day=lunar_day or 1,
+                    locale=locale,
+                )
+
+                # Return recommendations from AstroReasoner
+                return result.get("recommendations", [])
+            except Exception as e:
+                logger.error(f"AstroReasoner event forecast failed, falling back to template: {e}")
+
+        # Fallback to template-based recommendations
         recommendations = []
 
         # Base recommendations by event type
