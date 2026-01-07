@@ -329,14 +329,24 @@ See `render.yaml` for configuration. Deploy requires:
 | 2025-12-23 | `claude/oneiroscope-continuation-5S4v3` | DreamBank integration, language auto-detection, JSON prompts |
 | 2025-12-23 | `claude/dream-interpreter-setup-nK52c` | Dream interpreter v2.1 upgrade (REM/NREM, prohibited list, validation) |
 | 2025-12-24 | `claude/dream-interpreter-setup-nK52c` | Narrative-first semantic engine, contextual validation, 7 modern symbols |
-| **2025-12-30** | `claude/timezone-geonames-integration-mDyCI` | **AstroReasoner integration, structured natal chart interpretations, enhanced LLM prompts** |
-| **2025-12-30** | `claude/update-documentation-En0hK` | **🔴 CRITICAL FIXES: LunarEngine class, removed horoscope mocks, added period-specific prompts** |
+| 2025-12-30 | `claude/timezone-geonames-integration-mDyCI` | AstroReasoner integration, structured natal chart interpretations, enhanced LLM prompts |
+| 2025-12-30 | `claude/update-documentation-En0hK` | 🔴 CRITICAL FIXES: LunarEngine class, removed horoscope mocks, added period-specific prompts |
+| **2025-12-30** | `claude/update-documentation-En0hK` | **✨ Dream databases analysis + Horoscope improvements (specialized prompts, ×2 detail, natal chart integration)** |
 
 See `docs/SESSION_SUMMARY_*.md` for details.
 
-## Status (Updated 2025-12-30)
+## Status (Updated 2025-12-30 - Session 2)
 
-### Completed (Latest Session)
+### Completed (Latest Session - Part 2)
+- [x] **📊 ANALYSIS**: Analyzed 4 dream databases (DreamBank, DREAMS, krank, dreamento) - full report in `docs/DREAM_DATABASES_ANALYSIS_2025-12-30.md`
+- [x] **✨ HOROSCOPE IMPROVEMENTS**: Specialized prompts for each period (daily/weekly/monthly/yearly)
+- [x] **✨ HOROSCOPE IMPROVEMENTS**: Increased detail ×2 (600-1000 words, max_tokens=4000)
+- [x] **✨ HOROSCOPE IMPROVEMENTS**: Full personalization via natal chart (Sun/Moon/Ascendant)
+- [x] **✨ HOROSCOPE IMPROVEMENTS**: Event forecasts now use natal chart data
+- [x] **✅ TESTING**: All 15 astrology tests passed (provenance, quality, lunar, integration)
+- [x] **📚 DOCUMENTATION**: Comprehensive guides (HOROSCOPE_IMPROVEMENTS, SESSION_SUMMARY)
+
+### Completed (Previous Session - Part 1)
 - [x] **🔴 CRITICAL FIX**: LunarEngine class created in `backend/services/lunar/engine.py:231-284`
 - [x] **🔴 CRITICAL FIX**: Removed mock data from horoscope interpreter
 - [x] **🔴 CRITICAL FIX**: Added real lunar_tables.json integration for horoscope generation
@@ -364,12 +374,15 @@ See `docs/SESSION_SUMMARY_*.md` for details.
 - [x] **Structured Natal Chart**: 6 detailed sections (personality, strengths, challenges, relationships, career, life_purpose)
 - [x] **Context-Aware Horoscopes**: Personalized forecasts based on natal chart data
 
-### Pending
-- [ ] Create PR for merge to main
-- [ ] Verify production deploy
-- [ ] `ENVIRONMENT=production` on Render
-- [ ] Ephemeris health check logging
-- [ ] LunarWidget retry logic
+### Pending (Priority Order)
+1. [ ] **P0**: Deploy horoscope improvements to staging Render
+2. [ ] **P0**: A/B test new vs old horoscopes (measure engagement)
+3. [ ] **P1**: Create PR for merge to main
+4. [ ] **P1**: Verify production deploy
+5. [ ] **P1**: `ENVIRONMENT=production` on Render
+6. [ ] **P2**: Consider upgrading DreamBank to krank CSV format (~2 hours)
+7. [ ] **P3**: Ephemeris health check logging
+8. [ ] **P3**: LunarWidget retry logic
 
 ## Roadmap
 - Phase 0 (builds green): ✅ DONE - geocoder await fixed, backend tests passing
@@ -378,12 +391,19 @@ See `docs/SESSION_SUMMARY_*.md` for details.
 - Phase 3 (dreams enhancement): ✅ DONE - DreamBank norms, language detection, JSON prompts
 - Phase 3 (QA/CI): Tests green locally, CI pipeline setup pending
 
-## Next Actions (Updated 2025-12-30)
+## Next Actions (Updated 2025-12-30 - Session 2)
 
-### Immediate
-1) Создать PR из `claude/timezone-geonames-integration-mDyCI` в main
+### Immediate (P0)
+1) **Deploy на staging**: Развернуть улучшения гороскопов на Render staging
+2) **A/B тест**: Сравнить новые (600-1000 слов) vs старые (300-500 слов) гороскопы
+3) **Метрики**: Измерить engagement (reading time, scroll depth, return rate)
+4) **User feedback**: Собрать обратную связь первых пользователей
+
+### High Priority (P1)
+1) Создать PR из `claude/update-documentation-En0hK` в main
 2) После merge проверить production deploy на Render
 3) Выставить `ENVIRONMENT=production` на Render
+4) Мониторинг LLM costs (4000 tokens per request)
 
 ### Phase 2 - Astrology Frontend Integration
 1) **Structured Interpretation UI**: Display 6 sections in tabs (personality, strengths, challenges, relationships, career, life_purpose)
