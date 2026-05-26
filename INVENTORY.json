@@ -348,7 +348,7 @@
     {
       "path": "backend/core",
       "dirs": 0,
-      "files": 6
+      "files": 7
     },
     {
       "path": "backend/api",
@@ -378,7 +378,7 @@
     {
       "path": "backend/tests",
       "dirs": 0,
-      "files": 9
+      "files": 10
     },
     {
       "path": "backend/utils",
@@ -407,5 +407,5 @@
     }
   ],
   "total_dirs": 80,
-  "total_files": 264
+  "total_files": 266
 }

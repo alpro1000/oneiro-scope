@@ -71,17 +71,17 @@
 | backend/services/astrology/engine | 0 | 5 |
 | backend/services/astrology/validators | 0 | 2 |
 | backend/services/astrology/policies | 0 | 2 |
-| backend/core | 0 | 6 |
+| backend/core | 0 | 7 |
 | backend/api | 1 | 1 |
 | backend/api/v1 | 0 | 5 |
 | backend/app | 0 | 2 |
 | backend/mcp | 1 | 3 |
 | backend/mcp/tools | 0 | 5 |
-| backend/tests | 0 | 9 |
+| backend/tests | 0 | 10 |
 | backend/utils | 0 | 2 |
 | backend/data | 0 | 1 |
 | backend/models | 0 | 6 |
 | scripts | 0 | 3 |
 | data | 0 | 2 |
 
-**ИТОГО:** папок = 80, файлов = 264
+**ИТОГО:** папок = 80, файлов = 266
