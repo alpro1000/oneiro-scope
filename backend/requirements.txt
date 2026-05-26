@@ -60,6 +60,11 @@ stripe==7.11.0
 prometheus-client==0.19.0
 sentry-sdk[fastapi]==1.40.0
 
+# MCP server + Claude Agent SDK
+# MCP exposes the OneiroScope services as tools for skills/agents.
+mcp[cli]>=1.2
+claude-agent-sdk>=0.2
+
 # Testing
 pytest==7.4.4
 pytest-asyncio==0.23.3

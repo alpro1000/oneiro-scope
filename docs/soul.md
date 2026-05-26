@@ -91,17 +91,42 @@ Recent decisions:
 
 **Plan reference:** `docs/PLAN.md` (phases 0–4).
 
-**Phase 0 completed:**
-- Created `docs/PLAN.md` — single source of progress.
-- Created `docs/soul.md` (this file).
-- Created `docs/steering/{tech,structure,product}.md`.
-- Added mandatory-block header to `CLAUDE.md` for next-session pickup.
+**Phase 0 completed:** Created `docs/PLAN.md`, `docs/soul.md` (this file), `docs/steering/{tech,structure,product}.md`, mandatory-block header in `CLAUDE.md`.
 
-**Next phases:** MCP server (1) → ADK agent (2) → Skills (3) → Prod fixes (4).
+**Phase 1 completed — MCP server (`backend/mcp/`):**
+- `server.py` runs FastMCP on stdio (default) or streamable-HTTP. 13 tools registered:
+  astrology (calculate_natal_chart, generate_horoscope, forecast_event, list_event_types, list_horoscope_periods),
+  dreams (analyze_dream, list_dream_symbols, list_archetypes, list_hvdc_categories),
+  lunar (get_lunar_day, get_lunar_period),
+  geo (search_city, validate_birth_data).
+- `backend/tests/test_mcp_smoke.py` — 9 tests, all green.
 
-**Notes / decisions:**
-- Adopted MCP-first because: (a) FastAPI services already strict-typed → trivial tool adapters, (b) one MCP server reusable from Claude Desktop, Cursor, agent loops, web Code; ADK is one consumer.
-- Will not implement user auth in this session — too large; tracked in `§5`.
-- Did not run dream-interpreter test fixes — out of scope for this session.
+**Phase 2 completed — ADK agent (`agents/`):**
+- `OneiroAgent` spawns MCP server as stdio child; restricts allowed_tools to `mcp__oneiro__*` (no shell, no fs).
+- System prompt enforces science-first, cost-aware tool chain, bilingual parity, provenance, no prediction-as-fact.
+- `python -m agents.cli "<prompt>"` CLI entry.
+- 5 agent smoke tests, all green.
+
+**Phase 3 completed — Skills (`.claude/skills/`):**
+- 8 SKILL.md files: `/natal`, `/horoscope`, `/dream`, `/lunar`, `/deploy-cycle`, `/validate-prod`, `/cost-report`, `/research-symbol`.
+- README lists conventions; all skills consume `mcp__oneiro__*` only.
+- Expanded `.claude/settings.local.json` with common dev permissions.
+
+**Phase 4 partial:**
+- `ENVIRONMENT=production` already set in `render.yaml` (verified).
+- `/health` now returns `ephemeris` block (engine + path + first 5 files).
+- `mcp[cli]>=1.2` + `claude-agent-sdk>=0.2` added to `backend/requirements.txt`.
+- `.github/workflows/mcp-smoke.yml` runs 14 smoke tests on push/PR.
+- Deferred: `cost_tracker.py` (needs middleware wiring), separate Render MCP service (embedded works), MCP Dockerfile (backend Dockerfile covers).
+
+**Decisions:**
+- MCP-first adopted: FastAPI services strict-typed → trivial adapters; one MCP server reusable from Claude Desktop, Cursor, agents, web Code.
+- Agent restricted to MCP tools only — never invokes Bash/Write/Read directly, keeps domain scope clean.
+- Skill layer never calls FastAPI HTTP — only MCP tools (rule in `docs/steering/structure.md`).
+- Cost tracking deferred to next session: requires deeper LLM-provider middleware change.
+
+**Out of scope this session:** user auth, natal-chart DB persistence, 5/14 failing dream interpreter tests, separate Render MCP service.
+
+**Verified:** 14/14 smoke tests green (`pytest backend/tests/test_mcp_smoke.py backend/tests/test_agent_smoke.py`).
 
 *(append new entries above this line on next session)*
