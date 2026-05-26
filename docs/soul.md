@@ -56,7 +56,7 @@ Personal/project memory file for cross-session continuity. Read by Claude Code a
 ## §5 Known issues / Tech debt
 
 - No user auth / natal chart persistence (TODOs in `backend/api/v1/astrology.py:59,102,175`).
-- 5/14 dream interpreter tests failing (64% pass rate).
+- ~~5/14 dream interpreter tests failing (64% pass rate).~~ **Fixed 2026-05-26 in `claude/fix-dream-narrative-tests`** — 14/14 passing.
 - `ENVIRONMENT=production` not yet set on Render (still `development` → triggers `init_db()` in prod).
 - LLM cost tracking middleware structure exists but counter not wired.
 - Ephemeris mode (SWIEPH vs MOSEPH) not logged in `/health`.
@@ -85,6 +85,22 @@ Recent decisions:
 ---
 
 ## §9 Session log
+
+### 2026-05-26 — claude/fix-dream-narrative-tests — Dream interpreter v2.1 test fixes
+**Goal:** Resolve the 6 known-failing tests in `test_dream_interpreter_narrative.py::TestContextualSymbolValidation` (noted as `§5` known issue; tracked as out-of-scope in the previous session).
+
+**Done:**
+- Added Russian keyword roots to `symbols.json` for `vehicle` (`автомобил`, `авто`, `машин`), `surveillance` (`слеж`, `следи`, `наблюд`), `boundaries` (`границ`, `наруш`, `вторг`), `escape_liberation` (`выброс`, `отброс`, `свобод`, `освобод`, `облегчен`). Root: the inflection-aware regex needs a literal prefix of the surface form.
+- Restored strict reinforcement requirement for `surveillance` only — lone keywords like "camera" produced false positives. Other reinforcement-driven symbols stay soft.
+- Added house exclusion for `(throw|выбросил…) … (window|окн)` — common in surveillance/escape dreams, the window is not a house symbol.
+
+**Verified:** 14/14 dream narrative tests pass; full backend suite 60/60 (6 skipped). Updates §5 (5/14 → 0/14 failing).
+
+**Decisions:**
+- Did NOT change the Russian regex compilation (still `\bkeyword\w*\b`). Keyword roots were the lowest-risk fix.
+- Strict reinforcement applied only to `surveillance`; widening it to others would regress legit detection cases.
+
+---
 
 ### 2026-05-26 — claude/eager-noether-5UQJR — MCP + ADK + Skills foundation
 **Goal:** Stand up MCP-server / ADK-agent / skills layer on top of existing FastAPI services + introduce discipline files (soul.md, steering/*, mandatory block in CLAUDE.md).
