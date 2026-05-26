@@ -29,6 +29,25 @@ async def lifespan(app: FastAPI):
     logger.info(f"Starting {settings.APP_NAME} v{settings.VERSION}")
     logger.info(f"Environment: {settings.ENVIRONMENT}")
 
+    # Surface ephemeris mode at startup — same source as /health.
+    try:
+        from backend.api.v1.health import _ephemeris_mode
+
+        eph = _ephemeris_mode()
+        if eph["engine"] == "SWIEPH":
+            logger.info(
+                "Ephemeris: SWIEPH (path=%s, files=%d)",
+                eph["ephe_path"],
+                len(eph["files"]),
+            )
+        else:
+            logger.warning(
+                "Ephemeris: MOSEPH (analytic fallback) — set SE_EPHE_PATH "
+                "to a directory containing .se1 binaries for arc-second precision."
+            )
+    except Exception as exc:  # pragma: no cover
+        logger.warning("Could not determine ephemeris mode: %s", exc)
+
     # Initialize database
     if settings.ENVIRONMENT == "development":
         logger.info("Initializing database...")
