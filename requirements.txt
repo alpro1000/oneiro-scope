@@ -1,4 +1,16 @@
+# Top-level requirements for the build/integration CI workflow.
+# The full backend stack lives in backend/requirements.txt and is
+# installed separately by mcp-smoke and backend test workflows.
+#
+# Pins below are deliberately loose-but-bounded — open versions caused
+# CI installs to fail on resolver mismatches between numpy 2.x and the
+# old pandas wheels GitHub's pip cache was reusing.
+
+# Local stub packages (DReAMy embedding toolkit + Swiss Ephemeris shim).
 -e ./external/DReAMy
 -e ./external/pyswisseph
-pandas
-pyarrow
+
+# Pin numpy < 3 so wheels resolve cleanly across the runtime stack.
+numpy>=1.26,<3
+pandas>=2.2,<3
+pyarrow>=15

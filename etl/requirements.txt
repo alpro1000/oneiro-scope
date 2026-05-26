@@ -4,8 +4,11 @@ html2text
 tqdm
 pyyaml
 rapidfuzz
-pandas
-pyarrow
+# Match the bounds in the top-level requirements.txt to avoid pip
+# resolver pulling pandas 3 / numpy 2 mismatch.
+numpy>=1.26,<3
+pandas>=2.2,<3
+pyarrow>=15
 # Paths are resolved from the repository root to avoid pip CWD quirks.
 -e ./external/DReAMy
 -e ./external/pyswisseph
