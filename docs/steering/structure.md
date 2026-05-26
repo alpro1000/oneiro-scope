@@ -73,7 +73,7 @@ oneiro-scope/
 ## Where things live
 
 - **Add a planet to astrology:** `backend/services/astrology/knowledge_base/planets.json` + ephemeris constant in `ephemeris.py`.
-- **Add a dream symbol:** `backend/services/dreams/knowledge_base/symbols.json` (use `/research-symbol` skill to help).
+- **Add a dream symbol:** `backend/services/dreams/knowledge_base/symbols.json` (use `/research-symbol` skill to help). **Russian keywords must be roots, not inflected forms** — the analyzer compiles `\bkeyword\w*\b`, so the keyword has to be a literal prefix of the surface form. Use `границ` (covers границ-а/-ы/-у/-ой), `вторг` (covers вторгся/вторгается), `выброс` (covers выбросил/выбросить/выбросив). Long noun keywords like `нарушение` won't match the verb `нарушил`.
 - **Add a new MCP tool:** create function in `backend/mcp/tools/<area>.py`, decorate, register in `backend/mcp/server.py`.
 - **Add a translation:** `frontend/messages/{en,ru}.json`. Both must be updated.
 - **Add an env var:** `backend/core/config.py` (Pydantic Settings) + `render.yaml` envVars block + `.env.example` + this file (if structural).

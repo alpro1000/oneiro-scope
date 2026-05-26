@@ -242,6 +242,10 @@ class DreamAnalyzer:
                 # Reverse: "door/window of car"
                 (r'(door|дверь).{0,10}(car|vehicle|машин|автомобил)', ["door", "дверь"]),
                 (r'(window|окн).{0,10}(car|vehicle|машин|автомобил)', ["window", "окно", "окна"]),
+                # "throw X out (the) window" — not a house symbol, it's an
+                # escape/disposal action. Common in surveillance dreams.
+                (r'(throw|threw|выбро\w*|выкин\w*|кину\w*).{0,30}(window|окн)', ["window", "окно", "окна"]),
+                (r'(throw|threw|выбро\w*|выкин\w*|кину\w*).{0,30}(door|дверь)', ["door", "дверь"]),
             ],
             "food": [
                 # "food" in "food truck" when vehicle is focus → exclude food
@@ -269,8 +273,10 @@ class DreamAnalyzer:
         # Using word roots for Russian to match inflections
         reinforcement_contexts = {
             "surveillance": [
-                # Strong indicators that surveillance is real theme
-                r'(track|monitor|watch|follow|spy|след|наблюд|контрол)',
+                # Strong indicators that surveillance is real theme.
+                # Cover both following-root (след-/следи-) and tracking-root
+                # (слеж-/слежения), which are spelled differently in Russian.
+                r'(track|monitor|watch|follow|spy|след|слеж|наблюд|контрол|шпион)',
             ],
             "boundaries": [
                 r'(violat|invad|cross|breach|нарушен|вторжен|пересеч|границ)',
@@ -284,9 +290,12 @@ class DreamAnalyzer:
             ],
         }
 
-        # For symbols with reinforcement patterns, check for supporting context
-        # Note: This is a SOFT filter - we don't block symbols entirely,
-        # just note their confidence. LLM will make final validation.
+        # For symbols with reinforcement patterns, check for supporting context.
+        # Most are SOFT (just trust the keyword match) — surveillance is STRICT
+        # because lone keywords like "camera" produce too many false positives
+        # ("I found a camera on the shelf" should NOT be surveillance).
+        strict_reinforcement = {"surveillance"}
+
         if symbol_id in reinforcement_contexts:
             has_reinforcement = False
             for pattern_str in reinforcement_contexts[symbol_id]:
@@ -295,10 +304,11 @@ class DreamAnalyzer:
                     has_reinforcement = True
                     break
 
-            # Even without reinforcement, allow symbol through
-            # The LLM will do final contextual validation
-            # This prevents over-filtering at the regex level
-            return True  # Changed from: return has_reinforcement
+            if symbol_id in strict_reinforcement:
+                return has_reinforcement
+            # Soft filter: trust the keyword match; the LLM does final
+            # contextual validation downstream.
+            return True
 
         # Default: symbol is valid (conservative approach)
         return True
