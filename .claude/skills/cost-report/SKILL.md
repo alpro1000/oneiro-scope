@@ -9,16 +9,28 @@ description: Report LLM provider costs over a period for OneiroScope MCP/API cal
 
 Summarize LLM spend per provider over a period.
 
-## Implementation status
+## Implementation
 
-**Phase 4 work — partially implemented.** The cost-tracker module
-(`backend/core/cost_tracker.py`) is NOT yet wired into the LLM
-provider abstraction. When invoked today, this skill should:
+`backend/core/cost_tracker.py` records every successful LLM call inside
+`UniversalLLMProvider.generate()`. Persists to Redis when `REDIS_URL` is
+set, otherwise to an in-memory store (resets on process restart).
 
-1. Check whether `backend/core/cost_tracker.py` exists.
-2. If yes, read counters from Redis (keys `oneiro:cost:<provider>:<YYYY-MM-DD>`).
-3. If no, report "cost tracking not yet wired — tracked in
-   `docs/PLAN.md` Phase 4 and `docs/soul.md §5`".
+Counters per day per provider:
+- `calls`, `input_tok`, `output_tok`, `usd_micro` (USD × 1,000,000)
+
+Token counts use a chars/4 heuristic — providers don't return usage,
+so the report is an estimate, not a billing source of truth.
+
+To read:
+
+```python
+from datetime import date
+from backend.core import cost_tracker
+
+rows = cost_tracker.report(date.today(), date.today())
+for r in rows:
+    print(r.provider, r.calls, r.input_tokens, r.output_tokens, f"${r.usd:.4f}")
+```
 
 ## Inputs
 

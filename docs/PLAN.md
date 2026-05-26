@@ -50,7 +50,7 @@
 - [x] `backend/api/v1/health.py` — ephemeris mode (SWIEPH/MOSEPH) в /health
 - [x] `backend/requirements.txt` — `mcp[cli]` + `claude-agent-sdk`
 - [x] `.github/workflows/mcp-smoke.yml` — CI smoke для MCP/agent
-- [ ] `backend/core/cost_tracker.py` — учёт LLM-затрат в Redis (deferred — needs middleware wiring)
+- [x] `backend/core/cost_tracker.py` — учёт LLM-затрат, Redis + memory fallback, подключён в `UniversalLLMProvider.generate()`, 7 тестов
 - [ ] Dockerfile для MCP-сервера (deferred — backend Dockerfile covers it)
 - [ ] Отдельный Render service для MCP HTTP (deferred — embedded in backend works)
 
