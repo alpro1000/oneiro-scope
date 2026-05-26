@@ -26,10 +26,12 @@ jobs:
 
       - name: Install dependencies
         run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt -r etl/requirements.txt
+          python -m pip install --upgrade pip setuptools wheel build
+          # -v gives us a usable failure trace in CI when pip resolution
+          # or the editable installs of external/* misbehave.
+          pip install -v -r requirements.txt -r etl/requirements.txt
 
       - name: Validate DReAMy + Swisseph Integration
         run: |
-          pytest tests/test_integration_dreamy_swisseph.py
+          python -m pytest tests/test_integration_dreamy_swisseph.py
           python etl/pipeline.py --check
