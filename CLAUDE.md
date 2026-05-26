@@ -1,5 +1,20 @@
 # CLAUDE.md - OneiroScope Project Guide
 
+> **🔴 MANDATORY BLOCK — READ FIRST (every new session)**
+>
+> Before doing anything else in this repo:
+>
+> 1. Read `docs/soul.md` — cross-session memory: §1 identity, §2 active contexts, §5 known issues, §9 latest session log.
+> 2. Read `docs/PLAN.md` if it exists — current task plan with checkboxes; continue from the first unchecked item.
+> 3. Read `docs/steering/{tech,structure,product}.md` if your task touches architecture, layering, or product principles.
+> 4. Hard rule: **agents and skills consume MCP tools** (`backend/mcp/`), they do not call FastAPI services or HTTP routes directly. FastAPI = HTTP surface; MCP = canonical tool surface; agent/skills = consumers.
+> 5. At the end of any substantial session: append a new entry to `docs/soul.md §9` (Session log) — date, branch, what changed, decisions. This is the final Gate of every task.
+> 6. Develop on the branch named in the task prompt. Never push to a different branch without explicit permission.
+>
+> If any of these files are missing, create them from the templates referenced in `docs/PLAN.md` Phase 0 before continuing.
+
+---
+
 ## Project Overview
 
 **OneiroScope** - комплексный эзотерический сервис, объединяющий научный подход к астрологии и анализу снов с лунным календарём.

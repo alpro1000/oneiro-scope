@@ -1,5 +1,8 @@
 """Health check endpoints"""
 
+import os
+from pathlib import Path
+
 from fastapi import APIRouter, Depends, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import text
@@ -11,13 +14,29 @@ from backend.core.config import settings
 router = APIRouter()
 
 
+def _ephemeris_mode() -> dict:
+    """Report which Swiss Ephemeris mode the backend is configured to use.
+
+    SWIEPH (binary files) is preferred for arc-second precision; MOSEPH
+    (analytic) is the fallback when binaries are absent. Surfacing this in
+    /health lets validate-prod skill and operators tell which mode is live.
+    """
+    path = os.getenv("SE_EPHE_PATH")
+    if path and Path(path).is_dir():
+        files = sorted(p.name for p in Path(path).glob("*.se1"))
+        if files:
+            return {"engine": "SWIEPH", "ephe_path": path, "files": files[:5]}
+    return {"engine": "MOSEPH", "ephe_path": path or None, "files": []}
+
+
 @router.get("/health")
 async def health_check():
-    """Basic health check"""
+    """Basic health check + ephemeris mode."""
     return {
         "status": "healthy",
         "service": settings.APP_NAME,
-        "version": settings.VERSION
+        "version": settings.VERSION,
+        "ephemeris": _ephemeris_mode(),
     }
 
 

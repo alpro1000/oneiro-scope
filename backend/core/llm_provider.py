@@ -166,6 +166,18 @@ class UniversalLLMProvider:
                     model, prompt, system_prompt
                 )
                 logger.info(f"Success with {model.provider.value}")
+                # Cost tracking — never raises (see cost_tracker.record).
+                # ~4 chars/token is the standard rough estimate when the
+                # provider does not return token usage.
+                from backend.core import cost_tracker
+
+                input_chars = len(prompt) + len(system_prompt or "")
+                cost_tracker.record(
+                    provider=model.provider.value,
+                    input_tokens=max(1, input_chars // 4),
+                    output_tokens=max(1, len(result) // 4),
+                    cost_per_1k_tokens=model.cost_per_1k_tokens,
+                )
                 return result, model.provider.value
             except Exception as e:
                 logger.warning(

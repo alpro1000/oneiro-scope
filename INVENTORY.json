@@ -2,28 +2,38 @@
   "tree": [
     {
       "path": ".",
-      "dirs": 14,
+      "dirs": 15,
       "files": 20
     },
     {
-      "path": "oneiro-scope",
+      "path": "docs",
+      "dirs": 2,
+      "files": 37
+    },
+    {
+      "path": "docs/steering",
       "dirs": 0,
-      "files": 0
+      "files": 3
+    },
+    {
+      "path": "docs/architecture",
+      "dirs": 1,
+      "files": 5
+    },
+    {
+      "path": "docs/architecture/modules",
+      "dirs": 0,
+      "files": 3
+    },
+    {
+      "path": "assets",
+      "dirs": 0,
+      "files": 2
     },
     {
       "path": "external",
       "dirs": 2,
       "files": 0
-    },
-    {
-      "path": "external/pyswisseph",
-      "dirs": 1,
-      "files": 1
-    },
-    {
-      "path": "external/pyswisseph/swisseph",
-      "dirs": 0,
-      "files": 1
     },
     {
       "path": "external/DReAMy",
@@ -36,9 +46,14 @@
       "files": 3
     },
     {
-      "path": "scripts",
+      "path": "external/pyswisseph",
+      "dirs": 1,
+      "files": 1
+    },
+    {
+      "path": "external/pyswisseph/swisseph",
       "dirs": 0,
-      "files": 3
+      "files": 1
     },
     {
       "path": ".github",
@@ -48,42 +63,207 @@
     {
       "path": ".github/workflows",
       "dirs": 0,
-      "files": 6
+      "files": 7
     },
     {
-      "path": "assets",
+      "path": "frontend",
+      "dirs": 12,
+      "files": 12
+    },
+    {
+      "path": "frontend/stories",
+      "dirs": 0,
+      "files": 1
+    },
+    {
+      "path": "frontend/public",
+      "dirs": 0,
+      "files": 1
+    },
+    {
+      "path": "frontend/e2e",
+      "dirs": 0,
+      "files": 2
+    },
+    {
+      "path": "frontend/__tests__",
+      "dirs": 0,
+      "files": 2
+    },
+    {
+      "path": "frontend/components",
+      "dirs": 0,
+      "files": 7
+    },
+    {
+      "path": "frontend/messages",
+      "dirs": 0,
+      "files": 2
+    },
+    {
+      "path": "frontend/app",
+      "dirs": 2,
+      "files": 2
+    },
+    {
+      "path": "frontend/app/api",
+      "dirs": 2,
+      "files": 0
+    },
+    {
+      "path": "frontend/app/api/timezones",
+      "dirs": 0,
+      "files": 1
+    },
+    {
+      "path": "frontend/app/api/lunar",
+      "dirs": 0,
+      "files": 1
+    },
+    {
+      "path": "frontend/app/[locale]",
+      "dirs": 3,
+      "files": 2
+    },
+    {
+      "path": "frontend/app/[locale]/dreams",
+      "dirs": 0,
+      "files": 1
+    },
+    {
+      "path": "frontend/app/[locale]/astrology",
+      "dirs": 0,
+      "files": 1
+    },
+    {
+      "path": "frontend/app/[locale]/(calendar)",
+      "dirs": 1,
+      "files": 0
+    },
+    {
+      "path": "frontend/app/[locale]/(calendar)/calendar",
+      "dirs": 0,
+      "files": 1
+    },
+    {
+      "path": "frontend/types",
+      "dirs": 0,
+      "files": 2
+    },
+    {
+      "path": "frontend/i18n",
+      "dirs": 0,
+      "files": 1
+    },
+    {
+      "path": "frontend/lib",
+      "dirs": 0,
+      "files": 8
+    },
+    {
+      "path": "frontend/styles",
+      "dirs": 0,
+      "files": 2
+    },
+    {
+      "path": "frontend/.storybook",
       "dirs": 0,
       "files": 2
     },
     {
       "path": ".claude",
+      "dirs": 1,
+      "files": 1
+    },
+    {
+      "path": ".claude/skills",
+      "dirs": 8,
+      "files": 1
+    },
+    {
+      "path": ".claude/skills/research-symbol",
+      "dirs": 0,
+      "files": 1
+    },
+    {
+      "path": ".claude/skills/deploy-cycle",
+      "dirs": 0,
+      "files": 1
+    },
+    {
+      "path": ".claude/skills/cost-report",
+      "dirs": 0,
+      "files": 1
+    },
+    {
+      "path": ".claude/skills/natal",
+      "dirs": 0,
+      "files": 1
+    },
+    {
+      "path": ".claude/skills/lunar",
+      "dirs": 0,
+      "files": 1
+    },
+    {
+      "path": ".claude/skills/horoscope",
+      "dirs": 0,
+      "files": 1
+    },
+    {
+      "path": ".claude/skills/validate-prod",
+      "dirs": 0,
+      "files": 1
+    },
+    {
+      "path": ".claude/skills/dream",
+      "dirs": 0,
+      "files": 1
+    },
+    {
+      "path": "oneiro-scope",
+      "dirs": 0,
+      "files": 0
+    },
+    {
+      "path": "config",
+      "dirs": 0,
+      "files": 2
+    },
+    {
+      "path": "tests",
+      "dirs": 0,
+      "files": 4
+    },
+    {
+      "path": "styles",
+      "dirs": 0,
+      "files": 2
+    },
+    {
+      "path": "agents",
+      "dirs": 1,
+      "files": 3
+    },
+    {
+      "path": "agents/prompts",
+      "dirs": 0,
+      "files": 1
+    },
+    {
+      "path": "etl",
+      "dirs": 1,
+      "files": 5
+    },
+    {
+      "path": "etl/input",
       "dirs": 0,
       "files": 1
     },
     {
       "path": "backend",
-      "dirs": 10,
+      "dirs": 11,
       "files": 5
-    },
-    {
-      "path": "backend/api",
-      "dirs": 1,
-      "files": 1
-    },
-    {
-      "path": "backend/api/v1",
-      "dirs": 0,
-      "files": 5
-    },
-    {
-      "path": "backend/models",
-      "dirs": 0,
-      "files": 6
-    },
-    {
-      "path": "backend/utils",
-      "dirs": 0,
-      "files": 2
     },
     {
       "path": "backend/middleware",
@@ -91,44 +271,19 @@
       "files": 2
     },
     {
+      "path": "backend/alembic",
+      "dirs": 1,
+      "files": 2
+    },
+    {
+      "path": "backend/alembic/versions",
+      "dirs": 0,
+      "files": 1
+    },
+    {
       "path": "backend/services",
       "dirs": 3,
       "files": 0
-    },
-    {
-      "path": "backend/services/lunar",
-      "dirs": 0,
-      "files": 3
-    },
-    {
-      "path": "backend/services/astrology",
-      "dirs": 5,
-      "files": 15
-    },
-    {
-      "path": "backend/services/astrology/ai",
-      "dirs": 0,
-      "files": 3
-    },
-    {
-      "path": "backend/services/astrology/policies",
-      "dirs": 0,
-      "files": 2
-    },
-    {
-      "path": "backend/services/astrology/validators",
-      "dirs": 0,
-      "files": 2
-    },
-    {
-      "path": "backend/services/astrology/engine",
-      "dirs": 0,
-      "files": 5
-    },
-    {
-      "path": "backend/services/astrology/knowledge_base",
-      "dirs": 0,
-      "files": 4
     },
     {
       "path": "backend/services/dreams",
@@ -156,7 +311,77 @@
       "files": 3
     },
     {
+      "path": "backend/services/lunar",
+      "dirs": 0,
+      "files": 3
+    },
+    {
+      "path": "backend/services/astrology",
+      "dirs": 5,
+      "files": 15
+    },
+    {
+      "path": "backend/services/astrology/ai",
+      "dirs": 0,
+      "files": 3
+    },
+    {
+      "path": "backend/services/astrology/knowledge_base",
+      "dirs": 0,
+      "files": 4
+    },
+    {
+      "path": "backend/services/astrology/engine",
+      "dirs": 0,
+      "files": 5
+    },
+    {
+      "path": "backend/services/astrology/validators",
+      "dirs": 0,
+      "files": 2
+    },
+    {
+      "path": "backend/services/astrology/policies",
+      "dirs": 0,
+      "files": 2
+    },
+    {
+      "path": "backend/core",
+      "dirs": 0,
+      "files": 7
+    },
+    {
+      "path": "backend/api",
+      "dirs": 1,
+      "files": 1
+    },
+    {
+      "path": "backend/api/v1",
+      "dirs": 0,
+      "files": 5
+    },
+    {
       "path": "backend/app",
+      "dirs": 0,
+      "files": 2
+    },
+    {
+      "path": "backend/mcp",
+      "dirs": 1,
+      "files": 3
+    },
+    {
+      "path": "backend/mcp/tools",
+      "dirs": 0,
+      "files": 5
+    },
+    {
+      "path": "backend/tests",
+      "dirs": 0,
+      "files": 10
+    },
+    {
+      "path": "backend/utils",
       "dirs": 0,
       "files": 2
     },
@@ -166,47 +391,12 @@
       "files": 1
     },
     {
-      "path": "backend/core",
+      "path": "backend/models",
       "dirs": 0,
       "files": 6
     },
     {
-      "path": "backend/tests",
-      "dirs": 0,
-      "files": 7
-    },
-    {
-      "path": "backend/alembic",
-      "dirs": 1,
-      "files": 2
-    },
-    {
-      "path": "backend/alembic/versions",
-      "dirs": 0,
-      "files": 1
-    },
-    {
-      "path": "etl",
-      "dirs": 1,
-      "files": 5
-    },
-    {
-      "path": "etl/input",
-      "dirs": 0,
-      "files": 1
-    },
-    {
-      "path": "docs",
-      "dirs": 1,
-      "files": 35
-    },
-    {
-      "path": "docs/architecture",
-      "dirs": 1,
-      "files": 5
-    },
-    {
-      "path": "docs/architecture/modules",
+      "path": "scripts",
       "dirs": 0,
       "files": 3
     },
@@ -214,128 +404,8 @@
       "path": "data",
       "dirs": 0,
       "files": 2
-    },
-    {
-      "path": "tests",
-      "dirs": 0,
-      "files": 4
-    },
-    {
-      "path": "config",
-      "dirs": 0,
-      "files": 2
-    },
-    {
-      "path": "frontend",
-      "dirs": 12,
-      "files": 12
-    },
-    {
-      "path": "frontend/stories",
-      "dirs": 0,
-      "files": 1
-    },
-    {
-      "path": "frontend/e2e",
-      "dirs": 0,
-      "files": 2
-    },
-    {
-      "path": "frontend/types",
-      "dirs": 0,
-      "files": 2
-    },
-    {
-      "path": "frontend/components",
-      "dirs": 0,
-      "files": 7
-    },
-    {
-      "path": "frontend/lib",
-      "dirs": 0,
-      "files": 8
-    },
-    {
-      "path": "frontend/messages",
-      "dirs": 0,
-      "files": 2
-    },
-    {
-      "path": "frontend/app",
-      "dirs": 2,
-      "files": 2
-    },
-    {
-      "path": "frontend/app/api",
-      "dirs": 2,
-      "files": 0
-    },
-    {
-      "path": "frontend/app/api/lunar",
-      "dirs": 0,
-      "files": 1
-    },
-    {
-      "path": "frontend/app/api/timezones",
-      "dirs": 0,
-      "files": 1
-    },
-    {
-      "path": "frontend/app/[locale]",
-      "dirs": 3,
-      "files": 2
-    },
-    {
-      "path": "frontend/app/[locale]/astrology",
-      "dirs": 0,
-      "files": 1
-    },
-    {
-      "path": "frontend/app/[locale]/(calendar)",
-      "dirs": 1,
-      "files": 0
-    },
-    {
-      "path": "frontend/app/[locale]/(calendar)/calendar",
-      "dirs": 0,
-      "files": 1
-    },
-    {
-      "path": "frontend/app/[locale]/dreams",
-      "dirs": 0,
-      "files": 1
-    },
-    {
-      "path": "frontend/public",
-      "dirs": 0,
-      "files": 1
-    },
-    {
-      "path": "frontend/.storybook",
-      "dirs": 0,
-      "files": 2
-    },
-    {
-      "path": "frontend/i18n",
-      "dirs": 0,
-      "files": 1
-    },
-    {
-      "path": "frontend/__tests__",
-      "dirs": 0,
-      "files": 2
-    },
-    {
-      "path": "frontend/styles",
-      "dirs": 0,
-      "files": 2
-    },
-    {
-      "path": "styles",
-      "dirs": 0,
-      "files": 2
     }
   ],
-  "total_dirs": 66,
-  "total_files": 235
+  "total_dirs": 80,
+  "total_files": 266
 }
