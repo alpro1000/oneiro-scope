@@ -4,7 +4,22 @@
       "Bash(git clone:*)",
       "Bash(git init:*)",
       "Bash(git remote add:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git status*)",
+      "Bash(git diff*)",
+      "Bash(git log*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(git branch*)",
+      "Bash(python -m pytest*)",
+      "Bash(python -m backend.mcp.server*)",
+      "Bash(python -m agents.cli*)",
+      "Bash(python -c*)",
+      "Bash(pip install*)",
+      "Bash(ls*)",
+      "Bash(grep*)",
+      "Bash(cat*)",
+      "Bash(mkdir*)"
     ],
     "deny": [],
     "ask": []
