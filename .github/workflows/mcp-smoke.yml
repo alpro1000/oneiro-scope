@@ -35,9 +35,24 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install --ignore-installed PyJWT
-          pip install -r backend/requirements.txt
+          # Install only what the smoke tests need — full backend requirements
+          # bring heavy deps (mne, pandas, openai-whisper, sentry, etc.) that
+          # aren't required for MCP/agent imports or pure-tool tests, and
+          # slow CI install dramatically.
+          pip install \
+            "mcp[cli]>=1.2" \
+            "claude-agent-sdk>=0.2" \
+            "pydantic>=2.7,<3" \
+            "pydantic-settings>=2.1" \
+            pyswisseph \
+            geopy \
+            timezonefinder \
+            pytz \
+            ephem \
+            fastapi \
+            "pytest>=7" \
+            "pytest-asyncio>=0.23"
 
       - name: Run MCP + agent smoke tests
         run: |
-          python -m pytest backend/tests/test_mcp_smoke.py backend/tests/test_agent_smoke.py -v
+          python -m pytest backend/tests/test_mcp_smoke.py backend/tests/test_agent_smoke.py backend/tests/test_cost_tracker.py -v
