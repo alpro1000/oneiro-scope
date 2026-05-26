@@ -57,10 +57,11 @@ Personal/project memory file for cross-session continuity. Read by Claude Code a
 
 - No user auth / natal chart persistence (TODOs in `backend/api/v1/astrology.py:59,102,175`).
 - ~~5/14 dream interpreter tests failing (64% pass rate).~~ **Fixed 2026-05-26 in `claude/fix-dream-narrative-tests`** — 14/14 passing.
-- `ENVIRONMENT=production` not yet set on Render (still `development` → triggers `init_db()` in prod).
-- LLM cost tracking middleware structure exists but counter not wired.
-- Ephemeris mode (SWIEPH vs MOSEPH) not logged in `/health`.
+- ~~`ENVIRONMENT=production` not yet set on Render~~. Already set in `render.yaml` (verified 2026-05-26).
+- ~~LLM cost tracking middleware structure exists but counter not wired~~. **Fixed 2026-05-26 PR #111** — `backend/core/cost_tracker.py` wired into `UniversalLLMProvider.generate()`.
+- ~~Ephemeris mode (SWIEPH vs MOSEPH) not logged in `/health`~~. **Fixed 2026-05-26 PR #111** — and now also logged on app startup (PR #113).
 - LunarWidget no retry on 502.
+- **`build-and-validate` CI is red on every PR** (pre-existing). Diagnostic improvements landed in PR #113 (`pip install -v`, upgraded setuptools/wheel); next iteration should see the actual error trace. Not blocking — `mergeable_state` is `unstable` not `blocked`.
 
 ## §6 Architecture decisions log
 
@@ -85,6 +86,22 @@ Recent decisions:
 ---
 
 ## §9 Session log
+
+### 2026-05-26 — claude/fix-build-ci — Build CI hardening + startup ephemeris log
+**Goal:** Get `build-and-validate` CI green (red on every PR since pre-existing) + add operator-friendly startup logs.
+
+**Done (merged via PR #113):**
+- `requirements.txt` / `etl/requirements.txt`: pin `numpy>=1.26,<3`, `pandas>=2.2,<3`, `pyarrow>=15`. Clean-venv install verified locally.
+- `.github/workflows/build.yml`: upgrade `setuptools wheel build` alongside pip, switch to `pip install -v` (diagnostic), use `python -m pytest` for consistency with smoke workflow.
+- `backend/app/main.py`: log ephemeris mode at startup (mirrors `/health`). INFO for SWIEPH, WARNING for MOSEPH fallback with `SE_EPHE_PATH` hint.
+
+**Outcome:** `build-and-validate` **still red on PR #113** — root cause not visible without GHA log access. Verbose flag will surface the actual error on the next iteration. Smoke + inventory + dream tests all green.
+
+**Decisions:**
+- Did not chase further without log visibility. Pinned-version + diagnostic improvements are useful regardless of whether they fully resolve build-and-validate.
+- Did NOT revert changes — all three are independently beneficial.
+
+---
 
 ### 2026-05-26 — claude/fix-dream-narrative-tests — Dream interpreter v2.1 test fixes
 **Goal:** Resolve the 6 known-failing tests in `test_dream_interpreter_narrative.py::TestContextualSymbolValidation` (noted as `§5` known issue; tracked as out-of-scope in the previous session).
