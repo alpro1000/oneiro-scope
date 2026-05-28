@@ -32,7 +32,7 @@ def _load_lunar_tables():
         return _LUNAR_TABLES
 
     lunar_json_path = os.path.join(
-        os.path.dirname(os.path.dirname(__file__)),
+        os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
         "data",
         "lunar_tables.json",
     )

@@ -12,10 +12,15 @@ Architectural decisions log. Update on every significant tech choice.
 - **LLM providers (cost-ordered, first available wins):**
   1. Groq — `llama-3.1-8b-instant` (free tier).
   2. Gemini — `gemini-1.5-flash` ($0.075/1M).
-  3. Together AI — Meta-Llama-3.1-8B ($0.20/1M).
-  4. OpenAI — `gpt-4o-mini` ($0.15/1M).
-  5. Anthropic — `claude-3-haiku-20240307` ($0.25/1M).
+  3. Vertex AI — Gemini via GCP gateway ($0.075/1M). Enterprise route.
+  4. Together AI — Meta-Llama-3.1-8B ($0.20/1M).
+  5. OpenAI — `gpt-4o-mini` ($0.15/1M).
+  6. Anthropic — `claude-3-haiku-20240307` ($0.25/1M).
+  7. AWS Bedrock — Claude via AWS gateway ($0.25/1M). Enterprise route.
   Provider abstraction in `backend/core/llm_provider.py`. Every LLM call has a deterministic template fallback (no mocks).
+  - **Vertex AI** auth: `VERTEX_PROJECT` (+ `VERTEX_LOCATION`, default `us-central1`) and a bearer token — either `VERTEX_ACCESS_TOKEN` (short-lived, good for CI) or Application Default Credentials via `google-auth` (`GOOGLE_APPLICATION_CREDENTIALS`). Same `generateContent` payload as public Gemini, regional endpoint.
+  - **Bedrock** auth: AWS creds (`AWS_ACCESS_KEY_ID`/`AWS_SECRET_ACCESS_KEY` or `AWS_PROFILE`) + `boto3` (SigV4 signing, sync `invoke_model` run in an executor). Anthropic Messages schema with `anthropic_version: bedrock-2023-05-31`.
+  - Both are gated by `_provider_configured()` and disable cleanly when unconfigured or when their optional library (`google-auth` / `boto3`) is absent.
 
 ## Frontend
 

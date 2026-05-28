@@ -180,6 +180,21 @@ TOGETHER_API_KEY=...              # $0.20 per 1M tokens
 OPENAI_API_KEY=sk-...             # GPT-4o-mini: $0.15 per 1M tokens
 ANTHROPIC_API_KEY=sk-ant-...      # Claude Haiku: $0.25 per 1M tokens
 
+# Enterprise cloud gateways (optional — reach the same Gemini/Claude models
+# through GCP/AWS for billing, data-residency, or private networking).
+# Vertex AI (Gemini via GCP) — needs a project + credentials:
+VERTEX_PROJECT=my-gcp-project     # or GOOGLE_CLOUD_PROJECT
+VERTEX_LOCATION=us-central1       # region, default us-central1
+VERTEX_MODEL_ID=gemini-1.5-flash-002
+# Auth: either a short-lived token OR Application Default Credentials.
+VERTEX_ACCESS_TOKEN=ya29...       # optional; else uses GOOGLE_APPLICATION_CREDENTIALS
+GOOGLE_APPLICATION_CREDENTIALS=/path/to/sa.json
+# AWS Bedrock (Claude via AWS) — needs AWS creds + boto3 installed:
+AWS_ACCESS_KEY_ID=AKIA...         # or AWS_PROFILE
+AWS_SECRET_ACCESS_KEY=...
+AWS_REGION=us-east-1
+BEDROCK_MODEL_ID=anthropic.claude-3-haiku-20240307-v1:0
+
 # Database
 DATABASE_URL=sqlite:///./oneiroscope.db
 REDIS_URL=redis://localhost:6379  # Optional
@@ -216,9 +231,17 @@ After updating envs on Render, trigger **Clear build cache & Deploy** for the fr
 |----------|-------|---------------------|-------|---------|
 | **Groq** | llama-3.1-8b-instant | **FREE** | ⚡ Very Fast | ⭐⭐⭐ Good |
 | **Gemini** ⭐ | gemini-1.5-flash | **$0.075** | ⚡ Very Fast | ⭐⭐⭐⭐ Very Good |
+| Vertex AI | gemini-1.5-flash-002 | $0.075 | ⚡ Very Fast | ⭐⭐⭐⭐ Very Good (GCP gateway) |
 | Together AI | Meta-Llama-3.1-8B | $0.20 | ⚡ Fast | ⭐⭐⭐ Good |
 | OpenAI | gpt-4o-mini | $0.15 | 🚀 Fast | ⭐⭐⭐⭐ Very Good |
 | Anthropic | claude-3-haiku | $0.25 | 🚀 Fast | ⭐⭐⭐⭐ Very Good |
+| AWS Bedrock | claude-3-haiku (v1:0) | $0.25 | 🚀 Fast | ⭐⭐⭐⭐ Very Good (AWS gateway) |
+
+**Enterprise gateways:** Vertex AI and Bedrock reach the same Gemini/Claude
+models through GCP/AWS. Use when you already have cloud billing, need
+data-residency, or require private networking. Vertex needs `VERTEX_PROJECT`
++ credentials (token or ADC); Bedrock needs AWS creds + `boto3`. Both
+disable gracefully when unconfigured — they never block the fallback chain.
 
 **Recommendation:** Start with **Groq** (free tier) for development. For production, **Gemini** offers the best value!
 
