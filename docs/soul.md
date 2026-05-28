@@ -87,6 +87,29 @@ Recent decisions:
 
 ## §9 Session log
 
+### 2026-05-28 — claude/cloud-llm-providers — Vertex AI + Bedrock providers, horoscope/dream test run, lunar-table path fix
+**Goal:** Run sample daily/monthly/yearly horoscopes + a dream for birth data (01.07.1977 22:30 Запорожье), and add Vertex AI / Bedrock as LLM providers.
+
+**Done:**
+- **Vertex AI provider** (`backend/core/llm_provider.py`): Gemini via GCP regional endpoint. Auth via `VERTEX_ACCESS_TOKEN` or ADC (`google-auth`). Gated on `VERTEX_PROJECT` + creds.
+- **Bedrock provider**: Claude via AWS `bedrock-runtime.invoke_model` (boto3, SigV4, sync call in executor). Gated on AWS creds + boto3 importable. Anthropic Messages schema + `anthropic_version: bedrock-2023-05-31`.
+- Both added to the cost-ordered catalog (Vertex after Gemini, Bedrock after Anthropic) and to `_provider_configured()`; disable gracefully when unconfigured.
+- `backend/tests/test_llm_providers_cloud.py` — 8 tests (gating + request construction with mocked httpx/boto3). Full backend suite 68 passed, 6 skipped.
+- **Bug fix**: `backend/services/astrology/interpreter.py` loaded `lunar_tables.json` from `backend/services/data/` (wrong) instead of `backend/data/` — degraded ALL horoscope template content. Fixed the path (one more `dirname`).
+- Deps: added optional `google-auth>=2.27`, `boto3>=1.34` to `backend/requirements.txt`.
+- Docs: CLAUDE.md env section + provider table, `docs/steering/tech.md` provider list.
+
+**Test run results (template fallback, no LLM keys in this env):**
+- Natal chart 01.07.1977 22:30 Запорожье → Sun Cancer 9.83°, Moon Capricorn, Asc Aquarius, MC Sagittarius (MOSEPH analytic — no SWIEPH binaries locally). Geocoded via 90-city fallback (47.84, 35.20, Europe/Kyiv).
+- Daily/monthly/yearly horoscopes: correct period boundaries; content brief+identical because template fallback only uses lunar day (LLM keys produce 600-1000 words/period).
+- Dream analysis: symbols escape_liberation/house/animal, emotion happiness 0.65, archetypes liberation/self/instinct. Interpretation empty without LLM key.
+
+**Notes:**
+- Local env briefly had the `external/pyswisseph` stub shadowing real pyswisseph (from the build-CI work) — reinstalled real `pyswisseph==2.10.3.2` for accurate positions.
+- Geocoder rejects "City, Country" suffix (", Украина" failed; bare "Запорожье" works). Candidate future fix: strip country segment before fallback lookup.
+
+---
+
 ### 2026-05-26 — claude/fix-build-ci — Build CI hardening + startup ephemeris log
 **Goal:** Get `build-and-validate` CI green (red on every PR since pre-existing) + add operator-friendly startup logs.
 
