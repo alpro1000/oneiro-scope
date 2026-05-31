@@ -18,9 +18,9 @@ def test_agent_module_imports():
 
 
 def test_system_prompt_present_and_non_trivial():
-    from agents.oneiro_agent import _load_system_prompt
+    from agents.oneiro_agent import _SYSTEM_PROMPT_PATH
 
-    text = _load_system_prompt()
+    text = _SYSTEM_PROMPT_PATH.read_text(encoding="utf-8")
     assert len(text) > 800
     assert "OneiroScope" in text
     assert "natal" in text.lower()

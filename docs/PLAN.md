@@ -56,6 +56,47 @@
 
 ---
 
+## Фаза 5 — ADK super-orchestrator + specialist agents
+
+Переход от единого `OneiroAgent` (все 13 tools в одном промпте) к роутеру со специализированными суб-агентами. Чище контекст, доменная экспертиза, параллелизм мульти-доменных запросов, точечный cost-tracking.
+
+```
+SuperOrchestrator (router)
+   ├─► AstrologyAgent  (natal/horoscope/forecast + geo)
+   ├─► DreamAgent      (analyze + symbols/archetypes/hvdc)
+   └─► LunarAgent      (get_lunar_day/period)
+              ▼
+        MCP server (13 tools)
+```
+
+### ✅ Фаза A — базовый класс агента
+- [x] `agents/base.py` — `BaseOneiroAgent(name, system_prompt_path, allowed_tools, model, max_turns)`; общий `run()`; `_qualify()` идемпотентный.
+- [x] `OneiroAgent` → тонкая обёртка вокруг `BaseOneiroAgent` для backward-compat CLI.
+
+### ✅ Фаза B — специализированные суб-агенты
+- [x] `agents/specialists/astrology_agent.py` — 7 tools (natal/horoscope/forecast/list_* + geo).
+- [x] `agents/specialists/dream_agent.py` — 4 tools (analyze + list_*).
+- [x] `agents/specialists/lunar_agent.py` — 2 tools (get_lunar_day/period).
+- [x] `agents/prompts/{astrology,dream,lunar}_system.md` — доменные промпты.
+- [x] `backend/tests/test_specialist_agents.py` — 10 тестов, все зелёные. Полный suite: 78 passed, 6 skipped.
+- [x] Specialist-тесты включены в `mcp-smoke.yml`.
+
+### Фаза C — супер-оркестратор
+- [ ] `agents/orchestrator.py` — `SuperOrchestrator`:
+  - **Intent router** — классификатор (LLM или keyword-rules) → `{astrology, dream, lunar}` (один или несколько).
+  - **Fan-out** — `asyncio.gather` параллельно по выбранным специалистам.
+  - **Context passing** — результат натальной карты (`sun/moon/asc`) прокидывается в Dream/Horoscope как контекст.
+  - **Merge** — собирает итоговый ответ в языке пользователя.
+- [ ] `agents/cli.py` — флаг `--orchestrate` (default ON для мульти-доменных запросов).
+- [ ] `backend/tests/test_orchestrator.py` — роутинг (моки), мульти-доменный merge, изоляция tool-наборов.
+
+### Фаза D — наблюдаемость стоимости
+- [ ] `backend/core/cost_tracker.py` — добавить тег `agent` в ключ (`oneiro:cost:<provider>:<agent>:<day>:...`).
+- [ ] Прокинуть `agent_name` через `UniversalLLMProvider` (опциональный параметр, default `None` → ключ без тега, backward-compat).
+- [ ] Лог роутинга в оркестраторе: `[router] intent=<...> agents=[astrology,lunar]`.
+
+---
+
 ## Definition of Done
 
 - `python -m backend.mcp.server` запускается, регистрирует ≥8 tools
