@@ -17,13 +17,18 @@
     },
     {
       "path": "agents",
-      "dirs": 1,
-      "files": 3
+      "dirs": 2,
+      "files": 4
+    },
+    {
+      "path": "agents/specialists",
+      "dirs": 0,
+      "files": 4
     },
     {
       "path": "agents/prompts",
       "dirs": 0,
-      "files": 1
+      "files": 4
     },
     {
       "path": "docs",
@@ -228,7 +233,7 @@
     {
       "path": "backend/tests",
       "dirs": 0,
-      "files": 11
+      "files": 12
     },
     {
       "path": "backend/alembic",
@@ -406,6 +411,6 @@
       "files": 2
     }
   ],
-  "total_dirs": 80,
-  "total_files": 267
+  "total_dirs": 81,
+  "total_files": 276
 }
