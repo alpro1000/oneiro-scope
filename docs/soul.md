@@ -87,6 +87,25 @@ Recent decisions:
 
 ## §9 Session log
 
+### 2026-05-28 — claude/adk-specialists — ADK Phase A+B: base class + 3 specialist agents
+**Goal:** Refactor the single `OneiroAgent` into a base class and stand up 3 domain-specialist agents (Astrology / Dream / Lunar) as Phase A+B of the SuperOrchestrator plan in `docs/PLAN.md`.
+
+**Done:**
+- `agents/base.py` — `BaseOneiroAgent` (name, system-prompt path, allowed_tools subset). Shared `run()` (streaming text deltas). Idempotent `_qualify()` (bare `tool` or `mcp__oneiro__tool` both work).
+- `agents/oneiro_agent.py` — `OneiroAgent` is now a 30-line subclass of `BaseOneiroAgent` keeping all 13 tools; backward-compat CLI unaffected.
+- `agents/specialists/{astrology,dream,lunar}_agent.py` — each declares a narrow tool subset:
+  - astrology: 7 (natal/horoscope/forecast/list_* + geo helpers)
+  - dream: 4 (analyze + list_*)
+  - lunar: 2 (get_lunar_day/period)
+- `agents/prompts/{astrology,dream,lunar}_system.md` — domain prompts (science-first, provenance shown, no prediction-as-fact, no esoteric/forbidden content).
+- `backend/tests/test_specialist_agents.py` — 10 tests: import, tool-subset correctness, prompt content, name uniqueness, qualifier idempotence, generalist backward-compat. All green.
+- Full backend suite: **78 passed, 6 skipped** (was 68 + 10 specialist). Specialist tests added to `mcp-smoke.yml`.
+- `docs/PLAN.md` — Phase 5 added; A+B checked off.
+
+**Next (Phase C+D, separate PR):** SuperOrchestrator (intent router + fan-out + context-passing + merge) + cost-tracker agent tag.
+
+---
+
 ### 2026-05-28 — claude/cloud-llm-providers — Vertex AI + Bedrock providers, horoscope/dream test run, lunar-table path fix
 **Goal:** Run sample daily/monthly/yearly horoscopes + a dream for birth data (01.07.1977 22:30 Запорожье), and add Vertex AI / Bedrock as LLM providers.
 

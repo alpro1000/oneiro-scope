@@ -1,115 +1,58 @@
-"""OneiroScope ADK agent.
+"""OneiroScope generalist ADK agent.
 
-Wraps the Claude Agent SDK around the OneiroScope MCP server. The MCP
-server is launched as a child process (stdio) and exposed to the model
-as the canonical tool surface.
+Backward-compatible single-agent entry point: spawns the MCP server and
+exposes all 13 OneiroScope tools to one model in one session. Useful for
+ad-hoc use via `python -m agents.cli` and for older skills that haven't
+moved to the SuperOrchestrator (Phase C).
 
-Usage:
-    import asyncio
-    from agents.oneiro_agent import OneiroAgent
-
-    async def main():
-        agent = OneiroAgent()
-        async for chunk in agent.run("Натальная карта для 15 мая 1990, Москва, 14:30"):
-            print(chunk, end="", flush=True)
-
-    asyncio.run(main())
-
-Or via the CLI:
-    python -m agents.cli "natal 1990-05-15 14:30 Moscow"
-
-Requires:
-    pip install claude-agent-sdk
+For domain-specialized contexts and parallel multi-domain workflows,
+use the specialist agents in `agents.specialists` (Phase B) or the
+orchestrator (Phase C, planned).
 """
 
 from __future__ import annotations
 
-import os
-import sys
 from pathlib import Path
-from typing import AsyncIterator, Optional
 
-try:
-    from claude_agent_sdk import (
-        ClaudeAgentOptions,
-        ClaudeSDKClient,
-    )
-    from claude_agent_sdk.types import McpServerConfig
-except ImportError as exc:  # pragma: no cover
-    raise ImportError(
-        "claude-agent-sdk is not installed. Run: pip install claude-agent-sdk"
-    ) from exc
+from agents.base import BaseOneiroAgent
+
+# Catalog of every tool the OneiroScope MCP server exposes. Kept here so
+# the generalist mirrors the full surface; specialists import their own
+# narrower subsets.
+ALL_ONEIRO_TOOLS: list[str] = [
+    # astrology
+    "calculate_natal_chart",
+    "generate_horoscope",
+    "forecast_event",
+    "list_event_types",
+    "list_horoscope_periods",
+    # dreams
+    "analyze_dream",
+    "list_dream_symbols",
+    "list_archetypes",
+    "list_hvdc_categories",
+    # lunar
+    "get_lunar_day",
+    "get_lunar_period",
+    # geo
+    "search_city",
+    "validate_birth_data",
+]
 
 
-_REPO_ROOT = Path(__file__).resolve().parents[1]
 _SYSTEM_PROMPT_PATH = Path(__file__).resolve().parent / "prompts" / "oneiro_system.md"
 
 
-def _load_system_prompt() -> str:
-    return _SYSTEM_PROMPT_PATH.read_text(encoding="utf-8")
+class OneiroAgent(BaseOneiroAgent):
+    """Generalist agent with access to all OneiroScope MCP tools."""
 
+    name = "oneiro"
 
-def _build_mcp_config() -> dict[str, McpServerConfig]:
-    """Spawn the OneiroScope MCP server as a stdio child process."""
-    server_cfg: McpServerConfig = {
-        "type": "stdio",
-        "command": sys.executable,
-        "args": ["-m", "backend.mcp.server"],
-        "env": {
-            **os.environ,
-            "PYTHONPATH": str(_REPO_ROOT),
-        },
-    }
-    return {"oneiro": server_cfg}
+    def __init__(self, **kwargs) -> None:
+        kwargs.setdefault("name", "oneiro")
+        kwargs.setdefault("system_prompt_path", _SYSTEM_PROMPT_PATH)
+        kwargs.setdefault("allowed_tools", ALL_ONEIRO_TOOLS)
+        super().__init__(**kwargs)
 
-
-class OneiroAgent:
-    """High-level orchestrator. One instance ≈ one conversation session."""
-
-    def __init__(
-        self,
-        *,
-        model: str = "claude-opus-4-7",
-        max_turns: int = 12,
-        permission_mode: str = "acceptEdits",
-        cwd: Optional[Path] = None,
-    ) -> None:
-        self.options = ClaudeAgentOptions(
-            model=model,
-            system_prompt=_load_system_prompt(),
-            mcp_servers=_build_mcp_config(),
-            allowed_tools=[
-                # Restrict the agent to OneiroScope MCP tools — no shell, no fs.
-                "mcp__oneiro__calculate_natal_chart",
-                "mcp__oneiro__generate_horoscope",
-                "mcp__oneiro__forecast_event",
-                "mcp__oneiro__list_event_types",
-                "mcp__oneiro__list_horoscope_periods",
-                "mcp__oneiro__analyze_dream",
-                "mcp__oneiro__list_dream_symbols",
-                "mcp__oneiro__list_archetypes",
-                "mcp__oneiro__list_hvdc_categories",
-                "mcp__oneiro__get_lunar_day",
-                "mcp__oneiro__get_lunar_period",
-                "mcp__oneiro__search_city",
-                "mcp__oneiro__validate_birth_data",
-            ],
-            permission_mode=permission_mode,
-            max_turns=max_turns,
-            cwd=str(cwd or _REPO_ROOT),
-        )
-
-    async def run(self, user_message: str) -> AsyncIterator[str]:
-        """Stream text chunks from the agent for a single user turn."""
-        async with ClaudeSDKClient(options=self.options) as client:
-            await client.query(user_message)
-            async for message in client.receive_response():
-                # Yield only assistant text deltas. Tool calls/results pass
-                # silently — they're visible to the model, not the user.
-                content = getattr(message, "content", None)
-                if not content:
-                    continue
-                for block in content:
-                    text = getattr(block, "text", None)
-                    if text:
-                        yield text
+    def default_tools(self) -> list[str]:
+        return ALL_ONEIRO_TOOLS
