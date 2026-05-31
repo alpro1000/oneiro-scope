@@ -104,13 +104,28 @@ class SuperOrchestrator:
             return
 
         # Multi-domain: run in parallel; only emit per-agent text once each
-        # finishes so the merged output is readable.
+        # finishes so the merged output is readable. Each specialist returns
+        # (name, text) so we can pair exceptions with their domain below.
         async def _collect(name: str) -> tuple[str, str]:
             buf: list[str] = []
             async for chunk in self._get(name).run(user_message):
                 buf.append(chunk)
             return name, "".join(buf)
 
-        results = await asyncio.gather(*[_collect(n) for n in domains])
-        for name, text in results:
-            yield f"\n## {name.title()}\n\n{text}\n"
+        # return_exceptions=True so one specialist's failure doesn't kill
+        # the whole multi-domain request — we surface partial results and
+        # log the failures.
+        coros = [_collect(n) for n in domains]
+        results = await asyncio.gather(*coros, return_exceptions=True)
+        for name, result in zip(domains, results):
+            if isinstance(result, BaseException):
+                logger.error(
+                    "[orchestrator] specialist %s failed: %s", name, result
+                )
+                yield (
+                    f"\n## {name.title()}\n\n"
+                    f"_(specialist temporarily unavailable: {type(result).__name__})_\n"
+                )
+                continue
+            _name, text = result
+            yield f"\n## {_name.title()}\n\n{text}\n"

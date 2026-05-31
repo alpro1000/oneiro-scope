@@ -106,6 +106,43 @@ async def test_multi_domain_runs_fan_out_and_merges_with_headers(orch):
     assert "## Lunar" in text
 
 
+class _BrokenAgent:
+    """Specialist whose stream raises mid-flight — simulates LLM/MCP failure."""
+
+    def __init__(self, exc: Exception):
+        self.exc = exc
+
+    async def run(self, msg: str) -> AsyncIterator[str]:
+        # Mark this as a real async generator before raising.
+        if False:  # pragma: no cover
+            yield ""
+        raise self.exc
+
+
+@pytest.mark.asyncio
+async def test_multi_domain_partial_results_when_one_specialist_crashes(orch):
+    """A failing specialist must not take down sibling agents.
+
+    Regression for the gather-without-return_exceptions bug spotted in PR
+    #117 review. Surviving specialists keep streaming; the failed one
+    surfaces as an inline error block tagged with its domain.
+    """
+    orch._instances["dream"] = _BrokenAgent(RuntimeError("LLM timeout"))
+    chunks: list[str] = []
+    async for c in orch.run("Истолкуй мой сон в контексте лунного дня"):
+        chunks.append(c)
+    text = "".join(chunks)
+
+    # The working specialist's output is preserved.
+    assert "## Lunar" in text
+    assert "[lunar] start" in text
+
+    # The failed one is surfaced, not silently dropped.
+    assert "## Dream" in text
+    assert "temporarily unavailable" in text
+    assert "RuntimeError" in text
+
+
 @pytest.mark.asyncio
 async def test_multi_domain_preserves_router_order(orch):
     """`classify_intent` returns ['astrology','lunar'] for this prompt."""
