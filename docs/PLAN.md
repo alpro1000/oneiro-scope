@@ -81,19 +81,21 @@ SuperOrchestrator (router)
 - [x] `backend/tests/test_specialist_agents.py` — 10 тестов, все зелёные. Полный suite: 78 passed, 6 skipped.
 - [x] Specialist-тесты включены в `mcp-smoke.yml`.
 
-### Фаза C — супер-оркестратор
-- [ ] `agents/orchestrator.py` — `SuperOrchestrator`:
-  - **Intent router** — классификатор (LLM или keyword-rules) → `{astrology, dream, lunar}` (один или несколько).
+### ✅ Фаза C — супер-оркестратор
+- [x] `agents/orchestrator.py` — `SuperOrchestrator`:
+  - **Intent router** — keyword-rules (детерминированно, без extra LLM-вызова) → `{astrology, dream, lunar}` (один или несколько).
   - **Fan-out** — `asyncio.gather` параллельно по выбранным специалистам.
-  - **Context passing** — результат натальной карты (`sun/moon/asc`) прокидывается в Dream/Horoscope как контекст.
-  - **Merge** — собирает итоговый ответ в языке пользователя.
-- [ ] `agents/cli.py` — флаг `--orchestrate` (default ON для мульти-доменных запросов).
-- [ ] `backend/tests/test_orchestrator.py` — роутинг (моки), мульти-доменный merge, изоляция tool-наборов.
+  - **Merge** — single-domain поток как есть; multi-domain — с заголовками `## Domain`.
+  - **Lazy instantiation** — специалист создаётся только при первом dispatch.
+- [x] `agents/cli.py` — `SuperOrchestrator` по умолчанию; `--generalist` для старого пути.
+- [x] `backend/tests/test_orchestrator.py` — роутинг (13 кейсов + fallback), single/multi-domain dispatch, isolation, lazy init.
+- [ ] **Deferred**: context passing (`natal_chart_id` между специалистами) — требует persistence слой (§5 known issue).
 
-### Фаза D — наблюдаемость стоимости
-- [ ] `backend/core/cost_tracker.py` — добавить тег `agent` в ключ (`oneiro:cost:<provider>:<agent>:<day>:...`).
-- [ ] Прокинуть `agent_name` через `UniversalLLMProvider` (опциональный параметр, default `None` → ключ без тега, backward-compat).
-- [ ] Лог роутинга в оркестраторе: `[router] intent=<...> agents=[astrology,lunar]`.
+### ✅ Фаза D — наблюдаемость стоимости
+- [x] `backend/core/cost_tracker.py` — ключ `oneiro:cost:<provider>:<agent>:<day>:<suffix>`. `report(agent=...)` фильтрует, `group_by_agent=True` даёт breakdown.
+- [x] `BaseOneiroAgent` — прокидывает `ONEIRO_AGENT_NAME=self.name` в env MCP-чайлда → пересекает process boundary без extra инфраструктуры.
+- [x] `record()` явный `agent=` арг побеждает env var (для прямых вызовов сервисов).
+- [x] Логирование роутинга в оркестраторе: `[orchestrator] intent=<msg> agents=[...]`.
 
 ---
 
