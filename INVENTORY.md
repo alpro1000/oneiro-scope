@@ -5,7 +5,7 @@
 | . | 15 | 20 |
 | .github | 1 | 0 |
 | .github/workflows | 0 | 7 |
-| agents | 2 | 4 |
+| agents | 2 | 5 |
 | agents/specialists | 0 | 4 |
 | agents/prompts | 0 | 4 |
 | docs | 2 | 37 |
@@ -48,7 +48,7 @@
 | backend/api/v1 | 0 | 5 |
 | backend/middleware | 0 | 2 |
 | backend/core | 0 | 7 |
-| backend/tests | 0 | 12 |
+| backend/tests | 0 | 13 |
 | backend/alembic | 1 | 2 |
 | backend/alembic/versions | 0 | 1 |
 | backend/app | 0 | 2 |
@@ -85,4 +85,4 @@
 | data | 0 | 2 |
 | assets | 0 | 2 |
 
-**ИТОГО:** папок = 81, файлов = 276
+**ИТОГО:** папок = 81, файлов = 278

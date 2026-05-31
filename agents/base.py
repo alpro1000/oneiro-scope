@@ -30,13 +30,21 @@ _REPO_ROOT = Path(__file__).resolve().parents[1]
 _PROMPTS_DIR = Path(__file__).resolve().parent / "prompts"
 
 
-def _build_mcp_config() -> dict[str, "McpServerConfig"]:
-    """Spawn the OneiroScope MCP server as a stdio child process."""
+def _build_mcp_config(agent_name: str) -> dict[str, "McpServerConfig"]:
+    """Spawn the OneiroScope MCP server as a stdio child process.
+
+    `agent_name` is propagated via `ONEIRO_AGENT_NAME` so that
+    `backend/core/cost_tracker.py` can tag LLM calls per specialist.
+    """
     server_cfg: McpServerConfig = {
         "type": "stdio",
         "command": sys.executable,
         "args": ["-m", "backend.mcp.server"],
-        "env": {**os.environ, "PYTHONPATH": str(_REPO_ROOT)},
+        "env": {
+            **os.environ,
+            "PYTHONPATH": str(_REPO_ROOT),
+            "ONEIRO_AGENT_NAME": agent_name,
+        },
     }
     return {"oneiro": server_cfg}
 
@@ -76,7 +84,7 @@ class BaseOneiroAgent:
         self.options = ClaudeAgentOptions(
             model=model,
             system_prompt=Path(system_prompt_path).read_text(encoding="utf-8"),
-            mcp_servers=_build_mcp_config(),
+            mcp_servers=_build_mcp_config(self.name),
             allowed_tools=_qualify(allowed_tools),
             permission_mode=permission_mode,
             max_turns=max_turns,

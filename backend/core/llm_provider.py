@@ -199,7 +199,9 @@ class UniversalLLMProvider:
                 logger.info(f"Success with {model.provider.value}")
                 # Cost tracking — never raises (see cost_tracker.record).
                 # ~4 chars/token is the standard rough estimate when the
-                # provider does not return token usage.
+                # provider does not return token usage. The `agent` arg
+                # defaults to the ONEIRO_AGENT_NAME env var set by the
+                # SuperOrchestrator when spawning specialist MCP children.
                 from backend.core import cost_tracker
 
                 input_chars = len(prompt) + len(system_prompt or "")

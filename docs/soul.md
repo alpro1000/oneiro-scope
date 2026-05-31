@@ -87,6 +87,28 @@ Recent decisions:
 
 ## §9 Session log
 
+### 2026-05-31 — claude/adk-orchestrator — ADK Phase C+D: SuperOrchestrator + cost-tracker agent tag
+**Goal:** Complete the SuperOrchestrator (routing + fan-out + merge) and per-agent cost tracking, finishing the plan started in PR #116.
+
+**Done — Phase C (orchestrator):**
+- `agents/orchestrator.py` — `SuperOrchestrator` with keyword-based intent router (deterministic, no extra LLM call). Single-domain passes streaming through as-is; multi-domain runs specialists in parallel via `asyncio.gather` and merges output with `## Domain` headers. Specialists are instantiated lazily — no idle stdio MCP children.
+- `agents/cli.py` — `SuperOrchestrator` is now default; `--generalist` opts into the old single-agent path.
+- Keyword tuning: `гороск` not `горо` (the latter false-matched "город" → mis-routed dreams about cities to astrology).
+
+**Done — Phase D (cost-tracker agent tag):**
+- `backend/core/cost_tracker.py` — keys now include `<agent>` segment (`oneiro:cost:<provider>:<agent>:<YYYY-MM-DD>:<suffix>`). `record()` resolves the tag from explicit arg → `ONEIRO_AGENT_NAME` env → `"default"`. `report()` aggregates across all tags by default; `agent=` filters to one; `group_by_agent=True` returns per-agent breakdown.
+- `BaseOneiroAgent` — propagates `ONEIRO_AGENT_NAME=self.name` into the spawned MCP child's env, crossing the process boundary without extra infrastructure. The backend's LLM provider reads that env transparently.
+
+**Deferred (tracked):**
+- Context passing between specialists (e.g. natal chart `chart_id` → DreamAgent for personalized interpretation). Needs the persistence layer (§5 known issue).
+
+**Tests:**
+- `backend/tests/test_orchestrator.py` — 22 tests: 13 router cases + fallback, single/multi-domain dispatch, isolation, lazy instantiation, cost-tracker tag via env, explicit-agent precedence, MCP-env propagation.
+- Full backend suite: **100 passed, 6 skipped** (was 78 → +22 orchestrator/cost-tag tests).
+- Orchestrator tests added to `mcp-smoke.yml`.
+
+---
+
 ### 2026-05-28 — claude/adk-specialists — ADK Phase A+B: base class + 3 specialist agents
 **Goal:** Refactor the single `OneiroAgent` into a base class and stand up 3 domain-specialist agents (Astrology / Dream / Lunar) as Phase A+B of the SuperOrchestrator plan in `docs/PLAN.md`.
 

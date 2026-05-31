@@ -59,6 +59,7 @@ jobs:
             backend/tests/test_mcp_smoke.py \
             backend/tests/test_agent_smoke.py \
             backend/tests/test_specialist_agents.py \
+            backend/tests/test_orchestrator.py \
             backend/tests/test_cost_tracker.py \
             backend/tests/test_llm_providers_cloud.py \
             -v
