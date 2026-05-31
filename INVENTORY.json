@@ -18,7 +18,7 @@
     {
       "path": "agents",
       "dirs": 2,
-      "files": 4
+      "files": 5
     },
     {
       "path": "agents/specialists",
@@ -233,7 +233,7 @@
     {
       "path": "backend/tests",
       "dirs": 0,
-      "files": 12
+      "files": 13
     },
     {
       "path": "backend/alembic",
@@ -412,5 +412,5 @@
     }
   ],
   "total_dirs": 81,
-  "total_files": 276
+  "total_files": 278
 }
