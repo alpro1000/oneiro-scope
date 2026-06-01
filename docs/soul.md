@@ -87,6 +87,37 @@ Recent decisions:
 
 ## §9 Session log
 
+### 2026-05-31 — claude/plan-phase-6-monetization — Phase 6 plan: monetization + 5-language GA
+**Goal:** After owner clarified product direction (hybrid BYOK+web, audience RU/EN/DE/ES/FR), write Phase 6 of the plan covering auth, subscription, payments, and i18n expansion. No code yet — planning only.
+
+**Decisions captured (from chat):**
+- Backend ASR (Whisper/Vosk) **stays** — owner will build the web frontend; voice input is a UX driver for mobile.
+- Audience: **5 languages** (RU, EN, DE, ES, FR) on the web, simultaneously.
+- Two access paths: **MCP free (BYOK)** as community/SEO loss-leader + **Web subscription** for non-tech users.
+- Pricing tiers drafted: Free / Premium ($9/€9/799₽) / Pro-BYOK ($5/€5/499₽) / one-time reports ($19-29).
+
+**Phase 6 sub-phases written into `docs/PLAN.md`:**
+- 6.A Auth foundation (JWT, User model, email verification).
+- 6.B Subscription & quota DB, quota enforcement on astrology/dreams endpoints.
+- 6.C Stripe integration (intl: USD/EUR markets).
+- 6.D YooKassa integration (RU market; flagged юр.лицо requirement).
+- 6.E Pro/BYOK tier — per-user encrypted LLM key + provider override.
+- 6.F i18n DE/ES/FR — frontend messages, backend prompts, `lunar_tables.json` keys, dream-symbols translations, MCP `locale` enum extension, language auto-detect.
+- 6.G Frontend pricing + checkout + account pages (region-aware provider routing).
+- 6.H Transactional email (Resend/SendGrid, multilingual templates).
+- 6.I GDPR compliance (data export, delete, cookie banner, privacy policy, retention).
+
+**5 open questions documented at end of Phase 6** — owner needs to answer before implementation: юр.лицо для YooKassa, страна Stripe-аккаунта, email-провайдер, переводчик (DeepL vs human), free-tier лимиты.
+
+---
+
+### 2026-05-31 — claude/orchestrator-error-handling — gather(return_exceptions=True) fix
+**Goal:** Address Amazon Q's review of PR #117 — multi-domain `asyncio.gather` would crash on any specialist failure.
+
+**Done (PR #118):** `return_exceptions=True` + per-result `BaseException` check; failed domains surface as tagged inline `## Dream — temporarily unavailable: RuntimeError` block. Regression test `test_multi_domain_partial_results_when_one_specialist_crashes`. Suite: 101 passed, 6 skipped.
+
+---
+
 ### 2026-05-31 — claude/adk-orchestrator — ADK Phase C+D: SuperOrchestrator + cost-tracker agent tag
 **Goal:** Complete the SuperOrchestrator (routing + fan-out + merge) and per-agent cost tracking, finishing the plan started in PR #116.
 
