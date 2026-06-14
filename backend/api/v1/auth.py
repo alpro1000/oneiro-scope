@@ -14,6 +14,7 @@ from fastapi.security import HTTPAuthorizationCredentials
 from pydantic import BaseModel, EmailStr, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
+from sqlalchemy.orm import selectinload
 
 from backend.core.config import settings
 from backend.core.database import get_db
@@ -93,7 +94,17 @@ async def get_current_user_db(
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token sub"
         )
-    result = await db.execute(select(User).where(User.id == uid))
+    # Eager-load relationships the downstream endpoints touch (tier
+    # computation, BYOK key listing, GDPR export) — async lazy-load
+    # raises MissingGreenlet outside the session.
+    result = await db.execute(
+        select(User)
+        .options(
+            selectinload(User.subscriptions),
+            selectinload(User.llm_keys),
+        )
+        .where(User.id == uid)
+    )
     user = result.scalar_one_or_none()
     if user is None:
         raise HTTPException(

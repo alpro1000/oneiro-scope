@@ -16,6 +16,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
+from sqlalchemy.orm import selectinload
 
 from backend.api.v1.auth import get_current_user_db
 from backend.core.database import get_db
@@ -148,6 +149,18 @@ async def gdpr_export(
     db: AsyncSession = Depends(get_db),
 ):
     """GDPR Article 20 — return all user data as JSON."""
+    # `user.subscriptions` and `user.llm_keys` are eager-loaded by
+    # `get_current_user_db`; dreams aren't (they can be huge), so fetch
+    # just the count separately.
+    from sqlalchemy import func as sa_func
+
+    from backend.models.dream import Dream
+
+    dream_count_q = await db.execute(
+        select(sa_func.count(Dream.id)).where(Dream.user_id == user.id)
+    )
+    dream_count = dream_count_q.scalar() or 0
+
     return {
         "user": {
             "id": str(user.id),
@@ -171,7 +184,7 @@ async def gdpr_export(
             for s in (user.subscriptions or [])
         ],
         "byok_providers": [k.provider for k in (user.llm_keys or [])],
-        "dream_count": len(user.dreams or []),
+        "dream_count": dream_count,
     }
 
 
