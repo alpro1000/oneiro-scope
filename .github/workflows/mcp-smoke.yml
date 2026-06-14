@@ -51,7 +51,9 @@ jobs:
             ephem \
             fastapi \
             "pytest>=7" \
-            "pytest-asyncio>=0.23"
+            "pytest-asyncio>=0.23" \
+            cryptography \
+            "email-validator>=2"
 
       - name: Run MCP + agent smoke tests
         run: |
@@ -62,4 +64,8 @@ jobs:
             backend/tests/test_orchestrator.py \
             backend/tests/test_cost_tracker.py \
             backend/tests/test_llm_providers_cloud.py \
+            backend/tests/test_byok.py \
+            backend/tests/test_quotas.py \
+            backend/tests/test_lemon_provider.py \
+            backend/tests/test_email_templates.py \
             -v

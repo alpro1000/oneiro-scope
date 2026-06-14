@@ -34,7 +34,7 @@ async def calculate_natal_chart(
     birth_date: str,
     birth_place: str,
     birth_time: Optional[str] = None,
-    locale: str = "ru",
+    locale: str = "ru",  # ru | en | de | es | fr
 ) -> dict[str, Any]:
     """Calculate a natal (birth) chart from birth data.
 
@@ -63,7 +63,7 @@ async def calculate_natal_chart(
 async def generate_horoscope(
     period: str = "daily",
     target_date: Optional[str] = None,
-    locale: str = "ru",
+    locale: str = "ru",  # ru | en | de | es | fr
     natal_chart_id: Optional[str] = None,
 ) -> dict[str, Any]:
     """Generate a horoscope for a period.
@@ -94,7 +94,7 @@ async def forecast_event(
     event_date: str,
     event_location: Optional[str] = None,
     event_description: Optional[str] = None,
-    locale: str = "ru",
+    locale: str = "ru",  # ru | en | de | es | fr
     natal_chart_id: Optional[str] = None,
 ) -> dict[str, Any]:
     """Forecast favorability of an event on a given date.

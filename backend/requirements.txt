@@ -21,6 +21,7 @@ celery[redis]==5.3.6
 
 # Authentication
 python-jose[cryptography]==3.3.0
+email-validator>=2.0  # Pydantic EmailStr
 passlib[bcrypt]==1.7.4
 python-multipart==0.0.6
 

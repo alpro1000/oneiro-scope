@@ -87,6 +87,53 @@ Recent decisions:
 
 ## §9 Session log
 
+### 2026-06-14 — claude/phase-6-lemon-implementation — Phase 6 production-ready: Lemon Squeezy MoR + auth + BYOK + quotas + 5-locale email + deployment & mobile guides
+**Goal:** Owner is solo founder in EU, no юр.лицо. Pivot from Stripe+YooKassa to **Lemon Squeezy as Merchant of Record** and ship a production-ready service: auth, subscription, BYOK, quotas, 5-locale email scaffolding, deployment guide for Render+Vercel+Lemon+Resend, mobile strategy via Capacitor (iOS+Android).
+
+**Plan pivot (PLAN.md Phase 6 rewritten):**
+- Lemon Squeezy as MoR — handles VAT/sales tax/KYC/chargebacks; works with RU cards via card processor; **no юр.лицо**.
+- 5 currencies/locales: USD/EUR + auto-detect by geo-IP; Lemon converts.
+- Mobile = Capacitor wrap (Phase 6.J added) — one Next.js codebase, two app stores.
+- Open questions resolved: Resend for email, DeepL Pro + human review for translations, 1 free natal lifetime + 1 horoscope/day.
+
+**Backend implemented (production-grade):**
+- `backend/models/user.py` extended: `password_hash`, `name`, `lemon_customer_id`, `free_natal_used`, `pending_deletion_at`, `llm_keys` relationship.
+- `backend/models/user_llm_key.py` — new model for BYOK Fernet-encrypted keys.
+- `backend/models/subscription.py` — added `tier`, `provider`, `lemon_subscription_id`, `lemon_variant_id`, `lemon_customer_id`; dropped old `check_one_gateway` constraint.
+- `backend/services/byok/keys.py` — Fernet encryption derived from SECRET_KEY (rotation invalidates all keys — by design). `encrypt`/`decrypt`/`hint`.
+- `backend/services/billing/quotas.py` — `Tier` enum + `assert_quota(user, QuotaKind)` raising HTTP 402 with CTA. Daily horoscope counter (in-memory; Redis path documented).
+- `backend/services/billing/lemon_provider.py` — Checkout API (httpx), webhook HMAC-SHA256 signature verification, `parse_webhook()`, `tier_for_variant()`, product-slug-to-variant env mapping.
+- `backend/services/email/resend_provider.py` — quiet no-op when `RESEND_API_KEY` unset; locale-aware template rendering with English fallback.
+- `backend/api/v1/auth.py` — POST `/register`, `/login`, `/refresh`, GET `/me`; constant-time-ish password verification.
+- `backend/api/v1/billing.py` — POST `/checkout`, `/webhook` (signature-verified + idempotent), GET `/me`.
+- `backend/api/v1/users.py` — `/me/llm-keys` save/list/delete, `/me/data-export` (GDPR Article 20), DELETE `/me` (Article 17 soft-delete).
+- All routers mounted in `backend/app/main.py`.
+- MCP tool docstrings annotated `# ru | en | de | es | fr`.
+
+**Email templates (5 locales):** `welcome.{subject,html}` for en/ru/de/es/fr (DE/ES/FR machine-translated baseline — flagged for native review in PLAN.md).
+
+**Tests (38 new, all green):**
+- `test_byok.py` (6): round-trip, empty rejection, tamper detection, hint redaction, secret-rotation invalidation.
+- `test_quotas.py` (13): tier resolution (free/premium/pro precedence, inactive ignored), lifetime flags, daily counters, lunar always free, 402 payload shape.
+- `test_lemon_provider.py` (12): signature verify (valid/tampered/missing/no-secret), variant lookup (known/unknown/unset env), tier mapping, webhook parsing (full/minimal), key/store unset errors.
+- `test_email_templates.py` (7): rendering each of 5 locales, fallback to en, full variable substitution.
+- Full backend suite: **139 passed, 6 skipped** (was 101 → +38).
+- All 4 new test files added to `mcp-smoke.yml` CI; `cryptography` and `email-validator` added to CI deps.
+
+**Documentation (production-ready):**
+- `docs/DEPLOYMENT.md` — step-by-step Render+Vercel+Lemon+Resend setup, all env vars enumerated, custom domain DNS, monthly cost breakdown (~$65/mo), recurring ops checklist.
+- `docs/MOBILE.md` — Capacitor wrap strategy, why-not-RN matrix, Xcode/Android Studio walkthrough, RevenueCat path for IAP, App Store metadata in 5 locales, 5-day timeline to TestFlight + Closed Track.
+- `.env.example` extended with all Lemon Squeezy + Resend vars.
+
+**What is NOT in this PR (tracked for next iteration):**
+- Alembic migration for new User/Subscription columns — needs to be generated against existing schema (out of scope for code-only change; documented in DEPLOYMENT.md §1.3 as a one-time bootstrap step).
+- Quota wiring into astrology/dreams endpoints (Phase 6.B sub-item) — service exists, the `Depends()` call to plug it in is straightforward but touches every endpoint signature; safer as a focused follow-up PR.
+- DE/ES/FR translation of `lunar_tables.json` (31 days) and `symbols.json` (56 entries) — needs human native review with astrology/psychology context; flagged in DEPLOYMENT and PLAN.
+- Frontend pricing/account/login pages — frontend work is the owner's plan.
+- Capacitor `mobile/` directory — depends on `next.config.js` static-export flip; documented in MOBILE.md as the owner's next step.
+
+---
+
 ### 2026-05-31 — claude/plan-phase-6-monetization — Phase 6 plan: monetization + 5-language GA
 **Goal:** After owner clarified product direction (hybrid BYOK+web, audience RU/EN/DE/ES/FR), write Phase 6 of the plan covering auth, subscription, payments, and i18n expansion. No code yet — planning only.
 

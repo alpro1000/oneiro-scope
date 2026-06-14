@@ -99,120 +99,117 @@ SuperOrchestrator (router)
 
 ---
 
-## Фаза 6 — Monetization + multilingual GA
+## Фаза 6 — Monetization + multilingual GA + mobile apps
 
-Переход от бесплатного MVP к коммерческому продукту с **двумя путями доступа** (hybrid):
+**Pivoted 2026-06-14:** owner is solo founder in EU, no юр.лицо. Adopting **Lemon Squeezy as Merchant of Record (MoR)** — Lemon Squeezy is the seller of record, handles EU VAT (one-stop shop), US sales tax, KYC, chargebacks, refunds. We just call their API and read webhooks. Stripe / YooKassa **NOT used**. RU customers can pay via Lemon Squeezy (cards work through MoR).
 
-1. **BYOK (free MCP)** — пользователь подключает MCP-сервер к Claude Desktop / Cursor с собственными LLM-ключами. Бесплатно, loss-leader для community/SEO.
-2. **Web с подпиской** — auth, тарифы, оплата. Аудитория: **RU / EN / DE / ES / FR**.
+Audience: **EU primary** (DE/ES/FR/EN) + RU via MoR. Mobile: **iOS + Android** via Capacitor wrap of the Next.js frontend (one codebase, native shells).
 
-ASR (Whisper/Vosk) **остаётся** — голосовой ввод нужен на собственном вебе для мобильных пользователей.
+ASR (Whisper/Vosk) **остаётся** — owner builds the web/mobile frontend; voice input is mobile UX.
 
-### Тарифная сетка (черновик)
+### Тарифная сетка
 
 | Tier | Цена | Что входит |
 |---|---|---|
-| **Free** (web) | $0 | 1 натальная карта (всего) + 1 гороскоп/день + лунный календарь без лимитов |
-| **Premium** | $9 / €9 / 799₽ / мес | Unlimited гороскопы, все типы event-forecasts, unlimited анализ снов, экспорт PDF |
-| **Pro (BYOK)** | $5 / €5 / 499₽ / мес | Premium + пользователь предоставляет свои LLM-ключи (мы не несём LLM-cost) — для тех, у кого свой OpenAI/Anthropic billing |
-| **One-time** | $19-29 | Детальная натал-карта с аудио-нарративом, годовой персональный прогноз |
+| **Free** (web/mobile) | $0 | 1 натальная карта (всего) + 1 гороскоп/день + лунный календарь без лимитов |
+| **Premium** | $9.99 / €9.99 / 999₽ / мес | Unlimited гороскопы, все event-forecasts, unlimited анализ снов, экспорт PDF |
+| **Pro (BYOK)** | $5.99 / €5.99 / 599₽ / мес | Premium + пользователь подключает свои LLM-ключи — для экономии у тех, у кого свой Anthropic/OpenAI billing |
+| **One-time** | $19-29 | Детальная натал-карта с PDF + аудио-нарративом, годовой персональный прогноз |
 | **MCP (BYOK)** | $0 | MCP-сервер для Claude Desktop / Cursor, всё бесплатно — пользователь платит за свой Claude |
 
-Валюты обязательно по региону: USD/EUR/RUB. CHF/GBP — по запросу.
+Lemon Squeezy auto-converts USD/EUR; локально показываем валюту по гео-IP.
 
 ### Фаза 6.A — Auth foundation
-- [ ] `backend/models/user.py` — Pydantic + SQLAlchemy `User` (id, email, hashed_password, locale, created_at, email_verified_at).
-- [ ] `backend/api/v1/auth.py` — POST `/auth/register`, `/auth/login`, `/auth/refresh`, `/auth/logout`, `/auth/verify-email`, `/auth/reset-password`.
-- [ ] JWT (access + refresh), `python-jose` уже в requirements.
-- [ ] `Depends(get_current_user)` для защищённых эндпоинтов; обновить TODO в `backend/api/v1/astrology.py:59,102,175,...`.
-- [ ] Email verification — Resend / SendGrid / Mailgun (минимально один провайдер).
-- [ ] Tests: register/login flow, JWT expiry, refresh, rate-limit на брутфорс.
-- [ ] Alembic миграция `users` таблицы.
+- [ ] `backend/models/user.py` — добавить `password_hash`, `name`, `lemon_customer_id` к существующей таблице.
+- [ ] `backend/api/v1/auth.py` — POST `/auth/register`, `/auth/login`, `/auth/refresh`, `/auth/me`.
+- [ ] Использовать существующий `backend/core/security.py` (JWT, bcrypt уже готовы).
+- [ ] `Depends(get_current_user_from_db)` — возвращает `User` ORM, не payload dict.
+- [ ] Tests: register flow, login, JWT expiry, /me.
+- [ ] Email verification — отложить до Resend интеграции в Фазе 6.H.
 
 ### Фаза 6.B — Subscription & quota DB
-- [ ] `backend/models/subscription.py` — `Subscription(user_id, tier, status, provider, provider_subscription_id, current_period_end, currency)`.
-- [ ] `backend/models/usage.py` — `Usage(user_id, kind, count, period_start)` — счётчики для квот free-уровня.
-- [ ] `backend/services/billing/quotas.py` — `assert_quota(user, kind)` → 402 Payment Required при превышении.
-- [ ] Подключить квоты к astrology/dreams эндпоинтам (natal-chart + horoscope + analyze_dream).
-- [ ] Tests: free-user квоты, premium-user без лимитов, переход на новый период (cron-job / on-demand reset).
+- [ ] `backend/models/subscription.py` — добавить `provider` (`lemon`/`stripe`/`yookassa` enum, default `lemon`), `lemon_subscription_id`, `lemon_variant_id`. Снять старый CheckConstraint.
+- [ ] `backend/models/user_llm_key.py` — `UserLLMKey(user_id, provider, encrypted_key)` Fernet-шифрование.
+- [ ] `backend/services/billing/quotas.py` — `Tier` enum (`FREE`/`PREMIUM`/`PRO`), `assert_quota(user, kind)` → 402 при превышении (kind = `natal_chart`/`horoscope`/`dream_analysis`/`event_forecast`).
+- [ ] Подключить квоты к astrology + dreams endpoints через `Depends`.
+- [ ] Tests: free квоты, premium без лимитов, pro равен premium.
 
-### Фаза 6.C — Stripe integration (международный рынок: EN/DE/ES/FR)
-- [ ] `backend/services/billing/stripe_provider.py` — Checkout sessions, Customer Portal, webhook handler.
-- [ ] Products & Prices в Stripe Dashboard: Premium-monthly, Premium-yearly, Pro-monthly, One-time reports. Все в USD + EUR с конвертацией Stripe.
-- [ ] `POST /api/v1/billing/stripe/checkout` → возвращает `checkout_url`.
-- [ ] `POST /api/v1/billing/stripe/webhook` — `customer.subscription.{created,updated,deleted}`, `invoice.paid`, `invoice.payment_failed` → обновляет `Subscription` запись.
-- [ ] `POST /api/v1/billing/stripe/portal` → возвращает Customer Portal URL (отмена/смена тарифа делегируется Stripe).
-- [ ] Tests: webhook signature verification, idempotency (повторные webhook events), period rollover.
-- [ ] **Note:** Stripe не работает с RU-картами с 2022 — обязателен YooKassa параллельно.
+### Фаза 6.C — Lemon Squeezy integration (MoR)
+- [ ] `backend/services/billing/lemon_provider.py` — Checkout API, Customer API, webhook signature verification.
+- [ ] Products в Lemon Dashboard (manual setup): Premium-monthly, Pro-monthly, one-time reports. Variant IDs в env.
+- [ ] `POST /api/v1/billing/checkout` — создаёт checkout URL для variant_id, прокидывает user_email и custom_data={user_id}.
+- [ ] `POST /api/v1/billing/webhook` — HMAC-SHA256 signature verification, обрабатывает `subscription_created`, `subscription_updated`, `subscription_cancelled`, `subscription_expired`, `order_created` (one-time).
+- [ ] `POST /api/v1/billing/portal` — генерирует Customer Portal link (отмена/смена через Lemon).
+- [ ] Idempotency — каждый webhook payload имеет `meta.event_id`; кладём в `processed_webhook_events` чтобы не дублировать.
+- [ ] Tests: webhook signature, idempotency, subscription lifecycle, refund.
 
-### Фаза 6.D — YooKassa integration (RU-рынок)
-- [ ] `backend/services/billing/yookassa_provider.py` — recurring payments через YooKassa (Сбер).
-- [ ] Рекуррентные платежи: создание `payment` с `save_payment_method=true`, затем автосписания.
-- [ ] `POST /api/v1/billing/yookassa/checkout` → возвращает `payment_url` (форма YooKassa).
-- [ ] `POST /api/v1/billing/yookassa/webhook` — `payment.succeeded`, `payment.canceled`, `refund.succeeded`.
-- [ ] Tests: webhook signature, idempotency.
-- [ ] **Note:** YooKassa требует юр.лицо или ИП в РФ. Если нет — альтернативы: Robokassa, Tinkoff Acquiring, или crypto-провайдер (NowPayments) для обхода санкций.
+### Фаза 6.D — *(пропущена)*
+Stripe + YooKassa выпиливаются. Все Subscription.stripe_subscription_id / yookassa_subscription_id оставляем для backward-compat данных, но новые подписки только через Lemon.
 
 ### Фаза 6.E — Pro/BYOK tier
-- [ ] `backend/models/user_keys.py` — `UserLLMKey(user_id, provider, encrypted_key)` — Fernet-шифрование на `SECRET_KEY`.
-- [ ] `POST /api/v1/users/me/llm-keys` — сохранить ключ.
-- [ ] `UniversalLLMProvider` — поддержать per-user override ключа (новый `user_id`-aware режим).
-- [ ] При активной Pro-подписке `cost_tracker` не пишет в shared bucket, а в `user_id`-namespace (информационно).
-- [ ] Тарифный логика: Pro = Premium фичи + own keys → меньшая ежемесячная цена.
+- [ ] `backend/services/byok/keys.py` — Fernet save/load шифрованных ключей пользователя; ключ деривируется из `SECRET_KEY`.
+- [ ] `POST /api/v1/users/me/llm-keys` — сохранить ключ для provider (`anthropic`/`openai`/`gemini`/`groq`).
+- [ ] `DELETE /api/v1/users/me/llm-keys/<provider>` — отозвать.
+- [ ] `UniversalLLMProvider` — опциональный `for_user: User` параметр в `__init__`; если есть BYOK ключи → подменяем `api_keys` dict; cost_tracker помечает запись `agent` тегом `byok` (или сохраняем как обычно, метаданные в namespace).
+- [ ] Pro-tier checks: при Pro подписке у пользователя должен быть хотя бы один BYOK ключ.
+- [ ] Tests: encrypt/decrypt round-trip, provider override priority, Pro без ключа → 403.
 
-### Фаза 6.F — i18n DE / ES / FR (расширение существующего RU/EN)
-- [ ] **Frontend** (next-intl):
-  - [ ] `frontend/messages/{de,es,fr}.json` — переводы всех ключей из `en.json`. Использовать профессионального переводчика или DeepL Pro API (НЕ Google Translate для production-копии).
-  - [ ] `frontend/i18n/request.ts` — добавить `de`, `es`, `fr` в `locales`.
-  - [ ] `frontend/middleware.ts` — locale routing (`/de/...`, `/es/...`, `/fr/...`).
-  - [ ] `Accept-Language` auto-detect на первом визите.
-- [ ] **Backend**:
-  - [ ] `backend/services/dreams/ai/prompts/*.json` — добавить ветки `de/es/fr` к существующим `ru/en`.
-  - [ ] `backend/services/astrology/ai/prompt_templates.py` — параметризовать промпты по `locale` (сейчас bilingual ru/en строки в Python).
-  - [ ] `backend/data/lunar_tables.json` — добавить ключи `de/es/fr` (нужен переводчик с астрологическим контекстом).
-  - [ ] `backend/services/dreams/knowledge_base/symbols.json` — добавить `interpretation_{de,es,fr}` к 56 символам.
-  - [ ] `_detect_language()` в `backend/services/dreams/analyzer.py` — расширить до 5 языков (langdetect / lingua-language-detector).
-- [ ] **MCP tools**:
-  - [ ] `locale` параметр расширить enum до `ru|en|de|es|fr`.
-- [ ] **GeoNames**: `GEONAMES_LANG` env уже есть, fallback DB — расширить транслитерации (Berlin/Берлин/Berlín/Berlin — все ключи). 
-- [ ] Tests: каждый из 5 языков → каждый endpoint возвращает корректный язык.
+### Фаза 6.F — i18n RU/EN/DE/ES/FR
+- [ ] **Frontend** (next-intl): `frontend/messages/{de,es,fr}.json` стартовый перевод от DeepL Pro API + ручная проверка контента. `i18n/request.ts` + `middleware.ts` — добавить локали. Accept-Language auto-detect.
+- [ ] **MCP tools**: расширить `locale` валидацию до `ru|en|de|es|fr` в `astrology.py`, `dreams.py`, `lunar.py` (сейчас принимает любую строку, нужна валидация).
+- [ ] **Astrology prompts** (`backend/services/astrology/ai/prompt_templates.py`): параметризовать по locale; добавить DE/ES/FR ветки.
+- [ ] **Dream prompts** (`backend/services/dreams/ai/prompts/*.json`): добавить ветки `de/es/fr` к существующим `ru/en`.
+- [ ] **Lunar tables** (`backend/data/lunar_tables.json`): добавить ключи `de/es/fr` к 31 лунному дню (human translator — астрологический контекст).
+- [ ] **Dream symbols** (`backend/services/dreams/knowledge_base/symbols.json`): добавить `interpretation_{de,es,fr}` к 56 символам.
+- [ ] **Language detection** (`backend/services/dreams/analyzer.py::_detect_language`): расширить до 5 языков через `lingua-language-detector`.
+- [ ] **GeoNames fallback DB** (`backend/utils/geonames_resolver.py`): добавить ключи на DE/ES/FR для крупных городов (Berlin/Madrid/Paris/Roma + транслитерации).
+- [ ] Tests: каждый из 5 локалей → MCP tool + endpoint возвращает корректный язык.
 
-### Фаза 6.G — Frontend: pricing + checkout + account
-- [ ] `frontend/app/[locale]/pricing/page.tsx` — 5 языков, USD/EUR/RUB по гео-IP (Cloudflare / Vercel `request.geo`).
-- [ ] `frontend/app/[locale]/account/page.tsx` — текущая подписка, история платежей, BYOK key management, отмена → Stripe Customer Portal / YooKassa.
-- [ ] `frontend/app/[locale]/login` + `register` + `verify-email` + `reset-password`.
-- [ ] Auto-redirect to Stripe/YooKassa по region (детект на `request.geo.country`).
-- [ ] Тесты Playwright: full checkout flow (Stripe test mode), регистрация → email-verify → подписка → cancel.
+### Фаза 6.G — Frontend: pricing + checkout + account + mobile
+- [ ] `frontend/app/[locale]/pricing/page.tsx` — 5 языков, валюта по гео-IP.
+- [ ] `frontend/app/[locale]/account/page.tsx` — текущая подписка, история, BYOK keys, кнопка Portal.
+- [ ] `frontend/app/[locale]/{login,register}` — клиенту страницы с email/password формами.
+- [ ] Auto-redirect to Lemon Checkout URL после клика Buy.
+- [ ] Playwright тесты: register → login → checkout (Lemon test mode) → success page.
 
-### Фаза 6.H — Email transactional
-- [ ] `backend/services/email/provider.py` — Resend или SendGrid (Resend дешевле и проще).
-- [ ] Шаблоны (multilingual): welcome, email-verify, password-reset, subscription-receipt, payment-failed, subscription-cancelled.
-- [ ] Email templates в 5 языках (`backend/services/email/templates/{lang}/...`).
-- [ ] Tests: рендеринг шаблонов на каждом языке.
+### Фаза 6.H — Email transactional (Resend)
+- [ ] `backend/services/email/resend_provider.py` — `send(to, subject, html)` через Resend API.
+- [ ] Шаблоны (`backend/services/email/templates/{locale}/`): welcome, email-verify, password-reset, subscription-receipt, payment-failed, subscription-cancelled.
+- [ ] Tests: рендеринг каждого шаблона на каждом локали.
 
-### Фаза 6.I — Compliance & data ops
-- [ ] GDPR data export — `GET /api/v1/users/me/data-export` → ZIP со всеми чартами/снами/историей.
-- [ ] GDPR data delete — `DELETE /api/v1/users/me` → soft-delete + hard-purge через 30 дней.
-- [ ] Cookie banner (нужен для EU аудитории — DE/ES/FR).
-- [ ] Privacy Policy + Terms of Service (5 языков).
-- [ ] Webhook + cron на retention снов/чартов: пользователь сам выбирает срок хранения dream-text (privacy-чувствительные данные).
+### Фаза 6.I — Compliance & GDPR
+- [ ] `GET /api/v1/users/me/data-export` → ZIP со всеми чартами/снами/подписками/транзакциями.
+- [ ] `DELETE /api/v1/users/me` → soft-delete (status="pending_deletion") + cron-job hard-purge через 30 дней.
+- [ ] Cookie banner в frontend (EU обязателен).
+- [ ] Privacy Policy + ToS шаблоны на 5 языках.
+- [ ] Retention: пользователь сам выбирает срок хранения dream-text (поле `retention_days` на User).
+
+### Фаза 6.J — Mobile apps (iOS + Android via Capacitor)
+- [ ] `mobile/` — Capacitor проект, оборачивает existing Next.js (статичный экспорт).
+- [ ] `capacitor.config.ts` — `webDir: '../frontend/out'`, `appId: 'app.oneiroscope'`.
+- [ ] Native plugins: `@capacitor/preferences` (token storage), `@capacitor/share`, `@capacitor/push-notifications`.
+- [ ] iOS: Xcode сборка, App Store Connect submission.
+- [ ] Android: Android Studio сборка, Google Play Console submission.
+- [ ] In-App Purchases — Apple/Google требуют свой IAP для подписок (30% take). Решение: web-checkout через браузер до approval'а, потом native IAP с branching.
 
 ### Definition of Done (Фаза 6)
-- Пользователь из 🇷🇺/🇺🇸/🇩🇪/🇪🇸/🇫🇷 может зарегистрироваться, оплатить Premium через Stripe (или YooKassa для RU), получить unlimited доступ ко всем сервисам в своём языке.
-- Pro/BYOK путь работает: пользователь добавляет свой Anthropic-ключ, его запросы идут через его ключ.
-- MCP-сервер остаётся бесплатным (не требует auth) — отдельный config-флаг `MCP_REQUIRE_AUTH=false` (default).
-- Quota enforcement: free-юзер видит 402 при превышении лимитов, с CTA «upgrade to Premium».
-- `cost_tracker` показывает per-user-mode + per-tier breakdown в `/api/v1/admin/cost`.
-- Все 5 языков покрыты тестами e2e (Playwright или Cypress).
+- Пользователь из 🇪🇺/🇺🇸/🇷🇺/любая страна регистрируется → выбирает Premium/Pro → платит через Lemon Squeezy Checkout → получает unlimited доступ.
+- Pro/BYOK путь работает: пользователь добавляет Anthropic-ключ, его LLM-запросы идут через его ключ.
+- MCP-сервер остаётся бесплатным (не требует auth, BYOK для tech-пользователей через Claude Desktop).
+- Quota enforcement: free-юзер видит 402 при превышении.
+- 5 локалей покрыты тестами e2e.
+- Mobile apps опубликованы в App Store и Google Play (или хотя бы TestFlight + Closed Track).
+- Deployment guide (`docs/DEPLOYMENT.md`) + Mobile guide (`docs/MOBILE.md`) написаны.
 
-### Open questions перед началом Фазы 6
-1. **Юр.лицо для YooKassa** — есть ли ИП/ООО в РФ? Если нет — RU-pay через Robokassa (мягче по требованиям) или crypto-провайдер?
-2. **Stripe Account** — какая страна? От этого зависит payout (нужен local bank account).
-3. **Email-провайдер** — Resend (минималистично, дешевле) vs SendGrid (зрелее, дороже)?
-4. **Переводчик контента** — DeepL Pro API для UI ($/месяц) или ручной перевод? Для lunar-tables / dream-symbols обязателен носитель языка — это **не** машинный перевод.
-5. **Free-tier лимиты** — 1 натал на всю жизнь жёстко, или 1/месяц? Влияет на conversion.
+### Open questions (resolved 2026-06-14)
+1. ~~Юр.лицо для YooKassa~~ → **Lemon Squeezy MoR** — не нужно.
+2. ~~Stripe-аккаунт страна~~ → **выпилен**.
+3. Email-провайдер → **Resend** (минималистично, $20/мес).
+4. Переводчик → **DeepL Pro для UI** + human review для lunar/symbols.
+5. Free-tier лимит → **1 натал на аккаунт** + 1 гороскоп/день; reset гороскопов на полночь UTC.
 
 ---
+
 
 ## Definition of Done
 
