@@ -20,12 +20,16 @@ from collections import defaultdict
 from datetime import datetime, timezone
 from enum import Enum
 from threading import Lock
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
 
 from fastapi import HTTPException, status
 
-from backend.models.subscription import Subscription
-from backend.models.user import User
+# Import ORM types only for static typing — runtime quota code uses any
+# object that quacks like User/Subscription, so the smoke CI doesn't have
+# to install SQLAlchemy to run quota tests.
+if TYPE_CHECKING:
+    from backend.models.subscription import Subscription
+    from backend.models.user import User
 
 logger = logging.getLogger(__name__)
 
