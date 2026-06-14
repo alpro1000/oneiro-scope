@@ -18,17 +18,30 @@ class User(Base):
     email = Column(String(255), unique=True, nullable=True, index=True)
     telegram_id = Column(BigInteger, unique=True, nullable=True, index=True)
 
-    # User preferences
+    # Email + password auth (Phase 6.A). Nullable so existing telegram-only
+    # users keep working; web users authenticate via email + password.
+    password_hash = Column(String(255), nullable=True)
+    name = Column(String(255), nullable=True)
+
+    # Lemon Squeezy customer id — assigned on first successful checkout.
+    lemon_customer_id = Column(String(255), nullable=True, index=True)
+
+    # User preferences (extended to 5 locales — Phase 6.F).
+    # Stored as 2-letter ISO 639-1 code: ru/en/de/es/fr.
     language = Column(String(5), default="en", nullable=False)
     timezone = Column(String(50), default="UTC", nullable=False)
 
     # Freemium model
     free_dream_used = Column(Boolean, default=False, nullable=False)
+    free_natal_used = Column(Boolean, default=False, nullable=False)
     dream_balance = Column(Integer, default=0, nullable=False)  # Prepaid dreams
 
     # Account status
     is_active = Column(Boolean, default=True, nullable=False)
     is_verified = Column(Boolean, default=False, nullable=False)
+
+    # GDPR: pending hard-delete (soft-delete + cron purge after 30 days).
+    pending_deletion_at = Column(DateTime(timezone=True), nullable=True)
 
     # Timestamps
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
@@ -40,6 +53,7 @@ class User(Base):
     subscriptions = relationship("Subscription", back_populates="user", cascade="all, delete-orphan")
     transactions = relationship("Transaction", back_populates="user", cascade="all, delete-orphan")
     dream_usages = relationship("DreamUsage", back_populates="user", cascade="all, delete-orphan")
+    llm_keys = relationship("UserLLMKey", back_populates="user", cascade="all, delete-orphan")
 
     def __repr__(self):
         return f"<User(id={self.id}, email={self.email})>"

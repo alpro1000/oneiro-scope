@@ -34,7 +34,7 @@ async def analyze_dream(
     dream_date: Optional[str] = None,
     dreamer_gender: Optional[str] = None,
     dreamer_age_group: Optional[str] = None,
-    locale: str = "ru",
+    locale: str = "ru",  # ru | en | de | es | fr
 ) -> dict[str, Any]:
     """Analyze a dream using Hall/Van de Castle content analysis + Jungian
     archetypes + DreamBank norms + lunar context.
