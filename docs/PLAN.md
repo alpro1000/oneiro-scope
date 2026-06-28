@@ -257,6 +257,15 @@ Stripe + YooKassa выпиливаются. Все Subscription.stripe_subscript
 - `backend/services/strategic/disclaimer.py` + `numeric_confidence()`
 - Cloud Run / Vertex AI guide (`docs/deployment/CLOUD_RUN.md`)
 
+### ✅ 8.G — planet_in_house (follow-up, 2026-06-28 late)
+- [x] `archetypes/planet_in_house.py` — 10 планет × 12 домов, завершает
+  hard-archetype-набор. Композиция двух процитированных слоёв (planet-drive
+  Tompkins/Hand × house life-area Sasportas), без выдуманных постраничных
+  ссылок на каждую из 120 ячеек.
+- [x] MCP tool `planet_in_house()` (conf 0.9 + disclaimer) → tools **23 → 24**.
+- [x] Тесты +5 (полная сетка 10×12, двойная цитата, регистр, ошибки, обёртка).
+  Backend suite: **268 passed, 6 skipped**.
+
 ---
 
 ## ✅ Фаза 9 — Memory system harmonization (от scaffold/STAVAGENT)

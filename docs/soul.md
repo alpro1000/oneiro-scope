@@ -104,6 +104,44 @@ Recent decisions:
 
 ## §9 Session log
 
+### 2026-06-28 (late) — P1: planet_in_house hard table (10×12)
+
+Follow-up session after the Phase 7-9 consolidation. Picked up the
+first deferred P1 item from the consolidated entry below.
+
+**Done:**
+- `backend/services/astrology/archetypes/planet_in_house.py` — the
+  10 planets × 12 houses lookup, completing the Phase 8 hard-archetype
+  set. Built by **composition, not fabrication**: each cell joins a
+  cited planet-drive descriptor (Tompkins *Contemporary Astrologer's
+  Handbook* ch.4 / Hand *Horoscope Symbols*) with the already-cited
+  house life-area (Sasportas *The Twelve Houses*). We deliberately do
+  NOT invent a distinct page citation per cell — both real sources are
+  returned joined, keeping the provenance principle honest.
+- MCP tool `planet_in_house()` (layer `astrology_symbolic`, conf 0.9,
+  disclaimer); registered in `server.py` → **MCP tools 23 → 24**.
+- Listed in `list_archetype_topics`.
+- Tests +5 (full 10×12 grid, dual-citation assertion, case-insens,
+  invalid-input, tool wrapper). **Backend suite: 268 passed, 6 skipped.**
+
+**Birth-chart verification run** (01.07.1977 22:30 Запорожье, UTC+3 —
+re-confirmed via IANA `Europe/Zaporozhye` = +3 for that date, decree
+time, no pre-1981 DST): full path planets → house assignment → table
+produced cited deterministic readings for all 10 planets. Two honest
+caveats on *that run* (not the code, which is test-covered): this
+container lacks `.se1` files → MOSEPH approximate positions; house
+numbers derive from an approximate Asc (~16° Aquarius) so are
+indicative, not arc-precise. In prod (ephemeris files + GeoNames) the
+placement is exact.
+
+**Shipped:** PR merged to `main` (branch `claude/phase-9-consolidation-f64chg`).
+
+**Still deferred (unchanged):** Cloud Run staging smoke, Alembic
+migrations, `transit_meanings.py`, frontend pricing/checkout, DE/ES/FR
+content translations.
+
+---
+
 ### 📌 2026-06-28 — SESSION CONSOLIDATED (Phases 7-9 landed today)
 
 End-of-day consolidation. Three merged PRs this session:
