@@ -20,6 +20,7 @@ import sys
 
 from mcp.server.fastmcp import FastMCP
 
+from backend.mcp.tools import archetypes as ar
 from backend.mcp.tools import astrology as a
 from backend.mcp.tools import dreams as d
 from backend.mcp.tools import geo as g
@@ -68,6 +69,18 @@ mcp.tool()(g.validate_birth_data)
 mcp.tool()(sa.compute_transits)
 mcp.tool()(sa.astrocartography_scan)
 mcp.tool()(sa.solar_return_chart)
+
+# --- Archetypes (Phase 8) ----------------------------------------------------
+# Hard-table interpretations (MC/Sun/Houses/Aspects/Dignities) with cited
+# classical/modern sources. Layer = astrology_symbolic; confidence 0.9 —
+# above LLM narrative (0.7), below astronomy (1.0).
+mcp.tool()(ar.mc_in_sign)
+mcp.tool()(ar.sun_in_sign)
+mcp.tool()(ar.house_meaning)
+mcp.tool()(ar.aspect_meaning)
+mcp.tool()(ar.planet_dignity)
+mcp.tool()(ar.zodiac_sign)
+mcp.tool()(ar.list_archetype_topics)
 
 
 def main(argv: list[str] | None = None) -> int:

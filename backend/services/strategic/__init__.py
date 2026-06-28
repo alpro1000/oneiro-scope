@@ -10,12 +10,21 @@ This module is the substrate for the new pivot: from "AI horoscope" to
 the source of truth.
 """
 
+from backend.services.strategic.disclaimer import (
+    DisclaimerError,
+    DISCLAIMER_EN,
+    DISCLAIMER_RU,
+    ensure_disclaimer,
+    has_disclaimer,
+)
 from backend.services.strategic.layers import (
     Confidence,
     EvidenceMatrix,
     Insight,
+    LAYER_CONFIDENCE,
     Layer,
     Source,
+    numeric_confidence,
 )
 from backend.services.strategic.no_determinism import (
     DeterministicLanguageError,
@@ -27,9 +36,16 @@ __all__ = [
     "Confidence",
     "EvidenceMatrix",
     "Insight",
+    "LAYER_CONFIDENCE",
     "Layer",
     "Source",
+    "numeric_confidence",
     "DeterministicLanguageError",
     "contains_determinism",
     "soften",
+    "DisclaimerError",
+    "DISCLAIMER_EN",
+    "DISCLAIMER_RU",
+    "ensure_disclaimer",
+    "has_disclaimer",
 ]

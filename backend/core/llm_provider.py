@@ -233,9 +233,19 @@ class UniversalLLMProvider:
             has_project = bool(
                 os.getenv("VERTEX_PROJECT") or os.getenv("GOOGLE_CLOUD_PROJECT")
             )
+            # Cloud Run / GCE / GKE expose ADC via the metadata server with
+            # NO env var set — google.auth.default() picks it up. We can't
+            # detect that here without a network call, so trust two signals:
+            #   K_SERVICE (Cloud Run sets this)
+            #   K_REVISION (Cloud Run sets this)
+            # If either is present, ADC is available — no explicit token needed.
+            on_cloud_run = bool(
+                os.getenv("K_SERVICE") or os.getenv("K_REVISION")
+            )
             has_creds = bool(
                 os.getenv("VERTEX_ACCESS_TOKEN")
                 or os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
+                or on_cloud_run
             )
             return has_project and has_creds
         if provider == LLMProvider.BEDROCK:

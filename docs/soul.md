@@ -87,6 +87,53 @@ Recent decisions:
 
 ## §9 Session log
 
+### 2026-06-28 — claude/hard-archetypes-cloudrun — Phase 8: Hard archetype tables + Cloud Run + scaffold adoption
+
+**Goal:** After Phase 7 Strategic Analyst pivot, user requested **hard interpretation modules** (MC archetype tables, Sun, Houses, Aspects, Dignities) — so the system can cite classical/modern sources directly without going through LLM_NARRATIVE (0.7) → upgrade to ASTROLOGY_SYMBOLIC (0.9) with provenance. Also: peer-review scaffold suggestions to adopt + Cloud Run / Vertex AI integration.
+
+**Done — archetype tables (`backend/services/astrology/archetypes/`):**
+- `zodiac_signs.py` — 12 signs × {element, modality, ruler, keywords, shadow, description, source}.
+- `mc_in_sign.py` — 12 MC archetypes (career role, NOT "destiny").
+- `sun_in_sign.py` — 12 Sun archetypes (identity, with growth_edge).
+- `houses.py` — 12 houses × area-of-life with natural sign/ruler.
+- `aspects.py` — 5 aspects (conjunction/opposition/trine/square/sextile) with default orbs from domain.md §2.3.
+- `dignities.py` — essential dignity table (domicile/exaltation/detriment/fall/peregrine) using **traditional** rulers per Lilly 1647.
+- All citations from Sue Tompkins, Liz Greene, Howard Sasportas, Robert Hand, Stephen Arroyo — real, well-cited modern astrology sources.
+
+**Done — MCP tools (`backend/mcp/tools/archetypes.py`):**
+- 7 new tools: `mc_in_sign`, `sun_in_sign`, `house_meaning`, `aspect_meaning`, `planet_dignity`, `zodiac_sign`, `list_archetype_topics`.
+- Each returns `{layer: "astrology_symbolic", confidence: 0.9, ..., source: <citation>, disclaimer: <text>}`.
+- Registered in `backend/mcp/server.py` (total 23 tools, was 16).
+- Added to `StrategicAnalystAgent.allowed_tools` (now 19, was 12).
+
+**Done — scaffold adoption:**
+- `docs/steering/domain.md` — adopted from scaffold. Confidence ladder 1.0/0.9/0.8/0.7, disclaimer rules, forbidden patterns, acceptance criteria (provenance/disclaimer/tolerance, not exact text).
+- `docs/steering/conventions.md` — Karpathy anti-bloat rules, EARS-style criteria, commit/branch naming, update matrix, gates.
+- `backend/services/strategic/disclaimer.py` — `ensure_disclaimer(text, locale)`, `has_disclaimer()`, sentinel-phrase paraphrase detection. 5-locale canonical text (RU/EN/DE/ES/FR).
+- `backend/services/strategic/layers.py` — added `numeric_confidence()` function, `LAYER_CONFIDENCE` table mapping Layer → 0-1 numeric, convergence bonus.
+
+**Done — Cloud Run + Vertex AI:**
+- `docs/deployment/CLOUD_RUN.md` — full step-by-step (project setup → service account → secrets → Cloud SQL → Cloud Build → deploy → custom domain → optional Swiss Ephemeris bucket → CI/CD via Cloud Build trigger). ~$10-21/mo at MVP traffic.
+- `backend/core/llm_provider.py::_provider_configured(VERTEX)` — now detects Cloud Run via `K_SERVICE` / `K_REVISION` env vars (set by Cloud Run automatically). When present + `VERTEX_PROJECT`, Vertex activates via metadata-server ADC — no explicit token needed.
+
+**Tests:**
+- `test_archetypes.py` — 35 tests (table completeness, required fields, dignity calculations, MCP tool wrappers carry layer/confidence/disclaimer).
+- `test_disclaimer_and_numeric_confidence.py` — 18 tests (disclaimer detection across locales, paraphrase tolerance, idempotency; numeric ladder values match scaffold, convergence bonus, LLM-only cap).
+- Updated `test_mcp_smoke.py` registry to include 7 new archetype tools.
+- Updated `test_strategic_agent.py` allowed-tools to include archetype tools.
+- All added to `mcp-smoke.yml` CI.
+- Full backend suite: **263 passed, 6 skipped** (was 183 → +80).
+
+**Decisions:**
+- Archetype tables are deterministic Python dicts with cited sources — not configurable, not LLM-generated. This is the "0.9 cited classical rule" tier from the scaffold confidence ladder.
+- Disclaimer is **enforced at the response layer** via `ensure_disclaimer()` — auto-appends if LLM forgot. Sentinel-phrase detection lets the LLM phrase its own version.
+- Numeric confidence is **derived** from source mix, not declared. The 3-bucket Confidence enum (HIGH/MEDIUM/LOW) still exists as UI labels; the 0-1 float is for fine-grained ranking.
+- Cloud Run vs Render: Cloud Run wins for solo founder (scale-to-zero, ~$10/mo vs ~$21/mo). Vertex AI ADC via metadata-server is the right path — no secrets to rotate.
+
+---
+
+### 2026-06-14 — claude/strategic-analyst-pivot
+
 ### 2026-06-14 — claude/strategic-analyst-pivot — Phase 7: Strategic Life Cycle Analyst pivot
 
 **Goal:** After a long product-direction conversation (user explored own chart deeply with the existing tools, then surfaced peer-review feedback that "another astrology AI" is the wrong positioning), execute the **Strategic Life Cycle Analyst pivot** end-to-end in one PR: multi-layer evidence-matrix substrate, new deterministic astronomy tools (transits, astrocartography, solar return), new Strategic Analyst agent, rewritten domain prompts to inherit the posture.

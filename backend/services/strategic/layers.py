@@ -100,6 +100,24 @@ class Confidence(str, Enum):
     def color(self) -> str:
         return {"high": "🟢", "medium": "🟡", "low": "🔴"}[self.value]
 
+    @property
+    def numeric(self) -> float:
+        """Numeric confidence on the 0-1 ladder (per scaffold suggestion).
+
+        Maps:
+        - HIGH = 0.9 (default cited classical rule)  → upgraded to 1.0 by
+                source mix when objective_fact is present
+        - MEDIUM = 0.8 (symbol dictionary / single hard layer)
+        - LOW = 0.7 (LLM synthesis only)
+        """
+        return {"high": 0.9, "medium": 0.8, "low": 0.7}[self.value]
+
+
+# Per-source-layer numeric confidence ladder (scaffold §3 idea).
+# These are the BASELINE contributions; combined confidence may
+# exceed 0.9 when objective facts or convergence are present.
+LAYER_CONFIDENCE: dict["Layer", float] = {}  # filled at bottom — Layer defined above
+
 
 class Source(BaseModel):
     """One traceable reference behind an insight.
@@ -221,3 +239,42 @@ def insight(
         confidence=EvidenceMatrix.compute_confidence(sources),
         actions=actions or [],
     )
+
+
+# Fill the numeric confidence ladder now that Layer is defined.
+# These values come from `docs/PROJECT-scaffold/CLAUDE.md` confidence ladder:
+# 1.0 ephemeris/calc · 0.9 cited classical rule · 0.8 symbol dictionary ·
+# 0.7 LLM synthesis · 0.6 user context (per-individual, not generalisable).
+LAYER_CONFIDENCE.update({
+    Layer.OBJECTIVE_FACT: 1.0,        # verified life event / bank record
+    Layer.ASTRONOMY: 1.0,             # Swiss Ephemeris computation
+    Layer.AGE_PSYCHOLOGY: 0.9,        # peer-reviewed (Erikson, Levinson, H/VdC)
+    Layer.CAREER_CYCLE: 0.85,         # industry statistics
+    Layer.ECONOMICS: 0.85,            # macro data
+    Layer.USER_CONTEXT: 0.9,          # user-supplied, not generalisable
+    Layer.ASTROLOGY_SYMBOLIC: 0.8,    # symbol dictionary / classical rule
+    Layer.LLM_NARRATIVE: 0.7,         # generated synthesis
+})
+
+
+def numeric_confidence(sources: list[Source]) -> float:
+    """Combine numeric per-source confidences using the scaffold rule:
+
+    - Start from the highest-confidence source in the mix.
+    - Convergence bonus: +0.05 per additional hard layer (capped at 1.0).
+    - Penalty: if ONLY LLM_NARRATIVE present, cap at 0.7.
+    """
+    if not sources:
+        return 0.0
+    vals = [LAYER_CONFIDENCE.get(s.layer, 0.7) for s in sources]
+    base = max(vals)
+    hard_count = sum(
+        1 for s in sources
+        if s.layer in (Layer.OBJECTIVE_FACT, Layer.ASTRONOMY, Layer.USER_CONTEXT)
+    )
+    if hard_count >= 2:
+        base = min(1.0, base + 0.05 * (hard_count - 1))
+    # LLM-only floor.
+    if {s.layer for s in sources} == {Layer.LLM_NARRATIVE}:
+        base = min(base, 0.7)
+    return round(base, 2)

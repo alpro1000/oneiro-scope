@@ -18,13 +18,21 @@ STRATEGIC_TOOLS: list[str] = [
     "calculate_natal_chart",
     "validate_birth_data",
     "search_city",
-    # Deterministic astronomy
+    # Deterministic astronomy (confidence 1.0)
     "compute_transits",
     "solar_return_chart",
     "astrocartography_scan",
     "get_lunar_day",
     "get_lunar_period",
-    # Symbolic / interpretive (LOW-confidence inputs)
+    # Hard archetype tables (confidence 0.9 — cited tradition, NOT LLM)
+    "mc_in_sign",
+    "sun_in_sign",
+    "house_meaning",
+    "aspect_meaning",
+    "planet_dignity",
+    "zodiac_sign",
+    "list_archetype_topics",
+    # Symbolic / LLM-narrative (confidence 0.7 — last resort)
     "generate_horoscope",
     "forecast_event",
     "list_event_types",
