@@ -68,4 +68,7 @@ jobs:
             backend/tests/test_quotas.py \
             backend/tests/test_lemon_provider.py \
             backend/tests/test_email_templates.py \
+            backend/tests/test_strategic_layers.py \
+            backend/tests/test_strategic_astro_tools.py \
+            backend/tests/test_strategic_agent.py \
             -v

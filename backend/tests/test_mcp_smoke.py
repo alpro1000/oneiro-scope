@@ -42,6 +42,10 @@ async def test_all_tools_registered():
         # geo
         "search_city",
         "validate_birth_data",
+        # strategic astronomy (Phase 7)
+        "compute_transits",
+        "astrocartography_scan",
+        "solar_return_chart",
     }
     tools = await mcp.list_tools()
     registered = {t.name for t in tools}

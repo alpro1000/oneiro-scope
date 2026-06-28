@@ -210,6 +210,44 @@ Stripe + YooKassa выпиливаются. Все Subscription.stripe_subscript
 
 ---
 
+## ✅ Фаза 7 — Strategic Life Cycle Analyst pivot
+
+После peer-review: пивот из «ещё один AI-гороскоп» в **Strategic Life Cycle Analyst** — decision-support tool с многослойной evidence matrix, никаких детерминированных предсказаний. Astrology — один из аналитических слоёв, не источник истины. Полные обоснования: `docs/STRATEGIC_ANALYST.md`.
+
+### ✅ 7.A — Strategic substrate (`backend/services/strategic/`)
+- [x] `layers.py` — 8 epistemic Layer enum + Source + Insight + EvidenceMatrix + auto-derived Confidence.
+- [x] `no_determinism.py` — regex-валидатор «will/будет/случится» + softener + hedge prefixes + allowed-phrase list.
+- [x] Тесты: 24 кейса (валидаторы, hedge prefixes, confidence derivation, color codes).
+
+### ✅ 7.B — Deterministic astronomy MCP tools
+- [x] `backend/services/astrology/astrocartography.py` — relocate() + scan_cities() для астрокартографических расчётов с весами.
+- [x] `backend/services/astrology/transits_engine.py` — find_transits() для точных дат транзитов (local-minimum detection).
+- [x] `backend/services/astrology/solar_return.py` — solar_return() для SR на любой локации (arc-min precision через 2-stage search).
+- [x] MCP-tools: `compute_transits`, `astrocartography_scan`, `solar_return_chart` в `backend/mcp/tools/strategic_astro.py`.
+- [x] Зарегистрированы в `backend/mcp/server.py` (теперь 16 tools).
+- [x] Тесты: 10 кейсов (включая известную Jupiter ☌ natal Saturn 11.09.2026, SR Omiš Sun→House 8).
+
+### ✅ 7.C — Strategic Analyst agent + переписанные промпты
+- [x] `agents/prompts/strategic_system.md` — главный промпт парадигмы (8 layers, hard rules, обязательная Evidence Matrix в ответе, fixed closing).
+- [x] `agents/prompts/astrology_system.md` — переписан под Strategic Analyst posture (наследует hard rules).
+- [x] `agents/prompts/dream_system.md` — переписан под Strategic Analyst posture (no diagnosis, reflection prompts вместо predictions).
+- [x] `agents/specialists/strategic_agent.py` — `StrategicAnalystAgent` с 12 tools (синтез поверх всех данных).
+- [x] `agents/orchestrator.py` — добавлен `strategic` intent router (RU + EN keywords); strategic wins over domain при пересечении.
+- [x] Тесты: 12 кейсов роутинга + проверка обязательных секций в промптах.
+
+### ✅ 7.D — Документация
+- [x] `docs/STRATEGIC_ANALYST.md` — design rationale, architecture diagram, code map, market positioning матрица.
+- [x] PLAN.md обновлён (этот блок).
+- [x] soul.md §9 — session log.
+
+### Метрики Phase 7
+- **183 passed, 6 skipped** (было 139 + 44 новых) в backend suite.
+- Tools registered: **16** (было 13 + 3 strategic).
+- Specialists: **4** (было 3 + StrategicAnalystAgent).
+- Все новые файлы добавлены в `mcp-smoke.yml` CI.
+
+---
+
 
 ## Definition of Done
 

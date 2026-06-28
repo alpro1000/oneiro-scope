@@ -8,5 +8,11 @@ right specialist(s) for each user intent and merges their answers.
 from agents.specialists.astrology_agent import AstrologyAgent
 from agents.specialists.dream_agent import DreamAgent
 from agents.specialists.lunar_agent import LunarAgent
+from agents.specialists.strategic_agent import StrategicAnalystAgent
 
-__all__ = ["AstrologyAgent", "DreamAgent", "LunarAgent"]
+__all__ = [
+    "AstrologyAgent",
+    "DreamAgent",
+    "LunarAgent",
+    "StrategicAnalystAgent",
+]

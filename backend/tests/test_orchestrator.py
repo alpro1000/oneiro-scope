@@ -157,7 +157,14 @@ async def test_multi_domain_preserves_router_order(orch):
 
 
 def test_orchestrator_specialists_registry_complete():
-    assert set(SuperOrchestrator.SPECIALISTS) == {"astrology", "dream", "lunar"}
+    # Phase 7 added the StrategicAnalystAgent for decision-support
+    # synthesis questions. The classic three domain specialists remain.
+    assert set(SuperOrchestrator.SPECIALISTS) == {
+        "astrology",
+        "dream",
+        "lunar",
+        "strategic",
+    }
 
 
 def test_lazy_specialist_instantiation():

@@ -87,6 +87,48 @@ Recent decisions:
 
 ## §9 Session log
 
+### 2026-06-14 — claude/strategic-analyst-pivot — Phase 7: Strategic Life Cycle Analyst pivot
+
+**Goal:** After a long product-direction conversation (user explored own chart deeply with the existing tools, then surfaced peer-review feedback that "another astrology AI" is the wrong positioning), execute the **Strategic Life Cycle Analyst pivot** end-to-end in one PR: multi-layer evidence-matrix substrate, new deterministic astronomy tools (transits, astrocartography, solar return), new Strategic Analyst agent, rewritten domain prompts to inherit the posture.
+
+**Why this matters now:** Co-Star / Sanctuary / Nebula saturate the predictive-astrology market with unfalsifiable text. OneiroScope's defensive moat is **forced source-attribution** — every claim is tagged with which analytical layer (astronomy / age psychology / user context / symbolism) produced it, and confidence is derived from the source mix, not declared. Astrology stays as a symbolic layer; it just doesn't get to pretend to predict.
+
+**Done — Phase 7.A (substrate):**
+- `backend/services/strategic/layers.py` — `Layer` enum (8 epistemic levels), `Source`, `Insight` (Pydantic with no-determinism validator), `EvidenceMatrix` with auto-derived `Confidence`.
+- `backend/services/strategic/no_determinism.py` — regex guard for "will/будет/случится" + hedge-prefix allowlist + softener helper.
+
+**Done — Phase 7.B (deterministic astronomy):**
+- `backend/services/astrology/astrocartography.py` — `relocate()` + `scan_cities()` with planet/angle hits and a benefic/malefic scoring.
+- `backend/services/astrology/transits_engine.py` — `find_transits()` with local-minimum detection over a date window.
+- `backend/services/astrology/solar_return.py` — `solar_return()` with 2-stage (hourly + minute) search to arc-minute precision.
+- `backend/mcp/tools/strategic_astro.py` — three MCP wrappers (`compute_transits`, `astrocartography_scan`, `solar_return_chart`), registered in `backend/mcp/server.py`. Total tools now 16 (was 13).
+
+**Done — Phase 7.C (agent + prompts):**
+- `agents/prompts/strategic_system.md` — full Strategic Analyst posture: 8 layers, hard rules (no determinism, source attribution, confidence derivation, skeptical default), required response structure (8 sections ending with Evidence Matrix), fixed closing line.
+- `agents/prompts/astrology_system.md` — rewritten to inherit the posture.
+- `agents/prompts/dream_system.md` — rewritten ("no diagnosis", "reflection prompts" instead of interpretations).
+- `agents/specialists/strategic_agent.py` — `StrategicAnalystAgent` with 12 tools (synthesis across domains).
+- `agents/orchestrator.py` — `strategic` intent router (RU + EN keywords); strategic wins when both strategic + domain present.
+
+**Done — Phase 7.D (docs):**
+- `docs/STRATEGIC_ANALYST.md` — design rationale, architecture diagram, code map, market positioning matrix, "what this is NOT", how to extend.
+- `docs/PLAN.md` — Phase 7 fully checked off.
+
+**Important correction surfaced during session:**
+While running real chart tests through the new tools, discovered my prior manual analyses used **wrong timezone** (UTC+4 instead of correct UTC+3 for USSR 1977 summer — decree time, no DST until 1981). This shifted natal Asc/MC interpretations and the Jupiter ☌ Saturn date (was claiming Aug 25; actually Sep 11). The Strategic Analyst MCP tools use `zoneinfo` which handles historical timezones correctly. New tests lock in correct values.
+
+**Verification:** 
+- Backend suite: **183 passed, 6 skipped** (was 139). +44 new tests.
+- All new files added to `mcp-smoke.yml` CI.
+- MCP server registers 16 tools cleanly.
+
+**Decisions:**
+- Pivoted from "yet another astro AI" to Strategic Life Cycle Analyst. Free tier keeps classic astrology UI; Premium tier ($25-50/mo) gets the Evidence Matrix experience.
+- Astrology kept as `Layer.ASTROLOGY_SYMBOLIC` (LOW confidence by default) — not removed.
+- `Layer` enum is extensible — adding Vedic, Chinese cycles, biorhythms is "add to enum + add MCP tool".
+
+---
+
 ### 2026-06-14 — claude/phase-6-lemon-implementation — Phase 6 production-ready: Lemon Squeezy MoR + auth + BYOK + quotas + 5-locale email + deployment & mobile guides
 **Goal:** Owner is solo founder in EU, no юр.лицо. Pivot from Stripe+YooKassa to **Lemon Squeezy as Merchant of Record** and ship a production-ready service: auth, subscription, BYOK, quotas, 5-locale email scaffolding, deployment guide for Render+Vercel+Lemon+Resend, mobile strategy via Capacitor (iOS+Android).
 

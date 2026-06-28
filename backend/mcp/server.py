@@ -24,6 +24,7 @@ from backend.mcp.tools import astrology as a
 from backend.mcp.tools import dreams as d
 from backend.mcp.tools import geo as g
 from backend.mcp.tools import lunar as l
+from backend.mcp.tools import strategic_astro as sa
 
 logger = logging.getLogger("oneiro.mcp")
 
@@ -60,6 +61,13 @@ mcp.tool()(l.get_lunar_period)
 # --- Geo ---------------------------------------------------------------------
 mcp.tool()(g.search_city)
 mcp.tool()(g.validate_birth_data)
+
+# --- Strategic astronomy (Phase 7) -------------------------------------------
+# Deterministic chart geometry that the Strategic Life Cycle Analyst agent
+# cites as ASTRONOMY-layer evidence. Output is data, not interpretation.
+mcp.tool()(sa.compute_transits)
+mcp.tool()(sa.astrocartography_scan)
+mcp.tool()(sa.solar_return_chart)
 
 
 def main(argv: list[str] | None = None) -> int:
