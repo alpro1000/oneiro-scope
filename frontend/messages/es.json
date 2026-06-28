@@ -1,0 +1,225 @@
+{
+  "HomePage": {
+    "title": "Tu oráculo personal",
+    "subtitle": "Interpretación de sueños y pronósticos astrológicos basados en un enfoque científico y bases de datos de investigación universitaria",
+    "startButton": "Comenzar",
+    "services": {
+      "dreams": {
+        "title": "Análisis de sueños",
+        "description": "Interpretación científica de tus sueños con la metodología Hall/Van de Castle y bases de datos académicas",
+        "feature1": "Bases de datos de investigación universitaria",
+        "feature2": "Correlación con el ciclo lunar",
+        "feature3": "Reconocimiento de patrones"
+      },
+      "astrology": {
+        "title": "Astrología y pronósticos",
+        "description": "Carta natal, horóscopos personales y pronóstico de probabilidad de eventos basados en datos astronómicos",
+        "feature1": "Carta natal precisa",
+        "feature2": "Horóscopos personales",
+        "feature3": "Pronóstico de favorabilidad de eventos"
+      }
+    },
+    "voiceInput": {
+      "title": "Entrada de voz",
+      "description": "Graba tu sueño o describe una situación para analizar: solo pulsa el botón y habla",
+      "button": "Empezar a grabar"
+    },
+    "lunarCalendar": {
+      "title": "Calendario lunar",
+      "subtitle": "Sigue el día lunar actual y las recomendaciones"
+    },
+    "footer": {
+      "disclaimer": "Las interpretaciones astrológicas son simbólicas y no están demostradas científicamente. Úsalas como herramienta de autoconocimiento.",
+      "rights": "Todos los derechos reservados"
+    }
+  },
+  "CalendarPage": {
+    "title": "Calendario lunar de sueños",
+    "subtitle": "Sigue el ritmo de la luna y la guía de sueños para el día lunar actual.",
+    "todayLabel": "Hoy",
+    "metaDescription": "Información diaria sobre la fase lunar y recomendaciones de sueños inspiradas en ONEIROSCOP.",
+    "monthHeading": "Resumen del mes lunar",
+    "error": {
+      "title": "El calendario lunar no está disponible temporalmente",
+      "subtitle": "No pudimos cargar los datos. Intenta actualizar la página o cambiar la zona horaria.",
+      "cta": "Si el problema persiste, vuelve un poco más tarde: estamos en ello."
+    }
+  },
+  "LunarWidget": {
+    "showMonth": "📅 Mostrar mes",
+    "hideMonth": "📅 Ocultar mes",
+    "loading": "Cargando mes...",
+    "error": "No pudimos cargar el calendario lunar. Inténtalo de nuevo.",
+    "retry": "Reintentar",
+    "lunarDay": "Día lunar {day}",
+    "lunarDayStarted": "comenzó el día lunar {day}",
+    "phase": "Fase",
+    "description": "Energía de los sueños",
+    "recommendation": "Recomendaciones",
+    "updated": "Actualizado para {date}",
+    "tableDate": "Fecha",
+    "tableDay": "Día",
+    "tableDescription": "Enfoque del sueño",
+    "tableRecommendation": "Notas"
+  },
+  "DreamsPage": {
+    "title": "Análisis de sueños",
+    "subtitle": "Describe tu sueño y recibe una interpretación científica",
+    "inputPlaceholder": "Describe tu sueño en detalle...",
+    "analyzeButton": "Analizar sueño",
+    "recording": "Grabando...",
+    "lunarContext": "Día lunar actual: {day}",
+    "methodology": "Interpretación basada en la metodología Hall/Van de Castle y los datos de DreamBank"
+  },
+  "AstrologyPage": {
+    "title": "Astrología y pronósticos",
+    "subtitle": "Carta natal personal y pronósticos de eventos",
+    "tabs": {
+      "natalChart": "Carta natal",
+      "horoscope": "Horóscopo",
+      "eventForecast": "Pronóstico de eventos"
+    },
+    "natalChart": {
+      "title": "Calcular carta natal",
+      "birthDate": "Fecha de nacimiento",
+      "birthTime": "Hora de nacimiento (opcional)",
+      "birthPlace": "Lugar de nacimiento",
+      "calculateButton": "Calcular carta",
+      "unknownTime": "Si se desconoce la hora, se usará el mediodía (12:00)"
+    },
+    "horoscope": {
+      "title": "Horóscopo personal",
+      "period": "Período",
+      "daily": "Diario",
+      "weekly": "Semanal",
+      "monthly": "Mensual",
+      "yearly": "Anual"
+    },
+    "eventForecast": {
+      "title": "Pronóstico de eventos",
+      "eventDate": "Fecha del evento",
+      "eventType": "Tipo de evento",
+      "eventLocation": "Ubicación (opcional)",
+      "forecastButton": "Obtener pronóstico",
+      "favorability": "Favorabilidad",
+      "positiveFactors": "Factores positivos",
+      "riskFactors": "Factores de riesgo",
+      "recommendations": "Recomendaciones",
+      "alternativeDates": "Fechas alternativas"
+    }
+  },
+  "VoiceInput": {
+    "start": "Empezar a grabar",
+    "stop": "Detener",
+    "listening": "Escuchando...",
+    "processing": "Procesando...",
+    "error": "Acceso al micrófono denegado",
+    "notSupported": "Tu navegador no admite la entrada de voz"
+  },
+  "TimezoneSelector": {
+    "label": "Zona horaria",
+    "description": "Selecciona tu zona horaria para un cálculo preciso del día lunar",
+    "loading": "Cargando...",
+    "error": "Error de carga"
+  },
+  "Header": {
+    "tagline": "Astrología y sueños",
+    "home": "Inicio",
+    "calendar": "Calendario",
+    "astrology": "Astrología",
+    "dreams": "Sueños",
+    "pricing": "Precios",
+    "account": "Cuenta"
+  },
+  "Pricing": {
+    "title": "Elige tu plan",
+    "subtitle": "Perspectivas reflexivas y con fuentes citadas: astrología, sueños y ritmos lunares. Cancela cuando quieras.",
+    "mostPopular": "Más popular",
+    "perMonth": "/mes",
+    "redirecting": "Redirigiendo…",
+    "plans": {
+      "free": {
+        "name": "Free",
+        "tagline": "Prueba las herramientas básicas, sin tarjeta."
+      },
+      "premium": {
+        "name": "Premium",
+        "tagline": "Todo ilimitado, además de exportación a PDF."
+      },
+      "pro": {
+        "name": "Pro (BYOK)",
+        "tagline": "Funciones premium usando tus propias claves LLM."
+      }
+    },
+    "features": {
+      "natal": "Carta natal",
+      "horoscopes": "Horóscopos ilimitados",
+      "forecasts": "Pronósticos de eventos",
+      "dreams": "Análisis de sueños",
+      "pdf": "Exportación a PDF",
+      "byok": "Usa tus propias claves API"
+    },
+    "cta": {
+      "free": "Empezar gratis",
+      "subscribe": "Suscribirse",
+      "buy": "Comprar"
+    },
+    "oneTime": {
+      "title": "Informes únicos",
+      "subtitle": "Sin suscripción: un único documento detallado.",
+      "natalPdf": {
+        "name": "PDF detallado de carta natal",
+        "desc": "Carta completa con texto, exportable."
+      },
+      "yearly": {
+        "name": "Pronóstico anual",
+        "desc": "Perspectiva personalizada de 12 meses."
+      }
+    },
+    "disclaimer": "Contenido reflexivo / de entretenimiento: no es asesoramiento médico, psicológico, legal ni financiero.",
+    "manageLink": "Gestionar suscripción"
+  },
+  "Account": {
+    "title": "Cuenta",
+    "loading": "Cargando…",
+    "profile": "Perfil",
+    "email": "Correo electrónico",
+    "name": "Nombre",
+    "language": "Idioma",
+    "subscription": "Suscripción",
+    "status": "Estado",
+    "renewsOn": "Se renueva el",
+    "endsOn": "Termina el",
+    "upgrade": "Mejorar plan",
+    "logout": "Cerrar sesión",
+    "tiers": {
+      "free": "Free",
+      "premium": "Premium",
+      "pro": "Pro"
+    },
+    "loginTitle": "Bienvenido de nuevo",
+    "loginSubtitle": "Inicia sesión para gestionar tu suscripción.",
+    "registerTitle": "Crear una cuenta",
+    "registerSubtitle": "Regístrate para acceder sin límites.",
+    "password": "Contraseña",
+    "passwordHint": "Al menos 8 caracteres.",
+    "submitting": "Espera…",
+    "loginCta": "Iniciar sesión",
+    "registerCta": "Registrarse",
+    "switchToRegister": "¿No tienes cuenta? Regístrate",
+    "switchToLogin": "¿Ya tienes cuenta? Inicia sesión"
+  },
+  "CheckoutSuccess": {
+    "title": "¡Gracias!",
+    "verifying": "Confirmando tu pago…",
+    "activated": "Tu plan {tier} ya está activo.",
+    "pending": "Pago recibido. Tu plan se activará en breve.",
+    "tiers": {
+      "free": "Free",
+      "premium": "Premium",
+      "pro": "Pro"
+    },
+    "goToAccount": "Ir a la cuenta",
+    "startUsing": "Empezar a explorar"
+  }
+}

@@ -1,0 +1,225 @@
+{
+  "HomePage": {
+    "title": "Dein persönliches Orakel",
+    "subtitle": "Traumdeutung und astrologische Prognosen auf Basis eines wissenschaftlichen Ansatzes und universitärer Forschungsdatenbanken",
+    "startButton": "Loslegen",
+    "services": {
+      "dreams": {
+        "title": "Traumanalyse",
+        "description": "Wissenschaftliche Deutung deiner Träume mit der Hall/Van-de-Castle-Methodik und akademischen Datenbanken",
+        "feature1": "Universitäre Forschungsdatenbanken",
+        "feature2": "Korrelation mit dem Mondzyklus",
+        "feature3": "Mustererkennung"
+      },
+      "astrology": {
+        "title": "Astrologie & Prognosen",
+        "description": "Geburtshoroskop, persönliche Horoskope und Ereignisprognosen auf Basis astronomischer Daten",
+        "feature1": "Präzises Geburtshoroskop",
+        "feature2": "Persönliche Horoskope",
+        "feature3": "Prognose der Ereignisgunst"
+      }
+    },
+    "voiceInput": {
+      "title": "Spracheingabe",
+      "description": "Nimm deinen Traum auf oder beschreibe eine Situation zur Analyse — einfach die Taste drücken und sprechen",
+      "button": "Aufnahme starten"
+    },
+    "lunarCalendar": {
+      "title": "Mondkalender",
+      "subtitle": "Verfolge den aktuellen Mondtag und Empfehlungen"
+    },
+    "footer": {
+      "disclaimer": "Astrologische Deutungen sind symbolisch und nicht wissenschaftlich belegt. Nutze sie als Werkzeug zur Selbstentdeckung.",
+      "rights": "Alle Rechte vorbehalten"
+    }
+  },
+  "CalendarPage": {
+    "title": "Lunarer Traumkalender",
+    "subtitle": "Verfolge den Rhythmus des Mondes und die Traumhinweise für den aktuellen Mondtag.",
+    "todayLabel": "Heute",
+    "metaDescription": "Tägliche Einblicke in die Mondphase und Traumempfehlungen, inspiriert von ONEIROSCOP.",
+    "monthHeading": "Überblick über den Mondmonat",
+    "error": {
+      "title": "Der Mondkalender ist vorübergehend nicht verfügbar",
+      "subtitle": "Wir konnten die Daten nicht laden. Aktualisiere die Seite oder wechsle die Zeitzone.",
+      "cta": "Falls das Problem bestehen bleibt, komm bitte etwas später wieder — wir kümmern uns darum."
+    }
+  },
+  "LunarWidget": {
+    "showMonth": "📅 Monat anzeigen",
+    "hideMonth": "📅 Monat ausblenden",
+    "loading": "Monat wird geladen...",
+    "error": "Wir konnten den Mondkalender nicht laden. Bitte versuche es erneut.",
+    "retry": "Erneut versuchen",
+    "lunarDay": "Mondtag {day}",
+    "lunarDayStarted": "Mondtag {day} hat begonnen",
+    "phase": "Phase",
+    "description": "Traumenergie",
+    "recommendation": "Empfehlungen",
+    "updated": "Aktualisiert für {date}",
+    "tableDate": "Datum",
+    "tableDay": "Tag",
+    "tableDescription": "Traumfokus",
+    "tableRecommendation": "Notizen"
+  },
+  "DreamsPage": {
+    "title": "Traumanalyse",
+    "subtitle": "Beschreibe deinen Traum und erhalte eine wissenschaftliche Deutung",
+    "inputPlaceholder": "Beschreibe deinen Traum im Detail...",
+    "analyzeButton": "Traum analysieren",
+    "recording": "Aufnahme läuft...",
+    "lunarContext": "Aktueller Mondtag: {day}",
+    "methodology": "Deutung auf Basis der Hall/Van-de-Castle-Methodik und DreamBank-Daten"
+  },
+  "AstrologyPage": {
+    "title": "Astrologie & Prognosen",
+    "subtitle": "Persönliches Geburtshoroskop und Ereignisprognosen",
+    "tabs": {
+      "natalChart": "Geburtshoroskop",
+      "horoscope": "Horoskop",
+      "eventForecast": "Ereignisprognose"
+    },
+    "natalChart": {
+      "title": "Geburtshoroskop berechnen",
+      "birthDate": "Geburtsdatum",
+      "birthTime": "Geburtszeit (optional)",
+      "birthPlace": "Geburtsort",
+      "calculateButton": "Horoskop berechnen",
+      "unknownTime": "Ist die Zeit unbekannt, wird 12:00 Uhr mittags verwendet"
+    },
+    "horoscope": {
+      "title": "Persönliches Horoskop",
+      "period": "Zeitraum",
+      "daily": "Täglich",
+      "weekly": "Wöchentlich",
+      "monthly": "Monatlich",
+      "yearly": "Jährlich"
+    },
+    "eventForecast": {
+      "title": "Ereignisprognose",
+      "eventDate": "Ereignisdatum",
+      "eventType": "Ereignistyp",
+      "eventLocation": "Ort (optional)",
+      "forecastButton": "Prognose abrufen",
+      "favorability": "Gunst",
+      "positiveFactors": "Positive Faktoren",
+      "riskFactors": "Risikofaktoren",
+      "recommendations": "Empfehlungen",
+      "alternativeDates": "Alternative Termine"
+    }
+  },
+  "VoiceInput": {
+    "start": "Aufnahme starten",
+    "stop": "Stopp",
+    "listening": "Höre zu...",
+    "processing": "Verarbeite...",
+    "error": "Mikrofonzugriff verweigert",
+    "notSupported": "Spracheingabe wird von deinem Browser nicht unterstützt"
+  },
+  "TimezoneSelector": {
+    "label": "Zeitzone",
+    "description": "Wähle deine Zeitzone für eine genaue Berechnung des Mondtags",
+    "loading": "Wird geladen...",
+    "error": "Ladefehler"
+  },
+  "Header": {
+    "tagline": "Astrologie & Träume",
+    "home": "Start",
+    "calendar": "Kalender",
+    "astrology": "Astrologie",
+    "dreams": "Träume",
+    "pricing": "Preise",
+    "account": "Konto"
+  },
+  "Pricing": {
+    "title": "Wähle deinen Tarif",
+    "subtitle": "Reflektierende Einblicke mit Quellenangabe — Astrologie, Träume und Mondtiming. Jederzeit kündbar.",
+    "mostPopular": "Am beliebtesten",
+    "perMonth": "/Mon.",
+    "redirecting": "Weiterleitung…",
+    "plans": {
+      "free": {
+        "name": "Free",
+        "tagline": "Teste die Kernfunktionen, keine Karte nötig."
+      },
+      "premium": {
+        "name": "Premium",
+        "tagline": "Alles unbegrenzt, plus PDF-Export."
+      },
+      "pro": {
+        "name": "Pro (BYOK)",
+        "tagline": "Premium-Funktionen mit deinen eigenen LLM-Schlüsseln."
+      }
+    },
+    "features": {
+      "natal": "Geburtshoroskop",
+      "horoscopes": "Unbegrenzte Horoskope",
+      "forecasts": "Ereignisprognosen",
+      "dreams": "Traumanalyse",
+      "pdf": "PDF-Export",
+      "byok": "Eigene API-Schlüssel nutzen"
+    },
+    "cta": {
+      "free": "Kostenlos starten",
+      "subscribe": "Abonnieren",
+      "buy": "Kaufen"
+    },
+    "oneTime": {
+      "title": "Einmalige Berichte",
+      "subtitle": "Kein Abo — ein einzelnes ausführliches Dokument.",
+      "natalPdf": {
+        "name": "Ausführliches Geburtshoroskop-PDF",
+        "desc": "Vollständiges Horoskop mit Text, exportierbar."
+      },
+      "yearly": {
+        "name": "Jahresprognose",
+        "desc": "Personalisierter Ausblick über 12 Monate."
+      }
+    },
+    "disclaimer": "Reflektierende / unterhaltende Inhalte — keine medizinische, psychologische, rechtliche oder finanzielle Beratung.",
+    "manageLink": "Abo verwalten"
+  },
+  "Account": {
+    "title": "Konto",
+    "loading": "Wird geladen…",
+    "profile": "Profil",
+    "email": "E-Mail",
+    "name": "Name",
+    "language": "Sprache",
+    "subscription": "Abonnement",
+    "status": "Status",
+    "renewsOn": "Verlängert sich am",
+    "endsOn": "Endet am",
+    "upgrade": "Tarif upgraden",
+    "logout": "Abmelden",
+    "tiers": {
+      "free": "Free",
+      "premium": "Premium",
+      "pro": "Pro"
+    },
+    "loginTitle": "Willkommen zurück",
+    "loginSubtitle": "Melde dich an, um dein Abo zu verwalten.",
+    "registerTitle": "Konto erstellen",
+    "registerSubtitle": "Registriere dich für unbegrenzten Zugang.",
+    "password": "Passwort",
+    "passwordHint": "Mindestens 8 Zeichen.",
+    "submitting": "Bitte warten…",
+    "loginCta": "Anmelden",
+    "registerCta": "Registrieren",
+    "switchToRegister": "Kein Konto? Registrieren",
+    "switchToLogin": "Schon ein Konto? Anmelden"
+  },
+  "CheckoutSuccess": {
+    "title": "Vielen Dank!",
+    "verifying": "Zahlung wird bestätigt…",
+    "activated": "Dein {tier}-Tarif ist jetzt aktiv.",
+    "pending": "Zahlung erhalten. Dein Tarif wird in Kürze aktiviert.",
+    "tiers": {
+      "free": "Free",
+      "premium": "Premium",
+      "pro": "Pro"
+    },
+    "goToAccount": "Zum Konto",
+    "startUsing": "Loslegen"
+  }
+}

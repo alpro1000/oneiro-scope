@@ -6,6 +6,9 @@ import {useParams} from 'next/navigation';
 const locales = [
   {code: 'ru', label: 'RU', flag: ''},
   {code: 'en', label: 'EN', flag: ''},
+  {code: 'de', label: 'DE', flag: ''},
+  {code: 'es', label: 'ES', flag: ''},
+  {code: 'fr', label: 'FR', flag: ''},
 ];
 
 export default function LanguageSwitcher() {
