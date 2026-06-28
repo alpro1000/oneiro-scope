@@ -166,10 +166,18 @@ Stripe + YooKassa выпиливаются. Все Subscription.stripe_subscript
 - [ ] Tests: каждый из 5 локалей → MCP tool + endpoint возвращает корректный язык.
 
 ### Фаза 6.G — Frontend: pricing + checkout + account + mobile
-- [ ] `frontend/app/[locale]/pricing/page.tsx` — 5 языков, валюта по гео-IP.
-- [ ] `frontend/app/[locale]/account/page.tsx` — текущая подписка, история, BYOK keys, кнопка Portal.
-- [ ] `frontend/app/[locale]/{login,register}` — клиенту страницы с email/password формами.
-- [ ] Auto-redirect to Lemon Checkout URL после клика Buy.
+- [x] `frontend/app/[locale]/pricing/page.tsx` — RU/EN, тарифы Free/Premium
+  $9.99/Pro(BYOK) $5.99 + one-time ($19/$29). _(2026-06-28 late-3; валюта
+  по гео-IP — TODO, пока USD)_
+- [x] `frontend/app/[locale]/account/page.tsx` — профиль + subscription
+  summary (`GET /billing/me`), upgrade CTA, logout. _(BYOK keys UI + Portal
+  кнопка — TODO)_
+- [x] `frontend/app/[locale]/account` совмещает login/register формы
+  (email/password) вместо отдельных `{login,register}` маршрутов.
+- [x] Auto-redirect to Lemon Checkout URL после клика Buy
+  (`createCheckout` → `window.location`). `checkout/success/` poll-страница.
+- [x] `lib/auth-client.ts` + `lib/billing-client.ts`; Header nav; i18n
+  Pricing/Account/CheckoutSuccess. tsc/next build/jest зелёные.
 - [ ] Playwright тесты: register → login → checkout (Lemon test mode) → success page.
 
 ### Фаза 6.H — Email transactional (Resend)

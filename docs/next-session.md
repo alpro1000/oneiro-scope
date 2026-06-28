@@ -43,7 +43,7 @@
 | **Cloud Run + Vertex AI** | ✅ ADC auto-detect via K_SERVICE | `backend/core/llm_provider.py`, `docs/deployment/CLOUD_RUN.md` |
 | **Memory system** | ✅ Full STAVAGENT scaffold (Phase 9) | CLAUDE.md, soul.md §1-§10, steering/*, templates/, next-session.md |
 | **Backend test suite** | ✅ 275 passed, 6 skipped | `backend/tests/` |
-| **Frontend** | ⚠ Next.js существует, не интегрирован с Phase 6+ auth/billing | `frontend/` |
+| **Frontend** | ✅ pricing/account/checkout + auth/billing clients (Phase 6.G); ⚠ остальные страницы не интегрированы | `frontend/app/[locale]/{pricing,account,checkout}`, `frontend/lib/{auth,billing}-client.ts` |
 | **Mobile (Capacitor)** | ⚠ guide есть, проект не создан | `docs/MOBILE.md` |
 
 ---
@@ -54,7 +54,7 @@
 - Транзиты `compute_transits` (exact dates, тест на Jupiter ☌ natal Saturn = 11.09.2026 ✓).
 - Solar Return `solar_return_chart` (arc-min precision, любая локация).
 - Astrocartography `astrocartography_scan` (relocated chart angles, scored).
-- Archetype-таблицы — 7 MCP tools, классические цитаты, confidence 0.9.
+- Archetype-таблицы — 9 MCP tools (вкл. planet_in_house, transit_meaning), классические цитаты, confidence 0.9.
 - Strategic Analyst agent с 19 tools, 8-layer evidence matrix.
 - Disclaimer enforcement через `ensure_disclaimer()` для 5 локалей.
 - Numeric confidence ladder (`LAYER_CONFIDENCE` table).
@@ -63,7 +63,7 @@
 ## Что НЕ работает / pre-existing
 
 - **`build-and-validate` CI** — pre-existing failure. См. `docs/soul.md §5`. Не блокирует merge (`mergeable_state: unstable`, не `blocked`).
-- **Frontend ↔ Backend auth integration** — endpoints есть, frontend ещё не использует.
+- **Frontend ↔ Backend auth integration** — pricing/account/checkout готовы (token в localStorage); astrology/dreams страницы ещё не шлют Authorization.
 - **Vertex AI / Cloud Run живой деплой** — гайд написан, реального деплоя нет. Нужен GCP-аккаунт owner'а.
 
 ---
@@ -79,7 +79,7 @@
 
 3. ~~**`planet_in_house.py`** archetype module — 10 планет × 12 домов с цитатами Sasportas/Tompkins.~~ ✅ **DONE 2026-06-28 late** — composed table + MCP tool `planet_in_house` (tools 23→24), +5 tests. Phase 8 hard-archetype-набор завершён.
 4. ~~**`transit_meanings.py`** — archetype-таблица для транзитов (Saturn □ Sun = midlife reappraisal, цитата Greene).~~ ✅ **DONE 2026-06-28 late-2** — composed table + NAMED_TRANSITS + MCP tool `transit_meaning` (tools 24→25), +7 tests.
-5. **Frontend pricing/checkout/account pages** (Phase 6.G — не реализовано).
+5. ~~**Frontend pricing/checkout/account pages** (Phase 6.G).~~ ✅ **DONE 2026-06-28 late-3** — pricing/account/checkout/success + auth-client/billing-client; tsc/build/jest зелёные. TODO: Playwright e2e, BYOK-keys UI, валюта по гео-IP.
 6. **DE/ES/FR переводы** для `lunar_tables.json` и `symbols.json` (human native review).
 
 ### P2 — improvement
@@ -105,7 +105,7 @@
 
 ## Open architectural decisions ждущие owner'а
 
-1. **Цена premium tier:** $9.99 vs $14.99 vs $24.99/мес?
+1. **Цена premium tier:** $9.99 vs $14.99 vs $24.99/мес? _(pricing UI пока хардкодит $9.99 из PLAN-матрицы как placeholder — финальное решение всё ещё за owner'ом; менять в `frontend/app/[locale]/pricing/page.tsx` PLANS + Lemon variant.)_
 2. **Web frontend deploy:** Vercel или Cloud Run? Render деплоит оба, Vercel дешевле для Next.js.
 3. **Mobile-first vs web-first для Q3 2026.** Mobile через Capacitor готов (гайд) + $99/yr Apple + $25 Google Play.
 4. **Тестовый Lemon Squeezy аккаунт заведён?** Тестовые product variant IDs нужны для CI smoke.
