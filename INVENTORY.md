@@ -9,7 +9,7 @@
 | external/pyswisseph/swisseph | 0 | 1 |
 | external/DReAMy | 1 | 1 |
 | external/DReAMy/dreamy | 0 | 3 |
-| docs | 2 | 39 |
+| docs | 2 | 40 |
 | docs/architecture | 1 | 5 |
 | docs/architecture/modules | 0 | 3 |
 | docs/steering | 0 | 3 |
@@ -45,13 +45,13 @@
 | backend/api/v1 | 0 | 8 |
 | backend/models | 0 | 7 |
 | backend/mcp | 1 | 3 |
-| backend/mcp/tools | 0 | 5 |
+| backend/mcp/tools | 0 | 6 |
 | backend/alembic | 1 | 2 |
 | backend/alembic/versions | 0 | 1 |
 | backend/middleware | 0 | 2 |
-| backend/tests | 0 | 17 |
+| backend/tests | 0 | 20 |
 | backend/data | 0 | 1 |
-| backend/services | 6 | 0 |
+| backend/services | 7 | 0 |
 | backend/services/billing | 0 | 3 |
 | backend/services/email | 1 | 2 |
 | backend/services/email/templates | 5 | 0 |
@@ -60,6 +60,7 @@
 | backend/services/email/templates/es | 0 | 2 |
 | backend/services/email/templates/en | 0 | 2 |
 | backend/services/email/templates/fr | 0 | 2 |
+| backend/services/strategic | 0 | 3 |
 | backend/services/byok | 0 | 2 |
 | backend/services/dreams | 3 | 5 |
 | backend/services/dreams/knowledge_base | 0 | 2 |
@@ -67,7 +68,7 @@
 | backend/services/dreams/ai | 1 | 2 |
 | backend/services/dreams/ai/prompts | 0 | 1 |
 | backend/services/lunar | 0 | 3 |
-| backend/services/astrology | 5 | 15 |
+| backend/services/astrology | 5 | 18 |
 | backend/services/astrology/policies | 0 | 2 |
 | backend/services/astrology/engine | 0 | 5 |
 | backend/services/astrology/knowledge_base | 0 | 4 |
@@ -75,8 +76,8 @@
 | backend/services/astrology/validators | 0 | 2 |
 | backend/app | 0 | 2 |
 | agents | 2 | 5 |
-| agents/specialists | 0 | 4 |
-| agents/prompts | 0 | 4 |
+| agents/specialists | 0 | 5 |
+| agents/prompts | 0 | 5 |
 | oneiro-scope | 0 | 0 |
 | .claude | 1 | 1 |
 | .claude/skills | 8 | 1 |
@@ -94,4 +95,4 @@
 | .github | 1 | 0 |
 | .github/workflows | 0 | 7 |
 
-**ИТОГО:** папок = 90, файлов = 305
+**ИТОГО:** папок = 91, файлов = 318
