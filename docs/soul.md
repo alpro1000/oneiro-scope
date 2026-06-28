@@ -1,6 +1,23 @@
 # OneiroScope — Soul
 
+> **English TL;DR:** Living project memory between Claude Code
+> sessions. Reference, not log dump — keep it under ~400 lines.
+> Closed/resolved items get crossed out or deleted, not piled up.
+> §9 (session log) is the only append-only section.
+
 Personal/project memory file for cross-session continuity. Read by Claude Code at every session start (see mandatory block in `CLAUDE.md`).
+
+**Section map:**
+- §1 Identity — what this project is
+- §2 Active projects / contexts — current branch, KB sources
+- §3 Rules / discipline — 5 owner-side rules
+- §4 Code style / conventions
+- §5 Known issues / tech debt — strike through when resolved
+- §6 Architecture decisions log (ADRs)
+- §7 Deployment notes
+- §8 Open questions / parking lot
+- §9 **Session log** (append-only, newest first)
+- §10 Rejected ideas (and why)
 
 ---
 
@@ -86,6 +103,30 @@ Recent decisions:
 ---
 
 ## §9 Session log
+
+### 2026-06-28 — claude/memory-system-harmonization — Phase 9: scaffold memory-system harmonization
+
+**Goal:** Owner shared the peer-review scaffold from another chat (full STAVAGENT-style memory-management system). Apply the missing pieces here: `next-session.md` handoff format, `docs/templates/_TEMPLATE_{spec,bug}/` workflows, English TL;DR blocks in steering docs, §10 "Rejected ideas" in soul.md, cleaner CLAUDE.md mandatory block.
+
+**Done:**
+- `docs/next-session.md` — handoff snapshot with project state table, what works / what's broken, P0/P1/P2 priorities, "context easy to lose" notes (USSR 1977 = UTC+3 not UTC+4, Jupiter ☌ Saturn = Sep 11 not Aug 25, etc.), open architectural decisions.
+- `docs/templates/_TEMPLATE_spec/{requirements,design,tasks}.md` — full SDD template trio. EARS-style criteria, provenance-ladder mapping, 6 implementation Gates.
+- `docs/templates/_TEMPLATE_bug/{report,analyze,fix,verify}.md` — reproduce-first bug workflow. Hypothesis-generation in analyze.md, domain-rule re-check in verify.md.
+- `CLAUDE.md` mandatory block — expanded to read 8 files in order (conventions → product → tech → structure → domain → soul → PLAN → next-session). Added English TL;DR for external readers + the 5 core principles spelled out.
+- `docs/soul.md` — English TL;DR + section map at top; new §10 «Rejected ideas» with 6 entries (Stripe+YooKassa, Llama-as-primary, Co-Star positioning, MCP separate service, pure-LLM MC interpretation, Chiron MOSEPH).
+- `docs/steering/{product,tech,structure}.md` — added English TL;DR blocks in headers.
+- `docs/PLAN.md` — Phase 8 logged + Phase 9 added and checked off.
+
+**Decisions:**
+- Kept `docs/steering/conventions.md` and `domain.md` from Phase 8 untouched (already match the scaffold).
+- Did NOT renumber soul.md sections (would break all earlier §-references in commit history). Added §10 instead of fitting "Rejected ideas" into existing slots.
+- Did NOT add `docs/specs/` or `docs/bugs/` directories yet — templates are ready to copy when needed, but creating empty dirs is bloat.
+
+**Verification:**
+- All scaffold-required files present: CLAUDE.md ✓, soul.md (§1-§10) ✓, steering/{product,tech,structure,domain,conventions}.md ✓, next-session.md ✓, templates/_TEMPLATE_{spec,bug}/ ✓.
+- No code change in this PR → no test impact.
+
+---
 
 ### 2026-06-28 — claude/hard-archetypes-cloudrun — Phase 8: Hard archetype tables + Cloud Run + scaffold adoption
 
@@ -394,3 +435,38 @@ While running real chart tests through the new tools, discovered my prior manual
 **Verified:** 14/14 smoke tests green (`pytest backend/tests/test_mcp_smoke.py backend/tests/test_agent_smoke.py`).
 
 *(append new entries above this line on next session)*
+
+---
+
+## §10 Rejected ideas (and why)
+
+Track ideas we explicitly decided NOT to pursue, with the rationale.
+Prevents re-debating the same questions in future sessions.
+
+- **Stripe + YooKassa as payment providers** — rejected 2026-06-14
+  (Phase 6 pivot). Solo founder in EU, no юр.лицо; Lemon Squeezy as
+  Merchant of Record handles VAT/sales tax/KYC/chargebacks instead.
+- **Llama-3.1-8b (Groq) as primary LLM for premium tier** — rejected
+  2026-06-28. Llama-8b breaks the Strategic Analyst 8-section response
+  structure and the no-determinism rule under load. Kept as fallback
+  for free tier; premium uses Claude Sonnet 4.6 / Gemini Flash.
+- **Loud public "AI horoscope" positioning (Co-Star clone)** —
+  rejected 2026-06-14 (Phase 7 pivot). Saturated market with
+  unfalsifiable text; OneiroScope's defensive moat is forced
+  source attribution via the Evidence Matrix.
+- **MCP server as a separate Render service** — rejected 2026-05-26.
+  Embedded in the backend works (stdio child) and avoids a second
+  paid service. Re-evaluate if/when MCP HTTP becomes external-traffic-
+  heavy.
+- **Pure-LLM interpretation for MC / Sun / Houses** — rejected
+  2026-06-28 (Phase 8). Hard archetype tables with cited classical
+  sources (Sue Tompkins, Liz Greene, Howard Sasportas, Robert Hand,
+  William Lilly) give confidence 0.9 instead of 0.7 and run at
+  $0 cost — strictly better than LLM-on-the-fly for the well-known
+  archetypal layer.
+- **Chiron / asteroid transits via MOSEPH analytic ephemeris** —
+  rejected 2026-06-14 (Phase 7). MOSEPH doesn't ship asteroids
+  (`seas_18.se1` is required). Two options remain: drop Chiron from
+  the transit list (current state) OR upload `.se1` files to a Cloud
+  Storage bucket and point `SE_EPHE_PATH` at it (Phase 8 Cloud Run
+  guide §8 documents the path).

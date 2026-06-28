@@ -248,6 +248,43 @@ Stripe + YooKassa выпиливаются. Все Subscription.stripe_subscript
 
 ---
 
+## ✅ Фаза 8 — Hard archetype tables + Cloud Run + scaffold adoption
+
+См. PR #122 (merged 2026-06-28).
+- 7 archetype-модулей (MC/Sun/Houses/Aspects/Dignities/zodiac signs) с цитатами
+- 7 MCP tools archetypes.* — `mc_in_sign`, `sun_in_sign`, etc.
+- `docs/steering/domain.md` + `conventions.md` адаптированы из scaffold'а
+- `backend/services/strategic/disclaimer.py` + `numeric_confidence()`
+- Cloud Run / Vertex AI guide (`docs/deployment/CLOUD_RUN.md`)
+
+---
+
+## ✅ Фаза 9 — Memory system harmonization (от scaffold/STAVAGENT)
+
+Доделаны недостающие компоненты системы памяти, перенесённой из STAVAGENT.
+
+### ✅ 9.A — Handoff snapshot
+- [x] `docs/next-session.md` — состояние / что работает / что сломано / приоритеты / контекст-который-легко-потерять / open architectural decisions. Обновляется каждым substantial-сессионным PR.
+
+### ✅ 9.B — Templates для spec + bug workflow
+- [x] `docs/templates/_TEMPLATE_spec/` — `requirements.md` (EARS-стиль), `design.md` (архитектура + provenance ladder mapping), `tasks.md` (6 Gates с чекбоксами).
+- [x] `docs/templates/_TEMPLATE_bug/` — `report.md`, `analyze.md` (root-cause + hypotheses), `fix.md` (минимальный fix), `verify.md` (post-merge верификация).
+
+### ✅ 9.C — Bilingual TL;DR в шапках
+- [x] `CLAUDE.md` — расширенный English TL;DR + обновлённый mandatory block (читать domain.md/conventions.md/next-session.md/templates).
+- [x] `docs/soul.md` — English TL;DR + section map; новая §10 «Rejected ideas».
+- [x] `docs/steering/{product,tech,structure}.md` — английский TL;DR в шапке.
+
+### ✅ 9.D — §10 Rejected ideas в soul.md
+- [x] Зафиксированы 6 решений (Stripe+YooKassa, Llama-as-primary, Co-Star clone, MCP separate service, pure-LLM MC interpretation, Chiron without .se1) — каждое с датой и rationale.
+
+### Метрики Phase 9
+- Files added: 5 (next-session.md + 3 spec templates + 4 bug templates = 8 новых).
+- Files updated: 5 (CLAUDE.md, soul.md, steering/{product,tech,structure}.md).
+- No code change → no test impact.
+
+---
+
 
 ## Definition of Done
 

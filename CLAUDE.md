@@ -1,17 +1,94 @@
-# CLAUDE.md - OneiroScope Project Guide
+# CLAUDE.md — OneiroScope Project Guide
+
+> **English TL;DR:** Operational reference for any Claude Code
+> session working on OneiroScope — a Strategic Life Cycle Analyst
+> built on top of Swiss-Ephemeris astronomy + Hall/Van de Castle
+> dream analysis + lunar calendar. Architecture is
+> **deterministic-first**: chart math is never LLM-generated;
+> interpretation is the AI layer and always labelled with provenance.
+> Confidence ladder: ephemeris/calc = 1.0 · cited classical rule =
+> 0.9 · symbol dictionary = 0.8 · LLM synthesis = 0.7. All content
+> is reflective / entertainment — never medical, psychological,
+> legal or financial advice.
 
 > **🔴 MANDATORY BLOCK — READ FIRST (every new session)**
 >
-> Before doing anything else in this repo:
+> Read in this order before touching anything:
 >
-> 1. Read `docs/soul.md` — cross-session memory: §1 identity, §2 active contexts, §5 known issues, §9 latest session log.
-> 2. Read `docs/PLAN.md` if it exists — current task plan with checkboxes; continue from the first unchecked item.
-> 3. Read `docs/steering/{tech,structure,product}.md` if your task touches architecture, layering, or product principles.
-> 4. Hard rule: **agents and skills consume MCP tools** (`backend/mcp/`), they do not call FastAPI services or HTTP routes directly. FastAPI = HTTP surface; MCP = canonical tool surface; agent/skills = consumers.
-> 5. At the end of any substantial session: append a new entry to `docs/soul.md §9` (Session log) — date, branch, what changed, decisions. This is the final Gate of every task.
-> 6. Develop on the branch named in the task prompt. Never push to a different branch without explicit permission.
+> 1. `docs/steering/conventions.md` — workflow rules (mantra,
+>    Karpathy anti-bloat, gates, commit/branch naming).
+> 2. `docs/steering/product.md` — what we're building and for whom.
+> 3. `docs/steering/tech.md` — stack, AI provider layer, data sources.
+> 4. `docs/steering/structure.md` — repo layout, layering rules
+>    (Skills → Agents → MCP → Services).
+> 5. `docs/steering/domain.md` — astrology (houses/aspects/orbs/
+>    dignities) + dreams (symbols/frameworks) + disclaimers.
+> 6. `docs/soul.md` — cross-session memory: §1 identity, §2 active
+>    contexts, §5 known issues, §6 ADR log, §9 latest session log.
+> 7. `docs/PLAN.md` — current phase checklist; continue from the first
+>    unchecked item.
+> 8. `docs/next-session.md` — handoff snapshot from the previous
+>    session (what works, what's broken, what's next).
 >
-> If any of these files are missing, create them from the templates referenced in `docs/PLAN.md` Phase 0 before continuing.
+> If any of these files is missing or stale → **STOP** and notify the owner.
+>
+> **Hard layering rule:** agents and skills consume MCP tools
+> (`backend/mcp/`); they do NOT call FastAPI HTTP or service classes
+> directly. FastAPI = HTTP surface for the web frontend; MCP = the
+> canonical tool surface; agents/skills = consumers.
+>
+> **Final Gate of every substantial session:**
+> append an entry to `docs/soul.md §9` AND update
+> `docs/next-session.md` with the new state.
+>
+> **Branch discipline:** develop on the branch named in the task
+> prompt. Never push to a different branch without explicit owner
+> permission. Branch naming: `claude/<task-description>-<5chars>`.
+>
+> **For new features / bugs:** copy templates from
+> `docs/templates/_TEMPLATE_spec/` or `docs/templates/_TEMPLATE_bug/`
+> into `docs/specs/<feature>/` or `docs/bugs/BUG-<id>/`.
+
+---
+
+## 🔑 Key principles (domain-agnostic core)
+
+- **Determinism > AI.** Astronomical math (planet positions, houses,
+  aspects, transits) is computed via Swiss Ephemeris, not generated
+  by an LLM. Interpretation of a transit / dream symbol is the AI
+  layer and is always last and always labelled.
+- **Confidence ladder.** Astronomy = 1.0 · cited classical rule = 0.9
+  · symbol dictionary = 0.8 · LLM synthesis = 0.7. A higher-confidence
+  source is never overwritten by a lower one. Implemented in
+  `backend/services/strategic/layers.py::LAYER_CONFIDENCE`.
+- **Provenance per item.** Every claim carries its source: which
+  computation / which classical text (with citation) / which symbol
+  dictionary / which LLM call. Returned in MCP-tool responses as the
+  `source` field.
+- **Disclaimer is non-negotiable.** Every interpretive response
+  carries a disclaimer (reflective/entertainment content; not medical/
+  psychological/legal/financial advice; no absolute predictions).
+  Enforced by `backend/services/strategic/disclaimer.py`.
+- **No deterministic prediction language.** Forbidden: "will / будет /
+  случится / definitely / точно". Replace with "tends to / traditionally
+  associated with / period associated with…". Enforced by
+  `backend/services/strategic/no_determinism.py`.
+
+## 📐 Domain philosophy (mandatory reading before touching the core)
+
+Before changing the calculation core, interpretation rules, acceptance
+criteria, or UI text — read `docs/steering/domain.md`. TL;DR:
+
+- ✅ "in tradition X this is usually interpreted as…"
+- ✅ "classically associated with…"
+- ✅ "probability higher", "period associated with"
+- ❌ "this MEANS that…", "you will DEFINITELY experience…", "NEVER / MUST"
+
+**Acceptance criteria style:**
+- ❌ "interpretation must return exactly text T"
+- ✅ "computation of houses for known date matches reference ephemeris
+  within tolerance; interpretation contains a disclaimer and a source
+  citation"
 
 ---
 

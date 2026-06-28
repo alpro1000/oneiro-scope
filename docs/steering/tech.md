@@ -1,5 +1,10 @@
 # Steering — Technology
 
+> **English TL;DR:** Architectural decisions log — stack, AI providers,
+> data sources, infra. Update on every significant tech choice. Adjacent
+> docs: `domain.md` for astrology/dream rules, `structure.md` for
+> repo layout, `conventions.md` for workflow.
+
 Architectural decisions log. Update on every significant tech choice.
 
 ## Backend
