@@ -266,6 +266,17 @@ Stripe + YooKassa выпиливаются. Все Subscription.stripe_subscript
 - [x] Тесты +5 (полная сетка 10×12, двойная цитата, регистр, ошибки, обёртка).
   Backend suite: **268 passed, 6 skipped**.
 
+### ✅ 8.H — transit_meanings (follow-up, 2026-06-28 late-2)
+- [x] `archetypes/transit_meanings.py` — символический слой транзитов
+  (conf 0.9) поверх детерминированных дат из `compute_transits` (1.0).
+  Композиция: `TRANSIT_AGENDA` (Hand/Greene) × natal drive (`PLANET_DRIVES`)
+  × aspect nature (`ASPECTS`) + `NAMED_TRANSITS` для канонических
+  жизненных транзитов (Saturn □/☍ Sun = «midlife reappraisal», Saturn
+  Return, Pluto/Neptune/Uranus □ Sun). Natal-тела ограничены Sun..Saturn.
+- [x] MCP tool `transit_meaning()` → tools **24 → 25**.
+- [x] Тесты +7 (полная сетка, Saturn□Sun=midlife, Saturn Return, generic,
+  регистр, ошибки, обёртка). Backend suite: **275 passed, 6 skipped**.
+
 ---
 
 ## ✅ Фаза 9 — Memory system harmonization (от scaffold/STAVAGENT)

@@ -34,7 +34,7 @@
 
 | Слой | Статус | Где живёт |
 |---|---|---|
-| **MCP server** | ✅ 24 tools зарегистрированы | `backend/mcp/server.py` |
+| **MCP server** | ✅ 25 tools зарегистрированы | `backend/mcp/server.py` |
 | **ADK agents** | ✅ 4 specialists + 1 orchestrator | `agents/specialists/`, `agents/orchestrator.py` |
 | **Strategic Analyst posture** | ✅ prompts + Insight types + no-determinism | `agents/prompts/strategic_system.md`, `backend/services/strategic/` |
 | **Hard archetype tables** | ✅ MC/Sun/Houses/Aspects/Dignities + planet_in_house 10×12 (Phase 8) | `backend/services/astrology/archetypes/` |
@@ -42,7 +42,7 @@
 | **BYOK + Quotas** | ✅ Fernet-encrypted per-user keys + 402 quotas | `backend/services/{byok,billing/quotas}.py` |
 | **Cloud Run + Vertex AI** | ✅ ADC auto-detect via K_SERVICE | `backend/core/llm_provider.py`, `docs/deployment/CLOUD_RUN.md` |
 | **Memory system** | ✅ Full STAVAGENT scaffold (Phase 9) | CLAUDE.md, soul.md §1-§10, steering/*, templates/, next-session.md |
-| **Backend test suite** | ✅ 268 passed, 6 skipped | `backend/tests/` |
+| **Backend test suite** | ✅ 275 passed, 6 skipped | `backend/tests/` |
 | **Frontend** | ⚠ Next.js существует, не интегрирован с Phase 6+ auth/billing | `frontend/` |
 | **Mobile (Capacitor)** | ⚠ guide есть, проект не создан | `docs/MOBILE.md` |
 
@@ -78,7 +78,7 @@
 ### P1 — что усиливает продукт
 
 3. ~~**`planet_in_house.py`** archetype module — 10 планет × 12 домов с цитатами Sasportas/Tompkins.~~ ✅ **DONE 2026-06-28 late** — composed table + MCP tool `planet_in_house` (tools 23→24), +5 tests. Phase 8 hard-archetype-набор завершён.
-4. **`transit_meanings.py`** — archetype-таблица для транзитов (Saturn □ Sun = midlife reappraisal, цитата Greene).
+4. ~~**`transit_meanings.py`** — archetype-таблица для транзитов (Saturn □ Sun = midlife reappraisal, цитата Greene).~~ ✅ **DONE 2026-06-28 late-2** — composed table + NAMED_TRANSITS + MCP tool `transit_meaning` (tools 24→25), +7 tests.
 5. **Frontend pricing/checkout/account pages** (Phase 6.G — не реализовано).
 6. **DE/ES/FR переводы** для `lunar_tables.json` и `symbols.json` (human native review).
 

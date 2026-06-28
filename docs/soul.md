@@ -104,6 +104,36 @@ Recent decisions:
 
 ## §9 Session log
 
+### 2026-06-28 (late-2) — P1: transit_meanings archetype table
+
+Continued through the P1 queue (goal: "делай следующий незакрытый p1").
+Next unclosed item after planet_in_house was `transit_meanings.py`.
+
+**Done:**
+- `backend/services/astrology/archetypes/transit_meanings.py` — the
+  transit archetype layer: symbolic meaning (conf 0.9) on top of the
+  deterministic transit DATES from `compute_transits` (astronomy 1.0).
+  Same composition philosophy as planet_in_house:
+  - `TRANSIT_AGENDA` (6 slow transiting planets — process + tempo),
+    cited to Hand *Planets in Transit* (1976) + Greene *The Outer
+    Planets and Their Cycles* (1983).
+  - natal drive reused from `PLANET_DRIVES`; aspect nature from `ASPECTS`.
+  - `NAMED_TRANSITS` — canonical life-cycle transits get explicit
+    archetype + specific citation. **Saturn □/☍ Sun = "Midlife
+    reappraisal"** (the example named in next-session.md), Saturn Return,
+    Pluto/Neptune/Uranus □ Sun.
+  - Natal bodies restricted to Sun..Saturn to match `transits_engine`.
+- MCP tool `transit_meaning()` → **MCP tools 24 → 25**; in
+  `list_archetype_topics`.
+- Tests +7. **Backend suite: 275 passed, 6 skipped.**
+
+**Shipped:** PR merged to `main`.
+
+**Still deferred (unchanged):** Cloud Run staging smoke, Alembic
+migrations, frontend pricing/checkout, DE/ES/FR content translations.
+
+---
+
 ### 2026-06-28 (late) — P1: planet_in_house hard table (10×12)
 
 Follow-up session after the Phase 7-9 consolidation. Picked up the
