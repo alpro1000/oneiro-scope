@@ -28,6 +28,10 @@ from backend.services.astrology.archetypes.planet_in_house import (
     planet_in_house_archetype,
 )
 from backend.services.astrology.archetypes.sun_in_sign import sun_archetype
+from backend.services.astrology.archetypes.transit_meanings import (
+    TRANSITING_PLANETS,
+    transit_archetype,
+)
 from backend.services.astrology.archetypes.zodiac_signs import sign_archetype
 from backend.services.strategic.disclaimer import DISCLAIMER_RU
 
@@ -178,6 +182,38 @@ def planet_in_house(planet: str, house_number: int) -> dict[str, Any]:
     }
 
 
+def transit_meaning(transiting: str, aspect: str, natal: str) -> dict[str, Any]:
+    """Return the symbolic archetype of a transit (transiting × aspect × natal).
+
+    The exact DATES of a transit come from the astronomy tool
+    `compute_transits` (confidence 1.0). THIS tool adds the cited
+    symbolic meaning on top (confidence 0.9): what the transit is
+    traditionally about, its tempo, and — for canonical life-cycle
+    transits (Saturn Return, Saturn square/opposition Sun = midlife
+    reappraisal, outer-planet identity transits) — a named archetype.
+
+    Args:
+        transiting: transiting planet — one of mars/jupiter/saturn/
+            uranus/neptune/pluto (the slow planets the engine scans).
+        aspect: conjunction/opposition/square/trine/sextile.
+        natal: natal body contacted — sun/moon/mercury/venus/mars/
+            jupiter/saturn.
+    """
+    arc = transit_archetype(transiting, aspect, natal)
+    return {
+        "layer": _LAYER,
+        "confidence": _CONFIDENCE,
+        "subject": f"Transiting {transiting.capitalize()} {aspect} natal {natal.capitalize()}",
+        "archetype": arc["archetype"],
+        "named": arc["named"],
+        "themes": arc["themes"],
+        "tempo": arc["tempo"],
+        "description": arc["description"],
+        "source": arc["source"],
+        "disclaimer": DISCLAIMER_RU,
+    }
+
+
 def zodiac_sign(sign: str) -> dict[str, Any]:
     """Return the elemental archetype of a zodiac sign.
 
@@ -216,6 +252,7 @@ def list_archetype_topics() -> dict[str, Any]:
             "houses": list(HOUSES.keys()),
             "aspects": list(ASPECTS.keys()),
             "planet_in_house": list(PLANETS),
+            "transit_meaning": list(TRANSITING_PLANETS),
         },
         "disclaimer": DISCLAIMER_RU,
     }

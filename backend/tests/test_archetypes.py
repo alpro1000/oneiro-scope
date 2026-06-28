@@ -254,7 +254,7 @@ def test_list_archetype_topics_includes_all_categories():
     topics = r["topics"]
     assert set(topics) == {
         "zodiac_signs", "mc_in_sign", "sun_in_sign", "houses", "aspects",
-        "planet_in_house",
+        "planet_in_house", "transit_meaning",
     }
     assert len(topics["zodiac_signs"]) == 12
     assert len(topics["mc_in_sign"]) == 12
@@ -262,6 +262,7 @@ def test_list_archetype_topics_includes_all_categories():
     assert len(topics["houses"]) == 12
     assert len(topics["aspects"]) == 5
     assert len(topics["planet_in_house"]) == 10
+    assert len(topics["transit_meaning"]) == 6
 
 
 # ---------- Planet in house ------------------------------------------------
@@ -318,3 +319,82 @@ def test_planet_in_house_tool_carries_confidence_and_disclaimer():
     assert r["subject"] == "Saturn in House 10"
     assert "disclaimer" in r and len(r["disclaimer"]) > 30
     assert "House of Career" in r["archetype"]
+
+
+# ---------- Transit meanings -----------------------------------------------
+
+_TRANSITING = ("mars", "jupiter", "saturn", "uranus", "neptune", "pluto")
+_ASPECT_NAMES = ("conjunction", "opposition", "square", "trine", "sextile")
+_NATAL_BODIES = ("sun", "moon", "mercury", "venus", "mars", "jupiter", "saturn")
+
+
+def test_transit_full_grid_resolves():
+    """Every transiting × aspect × natal cell the engine can emit resolves."""
+    from backend.services.astrology.archetypes import transit_archetype
+
+    for t in _TRANSITING:
+        for a in _ASPECT_NAMES:
+            for n in _NATAL_BODIES:
+                arc = transit_archetype(t, a, n)
+                for field in ("archetype", "themes", "description",
+                              "tempo", "source"):
+                    assert field in arc, f"{t}/{a}/{n} missing {field}"
+                # composed citation carries at least two joined sources
+                assert ";" in arc["source"]
+
+
+def test_transit_saturn_square_sun_is_midlife_reappraisal():
+    """The canonical example: Saturn □ Sun = midlife reappraisal (Greene)."""
+    from backend.services.astrology.archetypes import transit_archetype
+
+    arc = transit_archetype("Saturn", "square", "Sun")
+    assert arc["named"] == "Midlife reappraisal"
+    assert arc["archetype"] == "Test of identity structure"
+    assert "Greene" in arc["source"]
+
+
+def test_transit_saturn_return_named():
+    from backend.services.astrology.archetypes import transit_archetype
+
+    arc = transit_archetype("saturn", "conjunction", "saturn")
+    assert arc["named"] == "Saturn Return"
+
+
+def test_transit_generic_cell_has_no_named_label():
+    """A non-canonical transit composes but carries named=None."""
+    from backend.services.astrology.archetypes import transit_archetype
+
+    arc = transit_archetype("jupiter", "trine", "venus")
+    assert arc["named"] is None
+    assert "Jupiter" in arc["archetype"]
+
+
+def test_transit_case_insensitive():
+    from backend.services.astrology.archetypes import transit_archetype
+
+    assert (
+        transit_archetype("PLUTO", "Square", "SUN")["archetype"]
+        == transit_archetype("pluto", "square", "sun")["archetype"]
+    )
+
+
+def test_transit_invalid_inputs_raise():
+    from backend.services.astrology.archetypes import transit_archetype
+
+    with pytest.raises(KeyError):
+        transit_archetype("moon", "square", "sun")  # Moon not a scanned transiter
+    with pytest.raises(KeyError):
+        transit_archetype("saturn", "quincunx", "sun")  # not a major aspect
+    with pytest.raises(KeyError):
+        transit_archetype("saturn", "square", "pluto")  # not a scanned natal body
+
+
+def test_transit_meaning_tool_carries_layer_and_disclaimer():
+    from backend.mcp.tools.archetypes import transit_meaning
+
+    r = transit_meaning("Saturn", "square", "Sun")
+    assert r["layer"] == "astrology_symbolic"
+    assert r["confidence"] == 0.9
+    assert r["subject"] == "Transiting Saturn square natal Sun"
+    assert r["named"] == "Midlife reappraisal"
+    assert "disclaimer" in r and len(r["disclaimer"]) > 30

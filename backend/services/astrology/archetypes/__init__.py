@@ -29,6 +29,10 @@ from backend.services.astrology.archetypes.planet_in_house import (
     planet_in_house_archetype,
 )
 from backend.services.astrology.archetypes.sun_in_sign import SUN_IN_SIGN
+from backend.services.astrology.archetypes.transit_meanings import (
+    TRANSIT_AGENDA,
+    transit_archetype,
+)
 from backend.services.astrology.archetypes.zodiac_signs import ZODIAC_SIGNS
 
 __all__ = [
@@ -40,5 +44,7 @@ __all__ = [
     "PLANET_DRIVES",
     "planet_in_house_archetype",
     "SUN_IN_SIGN",
+    "TRANSIT_AGENDA",
+    "transit_archetype",
     "ZODIAC_SIGNS",
 ]
