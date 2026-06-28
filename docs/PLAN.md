@@ -154,8 +154,11 @@ Stripe + YooKassa выпиливаются. Все Subscription.stripe_subscript
 - [ ] Pro-tier checks: при Pro подписке у пользователя должен быть хотя бы один BYOK ключ.
 - [ ] Tests: encrypt/decrypt round-trip, provider override priority, Pro без ключа → 403.
 
-### Фаза 6.F — i18n RU/EN/DE/ES/FR
-- [ ] **Frontend** (next-intl): `frontend/messages/{de,es,fr}.json` стартовый перевод от DeepL Pro API + ручная проверка контента. `i18n/request.ts` + `middleware.ts` — добавить локали. Accept-Language auto-detect.
+### Фаза 6.F — i18n RU/EN/DE/ES/FR  _(частично, 2026-06-28 late-4)_
+- [x] **Frontend** (next-intl): `frontend/messages/{de,es,fr}.json` —
+  machine-draft всех 157 UI-строк (shape+placeholders валидированы vs en),
+  pending native review. `i18n/request.ts` + `middleware.ts` + LanguageSwitcher
+  → локали en/ru/de/es/fr. _(Accept-Language auto-detect — TODO)_
 - [ ] **MCP tools**: расширить `locale` валидацию до `ru|en|de|es|fr` в `astrology.py`, `dreams.py`, `lunar.py` (сейчас принимает любую строку, нужна валидация).
 - [ ] **Astrology prompts** (`backend/services/astrology/ai/prompt_templates.py`): параметризовать по locale; добавить DE/ES/FR ветки.
 - [ ] **Dream prompts** (`backend/services/dreams/ai/prompts/*.json`): добавить ветки `de/es/fr` к существующим `ru/en`.

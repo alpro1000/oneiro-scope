@@ -104,6 +104,37 @@ Recent decisions:
 
 ## §9 Session log
 
+### 2026-06-28 (late-4) — P1 #6 (partial): DE/ES/FR UI locales (Phase 6.F)
+
+Last item in the P1 queue. **Deliberately partial** — split the
+engineering from the content-quality work, because PLAN §6.F gates the
+domain content on DeepL Pro + human native review (which I cannot do
+autonomously and won't fake).
+
+**Done (engineering, shippable):**
+- `frontend/messages/{de,es,fr}.json` — complete machine-draft of all 157
+  UI strings. Validated programmatically: identical key shape + matching
+  `{placeholders}` vs `en.json`. **Marked as pending native review.**
+- `i18n/request.ts` + `middleware.ts` — locales en/ru/de/es/fr.
+- `LanguageSwitcher` — DE/ES/FR buttons.
+- tsc clean, next build green, jest 7/7.
+
+**NOT done (left for the content pipeline, by design):**
+- `backend/data/lunar_tables.json` + `dreams/knowledge_base/symbols.json`
+  DE/ES/FR — these are the domain content needing DeepL + native review.
+  Backend already falls back to EN, so de/es/fr users get localized UI
+  chrome + EN domain content until the pipeline runs.
+
+So **P1 #6 is partially closed**: UI locales live; content translation
+remains a discrete follow-up (still needs a human + DeepL key).
+
+**Shipped:** PR merged to `main`.
+
+**P1 queue now empty of fully-autonomous items.** Remaining work is P0
+(Cloud Run staging, Alembic) + the human-gated content half of #6.
+
+---
+
 ### 2026-06-28 (late-3) — P1: frontend pricing / account / checkout (Phase 6.G)
 
 Continued the P1 queue (goal "делай следующий незакрытый p1"). After the

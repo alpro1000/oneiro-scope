@@ -5,9 +5,9 @@
 > that's easy to lose. Updated at the end of every substantial session
 > alongside `soul.md §9`.
 
-**Дата последнего обновления:** 2026-06-28 (end of day)
-**Последняя ветка работы:** `claude/memory-system-harmonization` (merged PR #123)
-**Текущий main HEAD:** `af9aebf` (Phase 9 memory scaffold complete)
+**Дата последнего обновления:** 2026-06-28 (late-4)
+**Последняя ветка работы:** `claude/phase-9-consolidation-f64chg` (PRs #125 planet_in_house, #126 transit_meanings, #127 frontend pricing/account/checkout, + DE/ES/FR UI locales)
+**Текущий main HEAD:** frontend pricing/account/checkout + transit/planet archetype tables merged
 
 ---
 
@@ -80,7 +80,12 @@
 3. ~~**`planet_in_house.py`** archetype module — 10 планет × 12 домов с цитатами Sasportas/Tompkins.~~ ✅ **DONE 2026-06-28 late** — composed table + MCP tool `planet_in_house` (tools 23→24), +5 tests. Phase 8 hard-archetype-набор завершён.
 4. ~~**`transit_meanings.py`** — archetype-таблица для транзитов (Saturn □ Sun = midlife reappraisal, цитата Greene).~~ ✅ **DONE 2026-06-28 late-2** — composed table + NAMED_TRANSITS + MCP tool `transit_meaning` (tools 24→25), +7 tests.
 5. ~~**Frontend pricing/checkout/account pages** (Phase 6.G).~~ ✅ **DONE 2026-06-28 late-3** — pricing/account/checkout/success + auth-client/billing-client; tsc/build/jest зелёные. TODO: Playwright e2e, BYOK-keys UI, валюта по гео-IP.
-6. **DE/ES/FR переводы** для `lunar_tables.json` и `symbols.json` (human native review).
+6. **DE/ES/FR переводы** — 🟡 _частично (2026-06-28 late-4)_: UI-локали готовы
+   (`messages/{de,es,fr}.json` machine-draft + i18n plumbing + LanguageSwitcher,
+   tsc/build/jest зелёные). **Остаётся:** контент `lunar_tables.json` (31 день)
+   + `symbols.json` (56 символов) через DeepL Pro + **human native review**;
+   локаль-валидация MCP tools до `ru|en|de|es|fr`; Accept-Language auto-detect.
+   UI-строки тоже ждут проверки носителем.
 
 ### P2 — improvement
 

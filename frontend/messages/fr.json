@@ -1,0 +1,225 @@
+{
+  "HomePage": {
+    "title": "Votre oracle personnel",
+    "subtitle": "Interprétation des rêves et prévisions astrologiques fondées sur une approche scientifique et des bases de données de recherche universitaires",
+    "startButton": "Commencer",
+    "services": {
+      "dreams": {
+        "title": "Analyse des rêves",
+        "description": "Interprétation scientifique de vos rêves selon la méthodologie Hall/Van de Castle et des bases de données académiques",
+        "feature1": "Bases de données de recherche universitaires",
+        "feature2": "Corrélation avec le cycle lunaire",
+        "feature3": "Reconnaissance de motifs"
+      },
+      "astrology": {
+        "title": "Astrologie et prévisions",
+        "description": "Thème natal, horoscopes personnels et prévision de probabilité d'événements à partir de données astronomiques",
+        "feature1": "Thème natal précis",
+        "feature2": "Horoscopes personnels",
+        "feature3": "Prévision de la favorabilité des événements"
+      }
+    },
+    "voiceInput": {
+      "title": "Saisie vocale",
+      "description": "Enregistrez votre rêve ou décrivez une situation à analyser — appuyez sur le bouton et parlez",
+      "button": "Démarrer l'enregistrement"
+    },
+    "lunarCalendar": {
+      "title": "Calendrier lunaire",
+      "subtitle": "Suivez le jour lunaire actuel et les recommandations"
+    },
+    "footer": {
+      "disclaimer": "Les interprétations astrologiques sont symboliques et non prouvées scientifiquement. À utiliser comme outil de découverte de soi.",
+      "rights": "Tous droits réservés"
+    }
+  },
+  "CalendarPage": {
+    "title": "Calendrier lunaire des rêves",
+    "subtitle": "Suivez le rythme de la lune et les conseils oniriques pour le jour lunaire actuel.",
+    "todayLabel": "Aujourd'hui",
+    "metaDescription": "Aperçus quotidiens de la phase lunaire et recommandations oniriques inspirés par ONEIROSCOP.",
+    "monthHeading": "Aperçu du mois lunaire",
+    "error": {
+      "title": "Le calendrier lunaire est temporairement indisponible",
+      "subtitle": "Nous n'avons pas pu charger les données. Actualisez la page ou changez de fuseau horaire.",
+      "cta": "Si le problème persiste, revenez un peu plus tard — nous y travaillons."
+    }
+  },
+  "LunarWidget": {
+    "showMonth": "📅 Afficher le mois",
+    "hideMonth": "📅 Masquer le mois",
+    "loading": "Chargement du mois...",
+    "error": "Nous n'avons pas pu charger le calendrier lunaire. Veuillez réessayer.",
+    "retry": "Réessayer",
+    "lunarDay": "Jour lunaire {day}",
+    "lunarDayStarted": "le jour lunaire {day} a commencé",
+    "phase": "Phase",
+    "description": "Énergie des rêves",
+    "recommendation": "Recommandations",
+    "updated": "Mis à jour pour {date}",
+    "tableDate": "Date",
+    "tableDay": "Jour",
+    "tableDescription": "Thème du rêve",
+    "tableRecommendation": "Notes"
+  },
+  "DreamsPage": {
+    "title": "Analyse des rêves",
+    "subtitle": "Décrivez votre rêve et recevez une interprétation scientifique",
+    "inputPlaceholder": "Décrivez votre rêve en détail...",
+    "analyzeButton": "Analyser le rêve",
+    "recording": "Enregistrement...",
+    "lunarContext": "Jour lunaire actuel : {day}",
+    "methodology": "Interprétation fondée sur la méthodologie Hall/Van de Castle et les données DreamBank"
+  },
+  "AstrologyPage": {
+    "title": "Astrologie et prévisions",
+    "subtitle": "Thème natal personnel et prévisions d'événements",
+    "tabs": {
+      "natalChart": "Thème natal",
+      "horoscope": "Horoscope",
+      "eventForecast": "Prévision d'événement"
+    },
+    "natalChart": {
+      "title": "Calculer le thème natal",
+      "birthDate": "Date de naissance",
+      "birthTime": "Heure de naissance (facultatif)",
+      "birthPlace": "Lieu de naissance",
+      "calculateButton": "Calculer le thème",
+      "unknownTime": "Si l'heure est inconnue, midi (12h00) sera utilisé"
+    },
+    "horoscope": {
+      "title": "Horoscope personnel",
+      "period": "Période",
+      "daily": "Quotidien",
+      "weekly": "Hebdomadaire",
+      "monthly": "Mensuel",
+      "yearly": "Annuel"
+    },
+    "eventForecast": {
+      "title": "Prévision d'événement",
+      "eventDate": "Date de l'événement",
+      "eventType": "Type d'événement",
+      "eventLocation": "Lieu (facultatif)",
+      "forecastButton": "Obtenir la prévision",
+      "favorability": "Favorabilité",
+      "positiveFactors": "Facteurs positifs",
+      "riskFactors": "Facteurs de risque",
+      "recommendations": "Recommandations",
+      "alternativeDates": "Dates alternatives"
+    }
+  },
+  "VoiceInput": {
+    "start": "Démarrer l'enregistrement",
+    "stop": "Arrêter",
+    "listening": "Écoute...",
+    "processing": "Traitement...",
+    "error": "Accès au microphone refusé",
+    "notSupported": "La saisie vocale n'est pas prise en charge par votre navigateur"
+  },
+  "TimezoneSelector": {
+    "label": "Fuseau horaire",
+    "description": "Sélectionnez votre fuseau horaire pour un calcul précis du jour lunaire",
+    "loading": "Chargement...",
+    "error": "Erreur de chargement"
+  },
+  "Header": {
+    "tagline": "Astrologie et rêves",
+    "home": "Accueil",
+    "calendar": "Calendrier",
+    "astrology": "Astrologie",
+    "dreams": "Rêves",
+    "pricing": "Tarifs",
+    "account": "Compte"
+  },
+  "Pricing": {
+    "title": "Choisissez votre formule",
+    "subtitle": "Des éclairages réflexifs et sourcés — astrologie, rêves et rythmes lunaires. Annulable à tout moment.",
+    "mostPopular": "Le plus populaire",
+    "perMonth": "/mois",
+    "redirecting": "Redirection…",
+    "plans": {
+      "free": {
+        "name": "Free",
+        "tagline": "Essayez les outils essentiels, sans carte."
+      },
+      "premium": {
+        "name": "Premium",
+        "tagline": "Tout en illimité, plus l'export PDF."
+      },
+      "pro": {
+        "name": "Pro (BYOK)",
+        "tagline": "Fonctions premium avec vos propres clés LLM."
+      }
+    },
+    "features": {
+      "natal": "Thème natal",
+      "horoscopes": "Horoscopes illimités",
+      "forecasts": "Prévisions d'événements",
+      "dreams": "Analyse des rêves",
+      "pdf": "Export PDF",
+      "byok": "Utilisez vos propres clés API"
+    },
+    "cta": {
+      "free": "Commencer gratuitement",
+      "subscribe": "S'abonner",
+      "buy": "Acheter"
+    },
+    "oneTime": {
+      "title": "Rapports ponctuels",
+      "subtitle": "Sans abonnement — un seul document détaillé.",
+      "natalPdf": {
+        "name": "PDF détaillé du thème natal",
+        "desc": "Thème complet avec texte, exportable."
+      },
+      "yearly": {
+        "name": "Prévision annuelle",
+        "desc": "Perspective personnalisée sur 12 mois."
+      }
+    },
+    "disclaimer": "Contenu réflexif / de divertissement — ne constitue pas un avis médical, psychologique, juridique ou financier.",
+    "manageLink": "Gérer l'abonnement"
+  },
+  "Account": {
+    "title": "Compte",
+    "loading": "Chargement…",
+    "profile": "Profil",
+    "email": "E-mail",
+    "name": "Nom",
+    "language": "Langue",
+    "subscription": "Abonnement",
+    "status": "Statut",
+    "renewsOn": "Se renouvelle le",
+    "endsOn": "Se termine le",
+    "upgrade": "Améliorer la formule",
+    "logout": "Se déconnecter",
+    "tiers": {
+      "free": "Free",
+      "premium": "Premium",
+      "pro": "Pro"
+    },
+    "loginTitle": "Bon retour",
+    "loginSubtitle": "Connectez-vous pour gérer votre abonnement.",
+    "registerTitle": "Créer un compte",
+    "registerSubtitle": "Inscrivez-vous pour un accès illimité.",
+    "password": "Mot de passe",
+    "passwordHint": "Au moins 8 caractères.",
+    "submitting": "Veuillez patienter…",
+    "loginCta": "Se connecter",
+    "registerCta": "S'inscrire",
+    "switchToRegister": "Pas de compte ? Inscrivez-vous",
+    "switchToLogin": "Déjà un compte ? Connectez-vous"
+  },
+  "CheckoutSuccess": {
+    "title": "Merci !",
+    "verifying": "Confirmation de votre paiement…",
+    "activated": "Votre formule {tier} est maintenant active.",
+    "pending": "Paiement reçu. Votre formule sera activée sous peu.",
+    "tiers": {
+      "free": "Free",
+      "premium": "Premium",
+      "pro": "Pro"
+    },
+    "goToAccount": "Aller au compte",
+    "startUsing": "Commencer à explorer"
+  }
+}

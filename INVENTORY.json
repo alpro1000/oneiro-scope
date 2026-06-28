@@ -118,7 +118,7 @@
     {
       "path": "frontend/messages",
       "dirs": 0,
-      "files": 2
+      "files": 5
     },
     {
       "path": "frontend/public",
@@ -507,5 +507,5 @@
     }
   ],
   "total_dirs": 100,
-  "total_files": 348
+  "total_files": 351
 }
