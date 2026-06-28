@@ -38,7 +38,7 @@
     {
       "path": "docs",
       "dirs": 2,
-      "files": 39
+      "files": 40
     },
     {
       "path": "docs/architecture",
@@ -218,7 +218,7 @@
     {
       "path": "backend/mcp/tools",
       "dirs": 0,
-      "files": 5
+      "files": 6
     },
     {
       "path": "backend/alembic",
@@ -238,7 +238,7 @@
     {
       "path": "backend/tests",
       "dirs": 0,
-      "files": 17
+      "files": 20
     },
     {
       "path": "backend/data",
@@ -247,7 +247,7 @@
     },
     {
       "path": "backend/services",
-      "dirs": 6,
+      "dirs": 7,
       "files": 0
     },
     {
@@ -291,6 +291,11 @@
       "files": 2
     },
     {
+      "path": "backend/services/strategic",
+      "dirs": 0,
+      "files": 3
+    },
+    {
       "path": "backend/services/byok",
       "dirs": 0,
       "files": 2
@@ -328,7 +333,7 @@
     {
       "path": "backend/services/astrology",
       "dirs": 5,
-      "files": 15
+      "files": 18
     },
     {
       "path": "backend/services/astrology/policies",
@@ -368,12 +373,12 @@
     {
       "path": "agents/specialists",
       "dirs": 0,
-      "files": 4
+      "files": 5
     },
     {
       "path": "agents/prompts",
       "dirs": 0,
-      "files": 4
+      "files": 5
     },
     {
       "path": "oneiro-scope",
@@ -456,6 +461,6 @@
       "files": 7
     }
   ],
-  "total_dirs": 90,
-  "total_files": 305
+  "total_dirs": 91,
+  "total_files": 318
 }

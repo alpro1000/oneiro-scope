@@ -19,7 +19,12 @@ import asyncio
 import logging
 from typing import AsyncIterator, Iterable
 
-from agents.specialists import AstrologyAgent, DreamAgent, LunarAgent
+from agents.specialists import (
+    AstrologyAgent,
+    DreamAgent,
+    LunarAgent,
+    StrategicAnalystAgent,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -44,6 +49,22 @@ _LUNAR_KEYWORDS: tuple[str, ...] = (
     "лунн", "лунный день", "фаза луны", "новолун", "полнолун",
     "lunar", "moon ", "moon-", "moon phase", "moonph",
 )
+# Strategic questions span multiple domains (year ahead + relocation +
+# career timing + financial decision). They route to the Strategic
+# Analyst, which uses deterministic chart tools as evidence and
+# explicitly separates astronomy from symbolism.
+_STRATEGIC_KEYWORDS: tuple[str, ...] = (
+    "стратег", "решен", "выбор", "переезд", "переехать",
+    "куда жить", "где жить", "ипотек", "карьер", "год вперёд",
+    "год вперед", "на год", "следующий год", "относительно",
+    "что мне делать", "стоит ли", "перспектив",
+    "страна", "регион", "город для жизни", "куда поехать",
+    "выбрать страну", "выбрать город", "подходит для",
+    "strategy", "decide", "decision", "relocate", "relocation",
+    "year ahead", "career", "mortgage", "should i", "where to live",
+    "which country", "best country", "best city",
+    "solar return", "astrocartography", "transits ahead",
+)
 
 _DEFAULT_DOMAIN = "astrology"
 
@@ -51,10 +72,19 @@ _DEFAULT_DOMAIN = "astrology"
 def classify_intent(text: str) -> list[str]:
     """Return the ordered list of specialist domains relevant to `text`.
 
-    Multiple may match (e.g. "истолкуй мой сон в контексте лунного дня"
-    → ["dream", "lunar"]). Empty match falls back to the default domain.
+    Strategic questions (year-ahead, relocation, decision support) win
+    when both strategic + domain keywords appear — the Strategic Analyst
+    will itself call domain tools as evidence inputs.
+
+    Multiple domains may match for pure-domain questions
+    ("истолкуй мой сон в контексте лунного дня" → ["dream", "lunar"]).
     """
     t = text.lower()
+
+    strategic = any(k in t for k in _STRATEGIC_KEYWORDS)
+    if strategic:
+        return ["strategic"]
+
     domains: list[str] = []
     if any(k in t for k in _ASTROLOGY_KEYWORDS):
         domains.append("astrology")
@@ -74,6 +104,7 @@ class SuperOrchestrator:
         "astrology": AstrologyAgent,
         "dream": DreamAgent,
         "lunar": LunarAgent,
+        "strategic": StrategicAnalystAgent,
     }
 
     def __init__(self, *, model: str = "claude-opus-4-7", max_turns: int = 12) -> None:
