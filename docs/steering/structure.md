@@ -1,5 +1,10 @@
 # Steering — Repository Structure
 
+> **English TL;DR:** Repository layout and layering rules. Where
+> things live, where to add new things. Strict layering: Skills →
+> Agents → MCP → Services. Adjacent docs: `domain.md` for what
+> "service" means in OneiroScope, `conventions.md` for naming.
+
 ## Layering
 
 ```

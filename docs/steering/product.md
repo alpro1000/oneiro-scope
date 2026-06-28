@@ -1,5 +1,11 @@
 # Steering — Product
 
+> **English TL;DR:** What we're building and for whom. Vision,
+> audience, principles, quality bars. The current pivot (Phase 7) is
+> from "AI horoscope" to **Strategic Life Cycle Analyst** — see
+> `docs/STRATEGIC_ANALYST.md`. Adjacent docs: `domain.md` for
+> ethical/methodological rules, `tech.md` for stack.
+
 ## Vision
 
 OneiroScope = "научная мистика". Mystical UX with rigorous backend: astronomical accuracy (Swiss Ephemeris), peer-reviewed dream methodology (Hall/Van de Castle), reproducible lunar calendar — never invented numbers.

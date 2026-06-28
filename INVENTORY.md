@@ -9,10 +9,13 @@
 | external/pyswisseph/swisseph | 0 | 1 |
 | external/DReAMy | 1 | 1 |
 | external/DReAMy/dreamy | 0 | 3 |
-| docs | 3 | 40 |
+| docs | 4 | 41 |
 | docs/architecture | 1 | 5 |
 | docs/architecture/modules | 0 | 3 |
 | docs/steering | 0 | 5 |
+| docs/templates | 2 | 0 |
+| docs/templates/_TEMPLATE_spec | 0 | 3 |
+| docs/templates/_TEMPLATE_bug | 0 | 4 |
 | docs/deployment | 0 | 1 |
 | etl | 1 | 5 |
 | etl/input | 0 | 1 |
@@ -97,4 +100,4 @@
 | .github | 1 | 0 |
 | .github/workflows | 0 | 7 |
 
-**ИТОГО:** папок = 93, файлов = 332
+**ИТОГО:** папок = 96, файлов = 340
