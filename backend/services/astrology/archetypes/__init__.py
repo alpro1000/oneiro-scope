@@ -24,6 +24,10 @@ from backend.services.astrology.archetypes.dignities import (
 )
 from backend.services.astrology.archetypes.houses import HOUSES
 from backend.services.astrology.archetypes.mc_in_sign import MC_IN_SIGN
+from backend.services.astrology.archetypes.planet_in_house import (
+    PLANET_DRIVES,
+    planet_in_house_archetype,
+)
 from backend.services.astrology.archetypes.sun_in_sign import SUN_IN_SIGN
 from backend.services.astrology.archetypes.zodiac_signs import ZODIAC_SIGNS
 
@@ -33,6 +37,8 @@ __all__ = [
     "essential_dignity",
     "HOUSES",
     "MC_IN_SIGN",
+    "PLANET_DRIVES",
+    "planet_in_house_archetype",
     "SUN_IN_SIGN",
     "ZODIAC_SIGNS",
 ]

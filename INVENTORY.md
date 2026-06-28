@@ -74,7 +74,7 @@
 | backend/services/lunar | 0 | 3 |
 | backend/services/astrology | 6 | 18 |
 | backend/services/astrology/policies | 0 | 2 |
-| backend/services/astrology/archetypes | 0 | 7 |
+| backend/services/astrology/archetypes | 0 | 8 |
 | backend/services/astrology/engine | 0 | 5 |
 | backend/services/astrology/knowledge_base | 0 | 4 |
 | backend/services/astrology/ai | 0 | 3 |
@@ -100,4 +100,4 @@
 | .github | 1 | 0 |
 | .github/workflows | 0 | 7 |
 
-**ИТОГО:** папок = 96, файлов = 340
+**ИТОГО:** папок = 96, файлов = 341
