@@ -127,6 +127,99 @@
     "home": "Home",
     "calendar": "Calendar",
     "astrology": "Astrology",
-    "dreams": "Dreams"
+    "dreams": "Dreams",
+    "pricing": "Pricing",
+    "account": "Account"
+  },
+  "Pricing": {
+    "title": "Choose your plan",
+    "subtitle": "Reflective, source-cited insight — astrology, dreams, and lunar timing. Cancel anytime.",
+    "mostPopular": "Most popular",
+    "perMonth": "/mo",
+    "redirecting": "Redirecting…",
+    "plans": {
+      "free": {
+        "name": "Free",
+        "tagline": "Try the core tools, no card required."
+      },
+      "premium": {
+        "name": "Premium",
+        "tagline": "Unlimited everything, plus PDF export."
+      },
+      "pro": {
+        "name": "Pro (BYOK)",
+        "tagline": "Premium features using your own LLM keys."
+      }
+    },
+    "features": {
+      "natal": "Natal chart",
+      "horoscopes": "Unlimited horoscopes",
+      "forecasts": "Event forecasts",
+      "dreams": "Dream analysis",
+      "pdf": "PDF export",
+      "byok": "Bring your own API keys"
+    },
+    "cta": {
+      "free": "Start free",
+      "subscribe": "Subscribe",
+      "buy": "Buy"
+    },
+    "oneTime": {
+      "title": "One-time reports",
+      "subtitle": "No subscription — a single detailed deliverable.",
+      "natalPdf": {
+        "name": "Detailed natal PDF",
+        "desc": "Full chart with narrative, exportable."
+      },
+      "yearly": {
+        "name": "Yearly forecast",
+        "desc": "Personalized 12-month outlook."
+      }
+    },
+    "disclaimer": "Reflective / entertainment content — not medical, psychological, legal, or financial advice.",
+    "manageLink": "Manage subscription"
+  },
+  "Account": {
+    "title": "Account",
+    "loading": "Loading…",
+    "profile": "Profile",
+    "email": "Email",
+    "name": "Name",
+    "language": "Language",
+    "subscription": "Subscription",
+    "status": "Status",
+    "renewsOn": "Renews on",
+    "endsOn": "Ends on",
+    "upgrade": "Upgrade plan",
+    "logout": "Log out",
+    "tiers": {
+      "free": "Free",
+      "premium": "Premium",
+      "pro": "Pro"
+    },
+    "loginTitle": "Welcome back",
+    "loginSubtitle": "Log in to manage your subscription.",
+    "registerTitle": "Create an account",
+    "registerSubtitle": "Sign up to unlock unlimited access.",
+    "password": "Password",
+    "passwordHint": "At least 8 characters.",
+    "submitting": "Please wait…",
+    "loginCta": "Log in",
+    "registerCta": "Sign up",
+    "switchToRegister": "No account? Sign up",
+    "switchToLogin": "Already have an account? Log in"
+  },
+  "CheckoutSuccess": {
+    "title": "Thank you!",
+    "verifying": "Confirming your payment…",
+    "activated": "Your {tier} plan is now active.",
+    "pending": "Payment received. Your plan will activate shortly.",
+    "tiers": {
+      "free": "Free",
+      "premium": "Premium",
+      "pro": "Pro"
+    },
+    "goToAccount": "Go to account",
+    "startUsing": "Start exploring"
   }
 }

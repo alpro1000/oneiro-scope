@@ -93,7 +93,7 @@
     {
       "path": "frontend",
       "dirs": 12,
-      "files": 12
+      "files": 13
     },
     {
       "path": "frontend/i18n",
@@ -108,7 +108,7 @@
     {
       "path": "frontend/lib",
       "dirs": 0,
-      "files": 8
+      "files": 10
     },
     {
       "path": "frontend/components",
@@ -147,11 +147,31 @@
     },
     {
       "path": "frontend/app/[locale]",
-      "dirs": 3,
+      "dirs": 6,
       "files": 2
     },
     {
+      "path": "frontend/app/[locale]/pricing",
+      "dirs": 0,
+      "files": 1
+    },
+    {
       "path": "frontend/app/[locale]/dreams",
+      "dirs": 0,
+      "files": 1
+    },
+    {
+      "path": "frontend/app/[locale]/account",
+      "dirs": 0,
+      "files": 1
+    },
+    {
+      "path": "frontend/app/[locale]/checkout",
+      "dirs": 1,
+      "files": 0
+    },
+    {
+      "path": "frontend/app/[locale]/checkout/success",
       "dirs": 0,
       "files": 1
     },
@@ -486,6 +506,6 @@
       "files": 7
     }
   ],
-  "total_dirs": 96,
-  "total_files": 342
+  "total_dirs": 100,
+  "total_files": 348
 }

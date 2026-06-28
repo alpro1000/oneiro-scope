@@ -104,6 +104,39 @@ Recent decisions:
 
 ## §9 Session log
 
+### 2026-06-28 (late-3) — P1: frontend pricing / account / checkout (Phase 6.G)
+
+Continued the P1 queue (goal "делай следующий незакрытый p1"). After the
+two backend archetype P1s, the next unclosed item was the monetization
+frontend surface (#5) on top of the existing Phase 6 Lemon Squeezy backend.
+
+**Done:**
+- `frontend/lib/auth-client.ts` — register/login/me + localStorage token
+  storage (server-safe no-ops, Bearer header helper).
+- `frontend/lib/billing-client.ts` — `createCheckout` (hosted Lemon URL)
+  + `getSubscription`.
+- Pages (bilingual RU/EN, design-token styled):
+  - `[locale]/pricing/` — Free / Premium $9.99 / Pro(BYOK) $5.99 + one-time
+    ($19 natal PDF, $29 yearly). Unauthed CTA → `account?next=pricing`.
+  - `[locale]/account/` — login/register, profile + subscription summary,
+    upgrade CTA, logout; resumes checkout via `?next`.
+  - `[locale]/checkout/success/` — polls `/billing/me` for webhook-lagged
+    tier activation.
+  - `Header` nav + `messages/{en,ru}.json` (Pricing/Account/CheckoutSuccess).
+- **Verified:** `tsc --noEmit` clean, `next build` green (all 3 routes
+  compile, dynamic), `jest` 7/7.
+
+**Prices** come from PLAN.md Phase 6 matrix. Pricing still uses placeholder
+USD only in the UI; multi-currency display (€/₽) and the actual Lemon
+variant IDs are env/dashboard config (`LEMON_VARIANT_*`), not frontend.
+
+**Shipped:** PR merged to `main`.
+
+**Still deferred:** Cloud Run staging smoke, Alembic migrations, DE/ES/FR
+content translations (the last remaining P1, needs human native review).
+
+---
+
 ### 2026-06-28 (late-2) — P1: transit_meanings archetype table
 
 Continued through the P1 queue (goal: "делай следующий незакрытый p1").

@@ -20,10 +20,10 @@
 | etl | 1 | 5 |
 | etl/input | 0 | 1 |
 | assets | 0 | 2 |
-| frontend | 12 | 12 |
+| frontend | 12 | 13 |
 | frontend/i18n | 0 | 1 |
 | frontend/e2e | 0 | 2 |
-| frontend/lib | 0 | 8 |
+| frontend/lib | 0 | 10 |
 | frontend/components | 0 | 7 |
 | frontend/messages | 0 | 2 |
 | frontend/public | 0 | 1 |
@@ -31,8 +31,12 @@
 | frontend/types | 0 | 2 |
 | frontend/stories | 0 | 1 |
 | frontend/app | 2 | 2 |
-| frontend/app/[locale] | 3 | 2 |
+| frontend/app/[locale] | 6 | 2 |
+| frontend/app/[locale]/pricing | 0 | 1 |
 | frontend/app/[locale]/dreams | 0 | 1 |
+| frontend/app/[locale]/account | 0 | 1 |
+| frontend/app/[locale]/checkout | 1 | 0 |
+| frontend/app/[locale]/checkout/success | 0 | 1 |
 | frontend/app/[locale]/astrology | 0 | 1 |
 | frontend/app/[locale]/(calendar) | 1 | 0 |
 | frontend/app/[locale]/(calendar)/calendar | 0 | 1 |
@@ -100,4 +104,4 @@
 | .github | 1 | 0 |
 | .github/workflows | 0 | 7 |
 
-**ИТОГО:** папок = 96, файлов = 342
+**ИТОГО:** папок = 100, файлов = 348
