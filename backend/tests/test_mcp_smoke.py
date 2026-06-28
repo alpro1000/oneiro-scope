@@ -46,6 +46,14 @@ async def test_all_tools_registered():
         "compute_transits",
         "astrocartography_scan",
         "solar_return_chart",
+        # archetype tables (Phase 8)
+        "mc_in_sign",
+        "sun_in_sign",
+        "house_meaning",
+        "aspect_meaning",
+        "planet_dignity",
+        "zodiac_sign",
+        "list_archetype_topics",
     }
     tools = await mcp.list_tools()
     registered = {t.name for t in tools}

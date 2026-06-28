@@ -71,4 +71,6 @@ jobs:
             backend/tests/test_strategic_layers.py \
             backend/tests/test_strategic_astro_tools.py \
             backend/tests/test_strategic_agent.py \
+            backend/tests/test_archetypes.py \
+            backend/tests/test_disclaimer_and_numeric_confidence.py \
             -v
