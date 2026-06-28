@@ -23,6 +23,10 @@ from backend.services.astrology.archetypes import (
 from backend.services.astrology.archetypes.aspects import aspect_archetype
 from backend.services.astrology.archetypes.houses import house_archetype
 from backend.services.astrology.archetypes.mc_in_sign import mc_archetype
+from backend.services.astrology.archetypes.planet_in_house import (
+    PLANETS,
+    planet_in_house_archetype,
+)
 from backend.services.astrology.archetypes.sun_in_sign import sun_archetype
 from backend.services.astrology.archetypes.zodiac_signs import sign_archetype
 from backend.services.strategic.disclaimer import DISCLAIMER_RU
@@ -148,6 +152,32 @@ def planet_dignity(planet: str, sign: str) -> dict[str, Any]:
     }
 
 
+def planet_in_house(planet: str, house_number: int) -> dict[str, Any]:
+    """Return the drive-area archetype for a planet in a natal house.
+
+    A planet IN a house shows WHERE its psychological drive is invested
+    (planet = drive, house = field of life). Composed from two cited
+    layers: the planet's core drive (Tompkins / Hand) and the house's
+    life-area (Sasportas). Confidence 0.9 — cited tradition, not LLM.
+
+    Args:
+        planet: lowercase planet name (sun/moon/mercury/venus/mars/
+            jupiter/saturn/uranus/neptune/pluto).
+        house_number: 1-12.
+    """
+    arc = planet_in_house_archetype(planet, house_number)
+    return {
+        "layer": _LAYER,
+        "confidence": _CONFIDENCE,
+        "subject": f"{planet.capitalize()} in House {house_number}",
+        "archetype": arc["archetype"],
+        "themes": arc["themes"],
+        "description": arc["description"],
+        "source": arc["source"],
+        "disclaimer": DISCLAIMER_RU,
+    }
+
+
 def zodiac_sign(sign: str) -> dict[str, Any]:
     """Return the elemental archetype of a zodiac sign.
 
@@ -185,6 +215,7 @@ def list_archetype_topics() -> dict[str, Any]:
             "sun_in_sign": list(SUN_IN_SIGN.keys()),
             "houses": list(HOUSES.keys()),
             "aspects": list(ASPECTS.keys()),
+            "planet_in_house": list(PLANETS),
         },
         "disclaimer": DISCLAIMER_RU,
     }

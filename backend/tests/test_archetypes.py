@@ -254,9 +254,67 @@ def test_list_archetype_topics_includes_all_categories():
     topics = r["topics"]
     assert set(topics) == {
         "zodiac_signs", "mc_in_sign", "sun_in_sign", "houses", "aspects",
+        "planet_in_house",
     }
     assert len(topics["zodiac_signs"]) == 12
     assert len(topics["mc_in_sign"]) == 12
     assert len(topics["sun_in_sign"]) == 12
     assert len(topics["houses"]) == 12
     assert len(topics["aspects"]) == 5
+    assert len(topics["planet_in_house"]) == 10
+
+
+# ---------- Planet in house ------------------------------------------------
+
+
+def test_planet_in_house_full_grid_10x12():
+    """All 10 planets × 12 houses resolve with the required fields."""
+    from backend.services.astrology.archetypes import (
+        PLANET_DRIVES,
+        planet_in_house_archetype,
+    )
+
+    assert len(PLANET_DRIVES) == 10
+    for planet in PLANET_DRIVES:
+        for house_num in range(1, 13):
+            arc = planet_in_house_archetype(planet, house_num)
+            for field in ("archetype", "themes", "description", "source"):
+                assert field in arc, f"{planet}/{house_num} missing {field}"
+            # composed citation carries BOTH planet and house sources
+            assert ";" in arc["source"]
+            assert "(" in arc["source"]
+            assert len(arc["themes"]) >= 4  # planet keywords + house themes
+
+
+def test_planet_in_house_invalid_planet_raises():
+    from backend.services.astrology.archetypes import planet_in_house_archetype
+
+    with pytest.raises(KeyError):
+        planet_in_house_archetype("nibiru", 1)
+
+
+def test_planet_in_house_invalid_house_raises():
+    from backend.services.astrology.archetypes import planet_in_house_archetype
+
+    with pytest.raises(KeyError):
+        planet_in_house_archetype("sun", 13)
+
+
+def test_planet_in_house_case_insensitive():
+    from backend.services.astrology.archetypes import planet_in_house_archetype
+
+    assert (
+        planet_in_house_archetype("SUN", 10)["archetype"]
+        == planet_in_house_archetype("sun", 10)["archetype"]
+    )
+
+
+def test_planet_in_house_tool_carries_confidence_and_disclaimer():
+    from backend.mcp.tools.archetypes import planet_in_house
+
+    r = planet_in_house("saturn", 10)
+    assert r["layer"] == "astrology_symbolic"
+    assert r["confidence"] == 0.9
+    assert r["subject"] == "Saturn in House 10"
+    assert "disclaimer" in r and len(r["disclaimer"]) > 30
+    assert "House of Career" in r["archetype"]
