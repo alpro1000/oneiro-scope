@@ -17,6 +17,8 @@ export default function Header() {
     {href: `/${locale}/calendar`, label: t('calendar')},
     {href: `/${locale}/astrology`, label: t('astrology')},
     {href: `/${locale}/dreams`, label: t('dreams')},
+    {href: `/${locale}/pricing`, label: t('pricing')},
+    {href: `/${locale}/account`, label: t('account')},
   ];
 
   return (
