@@ -104,6 +104,45 @@ Recent decisions:
 
 ## §9 Session log
 
+### 📌 2026-06-28 — SESSION CONSOLIDATED (Phases 7-9 landed today)
+
+End-of-day consolidation. Three merged PRs this session:
+
+| PR | Phase | What |
+|---|---|---|
+| **#121** | 7 | Strategic Life Cycle Analyst pivot — 8-layer evidence matrix, no-determinism validator, 3 deterministic astronomy MCP tools (compute_transits, astrocartography_scan, solar_return_chart), Strategic Analyst agent, rewritten system prompts |
+| **#122** | 8 | Hard archetype tables (MC/Sun/Houses/Aspects/Dignities with cited classical sources), 7 new MCP tools, Cloud Run + Vertex AI guide with ADC auto-detect, domain.md + conventions.md from peer-review scaffold, numeric confidence ladder, disclaimer enforcement |
+| **#123** | 9 | Memory system harmonization — next-session.md, _TEMPLATE_spec/, _TEMPLATE_bug/, English TL;DR blocks in steering docs, §10 «Rejected ideas» |
+
+**Numerical state at end-of-day:**
+- MCP tools: **23** (was 13 at start of day)
+- Specialist agents: **4** + 1 orchestrator
+- Backend test suite: **263 passed, 6 skipped** (was 183)
+- Memory scaffold files: **complete** (CLAUDE.md + soul.md §1-§10 + steering/5 files + next-session.md + 7 templates)
+
+**Major architectural shift this session:** OneiroScope is no longer "another AI horoscope". It is now positioned as **Strategic Life Cycle Analyst** with:
+- Provenance per claim (every output cites which layer + source)
+- Confidence ladder 1.0/0.9/0.8/0.7 (astronomy / cited tradition / symbol dict / LLM)
+- No deterministic prediction language (regex-validated)
+- Mandatory disclaimer (5 locales, enforced)
+- Hard archetype tables as 0.9-confidence layer (above LLM 0.7) for the well-known archetypal interpretation surface
+
+**Key correction surfaced this session:** Prior manual chart analyses used wrong timezone (UTC+4 vs correct UTC+3 for USSR summer 1977 — decree time, no DST until 1981). All new MCP tools use `zoneinfo` correctly. The famous Jupiter ☌ natal Saturn aspect for the test chart (01.07.1977 22:30 Запорожье) is actually **September 11, 2026**, not August 25 — falls in the first 2 weeks of the user's magistratura at Pardubice.
+
+**What's deferred to next session (P0/P1 in `docs/next-session.md`):**
+- End-to-end smoke on Cloud Run staging
+- Alembic migrations for User/Subscription/UserLLMKey
+- `planet_in_house.py` (10 × 12 archetype table, completes Phase 8 set)
+- `transit_meanings.py` (transit archetype with citations)
+- Frontend pricing/checkout/account pages (Phase 6.G)
+- DE/ES/FR translations for lunar_tables / symbols (human native review)
+
+**Next session start sequence:** follow `CLAUDE.md` mandatory block — read 8 files in order (conventions → product → tech → structure → domain → soul → PLAN → next-session). The `next-session.md` file lists exact P0/P1/P2 priorities.
+
+Individual phase entries below (chronological within today).
+
+---
+
 ### 2026-06-28 — claude/memory-system-harmonization — Phase 9: scaffold memory-system harmonization
 
 **Goal:** Owner shared the peer-review scaffold from another chat (full STAVAGENT-style memory-management system). Apply the missing pieces here: `next-session.md` handoff format, `docs/templates/_TEMPLATE_{spec,bug}/` workflows, English TL;DR blocks in steering docs, §10 "Rejected ideas" in soul.md, cleaner CLAUDE.md mandatory block.
