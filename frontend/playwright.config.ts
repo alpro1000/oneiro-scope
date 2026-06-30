@@ -27,6 +27,10 @@ export default defineConfig({
     command: 'npm run dev -- --hostname 0.0.0.0 --port 3000',
     url: 'http://localhost:3000',
     timeout: 120_000,
-    reuseExistingServer: !process.env.CI
+    // Reuse a server already listening on the URL. The test-ui workflow starts
+    // a dev server for its lunar-API smoke step whose next-server child can
+    // outlive the step; without reuse, Playwright aborts with "port already in
+    // use" in CI. Reusing is safe — e2e specs mock their own network calls.
+    reuseExistingServer: true
   }
 });
