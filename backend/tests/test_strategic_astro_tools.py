@@ -200,6 +200,29 @@ async def test_acg_point_summary_has_plain_text_both_locales():
         assert summary["tension"], f"expected Mars-IC tension at Plzeň ({loc})"
 
 
+def test_acg_api_rejects_invalid_timezone():
+    """The HTTP layer must surface a bad timezone (→ ValueError → 400), not
+    silently fall back to UTC, which would shift every angle by whole hours."""
+    import datetime as _dt
+
+    from backend.api.v1.astrology import AstrocartographyBirth, _natal_jd
+
+    bad = AstrocartographyBirth(
+        birth_date=_dt.date(1977, 7, 1),
+        birth_time=_dt.time(22, 30),
+        birth_timezone="Not/AZone",
+    )
+    with pytest.raises(ValueError):
+        _natal_jd(bad)
+
+    ok = AstrocartographyBirth(
+        birth_date=_dt.date(1977, 7, 1),
+        birth_time=_dt.time(22, 30),
+        birth_timezone="Europe/Kyiv",
+    )
+    assert _natal_jd(ok) > 2_440_000  # a plausible modern Julian Day
+
+
 # ---------- Solar Return ----------------------------------------------------
 
 

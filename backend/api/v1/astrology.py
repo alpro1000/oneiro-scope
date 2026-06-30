@@ -56,14 +56,22 @@ class AstrocartographyPointRequest(AstrocartographyBirth):
 
 
 def _natal_jd(b: AstrocartographyBirth) -> float:
-    """Convert birth data → Julian Day (UT). Noon local if time unknown."""
+    """Convert birth data → Julian Day (UT). Noon local if time unknown.
+
+    Raises ValueError on an unknown/malformed timezone rather than silently
+    falling back to UTC — a wrong tz shifts every angle by whole hours, so we
+    surface the bad input instead of masking it.
+    """
     import swisseph as swe
 
     t = b.birth_time or time_cls(12, 0)
     try:
         tz = ZoneInfo(b.birth_timezone)
-    except Exception:
-        tz = timezone.utc
+    except Exception as exc:
+        raise ValueError(
+            f"Invalid timezone: {b.birth_timezone!r}. "
+            "Use an IANA name like 'Europe/Kyiv' or 'UTC'."
+        ) from exc
     local = datetime(
         b.birth_date.year, b.birth_date.month, b.birth_date.day,
         t.hour, t.minute, getattr(t, "second", 0), tzinfo=tz,
@@ -106,6 +114,8 @@ async def astrocartography_chart(req: AstrocartographyBirth) -> dict:
             "lines": acg_lines(jd),
             "disclaimer": _ACG_DISCLAIMER,
         }
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
     except Exception as e:  # noqa: BLE001
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -154,6 +164,8 @@ async def astrocartography_point(req: AstrocartographyPointRequest) -> dict:
             "summary": relocation_summary(result, locale=req.locale),
             "disclaimer": _ACG_DISCLAIMER,
         }
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
     except Exception as e:  # noqa: BLE001
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
