@@ -9,7 +9,7 @@
 | external/pyswisseph/swisseph | 0 | 1 |
 | external/DReAMy | 1 | 1 |
 | external/DReAMy/dreamy | 0 | 3 |
-| docs | 4 | 42 |
+| docs | 4 | 43 |
 | docs/architecture | 1 | 5 |
 | docs/architecture/modules | 0 | 3 |
 | docs/steering | 0 | 5 |
@@ -26,7 +26,7 @@
 | frontend/lib | 0 | 10 |
 | frontend/components | 0 | 7 |
 | frontend/messages | 0 | 5 |
-| frontend/public | 0 | 1 |
+| frontend/public | 0 | 2 |
 | frontend/.storybook | 0 | 2 |
 | frontend/types | 0 | 2 |
 | frontend/stories | 0 | 1 |
@@ -104,4 +104,4 @@
 | .github | 1 | 0 |
 | .github/workflows | 0 | 7 |
 
-**ИТОГО:** папок = 100, файлов = 352
+**ИТОГО:** папок = 100, файлов = 354
