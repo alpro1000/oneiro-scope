@@ -30,6 +30,9 @@ jobs:
           # -v gives us a usable failure trace in CI when pip resolution
           # or the editable installs of external/* misbehave.
           pip install -v -r requirements.txt -r etl/requirements.txt
+          # pytest is a test-only dep deliberately kept out of requirements.txt;
+          # the validation step below runs `python -m pytest`, so install it here.
+          pip install pytest
 
       - name: Validate DReAMy + Swisseph Integration
         run: |

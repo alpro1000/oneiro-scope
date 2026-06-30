@@ -49,6 +49,14 @@ export function buildMockLunarDay({locale, date, tz}: BuildMockArgs) {
   const phaseKey = phaseKeys[phaseIndex];
   const phaseLabel = getPhaseLabel(phaseKey, locale);
 
+  // Approximate the Moon's age, phase angle and illuminated fraction from the
+  // lunar day so the offline payload carries the same numeric fields the
+  // backend returns (consumers and the CI lunar smoke test expect them).
+  const SYNODIC = 29.530588853;
+  const age = lunarDay - 1; // days since new moon (0..29)
+  const phaseAngle = (age / SYNODIC) * 360; // degrees
+  const illumination = (1 - Math.cos((phaseAngle * Math.PI) / 180)) / 2; // 0..1
+
   return {
     date: safeDate.toISOString().slice(0, 10),
     lunar_day: lunarDay,
@@ -58,7 +66,10 @@ export function buildMockLunarDay({locale, date, tz}: BuildMockArgs) {
     recommendation: 'Using offline lunar approximation until the backend is reachable.',
     locale,
     source: 'mock',
-    timezone: tz
+    timezone: tz,
+    phase_angle: Number(phaseAngle.toFixed(2)),
+    illumination: Number(illumination.toFixed(4)),
+    age: Number(age.toFixed(2))
   };
 }
 
