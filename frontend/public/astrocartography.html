@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>OneiroScope · Астрокартография</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+:root{--bg:#0f1226;--panel:#171a33;--ink:#e8eaf6;--mut:#9aa0c8;--good:#3ddc84;--bad:#ff6b6b;--acc:#8a7dff;}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;font-family:-apple-system,Segoe UI,Roboto,system-ui,sans-serif;background:var(--bg);color:var(--ink)}
+#app{display:flex;height:100vh;height:100dvh;overflow:hidden}
+#map{flex:1;height:100%}
+#panel{width:380px;max-width:42vw;background:var(--panel);overflow-y:auto;padding:16px 16px 60px;box-shadow:-4px 0 24px rgba(0,0,0,.4)}
+h1{font-size:16px;margin:0 0 2px} .sub{color:var(--mut);font-size:12px;margin-bottom:12px}
+form{background:#1b1f40;border:1px solid #2b3061;border-radius:12px;padding:10px;margin-bottom:12px;font-size:12px}
+form label{display:block;color:var(--mut);margin:6px 0 2px}
+form input,form select{width:100%;background:#0f1226;color:var(--ink);border:1px solid #2b3061;border-radius:8px;padding:6px 8px;font-size:12px}
+.row{display:flex;gap:8px} .row>div{flex:1}
+.go{margin-top:10px;width:100%;background:var(--acc);color:#fff;border:0;border-radius:9px;padding:9px;font-weight:700;cursor:pointer}
+.hint{background:#1f2348;border:1px solid #2b3061;border-radius:12px;padding:10px 12px;font-size:13px;color:var(--mut);margin-bottom:12px}
+.coords{font-size:12px;color:var(--mut);margin:4px 0 12px}
+.verdict{border-radius:14px;padding:14px;margin-bottom:14px;font-size:14px;line-height:1.45;background:#1b1f40;border:1px solid #2b3061}
+.verdict b{color:#fff}
+.tag{display:inline-block;font-size:11px;font-weight:700;padding:3px 9px;border-radius:999px;margin:2px 4px 2px 0}
+.tag.work{background:rgba(138,125,255,.18);color:#bcb4ff}
+.tag.life{background:rgba(61,220,132,.16);color:#7ef0a8}
+.tag.warn{background:rgba(255,107,107,.16);color:#ff9d9d}
+.angle{border-left:3px solid var(--acc);padding:8px 10px;margin:8px 0;background:#161a36;border-radius:0 10px 10px 0}
+.angle h3{margin:0;font-size:13px;display:flex;justify-content:space-between}
+.angle .sign{color:var(--acc);font-weight:600}
+.angle .desc{color:var(--mut);font-size:12px;margin:3px 0 0}
+.hit{font-size:12.5px;margin:5px 0;padding-left:6px}
+.hit .orb{float:right;color:var(--mut);font-variant-numeric:tabular-nums}
+.dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px;vertical-align:middle}
+.empty{color:#5a6090;font-size:12px;font-style:italic}
+.legend{position:absolute;bottom:14px;left:14px;z-index:500;background:rgba(15,18,38,.85);border:1px solid #2b3061;border-radius:10px;padding:8px 10px;font-size:11px;max-width:46vw}
+.legend span{display:inline-block;margin:2px 6px 2px 0;white-space:nowrap}
+.toggle{position:absolute;top:12px;right:12px;z-index:600}
+.btn{background:#1f2348;color:var(--ink);border:1px solid #3a3f78;border-radius:9px;padding:7px 11px;font-size:12px;cursor:pointer}
+.disc{font-size:10.5px;color:#5a6090;margin-top:14px;line-height:1.4;border-top:1px solid #232752;padding-top:10px}
+@media(max-width:760px){
+  #app{flex-direction:column} #map{flex:1;min-height:0}
+  #panel{width:100%;max-width:100%;height:52vh;height:52dvh;border-radius:18px 18px 0 0;margin-top:-18px;z-index:700;position:relative}
+  .legend{max-width:90vw}
+}
+.leaflet-popup-content{margin:8px 12px;font-size:13px}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="map">
+    <div class="toggle"><button class="btn" id="lineBtn">Скрыть линии</button></div>
+    <div class="legend" id="legend"></div>
+  </div>
+  <div id="panel">
+    <h1>🌍 Астрокартография</h1>
+    <div class="sub" id="sub">Кликните точку карты — покажу 4 угла места и что здесь хорошо/сложно.</div>
+    <form id="birthForm">
+      <label>Дата рождения</label>
+      <input type="date" id="bdate" value="1977-07-01">
+      <div class="row">
+        <div><label>Время</label><input type="time" id="btime" value="22:30"></div>
+        <div><label>Часовой пояс</label>
+          <select id="btz">
+            <option>Europe/Kyiv</option><option>Europe/Moscow</option>
+            <option>Europe/Prague</option><option>Europe/Bratislava</option>
+            <option>Europe/Madrid</option><option>Europe/Rome</option>
+            <option>Europe/Athens</option><option>UTC</option>
+          </select>
+        </div>
+      </div>
+      <div class="row">
+        <div><label>Широта рожд.</label><input type="number" id="blat" step="0.0001" value="47.8388"></div>
+        <div><label>Долгота рожд.</label><input type="number" id="blon" step="0.0001" value="35.1396"></div>
+      </div>
+      <label>API (необязательно, для своих данных)</label>
+      <input type="text" id="apibase" placeholder="https://your-backend/api/v1" value="">
+      <button class="go" type="submit">Построить карту</button>
+    </form>
+    <div class="hint" id="hint">⭐ — город рождения. Ниже сейчас углы вашего города рождения. Кнопка справа прячет линии.</div>
+    <div id="result"></div>
+    <div class="disc" id="disc"></div>
+  </div>
+</div>
+<script>
+// ===== DEFAULT CHART (Swiss Ephemeris: 1977-07-01 19:30 UTC). Works offline. =====
+let GMST=212.2347, EPS=23.43962;
+let ECL={Sun:99.8251,Moon:289.2448,Mercury:102.0171,Venus:54.9195,Mars:48.8009,Jupiter:79.947,Saturn:135.1816,Uranus:217.7777,Neptune:254.0923,Pluto:191.4286};
+let EQU={Sun:{ra:100.6892,dec:23.0758},Moon:{ra:290.0908,dec:-17.0894},Mercury:{ra:103.2061,dec:24.3474},Venus:{ra:53.294,dec:16.1931},Mars:{ra:46.58,dec:16.6247},Jupiter:{ra:79.1006,dec:22.6094},Saturn:{ra:137.9467,dec:17.2193},Uranus:{ra:215.5623,dec:-13.6905},Neptune:{ra:252.9362,dec:-20.9759},Pluto:{ra:197.225,dec:11.1776}};
+let BIRTH={lat:47.8388,lon:35.1396,name:"Запорожье"};
+const DISCLAIMER="Рефлексивно-развлекательный характер. Углы — астрономия (Swiss Ephemeris); резюме — детерминированное правило, не предсказание, не медицинский/психологический/юридический/финансовый совет. Зависит от точного времени рождения.";
+const COL={Sun:"#f2a900",Moon:"#5b8def",Mercury:"#8a4fc4",Venus:"#e8559a",Mars:"#d23b2e",Jupiter:"#1f9e3b",Saturn:"#8a8f9c",Uranus:"#00a8a8",Neptune:"#2e86de",Pluto:"#6c3483"};
+const RU={Sun:"Солнце",Moon:"Луна",Mercury:"Меркурий",Venus:"Венера",Mars:"Марс",Jupiter:"Юпитер",Saturn:"Сатурн",Uranus:"Уран",Neptune:"Нептун",Pluto:"Плутон"};
+const GLY={Sun:"☉",Moon:"☽",Mercury:"☿",Venus:"♀",Mars:"♂",Jupiter:"♃",Saturn:"♄",Uranus:"♅",Neptune:"♆",Pluto:"♇"};
+const SIGNS=["Овен","Телец","Близнецы","Рак","Лев","Дева","Весы","Скорпион","Стрелец","Козерог","Водолей","Рыбы"];
+const KW={Sun:"жизненная сила, признание",Moon:"эмоции, забота, принадлежность",Mercury:"общение, учёба, торговля",Venus:"любовь, деньги, красота",Mars:"энергия, действие, конфликт",Jupiter:"удача, рост, изобилие",Saturn:"дисциплина, труд, ограничения",Uranus:"свобода, перемены, инновации",Neptune:"мечты, вдохновение, туман",Pluto:"власть, трансформация, кризис"};
+const ANG={Asc:{ru:"ASC · Личность и тело",theme:"как вас видят, что вы излучаете"},MC:{ru:"MC · Карьера и статус",theme:"работа, репутация, цель в обществе"},IC:{ru:"IC · Дом и корни",theme:"семья, быт, внутренний покой, недвижимость"},Desc:{ru:"DESC · Партнёрства",theme:"брак, союзники, отношения с другими"}};
+const BENEFIC={Venus:1,Jupiter:1}, CHALLENGE={Mars:1,Saturn:1,Pluto:1};
+const WORK_PL={Sun:1,Mercury:1,Saturn:1,Uranus:1,Jupiter:1}, HOME_PL={Venus:1,Moon:1,Jupiter:1};
+const ORB=8;
+const r=d=>d*Math.PI/180, dg=x=>x*180/Math.PI, n360=x=>((x%360)+360)%360, n180=x=>{x=n360(x);return x>180?x-360:x;};
+const angdiff=(a,b)=>{let d=Math.abs(n360(a)-n360(b))%360;return d>180?360-d:d;};
+const fmtSign=x=>{x=n360(x);let s=Math.floor(x/30)%12,d=x%30;return `${Math.floor(d)}°${String(Math.floor(d%1*60)).padStart(2,'0')}' ${SIGNS[s]}`;};
+
+function anglesAt(lat,lon){
+  const ramc=r(n360(GMST+lon));
+  const mc=n360(dg(Math.atan2(Math.sin(ramc),Math.cos(ramc)*Math.cos(r(EPS)))));
+  const phi=r(lat);
+  let asc=n360(dg(Math.atan2(Math.cos(ramc),-(Math.sin(ramc)*Math.cos(r(EPS))+Math.tan(phi)*Math.sin(r(EPS))))));
+  return {Asc:asc,MC:mc,IC:n360(mc+180),Desc:n360(asc+180)};
+}
+function contacts(A){const o={Asc:[],MC:[],IC:[],Desc:[]};
+  for(const a in A){for(const p in ECL){const d=angdiff(ECL[p],A[a]);if(d<=ORB)o[a].push({p,orb:d});}o[a].sort((x,y)=>x.orb-y.orb);}return o;}
+const strength=o=>o<=1?"★★★":o<=3?"★★":o<=5?"★":"·";
+
+function summarize(c){
+  let work=[],home=[],rel=[],warn=[];const add=(a,t)=>{if(!a.includes(t))a.push(t);};
+  for(const a of["MC","Asc","IC","Desc"])for(const h of c[a]){if(h.orb>6)continue;const nm=RU[h.p];
+    if((a==="MC"||a==="Asc")&&WORK_PL[h.p])add(work,nm);
+    if((a==="IC"||a==="Asc")&&HOME_PL[h.p])add(home,nm);
+    if(a==="Desc"&&(BENEFIC[h.p]||h.p==="Sun"||h.p==="Mercury"))add(rel,nm);
+    if((a==="IC"||a==="Asc")&&CHALLENGE[h.p])add(warn,`${nm} в доме/быту`);}
+  const gw=work.length>0,sh=home.length>0,hh=warn.length>0;let plain;
+  if(gw&&hh)plain="Сюда — <b>работать и расти</b>, но дом может быть беспокойным.";
+  else if(gw&&sh)plain="Редкое: и <b>карьера</b>, и <b>уют</b> поддержаны — баланс.";
+  else if(gw)plain="Место <b>про дело и реализацию</b>; жильё нейтрально.";
+  else if(sh&&!hh)plain="Место <b>про дом, уют и отдых</b>; карьерно спокойно.";
+  else if(hh)plain="Жить тут <b>энергозатратно</b> (напряжение в быту).";
+  else plain="Нейтральная зона: ярких угловых линий рядом нет.";
+  const tags=[...work.map(t=>`<span class="tag work">${t}·карьера</span>`),
+              ...home.map(t=>`<span class="tag life">${t}·дом</span>`),
+              ...warn.map(t=>`<span class="tag warn">${t}</span>`)].join("");
+  let parts=[];
+  if(work.length)parts.push(`<b>🏢 Работать:</b> ${work.join(", ")} усиливают карьеру.`);
+  if(home.length)parts.push(`<b>🏡 Жить:</b> ${home.join(", ")} — тепло и комфортно.`);
+  if(warn.length)parts.push(`<b>⚠️ Сложнее:</b> ${warn.join("; ")}.`);
+  if(rel.length)parts.push(`<b>❤️ Отношения:</b> ${rel.join(", ")} на партнёрствах.`);
+  return `<div class="verdict">${tags?`<div style="margin-bottom:8px">${tags}</div>`:""}
+    <div style="margin-bottom:8px">📝 <b>Простыми словами:</b> ${plain}</div>
+    ${parts.map(p=>`<div style="margin:4px 0">${p}</div>`).join("")}</div>`;
+}
+function render(lat,lon){
+  const A=anglesAt(lat,lon),C=contacts(A);
+  document.getElementById("hint").style.display="none";
+  let h=`<div class="coords">📍 ${lat.toFixed(2)}°, ${lon.toFixed(2)}°</div>`+summarize(C);
+  for(const a of["MC","Asc","IC","Desc"]){
+    h+=`<div class="angle"><h3><span>${ANG[a].ru}</span><span class="sign">${fmtSign(A[a])}</span></h3><div class="desc">${ANG[a].theme}</div>`;
+    if(C[a].length)for(const x of C[a])h+=`<div class="hit"><span class="dot" style="background:${COL[x.p]}"></span>${GLY[x.p]} ${RU[x.p]}<span class="orb">${x.orb.toFixed(1)}° ${strength(x.orb)}</span><br><span style="color:#9aa0c8;font-size:11.5px">${KW[x.p]}</span></div>`;
+    else h+=`<div class="empty">нет планет на этом угле рядом</div>`;
+    h+=`</div>`;
+  }
+  document.getElementById("result").innerHTML=h;
+  document.getElementById("disc").textContent=DISCLAIMER;
+}
+
+// ===== MAP =====
+const map=L.map('map',{worldCopyJump:true,minZoom:2}).setView([46,12],4);
+L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
+  {attribution:'© OpenStreetMap, © CARTO',subdomains:'abcd',maxZoom:10}).addTo(map);
+let lineLayer=L.layerGroup().addTo(map), birthMarker=null, clickMarker=null, linesOn=true;
+const star=L.divIcon({className:'',html:'<div style="font-size:26px;line-height:26px;filter:drop-shadow(0 0 4px #000)">⭐</div>',iconSize:[26,26],iconAnchor:[13,13]});
+
+function drawBirth(){
+  if(birthMarker)map.removeLayer(birthMarker);
+  birthMarker=L.marker([BIRTH.lat,BIRTH.lon],{icon:star}).addTo(map).bindPopup(`<b>⭐ Город рождения</b><br>${BIRTH.name}`);
+}
+function drawLines(){
+  lineLayer.clearLayers();
+  for(const p in EQU){const{ra,dec}=EQU[p],c=COL[p];
+    const mc=n180(ra-GMST),ic=n180(ra-GMST+180);
+    for(const[lon,dash]of[[mc,null],[ic,"6 6"]])L.polyline([[-58,lon],[80,lon]],{color:c,weight:2,opacity:.7,dashArray:dash}).addTo(lineLayer);
+    for(const rising of[true,false]){let seg=[];
+      for(let phi=-58;phi<=80;phi+=1){const cc=-Math.tan(r(phi))*Math.tan(r(dec));
+        if(Math.abs(cc)>1){if(seg.length>1)L.polyline(seg,{color:c,weight:1.6,opacity:.55,dashArray:rising?"1 5":"5 3 1 3"}).addTo(lineLayer);seg=[];continue;}
+        const H=dg(Math.acos(cc));let lon=n180((rising?ra-H:ra+H)-GMST);
+        if(seg.length&&Math.abs(lon-seg[seg.length-1][1])>90){if(seg.length>1)L.polyline(seg,{color:c,weight:1.6,opacity:.55,dashArray:rising?"1 5":"5 3 1 3"}).addTo(lineLayer);seg=[];}
+        seg.push([phi,lon]);}
+      if(seg.length>1)L.polyline(seg,{color:c,weight:1.6,opacity:.55,dashArray:rising?"1 5":"5 3 1 3"}).addTo(lineLayer);}
+  }
+}
+function rebuild(){drawLines();drawBirth();render(BIRTH.lat,BIRTH.lon);}
+
+document.getElementById("lineBtn").onclick=()=>{linesOn=!linesOn;linesOn?map.addLayer(lineLayer):map.removeLayer(lineLayer);document.getElementById("lineBtn").textContent=linesOn?"Скрыть линии":"Показать линии";};
+map.on('click',e=>{const{lat,lng}=e.latlng;if(clickMarker)map.removeLayer(clickMarker);
+  clickMarker=L.circleMarker([lat,lng],{radius:7,color:"#fff",weight:2,fillColor:"#8a7dff",fillOpacity:1}).addTo(map);
+  render(lat,((lng+540)%360)-180);});
+
+// form → fetch custom chart from API (optional)
+document.getElementById("birthForm").addEventListener("submit",async ev=>{
+  ev.preventDefault();
+  const api=document.getElementById("apibase").value.trim();
+  const body={birth_date:document.getElementById("bdate").value,
+    birth_time:document.getElementById("btime").value+":00",
+    birth_timezone:document.getElementById("btz").value,
+    birth_lat:parseFloat(document.getElementById("blat").value),
+    birth_lon:parseFloat(document.getElementById("blon").value),
+    birth_place:"рождение"};
+  if(!api){
+    BIRTH={lat:body.birth_lat,lon:body.birth_lon,name:"рождение"};
+    map.setView([body.birth_lat,body.birth_lon],4);
+    document.getElementById("sub").textContent="Без API показаны линии встроенной карты (Запорожье). Укажите API для своих данных.";
+    rebuild();return;
+  }
+  try{
+    const res=await fetch(`${api}/astrocartography/chart`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});
+    const data=await res.json();const ch=data.chart;
+    GMST=ch.gmst;EPS=ch.obliquity;
+    ECL={};EQU={};for(const p in ch.planets){ECL[p]=ch.planets[p].ecl_lon;EQU[p]={ra:ch.planets[p].ra,dec:ch.planets[p].dec};}
+    BIRTH={lat:ch.birth.lat,lon:ch.birth.lon,name:ch.birth.name||"рождение"};
+    map.setView([BIRTH.lat,BIRTH.lon],4);
+    document.getElementById("sub").textContent="Карта построена по вашим данным.";
+    rebuild();
+  }catch(err){document.getElementById("sub").textContent="Не удалось получить данные от API: "+err;}
+});
+
+document.getElementById("legend").innerHTML="<b>Планеты</b><br>"+Object.keys(RU).map(p=>`<span><span style="display:inline-block;width:10px;height:3px;background:${COL[p]};vertical-align:middle"></span> ${GLY[p]} ${RU[p]}</span>`).join("")+`<br><b>Линии:</b> сплошная=MC · пунктир=IC · точки=ASC · штрих=DESC`;
+rebuild();
+</script>
+</body>
+</html>
