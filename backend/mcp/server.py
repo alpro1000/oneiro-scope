@@ -68,6 +68,8 @@ mcp.tool()(g.validate_birth_data)
 # cites as ASTRONOMY-layer evidence. Output is data, not interpretation.
 mcp.tool()(sa.compute_transits)
 mcp.tool()(sa.astrocartography_scan)
+mcp.tool()(sa.astrocartography_lines)
+mcp.tool()(sa.astrocartography_point)
 mcp.tool()(sa.solar_return_chart)
 
 # --- Archetypes (Phase 8) ----------------------------------------------------

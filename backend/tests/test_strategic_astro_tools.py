@@ -127,6 +127,79 @@ async def test_astrocartography_includes_all_four_angles_in_output():
     assert all(k in r for k in ("asc", "mc", "ic", "desc"))
 
 
+# ---------- Astrocartography lines + point ----------------------------------
+
+
+@pytest.mark.asyncio
+async def test_acg_lines_returns_geojson_with_all_angles():
+    from backend.mcp.tools.strategic_astro import astrocartography_lines
+
+    result = await astrocartography_lines(
+        **NATAL, birth_lat=47.8388, birth_lon=35.1396, birth_name="Zaporizhzhia"
+    )
+    assert result["layer"] == "astronomy"
+    fc = result["lines"]
+    assert fc["type"] == "FeatureCollection"
+    assert fc["features"], "should produce line features"
+    angles = {f["properties"]["angle"] for f in fc["features"]}
+    assert angles == {"MC", "IC", "Asc", "Desc"}
+    # Every geometry is a LineString with [lon, lat] pairs in range.
+    for f in fc["features"]:
+        assert f["geometry"]["type"] == "LineString"
+        for lon, lat in f["geometry"]["coordinates"]:
+            assert -180.0 <= lon <= 180.0
+            assert -90.0 <= lat <= 90.0
+
+
+@pytest.mark.asyncio
+async def test_acg_lines_chart_payload_is_self_contained():
+    from backend.mcp.tools.strategic_astro import astrocartography_lines
+
+    result = await astrocartography_lines(
+        **NATAL, birth_lat=47.8388, birth_lon=35.1396
+    )
+    chart = result["chart"]
+    assert 0.0 <= chart["gmst"] < 360.0
+    assert 20.0 < chart["obliquity"] < 24.0
+    for body in ("Sun", "Moon", "Venus", "Mars", "Saturn", "Pluto"):
+        p = chart["planets"][body]
+        assert {"ecl_lon", "ra", "dec"} <= set(p)
+    assert chart["birth"]["lat"] == pytest.approx(47.8388, abs=1e-3)
+
+
+@pytest.mark.asyncio
+async def test_acg_point_brno_has_moon_on_asc():
+    """Known fact for this chart: in Brno the Moon sits on the Ascendant
+    (validated earlier this session). The point tool must surface it."""
+    from backend.mcp.tools.strategic_astro import astrocartography_point
+
+    result = await astrocartography_point(
+        **NATAL, lat=49.195, lon=16.606, locale="en"
+    )
+    assert set(result["angles"]) == {"asc", "mc", "ic", "desc"}
+    moon_asc = [
+        c for c in result["contacts"]
+        if c["planet"] == "Moon" and c["angle"] == "Asc"
+    ]
+    assert moon_asc, f"Moon on Asc missing for Brno: {result['contacts']}"
+    assert moon_asc[0]["orb_deg"] < 1.0
+
+
+@pytest.mark.asyncio
+async def test_acg_point_summary_has_plain_text_both_locales():
+    from backend.mcp.tools.strategic_astro import astrocartography_point
+
+    for loc in ("ru", "en"):
+        result = await astrocartography_point(
+            **NATAL, lat=49.7384, lon=13.3736, locale=loc  # Plzeň
+        )
+        summary = result["summary"]
+        assert summary["plain"], "plain-language verdict required"
+        assert summary["confidence"] == 0.8
+        # Plzeň has Mars tight on IC → tension bucket should be populated.
+        assert summary["tension"], f"expected Mars-IC tension at Plzeň ({loc})"
+
+
 # ---------- Solar Return ----------------------------------------------------
 
 

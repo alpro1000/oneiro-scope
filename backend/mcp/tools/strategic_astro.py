@@ -26,6 +26,10 @@ except ImportError as exc:  # pragma: no cover
 from backend.services.astrology.astrocartography import (
     AngleHit,
     RelocationResult,
+    acg_lines,
+    chart_geometry,
+    relocate,
+    relocation_summary,
     scan_cities,
 )
 from backend.services.astrology.solar_return import solar_return as _solar_return
@@ -151,6 +155,94 @@ async def astrocartography_scan(
         "orb_deg": orb_deg,
         "city_count": len(results),
         "results": [_result_to_dict(r) for r in results],
+    }
+
+
+_ANGLE_THEME = {
+    "Asc": "personality / how you come across",
+    "MC": "career, status, public role",
+    "IC": "home, roots, family, inner base",
+    "Desc": "partnerships, allies, close relationships",
+}
+
+
+async def astrocartography_lines(
+    birth_date: str,
+    birth_time: str,
+    birth_timezone: str,
+    birth_lat: float = 0.0,
+    birth_lon: float = 0.0,
+    birth_name: str = "birth",
+) -> dict[str, Any]:
+    """Compute the full astrocartography line set for an interactive map.
+
+    Returns a GeoJSON FeatureCollection of every planet's MC/IC meridians
+    and Asc/Desc horizon curves, plus a compact `chart` payload (sidereal
+    time, obliquity, each body's ecliptic longitude + RA/Dec, birth point)
+    that a thin client can use to compute the four angles for any clicked
+    location without an ephemeris. Pure geometry — ASTRONOMY layer.
+
+    Args:
+        birth_date: YYYY-MM-DD.
+        birth_time: HH:MM:SS local clock.
+        birth_timezone: IANA tz of birth (e.g. "Europe/Kyiv").
+        birth_lat: Birth latitude (for the birth marker).
+        birth_lon: Birth longitude.
+        birth_name: Label for the birth place.
+    """
+    jd = _natal_jd(birth_date, birth_time, birth_timezone)
+    return {
+        "layer": "astronomy",
+        "methodology": (
+            "Astro*Carto*Graphy (Lewis 1976); Swiss Ephemeris MOSEPH; "
+            "MC/IC = meridian loci, Asc/Desc = horizon curves"
+        ),
+        "chart": chart_geometry(jd, birth_lat, birth_lon, birth_name),
+        "lines": acg_lines(jd),
+    }
+
+
+async def astrocartography_point(
+    birth_date: str,
+    birth_time: str,
+    birth_timezone: str,
+    lat: float,
+    lon: float,
+    locale: str = "ru",
+    orb_deg: float = 8.0,
+) -> dict[str, Any]:
+    """Relocate the chart to one clicked point and explain it in plain words.
+
+    Returns the four relocated angles (Asc/MC/IC/Desc ecliptic longitudes),
+    the natal planets sitting on those angles within `orb_deg`, and a
+    rule-based work/life summary. Angle geometry is ASTRONOMY (conf 1.0);
+    the summary is a symbol-tier reflection (conf 0.8) — never a prediction.
+
+    Args:
+        birth_date: YYYY-MM-DD.
+        birth_time: HH:MM:SS local clock.
+        birth_timezone: IANA tz of birth.
+        lat: Latitude of the location to inspect.
+        lon: Longitude of the location to inspect.
+        locale: "ru" or "en" for the summary text.
+        orb_deg: Max orb for an angle contact (default 8°).
+    """
+    jd = _natal_jd(birth_date, birth_time, birth_timezone)
+    result = relocate(jd, lat, lon, orb_deg=orb_deg)
+    return {
+        "layer": "astronomy+symbolic",
+        "methodology": "Placidus angles; classical angle orbs; reflective summary",
+        "location": {"lat": lat, "lon": lon},
+        "angles": {
+            "asc": result.asc,
+            "mc": result.mc,
+            "ic": result.ic,
+            "desc": result.desc,
+        },
+        "angle_themes": _ANGLE_THEME,
+        "contacts": [_hit_to_dict(h) for h in result.angle_hits],
+        "score": result.score,
+        "summary": relocation_summary(result, locale=locale),
     }
 
 

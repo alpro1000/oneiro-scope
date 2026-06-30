@@ -1,10 +1,12 @@
 """Astrology API endpoints."""
 
-from datetime import date
+from datetime import date, datetime, time as time_cls, timezone
 from typing import Optional
 from uuid import UUID
+from zoneinfo import ZoneInfo
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
+from pydantic import BaseModel, Field
 
 from backend.services.astrology import (
     AstrologyService,
@@ -18,6 +20,145 @@ from backend.services.astrology import (
 from backend.services.astrology.schemas import HoroscopePeriod, EventType
 
 router = APIRouter(prefix="/astrology", tags=["astrology"])
+
+
+# --- Astrocartography (interactive relocation map) ---------------------------
+
+_ACG_DISCLAIMER = (
+    "Reflective / entertainment content. Angle geometry is astronomy "
+    "(Swiss Ephemeris); the work/life summary is a rule-based reflection, "
+    "not a prediction, and not medical, psychological, legal or financial "
+    "advice. Results depend on an accurate birth time."
+)
+
+
+class AstrocartographyBirth(BaseModel):
+    """Birth data needed to anchor the relocation chart."""
+
+    birth_date: date = Field(..., description="Date of birth (YYYY-MM-DD)")
+    birth_time: Optional[time_cls] = Field(
+        None, description="Time of birth (HH:MM). Noon is used if omitted."
+    )
+    birth_timezone: str = Field(
+        "UTC", description="IANA timezone of birth, e.g. 'Europe/Kyiv'."
+    )
+    birth_lat: float = Field(0.0, ge=-90, le=90, description="Birth latitude.")
+    birth_lon: float = Field(0.0, ge=-180, le=180, description="Birth longitude.")
+    birth_place: Optional[str] = Field(None, description="Birth place label.")
+
+
+class AstrocartographyPointRequest(AstrocartographyBirth):
+    """Birth data + a clicked location to inspect."""
+
+    lat: float = Field(..., ge=-90, le=90, description="Latitude to inspect.")
+    lon: float = Field(..., ge=-180, le=180, description="Longitude to inspect.")
+    locale: str = Field("ru", pattern="^(en|ru)$", description="Summary language.")
+
+
+def _natal_jd(b: AstrocartographyBirth) -> float:
+    """Convert birth data → Julian Day (UT). Noon local if time unknown."""
+    import swisseph as swe
+
+    t = b.birth_time or time_cls(12, 0)
+    try:
+        tz = ZoneInfo(b.birth_timezone)
+    except Exception:
+        tz = timezone.utc
+    local = datetime(
+        b.birth_date.year, b.birth_date.month, b.birth_date.day,
+        t.hour, t.minute, getattr(t, "second", 0), tzinfo=tz,
+    )
+    utc = local.astimezone(timezone.utc)
+    return swe.julday(
+        utc.year, utc.month, utc.day,
+        utc.hour + utc.minute / 60.0 + utc.second / 3600.0,
+    )
+
+
+@router.post(
+    "/astrocartography/chart",
+    summary="Astrocartography lines for the interactive map",
+    description=(
+        "Return the full astrocartography line set (GeoJSON) plus a compact "
+        "chart payload (sidereal time, obliquity, planet ecliptic + equatorial "
+        "coordinates, birth point). A thin client can compute the four angles "
+        "for any clicked location from this payload without an ephemeris. "
+        "Pure geometry — no interpretation."
+    ),
+)
+async def astrocartography_chart(req: AstrocartographyBirth) -> dict:
+    """Compute astrocartography lines + chart geometry for a birth moment."""
+    from backend.services.astrology.astrocartography import (
+        acg_lines,
+        chart_geometry,
+    )
+
+    try:
+        jd = _natal_jd(req)
+        return {
+            "layer": "astronomy",
+            "methodology": (
+                "Astro*Carto*Graphy (Lewis 1976); Swiss Ephemeris MOSEPH"
+            ),
+            "chart": chart_geometry(
+                jd, req.birth_lat, req.birth_lon, req.birth_place or "birth"
+            ),
+            "lines": acg_lines(jd),
+            "disclaimer": _ACG_DISCLAIMER,
+        }
+    except Exception as e:  # noqa: BLE001
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to compute astrocartography: {str(e)}",
+        )
+
+
+@router.post(
+    "/astrocartography/point",
+    summary="Inspect one location: four angles + plain-language summary",
+    description=(
+        "Relocate the chart to a clicked point and return the four angles "
+        "(Asc/MC/IC/Desc), the natal planets on those angles within orb, and "
+        "a rule-based work/life summary in plain language (ru/en)."
+    ),
+)
+async def astrocartography_point(req: AstrocartographyPointRequest) -> dict:
+    """Relocate to a point and summarise it."""
+    from backend.services.astrology.astrocartography import (
+        relocate,
+        relocation_summary,
+    )
+
+    try:
+        jd = _natal_jd(req)
+        result = relocate(jd, req.lat, req.lon, orb_deg=8.0)
+        return {
+            "location": {"lat": req.lat, "lon": req.lon},
+            "angles": {
+                "asc": result.asc,
+                "mc": result.mc,
+                "ic": result.ic,
+                "desc": result.desc,
+            },
+            "contacts": [
+                {
+                    "planet": h.planet,
+                    "angle": h.angle,
+                    "orb_deg": h.orb_deg,
+                    "planet_longitude": h.planet_longitude,
+                    "angle_longitude": h.angle_longitude,
+                }
+                for h in result.angle_hits
+            ],
+            "score": result.score,
+            "summary": relocation_summary(result, locale=req.locale),
+            "disclaimer": _ACG_DISCLAIMER,
+        }
+    except Exception as e:  # noqa: BLE001
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to inspect location: {str(e)}",
+        )
 
 
 def get_astrology_service() -> AstrologyService:
