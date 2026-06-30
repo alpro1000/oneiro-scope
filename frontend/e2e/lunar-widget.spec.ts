@@ -30,7 +30,11 @@ test.describe('LunarWidget', () => {
     await expect(toggle).toBeVisible();
     await toggle.click();
 
-    const todayRow = page.getByTestId(/row-\d{4}-\d{2}-\d{2}/).first();
-    await expect(todayRow).toHaveAttribute('aria-current', 'date');
+    // The month table renders every day sorted ascending, so the *first* row
+    // is the 1st of the month — only today's row carries aria-current="date".
+    // Assert on that highlighted row directly rather than on .first().
+    const todayRow = page.locator('[data-testid^="row-"][aria-current="date"]');
+    await expect(todayRow).toHaveCount(1);
+    await expect(todayRow).toBeVisible();
   });
 });

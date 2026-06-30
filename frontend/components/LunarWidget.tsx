@@ -86,15 +86,14 @@ export default function LunarWidget({initialData, locale}: Props) {
   );
 
   useEffect(() => {
-    if (!expanded || status !== 'idle') {
+    if (!expanded) {
       return;
     }
 
-    if (monthData.length > 0) {
-      setStatus('ready');
-      return;
-    }
-
+    // NOTE: `status` and `monthData.length` are deliberately NOT in the
+    // dependency array. This effect calls setStatus('loading'), so depending on
+    // `status` would re-run the effect, fire its cleanup (cancelled = true), and
+    // strand the in-flight month load — leaving the table stuck on "Loading…".
     let cancelled = false;
     const loadMonth = async () => {
       try {
@@ -137,7 +136,7 @@ export default function LunarWidget({initialData, locale}: Props) {
     return () => {
       cancelled = true;
     };
-  }, [expanded, currentData.date, locale, monthData.length, status, timezone]);
+  }, [expanded, currentData.date, locale, timezone]);
 
   useEffect(() => {
     if (!expanded) {
