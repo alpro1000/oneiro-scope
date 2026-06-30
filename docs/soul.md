@@ -104,6 +104,36 @@ Recent decisions:
 
 ## §9 Session log
 
+### 2026-06-29 — Real-use field notes + /me personal skill
+
+Long session split in two: (1) finished the P1 queue, (2) used OneiroScope
+as a real personal Strategic Analyst end-to-end, which surfaced concrete
+product feedback.
+
+**Shipped (code):**
+- Earlier P1 work: `planet_in_house` (10×12), `transit_meanings`, frontend
+  pricing/account/checkout (Phase 6.G), DE/ES/FR UI locales (Phase 6.F).
+- `.claude/skills/me/SKILL.md` + `.claude/personal/profile.md` — a `/me`
+  personal astrologer + dream interpreter. **The profile holds private data
+  and is gitignored** (`.claude/personal/`, `.claude/skills/me/`) — local
+  only; the public repo must not carry owner PII.
+
+**Product conclusions (see `docs/FIELD_NOTES_real_use.md`):**
+- The Strategic Analyst posture (no determinism / provenance / confidence /
+  life-context-wins) is the real, if niche, differentiator. Validated.
+- Gaps for the roadmap: per-angle astrocartography output (Asc/MC/IC/Desc →
+  plain meaning); "score = tone, not intensity" caveat; time-sensitivity UX
+  (transits robust vs angles/astrocartography sensitive ~15°/h); `.se1`
+  bundling matters specifically for relocation precision; persistent saved
+  chart/profile (`natal_chart_id` TODO).
+- Safety: added "never interpret external clinical instruments (MMPI)" to
+  `strategic_system.md`; lottery/gambling "lucky periods" stay refused.
+
+**Note:** OneiroScope monetization left intentionally open (not decided
+either way this session).
+
+---
+
 ### 2026-06-28 (late-4) — P1 #6 (partial): DE/ES/FR UI locales (Phase 6.F)
 
 Last item in the P1 queue. **Deliberately partial** — split the
