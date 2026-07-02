@@ -89,13 +89,14 @@
 | agents/prompts | 0 | 5 |
 | oneiro-scope | 0 | 0 |
 | .claude | 1 | 1 |
-| .claude/skills | 8 | 1 |
+| .claude/skills | 9 | 1 |
 | .claude/skills/cost-report | 0 | 1 |
 | .claude/skills/dream | 0 | 1 |
 | .claude/skills/deploy-cycle | 0 | 1 |
 | .claude/skills/horoscope | 0 | 1 |
 | .claude/skills/lunar | 0 | 1 |
 | .claude/skills/natal | 0 | 1 |
+| .claude/skills/client-report | 0 | 1 |
 | .claude/skills/validate-prod | 0 | 1 |
 | .claude/skills/research-symbol | 0 | 1 |
 | tests | 0 | 4 |
@@ -104,4 +105,4 @@
 | .github | 1 | 0 |
 | .github/workflows | 0 | 7 |
 
-**ИТОГО:** папок = 100, файлов = 360
+**ИТОГО:** папок = 101, файлов = 361
