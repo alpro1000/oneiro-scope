@@ -437,7 +437,7 @@
     },
     {
       "path": ".claude/skills",
-      "dirs": 8,
+      "dirs": 9,
       "files": 1
     },
     {
@@ -467,6 +467,11 @@
     },
     {
       "path": ".claude/skills/natal",
+      "dirs": 0,
+      "files": 1
+    },
+    {
+      "path": ".claude/skills/client-report",
       "dirs": 0,
       "files": 1
     },
@@ -506,6 +511,6 @@
       "files": 7
     }
   ],
-  "total_dirs": 100,
-  "total_files": 360
+  "total_dirs": 101,
+  "total_files": 361
 }

@@ -14,6 +14,7 @@ frontmatter (`name`, `description`).
 | `/validate-prod`   | Production env health-check (env vars, ephemeris, /health, lunar smoke)          |
 | `/cost-report`     | LLM cost summary per provider (Phase 4 — partially wired)                        |
 | `/research-symbol` | Add a new dream symbol to the knowledge base, methodologically grounded          |
+| `/client-report`   | Full client deliverable: natal + cities + year + Solar Return + map → PDF        |
 
 ## Conventions
 
