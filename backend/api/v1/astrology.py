@@ -19,6 +19,10 @@ from backend.services.astrology import (
 )
 from backend.services.astrology.schemas import HoroscopePeriod, EventType
 
+import logging
+
+logger = logging.getLogger(__name__)
+
 router = APIRouter(prefix="/astrology", tags=["astrology"])
 
 
@@ -116,10 +120,11 @@ async def astrocartography_chart(req: AstrocartographyBirth) -> dict:
         }
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
-    except Exception as e:  # noqa: BLE001
+    except Exception:  # noqa: BLE001
+        logger.exception("astrocartography chart computation failed")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to compute astrocartography: {str(e)}",
+            detail="Failed to compute astrocartography.",
         )
 
 
@@ -406,10 +411,11 @@ async def astrocartography_point(req: AstrocartographyPointRequest) -> dict:
         }
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
-    except Exception as e:  # noqa: BLE001
+    except Exception:  # noqa: BLE001
+        logger.exception("astrocartography point inspection failed")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to inspect location: {str(e)}",
+            detail="Failed to inspect location.",
         )
 
 
@@ -459,10 +465,11 @@ async def calculate_natal_chart(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e),
         )
-    except Exception as e:
+    except Exception:
+        logger.exception("natal chart calculation failed")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to calculate natal chart: {str(e)}",
+            detail="Failed to calculate natal chart.",
         )
 
 
@@ -525,10 +532,11 @@ async def get_horoscope(
 
     try:
         return await service.generate_horoscope(request, natal_chart)
-    except Exception as e:
+    except Exception:
+        logger.exception("horoscope generation failed")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to generate horoscope: {str(e)}",
+            detail="Failed to generate horoscope.",
         )
 
 
@@ -571,10 +579,11 @@ async def forecast_event(
 
     try:
         return await service.forecast_event(request, natal_chart)
-    except Exception as e:
+    except Exception:
+        logger.exception("event forecast failed")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to forecast event: {str(e)}",
+            detail="Failed to forecast event.",
         )
 
 
@@ -715,8 +724,9 @@ async def search_cities(
                 for city in cities
             ],
         }
-    except Exception as e:
+    except Exception:
+        logger.exception("city search failed")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to search cities: {str(e)}",
+            detail="Failed to search cities.",
         )
