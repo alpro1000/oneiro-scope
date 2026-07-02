@@ -104,6 +104,58 @@ Recent decisions:
 
 ## §9 Session log
 
+### 2026-07-01 — claude/july-2026-transits-jja4qn — Pattern features from live testing + synastry (Phase 9)
+
+**Goal:** Turn the patterns from 4 live user tests (owner + 3 friends, all
+Zaporizhzhia-born) into product features, plus compatibility (synastry).
+Session earlier shipped interactive astrocartography (PR #130) and full
+CI-green fixes incl. a real LunarWidget self-cancelling-effect bug (PR #131).
+
+**Done (backend services, `backend/services/astrology/`):**
+- `historic_tz.py` — birth-moment resolver: coordinates→IANA zone
+  (timezonefinder) → zoneinfo historic rules (Soviet decree time works:
+  1977/1989 Zaporizhzhia = UTC+3). Provenance: source, offset, pre-1970 flag.
+  Rejects bad tz names instead of silently using UTC.
+- `synastry.py` — inter-chart aspects + 5 dimension scores (attraction /
+  emotional / communication / stability / tension, 0–100) + reflective
+  summary. Conjunction nature resolved by planet pair (soft vs intense).
+- `transit_arcs.py` — thematic phase timeline: significators derived from
+  natal houses (occupants + cusp rulers + natural planets) per theme
+  (money_debt / career / relationships / home); slow transits grouped into
+  pressure/support phases + first sustained turning point. Reproduces the
+  hand-made debt analysis (1989 chart: turning point = 2027-08).
+- `astrocartography.py` — `clean` luck flag in `relocation_summary`
+  (benefic angular AND no malefic angular ≤6°: Warsaw clean, Prague not);
+  `compare_locations()` (side-by-side, order preserved); `theme_scan()`
+  (luck/career/relationships/home city ranking with clean flags).
+- `solar_return.py` — `suggest_locations()`: SR-relocation ranking by
+  benefics/malefics in angular houses.
+- `report.py` — one-call profile bundle (natal + places + themes + year
+  transits + provenance + disclaimer) as JSON and self-contained HTML
+  (print-to-PDF), no new deps.
+
+**API (`/api/v1/astrology`):** `/astrocartography/compare`,
+`/astrocartography/themes`, `/transits/arcs`, `/synastry`,
+`/solar-return/suggest`, `/report` (json|html). ValueError → 400.
+
+**MCP:** `compare_relocations`, `scan_cities_by_theme`, `transit_arc`,
+`synastry`, `solar_return_suggest` registered in `server.py` (Phase 9 block).
+
+**Tests:** +13 in `test_strategic_astro_tools.py` (28 total there) locking
+session-validated facts: USSR +3h offsets, Warsaw-clean/Prague-mixed,
+Pluto□Mars debt peaks (Jan+Oct 2026), synastry symmetry + bounded scores,
+SR ranking, report structure incl. Sun-in-Cancer anchor. Full CI smoke set
+locally: **254 passed**.
+
+**Patterns that drove this (from live tests):** users live on their
+Uranus/Pluto/Mars lines while their Venus/Moon belts are elsewhere; "clean
+vs mixed" luck changes the read entirely; users ask for "строго по
+транзитам" (raw-data-first); every reading converges to 4 themes
+(luck/career/relationships/home); the deliverable is always the same
+report bundle.
+
+---
+
 ### 2026-06-29 — Real-use field notes + /me personal skill
 
 Long session split in two: (1) finished the P1 queue, (2) used OneiroScope

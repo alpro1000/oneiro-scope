@@ -72,6 +72,16 @@ mcp.tool()(sa.astrocartography_lines)
 mcp.tool()(sa.astrocartography_point)
 mcp.tool()(sa.solar_return_chart)
 
+# --- Pattern features (Phase 9: session-retrospective) -----------------------
+# Side-by-side relocation, thematic city ranking with clean-luck flags,
+# thematic transit arcs (pressure/support phases), synastry, and Solar
+# Return location suggestions.
+mcp.tool()(sa.compare_relocations)
+mcp.tool()(sa.scan_cities_by_theme)
+mcp.tool()(sa.transit_arc)
+mcp.tool()(sa.synastry)
+mcp.tool()(sa.solar_return_suggest)
+
 # --- Archetypes (Phase 8) ----------------------------------------------------
 # Hard-table interpretations (MC/Sun/Houses/Aspects/Dignities) with cited
 # classical/modern sources. Layer = astrology_symbolic; confidence 0.9 —

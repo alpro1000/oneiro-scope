@@ -5,9 +5,15 @@
 > that's easy to lose. Updated at the end of every substantial session
 > alongside `soul.md §9`.
 
-**Дата последнего обновления:** 2026-06-28 (late-4)
-**Последняя ветка работы:** `claude/phase-9-consolidation-f64chg` (PRs #125 planet_in_house, #126 transit_meanings, #127 frontend pricing/account/checkout, + DE/ES/FR UI locales)
-**Текущий main HEAD:** frontend pricing/account/checkout + transit/planet archetype tables merged
+**Дата последнего обновления:** 2026-07-01
+**Последняя ветка работы:** `claude/july-2026-transits-jja4qn` (PR #130 interactive astrocartography — merged; PR #131 CI fully green + LunarWidget month-load bugfix — merged; PR pattern-features + synastry — см. §9 soul.md за 2026-07-01)
+**Текущий main HEAD:** interactive astrocartography + все CI-чеки зелёные
+
+**Новое в этой сессии (Phase 9, pattern features из живых тестов):**
+- Сервисы: `historic_tz.py` (советское декретное время из координат), `synastry.py` (совместимость, 5 измерений 0–100), `transit_arcs.py` (фазовый таймлайн pressure/support + turning point), `report.py` (JSON+HTML-отчёт одной кнопкой); `astrocartography.py` — clean-флаг удачи, `compare_locations`, `theme_scan`; `solar_return.suggest_locations`.
+- API: `/astrocartography/compare`, `/astrocartography/themes`, `/transits/arcs`, `/synastry`, `/solar-return/suggest`, `/report` (json|html).
+- MCP: `compare_relocations`, `scan_cities_by_theme`, `transit_arc`, `synastry`, `solar_return_suggest`.
+- Тесты: 254 passed (полный mcp-smoke набор локально).
 
 ---
 

@@ -32,7 +32,19 @@ from backend.services.astrology.astrocartography import (
     relocation_summary,
     scan_cities,
 )
-from backend.services.astrology.solar_return import solar_return as _solar_return
+from backend.services.astrology.astrocartography import (
+    compare_locations as _compare_locations,
+    theme_scan as _theme_scan,
+)
+from backend.services.astrology.solar_return import (
+    solar_return as _solar_return,
+    suggest_locations as _sr_suggest,
+)
+from backend.services.astrology.synastry import (
+    compute_synastry as _compute_synastry,
+    synastry_summary as _synastry_summary,
+)
+from backend.services.astrology.transit_arcs import compute_arc as _compute_arc
 from backend.services.astrology.transits_engine import find_transits
 
 
@@ -289,4 +301,204 @@ async def solar_return_chart(
         },
         "planets": sr.planets,
         "planet_houses": sr.planet_houses,
+    }
+
+
+# --- Pattern features (session retrospective) --------------------------------
+
+
+async def compare_relocations(
+    birth_date: str,
+    birth_time: str,
+    birth_timezone: str,
+    locations: list[dict[str, Any]],
+    locale: str = "ru",
+) -> dict[str, Any]:
+    """Side-by-side relocation read for 2–6 places — 'birth city vs
+    current city vs candidate' in one call.
+
+    Returns, per location: the four relocated angles, planets on angles
+    (orb ≤8°), the heuristic score, and a plain-language work/life
+    summary with a `clean` luck flag. Input order preserved.
+
+    Args:
+        birth_date: YYYY-MM-DD.
+        birth_time: HH:MM:SS local clock.
+        birth_timezone: IANA tz of birth.
+        locations: List of {"name":..., "lat":..., "lon":...}.
+        locale: "ru" or "en" for summaries.
+    """
+    jd = _natal_jd(birth_date, birth_time, birth_timezone)
+    tuples = [(l["name"], float(l["lat"]), float(l["lon"])) for l in locations]
+    return {
+        "layer": "astronomy+symbolic",
+        "methodology": "Placidus relocation angles; classical angle orbs",
+        "locations": _compare_locations(jd, tuples, locale=locale),
+    }
+
+
+async def scan_cities_by_theme(
+    birth_date: str,
+    birth_time: str,
+    birth_timezone: str,
+    theme: str,
+    cities: list[dict[str, Any]],
+    top_n: int = 10,
+) -> dict[str, Any]:
+    """Rank cities for ONE life theme: "luck" (Jupiter/Venus angular),
+    "career" (Sun/Jupiter/Uranus/Mercury/Saturn on MC), "relationships"
+    (benefics/luminaries on Desc), or "home" (Venus/Moon/Jupiter on
+    IC/Asc).
+
+    Each row carries a `clean` flag — benefic present with NO malefic
+    (Mars/Saturn/Pluto) on any angle within orb — because a Venus line
+    next to a tight Mars-IC reads completely differently.
+
+    Args:
+        birth_date: YYYY-MM-DD.
+        birth_time: HH:MM:SS local.
+        birth_timezone: IANA tz of birth.
+        theme: "luck" | "career" | "relationships" | "home".
+        cities: List of {"name":..., "lat":..., "lon":...}.
+        top_n: Max rows returned (default 10).
+    """
+    jd = _natal_jd(birth_date, birth_time, birth_timezone)
+    tuples = [(c["name"], float(c["lat"]), float(c["lon"])) for c in cities]
+    return {
+        "layer": "astronomy+symbolic",
+        "theme": theme,
+        "results": _theme_scan(jd, tuples, theme, top_n=top_n),
+    }
+
+
+async def transit_arc(
+    birth_date: str,
+    birth_time: str,
+    birth_timezone: str,
+    birth_lat: float,
+    birth_lon: float,
+    theme: str,
+    start: str,
+    end: str,
+) -> dict[str, Any]:
+    """Phase timeline of slow transits for one life theme — the
+    "crisis → turning point → support" storyline instead of a flat list.
+
+    Significators are derived from the natal chart (occupants + rulers
+    of the theme's houses + natural planets), then Jupiter→Pluto
+    transits to them are grouped into pressure/support phases. Output
+    includes the first sustained turning point month, if any. Phases
+    describe pressure vs support — they are NOT outcome verdicts.
+
+    Args:
+        birth_date: YYYY-MM-DD.
+        birth_time: HH:MM:SS local.
+        birth_timezone: IANA tz of birth.
+        birth_lat: Birth latitude (houses need it).
+        birth_lon: Birth longitude.
+        theme: "money_debt" | "career" | "relationships" | "home".
+        start: Window start YYYY-MM-DD.
+        end: Window end YYYY-MM-DD.
+    """
+    jd = _natal_jd(birth_date, birth_time, birth_timezone)
+    arc = _compute_arc(
+        jd, birth_lat, birth_lon, theme,
+        date_cls.fromisoformat(start), date_cls.fromisoformat(end),
+    )
+    return {
+        "layer": "astronomy+symbolic",
+        "theme": arc.theme,
+        "significators": arc.significators,
+        "events": [
+            {
+                "date": e.exact_date,
+                "transiting": e.transiting,
+                "aspect": e.aspect,
+                "natal": e.natal,
+                "orb": e.orb_at_midnight,
+            }
+            for e in arc.events
+        ],
+        "phases": [
+            {
+                "start": p.start,
+                "end": p.end,
+                "kind": p.kind,
+                "event_count": len(p.events),
+            }
+            for p in arc.phases
+        ],
+        "turning_point": arc.turning_point,
+        "note": "phases describe transit pressure/support, not outcomes",
+    }
+
+
+async def synastry(
+    person_a: dict[str, str],
+    person_b: dict[str, str],
+    locale: str = "ru",
+) -> dict[str, Any]:
+    """Compatibility (synastry) between two people: every inter-chart
+    aspect plus dimension scores — attraction, emotional bond,
+    communication, stability, tension — and a reflective summary.
+
+    Geometry is astronomy (1.0); dimension scores are a classical
+    rule-set (0.8). Never a verdict on a relationship.
+
+    Args:
+        person_a: {"birth_date": "YYYY-MM-DD", "birth_time": "HH:MM:SS",
+            "birth_timezone": "Europe/Kyiv"}.
+        person_b: Same structure.
+        locale: "ru" or "en" for the summary.
+    """
+    jd_a = _natal_jd(
+        person_a["birth_date"], person_a["birth_time"],
+        person_a.get("birth_timezone", "UTC"),
+    )
+    jd_b = _natal_jd(
+        person_b["birth_date"], person_b["birth_time"],
+        person_b.get("birth_timezone", "UTC"),
+    )
+    result = _compute_synastry(jd_a, jd_b)
+    return {
+        "layer": "astronomy+symbolic",
+        "methodology": "inter-chart aspects; classical synastry weights",
+        "aspect_count": len(result.aspects),
+        "aspects": [
+            {
+                "a": a.person_a_planet,
+                "b": a.person_b_planet,
+                "aspect": a.aspect,
+                "orb_deg": a.orb_deg,
+                "nature": a.nature,
+            }
+            for a in sorted(result.aspects, key=lambda x: x.orb_deg)
+        ],
+        "summary": _synastry_summary(result, locale=locale),
+    }
+
+
+async def solar_return_suggest(
+    birth_date: str,
+    birth_time: str,
+    birth_timezone: str,
+    return_year: int,
+    candidates: list[dict[str, Any]],
+) -> dict[str, Any]:
+    """Rank candidate cities for spending a birthday (Solar Return
+    relocation): benefics angular score (+), malefics angular (−).
+
+    Args:
+        birth_date: YYYY-MM-DD.
+        birth_time: HH:MM:SS local.
+        birth_timezone: IANA tz of birth.
+        return_year: Birthday year to plan.
+        candidates: List of {"name":..., "lat":..., "lon":...}.
+    """
+    jd = _natal_jd(birth_date, birth_time, birth_timezone)
+    tuples = [(c["name"], float(c["lat"]), float(c["lon"])) for c in candidates]
+    return {
+        "layer": "astronomy+symbolic",
+        "return_year": return_year,
+        "ranking": _sr_suggest(jd, return_year, tuples),
     }

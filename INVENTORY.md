@@ -76,7 +76,7 @@
 | backend/services/dreams/ai | 1 | 2 |
 | backend/services/dreams/ai/prompts | 0 | 1 |
 | backend/services/lunar | 0 | 3 |
-| backend/services/astrology | 6 | 18 |
+| backend/services/astrology | 6 | 22 |
 | backend/services/astrology/policies | 0 | 2 |
 | backend/services/astrology/archetypes | 0 | 9 |
 | backend/services/astrology/engine | 0 | 5 |
@@ -104,4 +104,4 @@
 | .github | 1 | 0 |
 | .github/workflows | 0 | 7 |
 
-**ИТОГО:** папок = 100, файлов = 354
+**ИТОГО:** папок = 100, файлов = 358
