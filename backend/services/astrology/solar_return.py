@@ -182,3 +182,49 @@ def solar_return(
         planets=planets,
         planet_houses=houses,
     )
+
+
+# Angular houses carry the year's loudest emphasis (Gauquelin zones
+# aside, this is the classical SR-relocation heuristic).
+_ANGULAR_HOUSES = {1, 4, 7, 10}
+_SR_BENEFICS = {"Jupiter": 3.0, "Venus": 2.5, "Sun": 1.5, "Moon": 1.0}
+_SR_MALEFICS = {"Saturn": -2.0, "Mars": -1.5, "Pluto": -1.5}
+
+
+def suggest_locations(
+    natal_jd_ut: float,
+    return_year: int,
+    candidates: list[tuple[str, float, float]],
+) -> list[dict]:
+    """Rank candidate cities for spending the birthday ("Solar Return
+    relocation"). Score = benefics angular (+), malefics angular (−);
+    ties break toward Jupiter/Venus in house 1 or 10.
+
+    Returns one dict per candidate sorted best-first. Pure geometry +
+    a fixed weight table — the travel decision stays with the user.
+    """
+    rows = []
+    for name, lat, lon in candidates:
+        sr = solar_return(natal_jd_ut, return_year, lat, lon)
+        score = 0.0
+        angular = []
+        for planet, house in sr.planet_houses.items():
+            if house not in _ANGULAR_HOUSES:
+                continue
+            weight = _SR_BENEFICS.get(planet, 0.0) + _SR_MALEFICS.get(planet, 0.0)
+            score += weight
+            angular.append({"planet": planet, "house": house})
+        rows.append(
+            {
+                "name": name,
+                "latitude": lat,
+                "longitude": lon,
+                "score": round(score, 2),
+                "angular_planets": angular,
+                "exact_moment_utc": sr.exact_moment_utc,
+                "asc": sr.asc,
+                "mc": sr.mc,
+            }
+        )
+    rows.sort(key=lambda r: r["score"], reverse=True)
+    return rows

@@ -287,3 +287,262 @@ async def test_solar_return_chart_shifts_with_location():
     )
     # Angles must differ noticeably.
     assert abs(omis["angles"]["asc"] - klatovy["angles"]["asc"]) > 1.0
+
+
+# ---------- Historic timezone resolution ------------------------------------
+
+
+def test_resolve_birth_moment_soviet_decree_time():
+    """USSR 1977: Zaporizhzhia ran on Moscow decree time — UTC+3, no DST
+    yet. The resolver must reproduce the offset we validated by hand."""
+    import datetime as _dt
+
+    from backend.services.astrology.historic_tz import resolve_birth_moment
+
+    m = resolve_birth_moment(
+        _dt.date(1977, 7, 1), _dt.time(22, 30),
+        lat=47.8388, lon=35.1396,
+    )
+    assert m.utc_offset_hours == 3.0
+    assert m.source == "coordinates"
+    assert not m.pre_1970
+
+
+def test_resolve_birth_moment_explicit_tz_and_winter():
+    """January 1989 Ukraine: still UTC+3 (Moscow time, winter)."""
+    import datetime as _dt
+
+    from backend.services.astrology.historic_tz import resolve_birth_moment
+
+    m = resolve_birth_moment(
+        _dt.date(1989, 1, 24), _dt.time(22, 30),
+        timezone_name="Europe/Kyiv",
+    )
+    assert m.utc_offset_hours == 3.0
+    assert m.source == "explicit"
+
+
+def test_resolve_birth_moment_rejects_bad_tz():
+    import datetime as _dt
+
+    from backend.services.astrology.historic_tz import resolve_birth_moment
+
+    with pytest.raises(ValueError):
+        resolve_birth_moment(
+            _dt.date(2000, 1, 1), _dt.time(12, 0),
+            timezone_name="Not/AZone",
+        )
+
+
+# ---------- Clean-luck flag + compare + themes -------------------------------
+
+
+@pytest.mark.asyncio
+async def test_relocation_summary_clean_flag_warsaw_vs_prague():
+    """Session-validated: Warsaw = Venus-IC with no malefic (clean);
+    Prague = Venus-IC far + Mars-IC 0.3° (mixed)."""
+    from backend.mcp.tools.strategic_astro import astrocartography_point
+
+    warsaw = await astrocartography_point(**NATAL, lat=52.23, lon=21.01)
+    prague = await astrocartography_point(**NATAL, lat=50.0755, lon=14.4378)
+    assert warsaw["summary"]["clean"] is True
+    assert prague["summary"]["clean"] is False
+
+
+@pytest.mark.asyncio
+async def test_compare_relocations_preserves_order():
+    from backend.mcp.tools.strategic_astro import compare_relocations
+
+    result = await compare_relocations(
+        **NATAL,
+        locations=[
+            {"name": "Zaporizhzhia", "lat": 47.8388, "lon": 35.1396},
+            {"name": "Brno", "lat": 49.195, "lon": 16.606},
+        ],
+    )
+    names = [l["name"] for l in result["locations"]]
+    assert names == ["Zaporizhzhia", "Brno"]
+    for loc in result["locations"]:
+        assert "clean" in loc["summary"]
+        assert set(loc["angles"]) == {"asc", "mc", "ic", "desc"}
+
+
+@pytest.mark.asyncio
+async def test_theme_scan_luck_flags_warsaw_clean():
+    from backend.mcp.tools.strategic_astro import scan_cities_by_theme
+
+    result = await scan_cities_by_theme(
+        **NATAL,
+        theme="luck",
+        cities=[
+            {"name": "Warsaw", "lat": 52.23, "lon": 21.01},
+            {"name": "Prague", "lat": 50.0755, "lon": 14.4378},
+        ],
+    )
+    rows = {r["name"]: r for r in result["results"]}
+    assert rows["Warsaw"]["clean"] is True
+    assert rows["Prague"]["clean"] is False
+    # Ranking must put clean Warsaw above Mars-dominated Prague.
+    assert result["results"][0]["name"] == "Warsaw"
+
+
+@pytest.mark.asyncio
+async def test_theme_scan_rejects_unknown_theme():
+    from backend.mcp.tools.strategic_astro import scan_cities_by_theme
+
+    with pytest.raises(ValueError):
+        await scan_cities_by_theme(
+            **NATAL, theme="wealth",
+            cities=[{"name": "X", "lat": 0.0, "lon": 0.0}],
+        )
+
+
+# ---------- Thematic transit arcs --------------------------------------------
+
+# Chart validated in session: 1989-01-24 22:30 Zaporizhzhia (Mars+Jupiter
+# in the 8th, Pluto in the 2nd) — the debt-theme fixture.
+NATAL_1989 = {
+    "birth_date": "1989-01-24",
+    "birth_time": "22:30:00",
+    "birth_timezone": "Europe/Kyiv",
+}
+
+
+@pytest.mark.asyncio
+async def test_transit_arc_money_debt_finds_pluto_mars_pressure():
+    """Hand-validated: Pluto □ natal Mars (8th house) peaks January and
+    October 2026. The arc must surface both as pressure events."""
+    from backend.mcp.tools.strategic_astro import transit_arc
+
+    result = await transit_arc(
+        **NATAL_1989,
+        birth_lat=47.8388, birth_lon=35.1396,
+        theme="money_debt",
+        start="2026-01-01", end="2026-12-31",
+    )
+    assert "Mars" in result["significators"]
+    assert "Jupiter" in result["significators"]
+    pluto_mars = [
+        e for e in result["events"]
+        if e["transiting"] == "Pluto" and e["natal"] == "Mars"
+        and e["aspect"] == "square"
+    ]
+    assert len(pluto_mars) >= 2, result["events"]
+    assert result["phases"], "events must be grouped into phases"
+    kinds = {p["kind"] for p in result["phases"]}
+    assert kinds <= {"pressure", "support"}
+
+
+@pytest.mark.asyncio
+async def test_transit_arc_rejects_unknown_theme():
+    from backend.mcp.tools.strategic_astro import transit_arc
+
+    with pytest.raises(ValueError):
+        await transit_arc(
+            **NATAL_1989, birth_lat=47.8, birth_lon=35.1,
+            theme="fortune", start="2026-01-01", end="2026-02-01",
+        )
+
+
+# ---------- Synastry ----------------------------------------------------------
+
+
+@pytest.mark.asyncio
+async def test_synastry_returns_aspects_and_bounded_scores():
+    from backend.mcp.tools.strategic_astro import synastry
+
+    result = await synastry(
+        person_a=NATAL,
+        person_b={
+            "birth_date": "1978-03-26",
+            "birth_time": "03:20:00",
+            "birth_timezone": "Europe/Kyiv",
+        },
+    )
+    assert result["aspect_count"] == len(result["aspects"]) > 0
+    for a in result["aspects"]:
+        assert a["nature"] in ("harmonious", "tense", "intense")
+        assert 0 <= a["orb_deg"] <= 7.0
+    dims = result["summary"]["dimensions"]
+    assert set(dims) == {
+        "attraction", "emotional", "communication", "stability", "tension"
+    }
+    for v in dims.values():
+        assert 0.0 <= v <= 100.0
+    assert 0.0 <= result["summary"]["overall_score"] <= 100.0
+    assert result["summary"]["plain"]
+
+
+@pytest.mark.asyncio
+async def test_synastry_is_symmetric_in_aspect_count():
+    """Swapping persons must yield the same number of inter-aspects."""
+    from backend.mcp.tools.strategic_astro import synastry
+
+    b = {
+        "birth_date": "1989-01-24",
+        "birth_time": "22:30:00",
+        "birth_timezone": "Europe/Kyiv",
+    }
+    ab = await synastry(person_a=NATAL, person_b=b)
+    ba = await synastry(person_a=b, person_b=NATAL)
+    assert ab["aspect_count"] == ba["aspect_count"]
+
+
+# ---------- Solar Return suggestions ------------------------------------------
+
+
+@pytest.mark.asyncio
+async def test_solar_return_suggest_ranks_candidates():
+    from backend.mcp.tools.strategic_astro import solar_return_suggest
+
+    result = await solar_return_suggest(
+        **NATAL,
+        return_year=2026,
+        candidates=[
+            {"name": "Omiš", "lat": 43.4452, "lon": 16.6890},
+            {"name": "Klatovy", "lat": 49.3958, "lon": 13.2950},
+        ],
+    )
+    ranking = result["ranking"]
+    assert len(ranking) == 2
+    scores = [r["score"] for r in ranking]
+    assert scores == sorted(scores, reverse=True)
+    for r in ranking:
+        for ap in r["angular_planets"]:
+            assert ap["house"] in (1, 4, 7, 10)
+
+
+# ---------- Report builder ------------------------------------------------------
+
+
+def test_build_report_structure_and_html():
+    import datetime as _dt
+
+    from backend.services.astrology.historic_tz import resolve_birth_moment
+    from backend.services.astrology.report import build_report, render_html
+
+    moment = resolve_birth_moment(
+        _dt.date(1977, 7, 1), _dt.time(22, 30),
+        lat=47.8388, lon=35.1396,
+    )
+    report = build_report(
+        moment,
+        birth_place=("Zaporizhzhia", 47.8388, 35.1396),
+        current_place=("Plzeň", 49.7384, 13.3736),
+        year_start=_dt.date(2026, 7, 1),
+        cities=[("Warsaw", 52.23, 21.01), ("Prague", 50.0755, 14.4378)],
+    )
+    assert set(report) >= {
+        "birth", "natal", "relocations", "themes", "year_transits",
+        "provenance", "disclaimer",
+    }
+    assert report["birth"]["utc_offset_hours"] == 3.0
+    assert len(report["relocations"]) == 2
+    assert set(report["themes"]) == {"luck", "career", "relationships", "home"}
+    # Known natal anchor: Sun ~9°49' Cancer.
+    assert "Рак" in report["natal"]["Sun"]["position"]
+
+    html = render_html(report)
+    assert html.startswith("<!DOCTYPE html>")
+    assert "Warsaw" in html or "Варшава" in html
+    assert report["disclaimer"][:30] in html

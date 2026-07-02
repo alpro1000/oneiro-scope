@@ -298,15 +298,139 @@ def relocation_summary(result: "RelocationResult", locale: str = "ru") -> dict:
         else:
             plain = "Neutral zone: no strong angular lines nearby."
 
+    # "Clean" luck: a benefic sits on an angle with no malefic angular
+    # contact nearby. Session testing showed this flag changes the read
+    # entirely (Venus-IC Prague looks lucky until you see Mars-IC 0.3°).
+    benefic_hits = [
+        h for h in result.angle_hits
+        if h.planet in _BENEFIC and h.orb_deg <= 6.0
+    ]
+    malefic_hits = [
+        h for h in result.angle_hits
+        if h.planet in _CHALLENGE and h.orb_deg <= 6.0
+    ]
+    clean = bool(benefic_hits) and not malefic_hits
+
     return {
         "plain": plain,
         "work": work,
         "home": home,
         "relationships": rel,
         "tension": warn,
+        "clean": clean,
+        "luck": [name(h.planet) for h in benefic_hits],
         "confidence": 0.8,
         "source": "relocation rule-set (classical angle practice)",
     }
+
+
+# Multi-location comparison + thematic scan --------------------------------
+
+# theme -> predicate over (planet, angle). Mirrors the four questions
+# users actually asked in session testing.
+_THEME_RULES = {
+    "luck": lambda p, a: p in ("Jupiter", "Venus"),
+    "career": lambda p, a: a == "MC" and p in (
+        "Sun", "Jupiter", "Uranus", "Mercury", "Saturn"
+    ),
+    "relationships": lambda p, a: a == "Desc" and p in (
+        "Venus", "Jupiter", "Sun", "Moon", "Mercury"
+    ),
+    "home": lambda p, a: a in ("IC", "Asc") and p in (
+        "Venus", "Moon", "Jupiter"
+    ),
+}
+
+
+def compare_locations(
+    jd_ut: float,
+    locations: list[tuple[str, float, float]],
+    *,
+    orb_deg: float = 8.0,
+    locale: str = "ru",
+) -> list[dict]:
+    """Side-by-side relocation read for a handful of places — the
+    'Zaporizhzhia vs Samara vs London' view. Returns one dict per
+    location, input order preserved (comparison, not ranking)."""
+    planets = natal_planets(jd_ut)
+    out = []
+    for name, lat, lon in locations:
+        r = relocate(jd_ut, lat, lon, planets=planets, orb_deg=orb_deg)
+        out.append(
+            {
+                "name": name,
+                "latitude": lat,
+                "longitude": lon,
+                "angles": {"asc": r.asc, "mc": r.mc, "ic": r.ic, "desc": r.desc},
+                "angle_hits": [
+                    {
+                        "planet": h.planet,
+                        "angle": h.angle,
+                        "orb_deg": h.orb_deg,
+                    }
+                    for h in sorted(r.angle_hits, key=lambda h: h.orb_deg)
+                ],
+                "score": r.score,
+                "summary": relocation_summary(r, locale=locale),
+            }
+        )
+    return out
+
+
+def theme_scan(
+    jd_ut: float,
+    cities: list[tuple[str, float, float]],
+    theme: str,
+    *,
+    orb_deg: float = 6.0,
+    top_n: int = 10,
+) -> list[dict]:
+    """Rank cities for one theme (luck/career/relationships/home).
+
+    A city qualifies when a theme-matching planet sits on an angle
+    within `orb_deg`; entries carry the matching hits, the full hit
+    list, and the clean flag so callers can render '✅ чисто' vs
+    '⚠️ с минусом' honestly.
+    """
+    if theme not in _THEME_RULES:
+        raise ValueError(
+            f"Unknown theme {theme!r}; expected one of {sorted(_THEME_RULES)}"
+        )
+    rule = _THEME_RULES[theme]
+    planets = natal_planets(jd_ut)
+    rows = []
+    for name, lat, lon in cities:
+        r = relocate(jd_ut, lat, lon, planets=planets, orb_deg=orb_deg)
+        matches = [
+            h for h in r.angle_hits
+            if rule(h.planet, h.angle) and h.orb_deg <= orb_deg
+        ]
+        if not matches:
+            continue
+        malefics = [
+            h for h in r.angle_hits
+            if h.planet in _CHALLENGE and h.orb_deg <= orb_deg
+        ]
+        rows.append(
+            {
+                "name": name,
+                "latitude": lat,
+                "longitude": lon,
+                "best_orb": min(h.orb_deg for h in matches),
+                "matches": [
+                    {"planet": h.planet, "angle": h.angle, "orb_deg": h.orb_deg}
+                    for h in sorted(matches, key=lambda h: h.orb_deg)
+                ],
+                "malefics": [
+                    {"planet": h.planet, "angle": h.angle, "orb_deg": h.orb_deg}
+                    for h in sorted(malefics, key=lambda h: h.orb_deg)
+                ],
+                "clean": not malefics,
+                "score": r.score,
+            }
+        )
+    rows.sort(key=lambda x: (-x["score"], x["best_orb"]))
+    return rows[:top_n]
 
 
 def _angle_diff_deg(a: float, b: float) -> float:

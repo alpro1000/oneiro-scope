@@ -123,6 +123,246 @@ async def astrocartography_chart(req: AstrocartographyBirth) -> dict:
         )
 
 
+class NamedLocation(BaseModel):
+    name: str = Field(..., description="Display name of the place.")
+    lat: float = Field(..., ge=-90, le=90)
+    lon: float = Field(..., ge=-180, le=180)
+
+
+class CompareRequest(AstrocartographyBirth):
+    locations: list[NamedLocation] = Field(..., min_length=1, max_length=8)
+    locale: str = Field("ru", pattern="^(en|ru)$")
+
+
+class ThemeScanRequest(AstrocartographyBirth):
+    theme: str = Field(
+        ..., pattern="^(luck|career|relationships|home)$",
+        description="Life theme to rank cities for.",
+    )
+    cities: list[NamedLocation] = Field(..., min_length=1, max_length=100)
+    top_n: int = Field(10, ge=1, le=50)
+
+
+class TransitArcRequest(AstrocartographyBirth):
+    theme: str = Field(
+        ..., pattern="^(money_debt|career|relationships|home)$",
+    )
+    start: date = Field(..., description="Window start.")
+    end: date = Field(..., description="Window end.")
+
+
+class SynastryPerson(BaseModel):
+    birth_date: date
+    birth_time: Optional[time_cls] = None
+    birth_timezone: str = "UTC"
+
+
+class SynastryRequest(BaseModel):
+    person_a: SynastryPerson
+    person_b: SynastryPerson
+    locale: str = Field("ru", pattern="^(en|ru)$")
+
+
+class SolarReturnSuggestRequest(AstrocartographyBirth):
+    return_year: int = Field(..., ge=1900, le=2200)
+    candidates: list[NamedLocation] = Field(..., min_length=1, max_length=50)
+
+
+class ReportRequest(AstrocartographyBirth):
+    current_place: Optional[NamedLocation] = None
+    locale: str = Field("ru", pattern="^(en|ru)$")
+    format: str = Field("json", pattern="^(json|html)$")
+
+
+@router.post(
+    "/astrocartography/compare",
+    summary="Compare 2–8 places side by side (angles + summaries)",
+)
+async def astrocartography_compare(req: CompareRequest) -> dict:
+    """The 'birth city vs current city vs candidate' view."""
+    from backend.services.astrology.astrocartography import compare_locations
+
+    try:
+        jd = _natal_jd(req)
+        return {
+            "locations": compare_locations(
+                jd,
+                [(l.name, l.lat, l.lon) for l in req.locations],
+                locale=req.locale,
+            ),
+            "disclaimer": _ACG_DISCLAIMER,
+        }
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+
+
+@router.post(
+    "/astrocartography/themes",
+    summary="Rank cities for one life theme with clean-luck flags",
+)
+async def astrocartography_themes(req: ThemeScanRequest) -> dict:
+    """Theme = luck | career | relationships | home. `clean` means a
+    benefic on an angle with no malefic angular contact within orb."""
+    from backend.services.astrology.astrocartography import theme_scan
+
+    try:
+        jd = _natal_jd(req)
+        return {
+            "theme": req.theme,
+            "results": theme_scan(
+                jd,
+                [(c.name, c.lat, c.lon) for c in req.cities],
+                req.theme,
+                top_n=req.top_n,
+            ),
+            "disclaimer": _ACG_DISCLAIMER,
+        }
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+
+
+@router.post(
+    "/transits/arcs",
+    summary="Thematic transit arc: pressure/support phases + turning point",
+)
+async def transit_arcs(req: TransitArcRequest) -> dict:
+    """Slow transits to a theme's natal significators, grouped into
+    chronological pressure/support phases. Describes transit weather,
+    never outcomes."""
+    from backend.services.astrology.transit_arcs import compute_arc
+
+    try:
+        jd = _natal_jd(req)
+        arc = compute_arc(
+            jd, req.birth_lat, req.birth_lon, req.theme, req.start, req.end
+        )
+        return {
+            "theme": arc.theme,
+            "significators": arc.significators,
+            "events": [
+                {
+                    "date": e.exact_date,
+                    "transiting": e.transiting,
+                    "aspect": e.aspect,
+                    "natal": e.natal,
+                    "orb": e.orb_at_midnight,
+                }
+                for e in arc.events
+            ],
+            "phases": [
+                {
+                    "start": p.start,
+                    "end": p.end,
+                    "kind": p.kind,
+                    "event_count": len(p.events),
+                }
+                for p in arc.phases
+            ],
+            "turning_point": arc.turning_point,
+            "disclaimer": _ACG_DISCLAIMER,
+        }
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+
+
+@router.post(
+    "/synastry",
+    summary="Compatibility between two people (inter-chart aspects)",
+)
+async def synastry_endpoint(req: SynastryRequest) -> dict:
+    """Inter-chart aspects + dimension scores (attraction, emotional,
+    communication, stability, tension) + reflective summary."""
+    from backend.services.astrology.historic_tz import resolve_birth_moment
+    from backend.services.astrology.synastry import (
+        compute_synastry,
+        synastry_summary,
+    )
+
+    try:
+        m_a = resolve_birth_moment(
+            req.person_a.birth_date, req.person_a.birth_time,
+            timezone_name=req.person_a.birth_timezone,
+        )
+        m_b = resolve_birth_moment(
+            req.person_b.birth_date, req.person_b.birth_time,
+            timezone_name=req.person_b.birth_timezone,
+        )
+        result = compute_synastry(m_a.jd_ut, m_b.jd_ut)
+        return {
+            "aspect_count": len(result.aspects),
+            "aspects": [
+                {
+                    "a": a.person_a_planet,
+                    "b": a.person_b_planet,
+                    "aspect": a.aspect,
+                    "orb_deg": a.orb_deg,
+                    "nature": a.nature,
+                }
+                for a in sorted(result.aspects, key=lambda x: x.orb_deg)
+            ],
+            "summary": synastry_summary(result, locale=req.locale),
+            "disclaimer": _ACG_DISCLAIMER,
+        }
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+
+
+@router.post(
+    "/solar-return/suggest",
+    summary="Rank cities for spending a birthday (Solar Return relocation)",
+)
+async def solar_return_suggest_endpoint(req: SolarReturnSuggestRequest) -> dict:
+    """Benefics angular (+) / malefics angular (−) per candidate city."""
+    from backend.services.astrology.solar_return import suggest_locations
+
+    try:
+        jd = _natal_jd(req)
+        return {
+            "return_year": req.return_year,
+            "ranking": suggest_locations(
+                jd, req.return_year,
+                [(c.name, c.lat, c.lon) for c in req.candidates],
+            ),
+            "disclaimer": _ACG_DISCLAIMER,
+        }
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+
+
+@router.post(
+    "/report",
+    summary="Full profile report (natal + places + themes + year), JSON or HTML",
+)
+async def profile_report(req: ReportRequest):
+    """One-call report bundle. `format=html` returns a self-contained
+    printable page (print-to-PDF ready); `json` returns the raw data."""
+    from fastapi.responses import HTMLResponse
+
+    from backend.services.astrology.historic_tz import resolve_birth_moment
+    from backend.services.astrology.report import build_report, render_html
+
+    try:
+        moment = resolve_birth_moment(
+            req.birth_date, req.birth_time,
+            lat=req.birth_lat, lon=req.birth_lon,
+            timezone_name=req.birth_timezone if req.birth_timezone != "UTC" else None,
+        )
+        report = build_report(
+            moment,
+            birth_place=(req.birth_place or "birth", req.birth_lat, req.birth_lon),
+            current_place=(
+                (req.current_place.name, req.current_place.lat, req.current_place.lon)
+                if req.current_place else None
+            ),
+            locale=req.locale,
+        )
+        if req.format == "html":
+            return HTMLResponse(render_html(report, locale=req.locale))
+        return report
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+
+
 @router.post(
     "/astrocartography/point",
     summary="Inspect one location: four angles + plain-language summary",
