@@ -73,4 +73,5 @@ jobs:
             backend/tests/test_strategic_agent.py \
             backend/tests/test_archetypes.py \
             backend/tests/test_disclaimer_and_numeric_confidence.py \
+            backend/tests/test_dream_morphology.py \
             -v

@@ -57,7 +57,7 @@
 | backend/alembic | 1 | 2 |
 | backend/alembic/versions | 0 | 1 |
 | backend/middleware | 0 | 2 |
-| backend/tests | 0 | 22 |
+| backend/tests | 0 | 23 |
 | backend/data | 0 | 1 |
 | backend/services | 7 | 0 |
 | backend/services/billing | 0 | 3 |
@@ -70,7 +70,7 @@
 | backend/services/email/templates/fr | 0 | 2 |
 | backend/services/strategic | 0 | 4 |
 | backend/services/byok | 0 | 2 |
-| backend/services/dreams | 3 | 5 |
+| backend/services/dreams | 3 | 6 |
 | backend/services/dreams/knowledge_base | 0 | 2 |
 | backend/services/dreams/data_sources | 0 | 3 |
 | backend/services/dreams/ai | 1 | 2 |
@@ -104,4 +104,4 @@
 | .github | 1 | 0 |
 | .github/workflows | 0 | 7 |
 
-**ИТОГО:** папок = 100, файлов = 358
+**ИТОГО:** папок = 100, файлов = 360

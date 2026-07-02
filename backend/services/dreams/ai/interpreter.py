@@ -189,7 +189,20 @@ class DreamInterpreter:
             system_prompt=system_prompt,
         )
 
-        return self._parse_response(response_text, locale)
+        # An empty or unparseable reply must raise so the caller falls
+        # back to the rule-based interpretation instead of returning the
+        # provider's stub text. `provider is None` is the chain's signal
+        # that no real model answered (no keys / all providers failed).
+        if provider is None:
+            raise ValueError("LLM provider chain returned fallback stub")
+        if not response_text or not response_text.strip():
+            raise ValueError("empty LLM response")
+        summary, interpretation, recommendations = self._parse_response(
+            response_text, locale
+        )
+        if not summary.strip() and not interpretation.strip():
+            raise ValueError("unparseable LLM response")
+        return summary, interpretation, recommendations
 
     def _build_system_prompt(self, locale: str, dream_text: Optional[str] = None) -> str:
         """
