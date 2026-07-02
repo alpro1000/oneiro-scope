@@ -278,7 +278,7 @@
     {
       "path": "backend/tests",
       "dirs": 0,
-      "files": 22
+      "files": 23
     },
     {
       "path": "backend/data",
@@ -343,7 +343,7 @@
     {
       "path": "backend/services/dreams",
       "dirs": 3,
-      "files": 5
+      "files": 6
     },
     {
       "path": "backend/services/dreams/knowledge_base",
@@ -507,5 +507,5 @@
     }
   ],
   "total_dirs": 100,
-  "total_files": 358
+  "total_files": 360
 }
