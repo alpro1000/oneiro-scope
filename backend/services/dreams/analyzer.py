@@ -11,6 +11,7 @@ from pathlib import Path
 from typing import List, Dict, Optional, Tuple
 from collections import Counter
 
+from backend.services.dreams import morphology
 from backend.services.dreams.schemas import (
     ContentAnalysis,
     DreamCategory,
@@ -72,7 +73,11 @@ class DreamAnalyzer:
                 pattern = '(' + '|'.join(pattern_parts) + ')'
                 self.symbol_patterns[symbol["id"]] = {
                     "pattern": re.compile(pattern, re.IGNORECASE),
-                    "data": symbol
+                    "data": symbol,
+                    # Stems of Cyrillic keywords: «змея» and «змею» share
+                    # the stem «зме», so inflected Russian dream text still
+                    # reaches the symbol when the regex prefix misses.
+                    "stems": morphology.keyword_stems(keywords),
                 }
 
         # Emotion patterns
@@ -193,10 +198,20 @@ class DreamAnalyzer:
         appear in appropriate semantic context (v2.1).
         """
         found_symbols = []
-        text_lower = text.lower()
+        text_lower = morphology.normalize(text)
+        token_stems = morphology.text_stems(text_lower)
 
         for symbol_id, symbol_data in self.symbol_patterns.items():
             matches = symbol_data["pattern"].findall(text_lower)
+            if not matches:
+                # Morphology pass: inflected Russian forms («воду»,
+                # «змею», «матери») match by shared Snowball stem.
+                stem_hits = sum(
+                    n for st, n in token_stems.items()
+                    if st in symbol_data["stems"]
+                )
+                if stem_hits:
+                    matches = [symbol_id] * stem_hits
             if matches:
                 # Contextual validation (v2.1 feature)
                 if self._validate_symbol_context(symbol_id, text_lower, matches):

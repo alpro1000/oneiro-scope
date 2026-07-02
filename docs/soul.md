@@ -104,6 +104,30 @@ Recent decisions:
 
 ## §9 Session log
 
+### 2026-07-02 — claude/july-2026-transits-jja4qn — Dreams: Russian morphology + non-blank LLM fallback
+
+**Trigger:** live walkthrough of the dreams KB found an inflected Russian
+dream losing 5 of 8 symbols (exact/prefix keyword matching can't handle
+case endings: «змею»≠«змея»), and `interpretation` coming back BLANK in
+no-keys mode (the provider chain returns a stub with provider=None which
+the parser accepted as an answer, so `_generate_fallback` never ran).
+
+**Done:**
+- `backend/services/dreams/morphology.py` — pure-Python Snowball Russian
+  stemmer (no deps): normalize (ё→е), stem, keyword_stems (min length 3
+  vs false positives), text_stems. «водитель» does NOT collapse to «вода».
+- `analyzer.py` — stem-set pass in `_find_symbols` when regex misses;
+  demo dream now yields 9 symbols instead of 3.
+- `symbols.json` — suppletive verb/kin forms the stemmer can't unify
+  (лечу/летел…, упал…, матери, отца…, бегу…) for 6 symbols.
+- `ai/interpreter.py` — raise on provider=None / empty / unparseable LLM
+  reply → existing `_generate_fallback` produces real summary +
+  interpretation + recommendations instead of blank text.
+- Tests: `test_dream_morphology.py` (15 cases) added to mcp-smoke; full
+  smoke set now **269 passed**.
+
+---
+
 ### 2026-07-01 — claude/july-2026-transits-jja4qn — Pattern features from live testing + synastry (Phase 9)
 
 **Goal:** Turn the patterns from 4 live user tests (owner + 3 friends, all
