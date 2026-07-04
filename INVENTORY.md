@@ -9,13 +9,15 @@
 | external/pyswisseph/swisseph | 0 | 1 |
 | external/DReAMy | 1 | 1 |
 | external/DReAMy/dreamy | 0 | 3 |
-| docs | 4 | 43 |
+| docs | 5 | 43 |
 | docs/architecture | 1 | 5 |
 | docs/architecture/modules | 0 | 3 |
 | docs/steering | 0 | 5 |
 | docs/templates | 2 | 0 |
 | docs/templates/_TEMPLATE_spec | 0 | 3 |
 | docs/templates/_TEMPLATE_bug | 0 | 4 |
+| docs/specs | 1 | 0 |
+| docs/specs/physiognomy | 0 | 3 |
 | docs/deployment | 0 | 1 |
 | etl | 1 | 5 |
 | etl/input | 0 | 1 |
@@ -50,16 +52,16 @@
 | backend/core | 0 | 7 |
 | backend/utils | 0 | 2 |
 | backend/api | 1 | 1 |
-| backend/api/v1 | 0 | 8 |
+| backend/api/v1 | 0 | 9 |
 | backend/models | 0 | 7 |
 | backend/mcp | 1 | 3 |
 | backend/mcp/tools | 0 | 7 |
 | backend/alembic | 1 | 2 |
 | backend/alembic/versions | 0 | 1 |
 | backend/middleware | 0 | 2 |
-| backend/tests | 0 | 23 |
+| backend/tests | 0 | 24 |
 | backend/data | 0 | 1 |
-| backend/services | 7 | 0 |
+| backend/services | 8 | 0 |
 | backend/services/billing | 0 | 3 |
 | backend/services/email | 1 | 2 |
 | backend/services/email/templates | 5 | 0 |
@@ -68,6 +70,8 @@
 | backend/services/email/templates/es | 0 | 2 |
 | backend/services/email/templates/en | 0 | 2 |
 | backend/services/email/templates/fr | 0 | 2 |
+| backend/services/physiognomy | 1 | 5 |
+| backend/services/physiognomy/knowledge_base | 0 | 2 |
 | backend/services/strategic | 0 | 4 |
 | backend/services/byok | 0 | 2 |
 | backend/services/dreams | 3 | 6 |
@@ -105,4 +109,4 @@
 | .github | 1 | 0 |
 | .github/workflows | 0 | 7 |
 
-**ИТОГО:** папок = 101, файлов = 361
+**ИТОГО:** папок = 105, файлов = 373
