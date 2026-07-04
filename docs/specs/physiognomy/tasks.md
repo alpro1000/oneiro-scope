@@ -9,6 +9,9 @@
 - [x] API: GET /methods, POST /analyze, POST /analyze-photo (501 без CV)
 - [x] Роутер в app/main.py
 - [x] pytest: метрики, классификация, дисклеймер, анкетный режим
+- [ ] Калибровка: детское лицо / чёлка дают width_length ~0.98 (вне всех
+      взрослых прототипов → элемент-скоринг вырождается в jaw-терм);
+      добавить age-режим или warning при width_length > 0.9
 - [ ] Frontend `/[locale]/face`: браузерный FaceLandmarker + анкета-fallback
 - [ ] Опционально: LLM-пересказ отчёта (0.7, поверх readings)
 - [ ] Опционально: mediapipe в prod-требования, если нужен серверный фото-путь
