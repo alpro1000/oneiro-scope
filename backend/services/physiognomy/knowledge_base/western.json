@@ -1,0 +1,37 @@
+{
+  "_meta": {
+    "tradition": "Western physiognomy & morphopsychology",
+    "sources": [
+      "Pseudo-Aristotle, 'Physiognomonica', ~III в. до н.э.",
+      "Giambattista della Porta, 'De humana physiognomonia', 1586",
+      "Johann Caspar Lavater, 'Physiognomische Fragmente', 1775-1778",
+      "Ernst Kretschmer, 'Körperbau und Charakter', 1921",
+      "Louis Corman, 'Quinze leçons de morphopsychologie', 1937",
+      "W.H. Sheldon, 'The Varieties of Human Physique', 1940",
+      "Carré & McCormick, Proc. R. Soc. B, 2008 (fWHR)",
+      "Geniole et al., PLOS ONE, 2015 (мета-анализ fWHR)",
+      "Alexander Todorov, 'Face Value', Princeton UP, 2017 (критика)"
+    ],
+    "scientific_status": "исторические системы; современной наукой не подтверждены (Todorov 2017); слабый спорный сигнал только у fWHR (Geniole 2015)",
+    "ethics_note": "Ломброзо и расовые злоупотребления физиогномикой XIX-XX вв. — причина, по которой система применяется ТОЛЬКО для само-рефлексии и никогда для оценки третьих лиц"
+  },
+  "lavater_zones": {
+    "upper": {"ru": "этаж лба — мыслительная функция: доминирование читали как склонность к рассуждению и абстракции", "en": "forehead storey — thinking function: dominance was read as inclination to reasoning and abstraction", "source": "Lavater 1775, Fragment II"},
+    "middle": {"ru": "средний этаж (глаза-нос-скулы) — чувствующе-волевая функция: эмоциональная жизнь и характер контакта", "en": "middle storey (eyes-nose-cheeks) — feeling-volitional function: emotional life and contact style", "source": "Lavater 1775, Fragment II"},
+    "lower": {"ru": "нижний этаж (рот-челюсть) — практико-инстинктивная функция: доминирование читали как силу дела и аппетит к материальному", "en": "lower storey (mouth-jaw) — practical-instinctive function: dominance was read as strength in action and material appetite", "source": "Lavater 1775, Fragment II"}
+  },
+  "corman": {
+    "dilated": {"ru": "дилатированный (расширенный) тип: широкое лицо, открытые рецепторы — экстенсивный контакт со средой, практичность, потребность в конкретном и общем деле", "en": "dilated type: wide face, open receptors — extensive contact with environment, practicality, need for the concrete and shared action", "source": "Corman 1937, leçon 3"},
+    "retracted": {"ru": "ретрактированный (сжатый) тип: узкое лицо, прикрытые рецепторы — избирательность, сбережение энергии, глубина вместо широты", "en": "retracted type: narrow face, guarded receptors — selectivity, energy conservation, depth over breadth", "source": "Corman 1937, leçon 3"},
+    "mixed_guarded": {"ru": "дилатированная рамка при прикрытых рецепторах: физически идёт в мир широко, но информацию впускает дозированно — «открытая дверь с фейс-контролем»", "en": "dilated frame with guarded receptors: enters the world broadly but admits information selectively — 'open door with a doorman'", "source": "Corman 1937, о смешанных типах"}
+  },
+  "kretschmer": {
+    "pyknic": {"ru": "пикнический круг (округлое полное лицо, плотная шея): циклотимный темперамент — ровное реалистичное настроение, общительность в своём кругу, практицизм", "en": "pyknic circle (round full face, sturdy neck): cyclothymic temperament — even realistic mood, sociability within one's circle, practicality", "source": "Kretschmer 1921, гл. 3"},
+    "athletic": {"ru": "атлетическая примесь (широкая кость, развитая челюсть): вязкость — медленный разгон, несбиваемость, долгая память на несправедливость", "en": "athletic admixture (broad bone, developed jaw): viscosity — slow start, unshakeability, long memory for injustice", "source": "Kretschmer 1921, гл. 4"},
+    "asthenic": {"ru": "астенический тип (узкое вытянутое лицо): шизотимный полюс — абстракция, дистанция, чувствительность", "en": "asthenic type (narrow elongated face): schizothymic pole — abstraction, distance, sensitivity", "source": "Kretschmer 1921, гл. 2"}
+  },
+  "fwhr_note": {
+    "high": {"ru": "высокий fWHR (широкое лицо относительно высоты средней зоны): единственный маркер со слабой научной поддержкой — в метаанализах у мужчин коррелирует с напористостью в конкуренции; эффект мал и оспаривается", "en": "high fWHR (face wide relative to midface height): the only marker with weak scientific support — meta-analyses link it in men to competitive assertiveness; effect small and contested", "source": "Carré & McCormick 2008; Geniole et al. 2015"},
+    "low": {"ru": "низкий fWHR: в тех же работах — меньшая склонность к силовой конкуренции; интерпретировать с той же осторожностью", "en": "low fWHR: in the same literature — lower inclination to forceful competition; interpret with equal caution", "source": "Geniole et al. 2015"}
+  }
+}

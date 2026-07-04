@@ -5,11 +5,17 @@
 > that's easy to lose. Updated at the end of every substantial session
 > alongside `soul.md §9`.
 
-**Дата последнего обновления:** 2026-07-01
-**Последняя ветка работы:** `claude/july-2026-transits-jja4qn` (PR #130 interactive astrocartography — merged; PR #131 CI fully green + LunarWidget month-load bugfix — merged; PR pattern-features + synastry — см. §9 soul.md за 2026-07-01)
+**Дата последнего обновления:** 2026-07-04
+**Последняя ветка работы:** `claude/top-cities-living-work-shxind` (физиогномика: мянсян + западные школы; см. §9 soul.md за 2026-07-04)
 **Текущий main HEAD:** interactive astrocartography + все CI-чеки зелёные
 
-**Новое в этой сессии (Phase 9, pattern features из живых тестов):**
+**Новое в этой сессии (physiognomy service):**
+- Сервис `backend/services/physiognomy/`: KB мянсян (5 элементов, 3 двора, 12 дворцов, 20 черт) + западные школы (Лафатер/Корман/Кречмер/fWHR), каждая запись с источником; детерминированная геометрия FaceMesh-лендмарок (1.0) → трактовки традиций (0.6 — НИЖЕ symbol-dict 0.8, физиогномика научно не валидирована).
+- API `/api/v1/physiognomy`: GET /methods, POST /analyze (landmarks|metrics|анкета), POST /analyze-photo (501 без mediapipe → клиентский путь). Privacy-first: фото не покидает браузер.
+- Тесты: `test_physiognomy.py` — 9 passed. Спека: `docs/specs/physiognomy/`.
+- **Следующий шаг фичи:** frontend `/[locale]/face` — браузерный FaceLandmarker (@mediapipe/tasks-vision, модель в public/) + анкета-fallback; опционально LLM-пересказ (0.7).
+
+**Предыдущая сессия (Phase 9, pattern features из живых тестов):**
 - Сервисы: `historic_tz.py` (советское декретное время из координат), `synastry.py` (совместимость, 5 измерений 0–100), `transit_arcs.py` (фазовый таймлайн pressure/support + turning point), `report.py` (JSON+HTML-отчёт одной кнопкой); `astrocartography.py` — clean-флаг удачи, `compare_locations`, `theme_scan`; `solar_return.suggest_locations`.
 - API: `/astrocartography/compare`, `/astrocartography/themes`, `/transits/arcs`, `/synastry`, `/solar-return/suggest`, `/report` (json|html).
 - MCP: `compare_relocations`, `scan_cities_by_theme`, `transit_arc`, `synastry`, `solar_return_suggest`.

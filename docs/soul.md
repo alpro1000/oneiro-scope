@@ -104,6 +104,41 @@ Recent decisions:
 
 ## §9 Session log
 
+### 2026-07-04 — claude/top-cities-living-work-shxind — Physiognomy service (mianxiang + Western traditions)
+
+**Trigger:** live client session (astrocartography consultation) drifted
+into face reading; owner set goal: encode the Chinese mianxiang system +
+Western physiognomy into OneiroScope with a photo-upload flow.
+
+**Done:**
+- Spec `docs/specs/physiognomy/` (requirements EARS + design + tasks).
+- New service `backend/services/physiognomy/`: KB (`mianxiang.json` —
+  5 elements, 3 courts, 12 palaces, 20 features; `western.json` —
+  Lavater, Corman, Kretschmer, fWHR) with per-entry sources (Ma Yi Shen
+  Xiang, Shen Xiang Quan Bian, Lavater 1775, Corman 1937, Kretschmer
+  1921, Geniole 2015, Todorov 2017).
+- Deterministic pipeline: FaceMesh 468 landmarks → scale-free ratios
+  (`geometry.py`, confidence 1.0) → threshold classifier + KB lookup
+  (`analyzer.py`, tradition tier **0.6** — deliberately below the 0.8
+  symbol-dictionary tier because physiognomy lacks scientific validity).
+- API `/api/v1/physiognomy`: GET /methods, POST /analyze
+  (landmarks|metrics|features questionnaire), POST /analyze-photo
+  (server CV optional → 501 with client-side guidance when mediapipe
+  is absent). Privacy-first: photo stays in the browser; only landmark
+  coordinates travel.
+- Ethics: self-reflection only; disclaimer forbids use on third
+  parties/hiring/legal; no health or attractiveness judgments.
+- Tests: `backend/tests/test_physiognomy.py` — 9 passed (metric
+  tolerance 1e-6, element classification, source+0.6 on every reading,
+  disclaimer + forbidden-determinism words, questionnaire-only mode,
+  no metric/questionnaire duplication).
+
+**Deferred:** frontend `/[locale]/face` page (browser FaceLandmarker +
+questionnaire fallback), optional LLM narrative layer (0.7), optional
+mediapipe in prod requirements.
+
+---
+
 ### 2026-07-02 — claude/july-2026-transits-jja4qn — Dreams: Russian morphology + non-blank LLM fallback
 
 **Trigger:** live walkthrough of the dreams KB found an inflected Russian
