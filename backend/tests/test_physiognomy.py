@@ -125,10 +125,27 @@ def test_empty_output_path_falls_back_to_default(tmp_path):
     import tempfile
     from pathlib import Path
 
+    from backend.mcp.tools._files import _REPORTS_DIR
+
     p = Path(res["report_path"]).resolve()
-    assert p.is_relative_to(Path(tempfile.gettempdir()).resolve())
+    tmp_root = Path(tempfile.gettempdir()).resolve()
+    # Default lands in tempdir — or in reports/ when the environment's
+    # tempdir resolves to the fs anchor (the hardened fallback).
+    assert p.is_relative_to(tmp_root) or p.is_relative_to(_REPORTS_DIR)
     assert p.is_file() and p.suffix == ".html"
     assert "physiognomy_report_" in p.name
+
+
+def test_default_path_falls_back_when_tempdir_is_anchor(monkeypatch):
+    import tempfile as tf
+
+    from backend.mcp.tools import _files
+
+    # Pathological TMPDIR=/ must divert defaults into reports/,
+    # never into the filesystem root.
+    monkeypatch.setattr(tf, "gettempdir", lambda: "/")
+    p = _files._safe_report_path("", "probe")
+    assert p.is_relative_to(_files._REPORTS_DIR)
 
 
 def test_relative_paths_anchor_to_reports_dir():
