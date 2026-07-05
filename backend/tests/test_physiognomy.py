@@ -56,6 +56,14 @@ def test_landmarks_too_few_rejected():
         metrics_from_landmarks([[0.0, 0.0]] * 10)
 
 
+def test_rotated_face_rejected_by_yaw_gate():
+    pts = synthetic_landmarks()
+    # Simulate yaw: right eye foreshortened to half width.
+    pts[EYE_R_OUT] = [144.0, 100.0]  # was 160 → eye width 32→16
+    with pytest.raises(ValueError, match="rotated"):
+        metrics_from_landmarks(pts)
+
+
 def test_wide_strong_jaw_classifies_earth():
     resp = SVC.analyze(PhysiognomyRequest(landmarks=synthetic_landmarks()))
     assert resp.primary_element == "earth"

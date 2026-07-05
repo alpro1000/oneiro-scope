@@ -30,12 +30,29 @@ def _d(a: list[float], b: list[float]) -> float:
     return math.hypot(a[0] - b[0], a[1] - b[1])
 
 
+# Yaw gate: head rotation forshortens the visible face width and skews
+# every width ratio (live case: W/L 0.64 vs the same person's stable
+# 0.85-0.96). A rotated face shows unequal left/right eye widths.
+_MAX_EYE_ASYMMETRY = 0.20
+
+
 def metrics_from_landmarks(pts: list[list[float]]) -> FaceMetrics:
     """Compute FaceMetrics from a FaceMesh point list (>=468 points)."""
     if len(pts) < MIN_POINTS:
         raise ValueError(
             f"Expected >= {MIN_POINTS} FaceMesh landmarks, got {len(pts)}"
         )
+
+    eye_l = _d(pts[EYE_L_OUT], pts[EYE_L_IN])
+    eye_r = _d(pts[EYE_R_IN], pts[EYE_R_OUT])
+    if max(eye_l, eye_r):
+        asym = abs(eye_l - eye_r) / max(eye_l, eye_r)
+        if asym > _MAX_EYE_ASYMMETRY:
+            raise ValueError(
+                f"Face appears rotated (eye-width asymmetry {asym:.2f} > "
+                f"{_MAX_EYE_ASYMMETRY}); width ratios would be distorted. "
+                "Use a frontal photo."
+            )
 
     face_h = _d(pts[FOREHEAD_TOP], pts[CHIN])
     cheek_w = _d(pts[CHEEK_L], pts[CHEEK_R])
