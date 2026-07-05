@@ -428,6 +428,49 @@ def test_mcp_timeline_requires_frames_per_period():
         ))
 
 
+def test_aggregate_support_and_stability():
+    from backend.services.physiognomy.aggregate import analyze_frames
+
+    # Two consistent adult frames + one child outlier: earth must hold
+    # the consensus, stability must flag the drifting width ratio.
+    frames = [_adult_metrics(), _adult_metrics(), _child_metrics()]
+    res = analyze_frames(frames)
+    assert res["frames_used"] == 3
+    assert res["primary_element"] == "earth"
+    assert res["element_consensus"]["earth"] >= 2
+    by_topic = {r["topic"]: r for r in res["readings"]}
+    # Wide-set eyes hold in every frame → full support.
+    assert by_topic["features.eyes_wide_set"]["support"] == "3/3"
+    assert res["stability"]["eye_spacing"]["stable"] is True
+    assert res["stability"]["width_length"]["spread"] == pytest.approx(0.07, abs=1e-6)
+    # Coverage map always states the honest limits.
+    assert "нечитаемо" in res["coverage"]["unreadable"]
+    assert "не валидирована" in res["disclaimer"]
+
+
+def test_aggregate_questionnaire_supplements_without_support():
+    from backend.services.physiognomy.aggregate import analyze_frames
+
+    res = analyze_frames(
+        [_adult_metrics()], features=FeatureAnswers(heavy_eyelid=True),
+    )
+    by_topic = {r["topic"]: r for r in res["readings"]}
+    # Questionnaire reading present, but no frame support claimed.
+    assert "support" not in by_topic["features.eyelid_heavy"]
+
+
+def test_mcp_archive_from_metric_dicts():
+    import asyncio
+
+    from backend.mcp.tools.physiognomy import analyze_face_archive
+
+    res = asyncio.run(analyze_face_archive(
+        metrics_list=[_adult_metrics().model_dump()],
+    ))
+    assert res["primary_element"] == "earth"
+    assert res["skipped"] == []
+
+
 def test_methods_lists_sources_and_status():
     m = PhysiognomyService.methods()
     ids = {s["id"] for s in m["systems"]}

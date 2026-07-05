@@ -140,6 +140,23 @@ secondary, lower court, athletic; disappeared — pyknic, middle-court
 dominance. Sharper zoom landmarks pushed one borderline frame
 (IMG_2029, asym 0.20) into the yaw gate — honest rejection.
 
+**Addendum (same session, photo-max-extraction):** owner asked for a
+system that extracts the maximum from any photo set, normalizes and
+calibrates what it can, and degrades honestly for the rest; spec
+written (`docs/specs/photo-max-extraction/`), core implemented:
+`services/physiognomy/aggregate.py` + MCP `analyze_face_archive` —
+detection ladder per photo, median profile, per-metric stability,
+per-reading `support` with honest denominators (optional metrics
+count only measurable frames: lips 5/5 closed-mouth, not 5/11), and
+a coverage map (measured / questionnaire-only / guided-scan-only /
+unreadable-in-principle, citing the evidence). Palace-zone texture
+experiments (raw spread ×160; within-frame cheek-normalized still
+×26; child-skin control indistinguishable from adult) permanently
+closed casual-photo qi-se/palace reading; guided scanner +
+controlled-capture pilot = Gates 4–5 in tasks.md. Tests 35 passed.
+Live: 14 photos → 11 accepted in one call, earth consensus 9/11,
+eye_spacing the only ≤10%-spread metric across ~45 years of frames.
+
 **Calibration finding (live, owner):** the thin-lips reading's
 «скупость на слова» clause was contradicted by the owner's report
 («очень разговорчивый») — an expected 0.6-tier miss, resolved by

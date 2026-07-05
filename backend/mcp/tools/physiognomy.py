@@ -230,6 +230,41 @@ def _period_metrics(
     return frames, skipped
 
 
+async def analyze_face_archive(
+    photo_paths: Optional[list[str]] = None,
+    metrics_list: Optional[list[dict]] = None,
+    features: Optional[dict] = None,
+    locale: str = "ru",
+) -> dict[str, Any]:
+    """Extract the maximum a photo SET can honestly give: every photo
+    goes through the auto-zoom detection ladder, unusable frames are
+    skipped with reasons, the rest are aggregated (median metrics,
+    cross-frame stability, per-reading `support`), and a coverage map
+    states what was measured vs what needs the questionnaire, a guided
+    scan, or is unreadable from casual photos in principle.
+
+    Self-reflection only, for the photo owner's own archive.
+
+    Args:
+        photo_paths: local images (mixed quality welcome — gates sort
+            them out).
+        metrics_list: precomputed FaceMetrics dicts — alternative or
+            addition to photos.
+        features: questionnaire dict supplementing unmeasured traits.
+        locale: "ru" or "en".
+    """
+    from backend.services.physiognomy.aggregate import analyze_frames
+
+    frames, skipped = _period_metrics(photo_paths, metrics_list, "archive")
+    result = analyze_frames(
+        frames,
+        features=FeatureAnswers(**features) if features else None,
+        locale=locale,
+    )
+    result["skipped"] = skipped
+    return result
+
+
 async def physiognomy_timeline(
     early_photo_paths: Optional[list[str]] = None,
     later_photo_paths: Optional[list[str]] = None,

@@ -104,6 +104,7 @@ mcp.tool()(ar.list_archetype_topics)
 # own tier BELOW symbol dictionaries: physiognomy is not scientifically
 # validated). Self-reflection only; disclaimer in every response/report.
 mcp.tool()(ph.analyze_face)
+mcp.tool()(ph.analyze_face_archive)
 mcp.tool()(ph.physiognomy_report)
 mcp.tool()(ph.physiognomy_methods)
 mcp.tool()(ph.physiognomy_timeline)
