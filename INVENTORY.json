@@ -37,7 +37,7 @@
     },
     {
       "path": "docs",
-      "dirs": 5,
+      "dirs": 6,
       "files": 43
     },
     {
@@ -49,6 +49,11 @@
       "path": "docs/architecture/modules",
       "dirs": 0,
       "files": 3
+    },
+    {
+      "path": "docs/physiognomy",
+      "dirs": 0,
+      "files": 2
     },
     {
       "path": "docs/steering",
@@ -546,6 +551,6 @@
       "files": 7
     }
   ],
-  "total_dirs": 108,
-  "total_files": 389
+  "total_dirs": 109,
+  "total_files": 391
 }
