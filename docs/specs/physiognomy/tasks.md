@@ -31,6 +31,10 @@
 - [x] Ревью ботов PR#135: zero-guard в geometry, лимит 8MB + content-type
       + 413/415 на /analyze-photo, response_model для /methods, PII-досье
       перенесено в gitignored .claude/personal/ (2026-07-05)
+- [x] Ревью ботов PR#136: MCP hardening — output_path прикован к
+      tmp/cwd (CWE-22), photo_path — к home/tmp/cwd (анти-зондирование
+      ФС в HTTP-режиме), уникальные имена отчётов (%f+uuid), guard на
+      пустой ввод, null-guard в рендерере (2026-07-05)
 - [ ] Frontend `/[locale]/face`: браузерный FaceLandmarker + анкета-fallback
 - [ ] Опционально: LLM-пересказ отчёта (0.7, поверх readings)
 - [ ] Опционально: mediapipe в prod-требования, если нужен серверный фото-путь

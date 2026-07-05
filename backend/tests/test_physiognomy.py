@@ -71,6 +71,36 @@ def test_degenerate_landmarks_rejected_not_crash():
         metrics_from_landmarks([[5.0, 5.0]] * 468)
 
 
+def test_mcp_report_rejects_path_traversal():
+    import asyncio
+
+    from backend.mcp.tools.physiognomy import physiognomy_report
+
+    with pytest.raises(ValueError, match="output_path must stay under"):
+        asyncio.run(physiognomy_report(
+            landmarks=synthetic_landmarks(),
+            output_path="/etc/oneiro_pwned.html",
+        ))
+
+
+def test_mcp_analyze_requires_some_input():
+    import asyncio
+
+    from backend.mcp.tools.physiognomy import analyze_face
+
+    with pytest.raises(ValueError, match="at least one"):
+        asyncio.run(analyze_face())
+
+
+def test_mcp_photo_path_confined_to_allowed_roots():
+    import asyncio
+
+    from backend.mcp.tools.physiognomy import analyze_face
+
+    with pytest.raises(ValueError, match="photo_path must stay under"):
+        asyncio.run(analyze_face(photo_path="/etc/passwd"))
+
+
 def test_html_report_file_via_mcp_tool(tmp_path):
     import asyncio
 
