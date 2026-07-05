@@ -104,6 +104,68 @@ Recent decisions:
 
 ## §9 Session log
 
+### 2026-07-05 — claude/top-cities-living-work-shxind — MCP hardening, two-layer reports, second-subject field test (PRs #136–#144)
+
+**Trigger:** continuation of the physiognomy session — owner asked to
+subscribe to PR bot reviews and fix what's real, make physiognomy a
+full MCP connector with file output, restructure reports (full
+narrative first, then theses), and field-test the system on a second
+person (friend, b. 26.03.1978 03:20 Zaporizhzhia, 18 photos).
+
+**Done (all merged to main):**
+- **Security hardening across PRs #136–#141, #143** — shared safe-path
+  module `backend/mcp/tools/_files.py`: CWE-22 path confinement,
+  project root from `__file__` (not cwd), writes confined to
+  gitignored `reports/`, `.html`-only suffix, anchor-root exclusion
+  (TMPDIR=/ case) + fallback test, photo reads confined to
+  home/tmp/project, collision-proof names, 8MB + content-type cap on
+  the API. Bot-review convergence policy applied: ~19 findings
+  accepted/fixed, ~15 rejected with written rationale (Amazon Q went
+  6+ consecutive false positives, incl. confusing the one-arg
+  back-compat wrapper with the two-arg `_files` function).
+- **Two-layer reports (#140):** full deterministic narrative
+  (`compose_narrative`, KB text woven with connectives only, 0.6) →
+  memorable theses (`compose_theses`) → sourced data → disclaimer.
+  Applied to physiognomy + new MCP file-report tools
+  `horoscope_report` and `profile_report_file`.
+- **conventions.md §11 (#142):** external "senior engineer" prompt
+  templates triaged — debugger/UI adopted; architect/review/perf
+  bounded by Karpathy anti-bloat; persona simulation REJECTED in
+  favor of the real adversarial loop (pytest + review bots +
+  convergence policy).
+- **Owner-caught contradiction → metric semantics fix (#144):**
+  `lip_fullness` (inner-lip gap 13/14) measures mouth OPENNESS, not
+  anatomical thickness — an expressive mouth averaged into «тонкие
+  губы» across mostly-closed frames. Geometry no longer emits mouth
+  readings (questionnaire-only); schema description corrected; 2
+  backlog items (outer-point thickness metric; inter-frame
+  variability as a first-class trait). Tests 23/23.
+
+**Field test #2 (friend, 18 photos → 13 valid / 5 rejected by gates):**
+- Earth-primary 13/13 (0.997–1.687), Water secondary 8/13; lower court
+  rivals middle (two life peaks); nose borderline wealth (mean 0.2687);
+  «живой рот» — lip-gap range 0.008–0.047 became the live case above.
+  Chart cross-check: ASC Capricorn matches Earth face; Uranus·MC 0.2°;
+  Rome crown +7.9 clean. Reports delivered (PDF + fixed HTML),
+  anonymized — friend's PII excluded per repo rule.
+- **ChatGPT-comparison lesson (recorded as method principle):** an
+  unmeasured reader assigns elements from the presentation layer
+  (smiles, poses, styling) and packages it in one confident voice;
+  our split — skeletal structure (measured, 1.0) vs tradition
+  dictionary (0.6) vs behavior — is exactly the provenance discipline
+  that catches this failure mode. Structure ≠ подача.
+
+**Dataset to date:** 2 people, ~39 photos, ~29 valid reads, ~8 honest
+gate rejections; 6 live calibration findings, 4 closed in code.
+
+**Deferred:** anatomical lip-thickness metric, inter-frame variability
+trait, occlusion flags, dual-reference eye metric, child-face mode,
+frontend `/[locale]/face`, Render build check with mediapipe/opencv.
+**Next session (owner's plan):** re-run the friend's photos fresh
+(«на чистую голову») end-to-end through the merged pipeline.
+
+---
+
 ### 2026-07-04 — claude/top-cities-living-work-shxind — Physiognomy service (mianxiang + Western traditions)
 
 **Trigger:** live client session (astrocartography consultation) drifted
