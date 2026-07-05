@@ -122,8 +122,29 @@ def test_empty_output_path_falls_back_to_default(tmp_path):
         landmarks=synthetic_landmarks(), output_path="",
     ))
     # Empty string means "default": a unique temp file, not cwd.
-    assert res["report_path"].endswith(".html")
-    assert "physiognomy_report_" in res["report_path"]
+    import tempfile
+    from pathlib import Path
+
+    p = Path(res["report_path"]).resolve()
+    assert p.is_relative_to(Path(tempfile.gettempdir()).resolve())
+    assert p.is_file() and p.suffix == ".html"
+    assert "physiognomy_report_" in p.name
+
+
+def test_relative_paths_anchor_to_project_root():
+    from pathlib import Path
+
+    from backend.mcp.tools.physiognomy import (
+        _PROJECT_ROOT,
+        _resolve_user_path,
+        _safe_report_path,
+    )
+
+    # Relative paths must not depend on runtime cwd.
+    assert _resolve_user_path("reports/r.html") == (
+        _PROJECT_ROOT / "reports/r.html"
+    ).resolve()
+    assert _safe_report_path("reports/r.html").is_relative_to(_PROJECT_ROOT)
 
 
 def test_html_report_file_via_mcp_tool(tmp_path):
