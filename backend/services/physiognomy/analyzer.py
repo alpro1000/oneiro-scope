@@ -140,11 +140,12 @@ def readings_from_metrics(m: FaceMetrics, locale: str) -> list[Reading]:
         out.append(_feat(feats, "jaw_wide", locale))
     if m.nose_width is not None and m.nose_width >= 0.28:
         out.append(_feat(feats, "nose_fleshy", locale))
-    if m.lip_fullness is not None:
-        if m.lip_fullness >= 0.065:
-            out.append(_feat(feats, "mouth_full", locale))
-        elif m.lip_fullness <= 0.035:
-            out.append(_feat(feats, "mouth_thin", locale))
+    # lip_fullness measures the INNER-lip gap — mouth openness in the
+    # frame (expression), NOT anatomical lip thickness. Live case
+    # 2026-07-05: an expressive mouth averaged into "thin lips" because
+    # most frames were closed. Until an anatomical-thickness metric
+    # exists (outer points 0/13+14/17), no mouth reading is emitted
+    # from geometry; mouth traits stay questionnaire-only.
     if m.upper_court >= 0.38:
         out.append(_feat(feats, "forehead_high", locale))
     elif m.upper_court <= 0.28:
