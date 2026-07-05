@@ -140,6 +140,16 @@ secondary, lower court, athletic; disappeared — pyknic, middle-court
 dominance. Sharper zoom landmarks pushed one borderline frame
 (IMG_2029, asym 0.20) into the yaw gate — honest rejection.
 
+**Calibration finding (live, owner):** the thin-lips reading's
+«скупость на слова» clause was contradicted by the owner's report
+(«очень разговорчивый») — an expected 0.6-tier miss, resolved by
+life-context-wins. The composite itself carried the talkative signal
+3-voices-to-1 (dilated 12/12 + water + childhood pyknic vs the mouth
+clause). Lesson: dictionary voices conflict by design; portraits
+should present conflicting clauses side by side, never averaged into
+one verdict. Possible refinement (backlog): a narrative connective
+for openly contradicting readings.
+
 **Deferred:** brow/eyelid/cheekbone geometric detection (no reliable
 FaceMesh heuristic yet — questionnaire remains their path); server CV
 deps (mediapipe 0.10.14 pin uses legacy `solutions` API removed in
