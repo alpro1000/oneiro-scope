@@ -104,6 +104,59 @@ Recent decisions:
 
 ## §9 Session log
 
+### 2026-07-04 — claude/top-cities-living-work-shxind — Physiognomy service (mianxiang + Western traditions)
+
+**Trigger:** live client session (astrocartography consultation) drifted
+into face reading; owner set goal: encode the Chinese mianxiang system +
+Western physiognomy into OneiroScope with a photo-upload flow.
+
+**Done:**
+- Spec `docs/specs/physiognomy/` (requirements EARS + design + tasks).
+- New service `backend/services/physiognomy/`: KB (`mianxiang.json` —
+  5 elements, 3 courts, 12 palaces, 20 features; `western.json` —
+  Lavater, Corman, Kretschmer, fWHR) with per-entry sources (Ma Yi Shen
+  Xiang, Shen Xiang Quan Bian, Lavater 1775, Corman 1937, Kretschmer
+  1921, Geniole 2015, Todorov 2017).
+- Deterministic pipeline: FaceMesh 468 landmarks → scale-free ratios
+  (`geometry.py`, confidence 1.0) → threshold classifier + KB lookup
+  (`analyzer.py`, tradition tier **0.6** — deliberately below the 0.8
+  symbol-dictionary tier because physiognomy lacks scientific validity).
+- API `/api/v1/physiognomy`: GET /methods, POST /analyze
+  (landmarks|metrics|features questionnaire), POST /analyze-photo
+  (server CV optional → 501 with client-side guidance when mediapipe
+  is absent). Privacy-first: photo stays in the browser; only landmark
+  coordinates travel.
+- Ethics: self-reflection only; disclaimer forbids use on third
+  parties/hiring/legal; no health or attractiveness judgments.
+- Tests: `backend/tests/test_physiognomy.py` — 9 passed (metric
+  tolerance 1e-6, element classification, source+0.6 on every reading,
+  disclaimer + forbidden-determinism words, questionnaire-only mode,
+  no metric/questionnaire duplication).
+
+**Live validation (same session, 21 photos of the owner 1981–2026):**
+- 16 valid reads / 5 honest rejections; adult profile Earth-primary
+  16/16, Metal secondary — reproducible across cameras and decades;
+  same-day 4-photo series: fWHR spread 0.02 = method precision.
+- 4 calibration findings from real photos: child-face/fringe
+  (width_length off-scale), upper-court occlusion, yaw rotation,
+  ICD/eye conflating aperture size with spacing (resolved with PD
+  data: «55» was frame lens width 55-16, PD≈64).
+- **Yaw pose-gate implemented same session** (eye-width asymmetry
+  >0.20 → ValueError; 10 tests green) — rejected the rotated frame,
+  passed frontals. Remaining 3 findings in tasks.md backlog.
+- mediapipe==0.10.14 + opencv-headless added to backend requirements
+  so `/analyze-photo` computes server-side after deploy.
+- Owner profile dossier: `docs/clients/owner_profile_patterns.md`
+  (natal, ACG belts, 2026–28 calendar, photo measurements, water-
+  stagnation pattern + protocol with committed deadlines).
+
+**Deferred:** frontend `/[locale]/face` page (browser FaceLandmarker +
+questionnaire fallback), occlusion flags, dual-reference eye metric,
+child-face mode, zone-structured report renderer, optional LLM
+narrative layer (0.7).
+
+---
+
 ### 2026-07-02 — claude/july-2026-transits-jja4qn — Dreams: Russian morphology + non-blank LLM fallback
 
 **Trigger:** live walkthrough of the dreams KB found an inflected Russian

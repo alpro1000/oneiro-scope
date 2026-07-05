@@ -1,0 +1,100 @@
+"""Physiognomy API endpoints (reflective/entertainment face reading)."""
+
+from fastapi import APIRouter, File, HTTPException, UploadFile, status
+
+from backend.services.physiognomy import (
+    PhysiognomyRequest,
+    PhysiognomyResponse,
+    PhysiognomyService,
+)
+
+router = APIRouter(prefix="/physiognomy", tags=["physiognomy"])
+
+
+def get_service() -> PhysiognomyService:
+    return PhysiognomyService()
+
+
+@router.get(
+    "/methods",
+    summary="Supported face-reading systems",
+    description="Traditions, primary sources, scientific status and input modes.",
+)
+async def methods() -> dict:
+    return PhysiognomyService.methods()
+
+
+@router.post(
+    "/analyze",
+    response_model=PhysiognomyResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Analyze face landmarks / metrics / questionnaire",
+    description="""
+    Reflective/entertainment reading (mianxiang + Western traditions).
+
+    **Privacy-first flow:** extract 468 FaceMesh landmarks in the
+    browser (MediaPipe FaceLandmarker) and send only coordinates —
+    the photo never leaves the device. Alternatively send precomputed
+    `metrics` or a `features` questionnaire (no photo at all).
+
+    Self-reflection only: analyze your own face, never third parties.
+    """,
+)
+async def analyze(request: PhysiognomyRequest) -> PhysiognomyResponse:
+    if not (request.landmarks or request.metrics or request.features):
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Provide landmarks, metrics or features",
+        )
+    try:
+        return get_service().analyze(request)
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(exc)
+        ) from exc
+
+
+@router.post(
+    "/analyze-photo",
+    response_model=PhysiognomyResponse,
+    summary="Analyze an uploaded photo (server-side CV, optional)",
+    description="""
+    Server-side landmark extraction. Requires the optional `mediapipe`
+    dependency; without it returns 501 pointing to the client-side
+    flow. The image is processed in memory and never stored.
+    """,
+)
+async def analyze_photo(
+    file: UploadFile = File(...), locale: str = "ru"
+) -> PhysiognomyResponse:
+    try:
+        import mediapipe as mp  # optional heavy dependency
+        import numpy as np
+        import cv2
+    except ImportError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_501_NOT_IMPLEMENTED,
+            detail=(
+                "Server-side CV is not installed. Use the client-side flow: "
+                "extract FaceMesh landmarks in the browser and POST them to "
+                "/physiognomy/analyze, or send the features questionnaire."
+            ),
+        ) from exc
+
+    data = await file.read()
+    img = cv2.imdecode(np.frombuffer(data, np.uint8), cv2.IMREAD_COLOR)
+    if img is None:
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, "Not an image")
+
+    with mp.solutions.face_mesh.FaceMesh(
+        static_image_mode=True, max_num_faces=1, refine_landmarks=False
+    ) as mesh:
+        res = mesh.process(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
+    if not res.multi_face_landmarks:
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, "No face found")
+
+    h, w = img.shape[:2]
+    pts = [[lm.x * w, lm.y * h] for lm in res.multi_face_landmarks[0].landmark]
+    return get_service().analyze(
+        PhysiognomyRequest(landmarks=pts, locale=locale)
+    )

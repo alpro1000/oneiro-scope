@@ -1,0 +1,119 @@
+{
+  "_meta": {
+    "tradition": "Chinese mianxiang (面相)",
+    "sources": [
+      "Ma Yi Shen Xiang (麻衣神相, «Духовное чтение лица мастера Ма И»), эпоха Сун, X-XIII в.",
+      "Liu Zhuang Xiang Fa (柳莊相法), Юань Лючжуан, эпоха Мин",
+      "Shen Xiang Quan Bian (神相全編, «Полный сборник духовной физиогномики»), сост. Юань Чжунчэ, XV в.",
+      "Joey Yap, 'Mian Xiang — Discover Face Reading', JY Books 2006",
+      "Henry B. Lin, 'What Your Face Reveals', Llewellyn 1999"
+    ],
+    "scientific_status": "историческая традиция; научная валидность не подтверждена"
+  },
+  "five_elements": {
+    "wood": {
+      "shape": {"ru": "вытянутое узкое лицо, высокий лоб, прямые линии", "en": "long narrow face, tall forehead, straight lines"},
+      "reading": {
+        "ru": "тип «Дерево»: в традиции связывают с ростом, идеализмом, планированием, потребностью в развитии; сила — стратегия, слабость — упрямая прямолинейность",
+        "en": "Wood type: traditionally associated with growth, idealism, planning, need for development; strength — strategy, weakness — rigid directness"
+      },
+      "source": "Shen Xiang Quan Bian, гл. о пяти элементах"
+    },
+    "fire": {
+      "shape": {"ru": "заострённые черты: широкий лоб, узкий острый подбородок, живые глаза", "en": "pointed features: wide forehead, narrow sharp chin, vivid eyes"},
+      "reading": {
+        "ru": "тип «Огонь»: традиционно — экспрессия, харизма, скорость, вдохновение; сила — зажигать других, слабость — выгорание и вспыльчивость",
+        "en": "Fire type: traditionally expression, charisma, speed, inspiration; strength — igniting others, weakness — burnout and temper"
+      },
+      "source": "Ma Yi Shen Xiang"
+    },
+    "earth": {
+      "shape": {"ru": "квадратно-округлое полное лицо, крепкая широкая челюсть, полные щёки, крупные устойчивые черты", "en": "square-round full face, strong wide jaw, full cheeks, large steady features"},
+      "reading": {
+        "ru": "тип «Земля»: в традиции — надёжность, терпение, практичность, накопление ресурса, верность слову; сила — выносливость и завершение начатого, слабость — инертность и упрямство",
+        "en": "Earth type: traditionally reliability, patience, practicality, resource accumulation, keeping one's word; strength — endurance and finishing, weakness — inertia and stubbornness"
+      },
+      "source": "Shen Xiang Quan Bian; Joey Yap 2006, ch. 3"
+    },
+    "metal": {
+      "shape": {"ru": "прямоугольное чёткое лицо, ровные «отчеканенные» черты, светлая кожа", "en": "rectangular defined face, even 'minted' features, fair skin"},
+      "reading": {
+        "ru": "тип «Металл»: традиционно — структура, порядок, справедливость, качество исполнения; сила — дисциплина, слабость — жёсткость к себе и другим",
+        "en": "Metal type: traditionally structure, order, justice, quality of execution; strength — discipline, weakness — harshness to self and others"
+      },
+      "source": "Liu Zhuang Xiang Fa"
+    },
+    "water": {
+      "shape": {"ru": "округлое мягкое лицо, плавные линии, полнота, мягкий подбородок", "en": "round soft face, flowing lines, fullness, soft chin"},
+      "reading": {
+        "ru": "тип «Вода»: в традиции — адаптивность, интуиция, коммуникабельность, скрытность глубин; сила — обтекать препятствия, слабость — уклончивость",
+        "en": "Water type: traditionally adaptability, intuition, sociability, hidden depths; strength — flowing around obstacles, weakness — evasiveness"
+      },
+      "source": "Ma Yi Shen Xiang"
+    }
+  },
+  "three_courts": {
+    "_note": {"ru": "三停 сань тин — три двора: баланс задаёт равновесие жизненных фаз и функций", "en": "三停 san ting — three courts: balance sets equilibrium of life phases and functions"},
+    "upper": {
+      "zone": {"ru": "лоб: от линии волос до бровей", "en": "forehead: hairline to brows"},
+      "reading": {
+        "ru": "верхний двор — мышление, ранние годы (15–30), отношения с «небом»/начальством; развитый лоб традиционно связывают с концептуальным умом",
+        "en": "upper court — thinking, early years (15-30), relations with 'heaven'/authority; a developed forehead is traditionally linked to conceptual mind"
+      },
+      "source": "Shen Xiang Quan Bian, раздел 三停"
+    },
+    "middle": {
+      "zone": {"ru": "от бровей до основания носа", "en": "brows to nose base"},
+      "reading": {
+        "ru": "средний двор — воля, зрелые годы (31–50), самореализация; развитая середина — деятельная зрелость, «сам себе опора»",
+        "en": "middle court — will, mature years (31-50), self-realization; developed middle — active maturity, self-reliance"
+      },
+      "source": "Shen Xiang Quan Bian, раздел 三停"
+    },
+    "lower": {
+      "zone": {"ru": "от основания носа до подбородка", "en": "nose base to chin"},
+      "reading": {
+        "ru": "нижний двор — практика, поздние годы (51+), исполнение и материя; развитый низ традиционно читают как силу воли-в-действии и хозяйственность",
+        "en": "lower court — practice, later years (51+), execution and matter; developed lower court is traditionally read as will-in-action and household strength"
+      },
+      "source": "Shen Xiang Quan Bian, раздел 三停"
+    }
+  },
+  "twelve_palaces": {
+    "_note": {"ru": "十二宮 — двенадцать дворцов: зоны лица, отвечающие сферам жизни; читаются по гладкости/полноте зоны", "en": "十二宮 — twelve palaces: face zones mapped to life spheres; read by smoothness/fullness of the zone"},
+    "ming_gong": {"zone": {"ru": "межбровье (印堂 иньтан)", "en": "between brows (yintang)"}, "sphere": {"ru": "дворец жизни: общий тонус судьбы, ясность пути", "en": "life palace: overall destiny tone, clarity of path"}, "source": "Ma Yi Shen Xiang"},
+    "guan_lu": {"zone": {"ru": "центр лба", "en": "forehead center"}, "sphere": {"ru": "дворец карьеры: статус, отношения с властью", "en": "career palace: status, relations with authority"}, "source": "Shen Xiang Quan Bian"},
+    "cai_bo": {"zone": {"ru": "нос (кончик и крылья)", "en": "nose (tip and wings)"}, "sphere": {"ru": "дворец богатства: способность накапливать и удерживать ресурс", "en": "wealth palace: capacity to accumulate and hold resources"}, "source": "Ma Yi Shen Xiang"},
+    "tian_zhai": {"zone": {"ru": "верхние веки и подбровье", "en": "upper eyelids and under-brow"}, "sphere": {"ru": "дворец имущества: дом, недвижимость, наследие", "en": "property palace: home, real estate, legacy"}, "source": "Shen Xiang Quan Bian"},
+    "xiong_di": {"zone": {"ru": "брови", "en": "brows"}, "sphere": {"ru": "дворец братьев: круг равных, партнёрство по духу", "en": "siblings palace: circle of peers, kindred partnership"}, "source": "Liu Zhuang Xiang Fa"},
+    "fu_qi": {"zone": {"ru": "внешние углы глаз (奸門)", "en": "outer eye corners"}, "sphere": {"ru": "дворец супружества: качество парных отношений", "en": "marriage palace: quality of partnership"}, "source": "Ma Yi Shen Xiang"},
+    "zi_nu": {"zone": {"ru": "область под глазами (臥蠶)", "en": "under-eye area"}, "sphere": {"ru": "дворец детей: потомство, плоды трудов", "en": "children palace: offspring, fruits of labor"}, "source": "Shen Xiang Quan Bian"},
+    "ji_e": {"zone": {"ru": "переносица (山根)", "en": "nose bridge root"}, "sphere": {"ru": "дворец здоровья: жизненная устойчивость (без медицинских выводов)", "en": "health palace: vital resilience (no medical conclusions)"}, "source": "Ma Yi Shen Xiang"},
+    "qian_yi": {"zone": {"ru": "виски и края лба", "en": "temples and forehead edges"}, "sphere": {"ru": "дворец странствий: переезды, дальние дела", "en": "travel palace: relocations, distant affairs"}, "source": "Shen Xiang Quan Bian"},
+    "nu_pu": {"zone": {"ru": "нижние боковые части лица", "en": "lower lateral face"}, "sphere": {"ru": "дворец помощников: команда, поддержка окружения", "en": "helpers palace: team, support of surroundings"}, "source": "Liu Zhuang Xiang Fa"},
+    "fu_mu": {"zone": {"ru": "верхние боковые части лба", "en": "upper lateral forehead"}, "sphere": {"ru": "дворец родителей: корни, старшие", "en": "parents palace: roots, elders"}, "source": "Shen Xiang Quan Bian"},
+    "fu_de": {"zone": {"ru": "над внешним краем брови", "en": "above outer brow"}, "sphere": {"ru": "дворец счастья и добродетели: внутренний баланс, удача духа", "en": "fortune-virtue palace: inner balance, luck of spirit"}, "source": "Ma Yi Shen Xiang"}
+  },
+  "features": {
+    "eyes_wide_set": {"ru": "широко расставленные глаза: широта восприятия, неторопливость суждений, видит целое раньше деталей", "en": "wide-set eyes: breadth of perception, unhurried judgment, sees the whole before details", "source": "Joey Yap 2006, ch. 5"},
+    "eyes_close_set": {"ru": "близко посаженные глаза: концентрация, точность, внимание к деталям", "en": "close-set eyes: concentration, precision, attention to detail", "source": "Joey Yap 2006, ch. 5"},
+    "eyes_large": {"ru": "крупные глаза: открытость впечатлениям, эмоциональная отзывчивость", "en": "large eyes: openness to impressions, emotional responsiveness", "source": "Henry B. Lin 1999"},
+    "eyes_small": {"ru": "некрупные глаза: наблюдательность, сдержанность, «сначала посмотрю»", "en": "smaller eyes: observation, restraint, 'watch first'", "source": "Henry B. Lin 1999"},
+    "eyelid_heavy": {"ru": "тяжёлое верхнее веко: сдержанность, недоверчивость к незнакомому, закрытый внутренний контур", "en": "heavy upper eyelid: reserve, wariness of the unfamiliar, guarded inner contour", "source": "Liu Zhuang Xiang Fa"},
+    "gaze_steady": {"ru": "ровный устойчивый взгляд: самообладание, воля; в трактатах — признак «собранного духа» (神)", "en": "steady gaze: composure, will; treatises call it 'gathered spirit' (shen)", "source": "Shen Xiang Quan Bian, о «шэнь» глаз"},
+    "brows_thick": {"ru": "густые брови: витальность, прямота, братская лояльность", "en": "thick brows: vitality, directness, fraternal loyalty", "source": "Liu Zhuang Xiang Fa"},
+    "brows_thin": {"ru": "тонкие брови: тонкость реакций, дипломатичность", "en": "thin brows: subtle reactions, diplomacy", "source": "Liu Zhuang Xiang Fa"},
+    "nose_fleshy": {"ru": "мясистый нос с крупным кончиком: в традиции — «нос богатства», способность накапливать и удерживать", "en": "fleshy nose with full tip: traditionally the 'wealth nose', capacity to accumulate and hold", "source": "Ma Yi Shen Xiang, дворец богатства"},
+    "nose_narrow": {"ru": "узкий нос: избирательность, экономность ресурса", "en": "narrow nose: selectivity, resource thrift", "source": "Joey Yap 2006"},
+    "mouth_full": {"ru": "полные губы: щедрость выражения, вкус к жизни", "en": "full lips: generous expression, taste for life", "source": "Henry B. Lin 1999"},
+    "mouth_thin": {"ru": "тонкие сомкнутые губы: самоконтроль, скупость на слова, надёжность в тайне", "en": "thin closed lips: self-control, economy of words, reliable with secrets", "source": "Henry B. Lin 1999"},
+    "jaw_wide": {"ru": "широкая крепкая челюсть: воля к завершению, упорство, «дожимает»", "en": "wide strong jaw: will to finish, persistence, 'closes the deal'", "source": "Shen Xiang Quan Bian, нижний двор"},
+    "jaw_soft": {"ru": "мягкая линия челюсти: гибкость, неконфликтность", "en": "soft jawline: flexibility, non-confrontation", "source": "Joey Yap 2006"},
+    "cheeks_full": {"ru": "полные щёки: запас жизненного ресурса, способность долго нести нагрузку", "en": "full cheeks: reserve of vital resource, capacity to carry load long", "source": "Ma Yi Shen Xiang"},
+    "cheekbones_high": {"ru": "выраженные скулы: властность, умение держать позицию среди людей", "en": "pronounced cheekbones: authority, holding one's position among people", "source": "Liu Zhuang Xiang Fa"},
+    "forehead_high": {"ru": "высокий лоб: концептуальность, дальний горизонт планирования", "en": "high forehead: conceptual mind, long planning horizon", "source": "Shen Xiang Quan Bian, верхний двор"},
+    "forehead_compact": {"ru": "компактный лоб: прикладной ум — решает деланием, а не рассуждением", "en": "compact forehead: applied mind — solves by doing, not theorizing", "source": "Shen Xiang Quan Bian, верхний двор"},
+    "ears_large": {"ru": "крупные уши: в традиции — запас удачи ранних лет, восприимчивость к советам", "en": "large ears: traditionally early-years luck reserve, receptivity to counsel", "source": "Ma Yi Shen Xiang"},
+    "chin_strong": {"ru": "крепкий подбородок: устойчивость поздних лет, хозяйская хватка", "en": "strong chin: stability of later years, proprietor's grip", "source": "Shen Xiang Quan Bian, нижний двор"}
+  }
+}

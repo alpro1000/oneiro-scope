@@ -26,6 +26,7 @@ from backend.api.v1 import (
     auth,
     billing,
     users,
+    physiognomy,
 )
 
 
@@ -168,6 +169,7 @@ app.include_router(dreams.router, prefix="/api/v1", tags=["Dreams"])
 app.include_router(auth.router, prefix="/api/v1", tags=["Auth"])
 app.include_router(billing.router, prefix="/api/v1", tags=["Billing"])
 app.include_router(users.router, prefix="/api/v1", tags=["Users"])
+app.include_router(physiognomy.router, prefix="/api/v1", tags=["Physiognomy"])
 # app.include_router(asr.router, prefix="/api/v1", tags=["ASR"])  # Coming soon
 # app.include_router(billing.router, prefix="/api/v1", tags=["Billing"])  # Coming soon
 

@@ -1,0 +1,132 @@
+"""Physiognomy service tests: deterministic metrics, KB-backed
+readings, disclaimer/provenance guarantees, questionnaire fallback."""
+
+import math
+
+import pytest
+
+from backend.services.physiognomy import (
+    FaceMetrics,
+    FeatureAnswers,
+    PhysiognomyRequest,
+    PhysiognomyService,
+)
+from backend.services.physiognomy.geometry import (
+    ALA_L, ALA_R, BROW_L, BROW_R, CHEEK_L, CHEEK_R, CHIN,
+    EYE_L_IN, EYE_L_OUT, EYE_R_IN, EYE_R_OUT, FOREHEAD_TOP,
+    JAW_L, JAW_R, LIP_BOTTOM, LIP_TOP, NOSE_BASE,
+    metrics_from_landmarks,
+)
+
+SVC = PhysiognomyService()
+
+# Forbidden deterministic wording (project-wide rule).
+FORBIDDEN = ["будет", "случится", "definitely", "точно предск"]
+
+
+def synthetic_landmarks() -> list[list[float]]:
+    """A stylized wide 'earth' face: 200px wide, 250px tall."""
+    pts = [[100.0, 125.0] for _ in range(468)]
+    pts[FOREHEAD_TOP] = [100.0, 0.0]
+    pts[CHIN] = [100.0, 250.0]
+    pts[CHEEK_L], pts[CHEEK_R] = [0.0, 110.0], [200.0, 110.0]
+    pts[JAW_L], pts[JAW_R] = [4.0, 180.0], [196.0, 180.0]
+    pts[BROW_L], pts[BROW_R] = [60.0, 80.0], [140.0, 80.0]
+    pts[EYE_L_OUT], pts[EYE_L_IN] = [40.0, 100.0], [72.0, 100.0]
+    pts[EYE_R_IN], pts[EYE_R_OUT] = [128.0, 100.0], [160.0, 100.0]
+    pts[NOSE_BASE] = [100.0, 160.0]
+    pts[ALA_L], pts[ALA_R] = [70.0, 155.0], [130.0, 155.0]
+    pts[LIP_TOP], pts[LIP_BOTTOM] = [100.0, 195.0], [100.0, 210.0]
+    return pts
+
+
+def test_metrics_match_manual_computation():
+    m = metrics_from_landmarks(synthetic_landmarks())
+    assert math.isclose(m.width_length, 200.0 / 250.0, abs_tol=1e-6)
+    assert math.isclose(m.jaw_cheek, 192.0 / 200.0, abs_tol=1e-6)
+    # courts: 80 / 80 / 90 of 250
+    assert math.isclose(m.upper_court, 80.0 / 250.0, abs_tol=1e-6)
+    assert math.isclose(m.lower_court, 90.0 / 250.0, abs_tol=1e-6)
+    # eye width 32, inner-canthal 56
+    assert math.isclose(m.eye_spacing, 56.0 / 32.0, abs_tol=1e-6)
+
+
+def test_landmarks_too_few_rejected():
+    with pytest.raises(ValueError):
+        metrics_from_landmarks([[0.0, 0.0]] * 10)
+
+
+def test_rotated_face_rejected_by_yaw_gate():
+    pts = synthetic_landmarks()
+    # Simulate yaw: right eye foreshortened to half width.
+    pts[EYE_R_OUT] = [144.0, 100.0]  # was 160 → eye width 32→16
+    with pytest.raises(ValueError, match="rotated"):
+        metrics_from_landmarks(pts)
+
+
+def test_wide_strong_jaw_classifies_earth():
+    resp = SVC.analyze(PhysiognomyRequest(landmarks=synthetic_landmarks()))
+    assert resp.primary_element == "earth"
+    assert resp.metrics is not None
+    assert resp.dominant_court in {"upper", "middle", "lower"}
+
+
+def test_long_narrow_face_classifies_wood():
+    m = FaceMetrics(
+        width_length=0.60, fwhr=1.6, jaw_cheek=0.78, eye_spacing=1.0,
+        upper_court=0.36, middle_court=0.34, lower_court=0.30,
+    )
+    resp = SVC.analyze(PhysiognomyRequest(metrics=m))
+    assert resp.primary_element == "wood"
+
+
+def test_every_reading_has_source_and_tradition_confidence():
+    resp = SVC.analyze(PhysiognomyRequest(landmarks=synthetic_landmarks()))
+    assert resp.readings
+    for r in resp.readings:
+        assert r.source, f"reading without source: {r.topic}"
+        assert r.confidence == 0.6
+
+
+def test_disclaimer_and_no_deterministic_language():
+    resp = SVC.analyze(PhysiognomyRequest(landmarks=synthetic_landmarks()))
+    assert "не валидирована" in resp.disclaimer
+    joined = " ".join(r.text.lower() for r in resp.readings)
+    for word in FORBIDDEN:
+        assert word not in joined
+
+
+def test_questionnaire_only_mode():
+    answers = FeatureAnswers(
+        face_shape="square", eye_spacing="wide", heavy_eyelid=True,
+        steady_gaze=True, jaw_wide=True, forehead_high=False,
+    )
+    resp = SVC.analyze(PhysiognomyRequest(features=answers, locale="en"))
+    assert resp.metrics is None
+    topics = {r.topic for r in resp.readings}
+    assert "five_elements.earth" in topics
+    assert "features.eyelid_heavy" in topics
+    assert "features.gaze_steady" in topics
+    assert "scientifically validated" in resp.disclaimer
+
+
+def test_features_supplement_metrics_without_duplication():
+    answers = FeatureAnswers(heavy_eyelid=True, jaw_wide=True)
+    resp = SVC.analyze(PhysiognomyRequest(
+        landmarks=synthetic_landmarks(), features=answers,
+    ))
+    topics = [r.topic for r in resp.readings]
+    # unmeasurable trait added from questionnaire
+    assert "features.eyelid_heavy" in topics
+    # measurable jaw comes from geometry only — no duplicate entries
+    assert topics.count("features.jaw_wide") == 1
+
+
+def test_methods_lists_sources_and_status():
+    m = PhysiognomyService.methods()
+    ids = {s["id"] for s in m["systems"]}
+    assert ids == {"mianxiang", "western"}
+    for s in m["systems"]:
+        assert s["meta"]["sources"]
+        assert "scientific_status" in s["meta"]
+    assert m["confidence"]["interpretations"] == 0.6
