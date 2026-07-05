@@ -300,6 +300,18 @@ def test_features_supplement_metrics_without_duplication():
     assert topics.count("features.jaw_wide") == 1
 
 
+def test_mouth_answers_survive_mixed_mode():
+    """Geometry no longer reads the mouth (openness ≠ thickness), so
+    questionnaire mouth answers must pass through even when metrics
+    are present — otherwise mouth traits become unreachable."""
+    answers = FeatureAnswers(lip_fullness="thin")
+    resp = SVC.analyze(PhysiognomyRequest(
+        landmarks=synthetic_landmarks(), features=answers,
+    ))
+    topics = {r.topic for r in resp.readings}
+    assert "features.mouth_thin" in topics
+
+
 def test_methods_lists_sources_and_status():
     m = PhysiognomyService.methods()
     ids = {s["id"] for s in m["systems"]}
