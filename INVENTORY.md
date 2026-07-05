@@ -16,8 +16,9 @@
 | docs/templates | 2 | 0 |
 | docs/templates/_TEMPLATE_spec | 0 | 3 |
 | docs/templates/_TEMPLATE_bug | 0 | 4 |
-| docs/specs | 1 | 0 |
+| docs/specs | 2 | 0 |
 | docs/specs/physiognomy | 0 | 3 |
+| docs/specs/photo-max-extraction | 0 | 3 |
 | docs/deployment | 0 | 1 |
 | etl | 1 | 5 |
 | etl/input | 0 | 1 |
@@ -70,7 +71,7 @@
 | backend/services/email/templates/es | 0 | 2 |
 | backend/services/email/templates/en | 0 | 2 |
 | backend/services/email/templates/fr | 0 | 2 |
-| backend/services/physiognomy | 1 | 7 |
+| backend/services/physiognomy | 1 | 8 |
 | backend/services/physiognomy/knowledge_base | 0 | 2 |
 | backend/services/strategic | 0 | 4 |
 | backend/services/byok | 0 | 2 |
@@ -109,4 +110,4 @@
 | .github | 1 | 0 |
 | .github/workflows | 0 | 7 |
 
-**ИТОГО:** папок = 105, файлов = 378
+**ИТОГО:** папок = 106, файлов = 382

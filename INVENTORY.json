@@ -72,11 +72,16 @@
     },
     {
       "path": "docs/specs",
-      "dirs": 1,
+      "dirs": 2,
       "files": 0
     },
     {
       "path": "docs/specs/physiognomy",
+      "dirs": 0,
+      "files": 3
+    },
+    {
+      "path": "docs/specs/photo-max-extraction",
       "dirs": 0,
       "files": 3
     },
@@ -343,7 +348,7 @@
     {
       "path": "backend/services/physiognomy",
       "dirs": 1,
-      "files": 7
+      "files": 8
     },
     {
       "path": "backend/services/physiognomy/knowledge_base",
@@ -531,6 +536,6 @@
       "files": 7
     }
   ],
-  "total_dirs": 105,
-  "total_files": 378
+  "total_dirs": 106,
+  "total_files": 382
 }
