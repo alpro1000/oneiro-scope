@@ -98,6 +98,7 @@ class FaceMetrics(BaseModel):
     lower_court: float = Field(..., description="lower face height share")
     nose_width: Optional[float] = Field(None, description="alar width / bizygomatic width")
     lip_fullness: Optional[float] = Field(None, description="inner-lip gap / face height — mouth OPENNESS in the frame (expression), not anatomical thickness")
+    lip_thickness: Optional[float] = Field(None, description="vermilion height (outer 0→13 + 14→17) / mouth width — anatomical thickness; None when the mouth is open (expression would distort it)")
 
 
 class PhysiognomyRequest(BaseModel):

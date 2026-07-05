@@ -14,7 +14,8 @@ from backend.services.physiognomy import (
 from backend.services.physiognomy.geometry import (
     ALA_L, ALA_R, BROW_L, BROW_R, CHEEK_L, CHEEK_R, CHIN,
     EYE_L_IN, EYE_L_OUT, EYE_R_IN, EYE_R_OUT, FOREHEAD_TOP,
-    JAW_L, JAW_R, LIP_BOTTOM, LIP_TOP, NOSE_BASE,
+    JAW_L, JAW_R, LIP_BOTTOM, LIP_BOTTOM_OUT, LIP_TOP, LIP_TOP_OUT,
+    MOUTH_L, MOUTH_R, NOSE_BASE,
     metrics_from_landmarks,
 )
 
@@ -300,6 +301,52 @@ def test_features_supplement_metrics_without_duplication():
     assert topics.count("features.jaw_wide") == 1
 
 
+def _lips(pts, outer_up, inner_up, inner_lo, outer_lo, width=60.0):
+    """Wire a mouth into the synthetic face: closed or open by gap."""
+    pts[MOUTH_L], pts[MOUTH_R] = [100.0 - width / 2, 202.0], [100.0 + width / 2, 202.0]
+    pts[LIP_TOP_OUT], pts[LIP_TOP] = [100.0, outer_up], [100.0, inner_up]
+    pts[LIP_BOTTOM], pts[LIP_BOTTOM_OUT] = [100.0, inner_lo], [100.0, outer_lo]
+    return pts
+
+
+def test_thin_vermilion_reads_mouth_thin():
+    # Closed mouth (gap 1px / 60px width), vermilion 6+7 → 13/60 ≈ 0.217.
+    pts = _lips(synthetic_landmarks(), 196.0, 202.0, 203.0, 210.0)
+    m = metrics_from_landmarks(pts)
+    assert m.lip_thickness == pytest.approx(13.0 / 60.0, abs=1e-3)
+    resp = SVC.analyze(PhysiognomyRequest(landmarks=pts))
+    assert "features.mouth_thin" in {r.topic for r in resp.readings}
+
+
+def test_full_vermilion_reads_mouth_full():
+    # Vermilion 14+15 → 29/60 ≈ 0.483 ≥ 0.40.
+    pts = _lips(synthetic_landmarks(), 188.0, 202.0, 203.0, 218.0)
+    resp = SVC.analyze(PhysiognomyRequest(landmarks=pts))
+    assert "features.mouth_full" in {r.topic for r in resp.readings}
+
+
+def test_open_mouth_yields_no_thickness_and_no_reading():
+    # Gap 15px / 60px = 0.25 > 0.06 — expression, not anatomy.
+    pts = _lips(synthetic_landmarks(), 190.0, 195.0, 210.0, 215.0)
+    m = metrics_from_landmarks(pts)
+    assert m.lip_thickness is None
+    resp = SVC.analyze(PhysiognomyRequest(landmarks=pts))
+    topics = {r.topic for r in resp.readings}
+    assert not {"features.mouth_thin", "features.mouth_full"} & topics
+
+
+def test_geometry_mouth_wins_over_questionnaire():
+    # When a closed-mouth frame measured the lips, the questionnaire
+    # answer must not duplicate/contradict the geometric reading.
+    pts = _lips(synthetic_landmarks(), 196.0, 202.0, 203.0, 210.0)
+    resp = SVC.analyze(PhysiognomyRequest(
+        landmarks=pts, features=FeatureAnswers(lip_fullness="full"),
+    ))
+    topics = [r.topic for r in resp.readings]
+    assert topics.count("features.mouth_thin") == 1
+    assert "features.mouth_full" not in topics
+
+
 def test_mouth_answers_survive_mixed_mode():
     """Geometry no longer reads the mouth (openness ≠ thickness), so
     questionnaire mouth answers must pass through even when metrics
@@ -310,6 +357,75 @@ def test_mouth_answers_survive_mixed_mode():
     ))
     topics = {r.topic for r in resp.readings}
     assert "features.mouth_thin" in topics
+
+
+def _child_metrics() -> FaceMetrics:
+    # Rounder child frame: wide, soft-jawed → pyknic per the frame rules.
+    return FaceMetrics(
+        width_length=0.91, fwhr=1.55, jaw_cheek=0.87, eye_spacing=1.23,
+        upper_court=0.19, middle_court=0.44, lower_court=0.37,
+    )
+
+
+def _adult_metrics() -> FaceMetrics:
+    # Same person grown: face elongated, jaw defined → athletic.
+    return FaceMetrics(
+        width_length=0.84, fwhr=1.67, jaw_cheek=0.91, eye_spacing=1.23,
+        upper_court=0.19, middle_court=0.41, lower_court=0.40,
+    )
+
+
+def test_longitudinal_diffs_stable_and_changed_topics():
+    from backend.services.physiognomy.longitudinal import compare_periods
+
+    res = compare_periods([_child_metrics()], [_adult_metrics()], "ru")
+    stable = {r["topic"] for r in res["stable"]}
+    appeared = {r["topic"] for r in res["appeared"]}
+    disappeared = {r["topic"] for r in res["disappeared"]}
+    # Wide-set eyes survive the years between the periods...
+    assert "features.eyes_wide_set" in stable
+    # ...while the constitution frame shifts pyknic → athletic.
+    assert "kretschmer.athletic" in appeared
+    assert "kretschmer.pyknic" in disappeared
+    assert res["metric_deltas"]["jaw_cheek"] == pytest.approx(0.04, abs=1e-6)
+    # Adult-anthropometry caveat + disclaimer always travel with the diff.
+    assert "антропометрия" in res["note"]
+    assert "не валидирована" in res["disclaimer"]
+
+
+def test_longitudinal_median_ignores_missing_optionals():
+    from backend.services.physiognomy.longitudinal import median_metrics
+
+    a, b = _adult_metrics(), _adult_metrics().model_copy(
+        update={"lip_thickness": 0.28})
+    med = median_metrics([a, b])
+    assert med.lip_thickness == 0.28  # only the frame that has it counts
+    assert med.nose_width is None
+
+
+def test_mcp_timeline_from_metric_dicts():
+    import asyncio
+
+    from backend.mcp.tools.physiognomy import physiognomy_timeline
+
+    res = asyncio.run(physiognomy_timeline(
+        early_metrics=[_child_metrics().model_dump()],
+        later_metrics=[_adult_metrics().model_dump()],
+    ))
+    assert res["frames_used"] == {"early": 1, "later": 1}
+    assert res["later"]["primary_element"] == "earth"
+    assert res["skipped"] == {"early": [], "later": []}
+
+
+def test_mcp_timeline_requires_frames_per_period():
+    import asyncio
+
+    from backend.mcp.tools.physiognomy import physiognomy_timeline
+
+    with pytest.raises(ValueError, match="early"):
+        asyncio.run(physiognomy_timeline(
+            later_metrics=[_adult_metrics().model_dump()],
+        ))
 
 
 def test_methods_lists_sources_and_status():

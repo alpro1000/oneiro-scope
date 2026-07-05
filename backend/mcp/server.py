@@ -106,6 +106,7 @@ mcp.tool()(ar.list_archetype_topics)
 mcp.tool()(ph.analyze_face)
 mcp.tool()(ph.physiognomy_report)
 mcp.tool()(ph.physiognomy_methods)
+mcp.tool()(ph.physiognomy_timeline)
 
 
 def main(argv: list[str] | None = None) -> int:

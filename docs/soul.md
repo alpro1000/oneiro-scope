@@ -104,6 +104,47 @@ Recent decisions:
 
 ## §9 Session log
 
+### 2026-07-05 — claude/photo-personality-analysis-2jy29b — auto-zoom detection, anatomical lip metric, longitudinal timeline
+
+**Trigger:** owner ran a live multi-batch photo reading (9 adult +
+5 childhood frames of himself) and asked (a) that the system zoom into
+photos and recognize traits itself instead of the questionnaire, and
+(b) special attention to childhood→adulthood changes.
+
+**Done:**
+- **Auto-zoom detection ladder** (`_landmarks_from_photo`): native →
+  2x/3x upscale on miss (archival prints), then a face-box crop
+  enlarged to ~600px face height for a sharper second pass. Metrics
+  are ratios, so crop-space coordinates need no back-mapping.
+- **Anatomical lip thickness** (`FaceMetrics.lip_thickness`): outer
+  vermilion (0→13 + 14→17) / mouth width (61–291), trusted only on a
+  near-closed mouth (inner gap ≤ 6% of mouth width) — closes the
+  known openness≠thickness gap from #144. Neutral ≈ 0.34 (Farkas);
+  thin ≤ 0.30, full ≥ 0.40, deviations-only like fWHR. Questionnaire
+  mouth answers now yield to geometry when a closed-mouth frame
+  measured the lips (`mouth_measured` param), pass through otherwise.
+- **Longitudinal module** (`services/physiognomy/longitudinal.py`) +
+  MCP tool `physiognomy_timeline`: per-period medians → KB readings
+  diffed by topic (stable / appeared / disappeared) + metric deltas;
+  adult-anthropometry caveat and disclaimer travel in every result.
+- Tests: 9 new (lip thin/full/open/questionnaire-precedence,
+  longitudinal diff, median with missing optionals, MCP timeline);
+  suite 32 passed.
+
+**Live validation (owner's own archive):** 5 closed-mouth adult
+frames gave lip_thickness 0.22–0.29 → mouth_thin, matching the
+owner's self-report given *before* the metric existed. Timeline over
+3 childhood vs 8 adult frames: stable — earth, dilated, wide-set
+eyes, compact forehead, thin lips, low fWHR; appeared — water
+secondary, lower court, athletic; disappeared — pyknic, middle-court
+dominance. Sharper zoom landmarks pushed one borderline frame
+(IMG_2029, asym 0.20) into the yaw gate — honest rejection.
+
+**Deferred:** brow/eyelid/cheekbone geometric detection (no reliable
+FaceMesh heuristic yet — questionnaire remains their path); server CV
+deps (mediapipe 0.10.14 pin uses legacy `solutions` API removed in
+0.10.20+) still optional, not in requirements.txt.
+
 ### 2026-07-05 — claude/top-cities-living-work-shxind — MCP hardening, two-layer reports, second-subject field test (PRs #136–#144)
 
 **Trigger:** continuation of the physiognomy session — owner asked to

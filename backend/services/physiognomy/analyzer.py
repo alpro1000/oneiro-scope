@@ -140,12 +140,14 @@ def readings_from_metrics(m: FaceMetrics, locale: str) -> list[Reading]:
         out.append(_feat(feats, "jaw_wide", locale))
     if m.nose_width is not None and m.nose_width >= 0.28:
         out.append(_feat(feats, "nose_fleshy", locale))
-    # lip_fullness measures the INNER-lip gap — mouth openness in the
-    # frame (expression), NOT anatomical lip thickness. Live case
-    # 2026-07-05: an expressive mouth averaged into "thin lips" because
-    # most frames were closed. Until an anatomical-thickness metric
-    # exists (outer points 0/13+14/17), no mouth reading is emitted
-    # from geometry; mouth traits stay questionnaire-only.
+    # Anatomical thickness (vermilion / mouth width, closed mouth only;
+    # None on open/smiling frames). Neutral ≈ 0.34 (Farkas means); only
+    # clear deviations are flagged, like fWHR.
+    if m.lip_thickness is not None:
+        if m.lip_thickness <= 0.30:
+            out.append(_feat(feats, "mouth_thin", locale))
+        elif m.lip_thickness >= 0.40:
+            out.append(_feat(feats, "mouth_full", locale))
     if m.upper_court >= 0.38:
         out.append(_feat(feats, "forehead_high", locale))
     elif m.upper_court <= 0.28:
@@ -196,12 +198,14 @@ _SHAPE_TO_ELEMENT = {
 
 
 def readings_from_answers(
-    answers: FeatureAnswers, locale: str, skip_measurable: bool = False
+    answers: FeatureAnswers, locale: str, skip_measurable: bool = False,
+    mouth_measured: bool = False,
 ) -> list[Reading]:
     """Questionnaire path. With `skip_measurable`, only traits that
-    geometry cannot see (eyelid, gaze, brows, ears, cheeks — and the
-    mouth, since the geometric lip metric measures openness, not
-    thickness) are added on top of metric readings."""
+    geometry cannot see (eyelid, gaze, brows, ears, cheeks) are added
+    on top of metric readings. The mouth is measurable only when a
+    closed-mouth frame yielded `lip_thickness` (`mouth_measured`);
+    otherwise the questionnaire answer still passes through."""
     out: list[Reading] = []
     feats = MIANXIANG["features"]
 
@@ -215,7 +219,9 @@ def readings_from_answers(
 
     unmeasurable = {"heavy_eyelid", "steady_gaze", "brow_thickness",
                     "ears_large", "cheeks_full", "cheekbones_high",
-                    "eye_size", "lip_fullness"}
+                    "eye_size"}
+    if not mouth_measured:
+        unmeasurable.add("lip_fullness")
     for field, value, kb_key in _ANSWER_MAP:
         if skip_measurable and field not in unmeasurable:
             continue

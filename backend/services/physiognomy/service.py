@@ -38,7 +38,8 @@ class PhysiognomyService:
             readings.extend(analyzer.readings_from_metrics(metrics, locale))
             if req.features:
                 readings.extend(analyzer.readings_from_answers(
-                    req.features, locale, skip_measurable=True
+                    req.features, locale, skip_measurable=True,
+                    mouth_measured=metrics.lip_thickness is not None,
                 ))
         elif req.features:
             readings.extend(analyzer.readings_from_answers(
