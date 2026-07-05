@@ -12,6 +12,7 @@ response and report.
 from __future__ import annotations
 
 import tempfile
+import uuid
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Optional
@@ -35,6 +36,40 @@ def _svc() -> PhysiognomyService:
     return _service
 
 
+# Report files may only land under these roots — MCP can run as a
+# remote HTTP server, so an arbitrary output_path would be a path-
+# traversal write primitive (CWE-22).
+_ALLOWED_REPORT_ROOTS = (
+    Path(tempfile.gettempdir()).resolve(),
+    Path.cwd().resolve(),
+)
+
+
+# Reading photos is likewise confined: in HTTP mode an arbitrary
+# photo_path lets a remote caller probe the server filesystem. Home
+# covers the local-desktop use case (photos in ~/...).
+_ALLOWED_READ_ROOTS = (
+    Path.home().resolve(),
+    Path(tempfile.gettempdir()).resolve(),
+    Path.cwd().resolve(),
+)
+
+
+def _safe_report_path(output_path: Optional[str]) -> Path:
+    if output_path is None:
+        # %f + uuid suffix: concurrent calls must never collide.
+        stamp = datetime.now().strftime("%Y%m%d_%H%M%S_%f")
+        name = f"physiognomy_report_{stamp}_{uuid.uuid4().hex[:8]}.html"
+        return Path(tempfile.gettempdir()) / name
+    path = Path(output_path).resolve()
+    if not any(path.is_relative_to(root) for root in _ALLOWED_REPORT_ROOTS):
+        allowed = ", ".join(str(r) for r in _ALLOWED_REPORT_ROOTS)
+        raise ValueError(
+            f"output_path must stay under: {allowed} (got {path})"
+        )
+    return path
+
+
 def _analyze(
     landmarks: Optional[list[list[float]]],
     metrics: Optional[dict],
@@ -44,6 +79,10 @@ def _analyze(
 ) -> PhysiognomyResponse:
     if photo_path:
         landmarks = _landmarks_from_photo(photo_path)
+    if not (landmarks or metrics or features):
+        raise ValueError(
+            "Provide at least one of: landmarks, metrics, features, photo_path"
+        )
     return _svc().analyze(PhysiognomyRequest(
         landmarks=landmarks,
         metrics=FaceMetrics(**metrics) if metrics else None,
@@ -54,6 +93,11 @@ def _analyze(
 
 def _landmarks_from_photo(photo_path: str) -> list[list[float]]:
     """Local-file CV path. Requires the optional mediapipe dependency."""
+    resolved = Path(photo_path).resolve()
+    if not any(resolved.is_relative_to(r) for r in _ALLOWED_READ_ROOTS):
+        raise ValueError(
+            "photo_path must stay under the home, temp or working directory"
+        )
     try:
         import cv2
         import mediapipe as mp
@@ -121,12 +165,8 @@ async def physiognomy_report(
     resp = _analyze(landmarks, metrics, features, photo_path, locale)
     html = render_html(resp, locale=locale)
 
-    if output_path:
-        path = Path(output_path)
-        path.parent.mkdir(parents=True, exist_ok=True)
-    else:
-        stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        path = Path(tempfile.gettempdir()) / f"physiognomy_report_{stamp}.html"
+    path = _safe_report_path(output_path)
+    path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(html, encoding="utf-8")
 
     return {

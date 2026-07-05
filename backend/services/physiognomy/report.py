@@ -62,7 +62,7 @@ def render_html(resp: PhysiognomyResponse, *, locale: str = "ru") -> str:
         )
 
     elements_html = ""
-    if resp.element_scores:
+    if resp.element_scores and resp.primary_element and resp.secondary_element:
         def el(name: str) -> str:
             return _ELEMENT_RU.get(name, name) if ru else name.title()
         bars = "".join(
