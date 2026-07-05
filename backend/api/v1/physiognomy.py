@@ -44,6 +44,9 @@ class ArchiveResponse(BaseModel):
     frames_used: int
     skipped: list[str]
     metrics: dict
+    traits: list[dict] = []
+    signature: list[dict] = []
+    lens_note: str = ""
     stability: dict
     primary_element: Optional[str] = None
     secondary_element: Optional[str] = None

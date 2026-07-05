@@ -72,6 +72,44 @@ _COVERAGE = {
 }
 
 
+# Face signature: deviations from neutral anchors in tolerance units,
+# for LENS-ROBUST metrics only. Close-range phone shots inflate the
+# width family (width_length, fwhr) for every subject — live corpus
+# 2026-07-05: three unrelated people all landed in the "wide face"
+# readings — so those metrics are excluded here and their readings are
+# tagged background. Vertical proportions and local ratios survive the
+# lens; THEY are what actually distinguishes one face from another.
+# Anchors/units mirror the documented analyzer heuristics.
+_SIGNATURE_ANCHORS = {
+    # metric: (neutral, unit = one threshold band)
+    "eye_spacing": (1.0, 0.12),
+    "jaw_cheek": (0.85, 0.10),
+    "middle_court": (1 / 3, 0.05),
+    "lower_court": (1 / 3, 0.05),
+    "nose_width": (0.25, 0.03),
+    "lip_thickness": (0.34, 0.06),
+}
+
+# Readings driven by lens-sensitive width metrics — reported, but
+# tagged so a portrait does not present them as personal signature.
+_WIDTH_FAMILY_TOPICS = {"corman.dilated", "corman.retracted",
+                        "fwhr.low", "fwhr.high"}
+
+
+def signature(median: FaceMetrics) -> list[dict]:
+    """Rank the person's lens-robust deviations from neutral."""
+    out = []
+    for metric, (neutral, unit) in _SIGNATURE_ANCHORS.items():
+        val = getattr(median, metric)
+        if val is None:
+            continue
+        dev = (val - neutral) / unit
+        out.append({"metric": metric, "median": round(val, 4),
+                    "neutral": neutral, "deviation_units": round(dev, 2)})
+    out.sort(key=lambda x: -abs(x["deviation_units"]))
+    return out
+
+
 def _stability(frames: list[FaceMetrics]) -> dict:
     """Per-metric cross-frame spread; 'stable' ≤ 10% of the median."""
     out = {}
@@ -140,14 +178,33 @@ def analyze_frames(
                 item["support"] = f"{n}/{denom}"
         if life_context and r.topic in life_context:
             item["life_context"] = life_context[r.topic]
+        if r.topic in _WIDTH_FAMILY_TOPICS:
+            item["scope"] = "background"  # lens-sensitive, not personal
         readings.append(item)
 
     primaries = [analyzer.element_scores(f)[0].element for f in frames]
     consensus = {e: primaries.count(e) for e in dict.fromkeys(primaries)}
 
+    from backend.services.physiognomy.dimensions import dimension_verdicts
+    mouth_frames = sum(1 for f in frames if f.lip_thickness is not None)
+    traits = dimension_verdicts(readings, loc, mouth_frames=mouth_frames)
+
     return {
         "frames_used": len(frames),
         "metrics": median.model_dump(),
+        "traits": traits,
+        "signature": signature(median),
+        "lens_note": (
+            "Ширинные чтения (дилатированный тип, fWHR, вклад ширины в "
+            "элементы) чувствительны к съёмке с близкого расстояния и "
+            "повторяются у разных людей — помечены background. Личную "
+            "подпись лица несут метрики из signature."
+            if loc == "ru" else
+            "Width-family readings (dilated type, fWHR, the width share "
+            "of the elements) are close-range-lens sensitive and repeat "
+            "across subjects — tagged background. The personal face "
+            "signature lives in the signature metrics."
+        ),
         "stability": _stability(frames),
         "primary_element": resp.primary_element,
         "secondary_element": resp.secondary_element,

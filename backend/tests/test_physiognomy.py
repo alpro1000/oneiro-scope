@@ -459,6 +459,94 @@ def test_aggregate_questionnaire_supplements_without_support():
     assert "support" not in by_topic["features.eyelid_heavy"]
 
 
+def test_no_forehead_reading_from_geometry():
+    """FaceMesh point 10 sits below the hairline → the upper court is
+    small for EVERYONE (live corpus: 3 unrelated subjects, 0.16-0.19)
+    — the geometric forehead reading was a mesh artifact."""
+    m = _adult_metrics().model_copy(update={"upper_court": 0.16})
+    resp = SVC.analyze(PhysiognomyRequest(metrics=m))
+    topics = {r.topic for r in resp.readings}
+    assert not {"features.forehead_compact", "features.forehead_high"} & topics
+    # Questionnaire path still reaches forehead traits, even with metrics.
+    resp2 = SVC.analyze(PhysiognomyRequest(
+        metrics=m, features=FeatureAnswers(forehead_high=True),
+    ))
+    assert "features.forehead_high" in {r.topic for r in resp2.readings}
+
+
+def test_signature_ranks_lens_robust_deviations():
+    from backend.services.physiognomy.aggregate import analyze_frames
+
+    res = analyze_frames([_adult_metrics()])
+    sig = res["signature"]
+    assert sig, "signature must not be empty"
+    # Sorted by |deviation|, lens-sensitive metrics excluded.
+    devs = [abs(s["deviation_units"]) for s in sig]
+    assert devs == sorted(devs, reverse=True)
+    assert not any(s["metric"] in ("width_length", "fwhr") for s in sig)
+    # Width-family readings are tagged background, personal ones not.
+    by_topic = {r["topic"]: r for r in res["readings"]}
+    assert by_topic["corman.dilated"].get("scope") == "background"
+    assert "scope" not in by_topic["features.eyes_wide_set"]
+    assert "lens_note" in res
+
+
+def test_dimensions_resolve_sociability_despite_thin_lips():
+    """The flip-flop case: dilated + water say sociable, thin lips say
+    not. The weighted consensus must land on 'sociable' FIRST time —
+    no user calibration required (live case 2026-07-05)."""
+    from backend.services.physiognomy.dimensions import dimension_verdicts
+
+    readings = [
+        {"topic": "corman.dilated", "source": "Corman 1937",
+         "support": "11/11", "scope": "background"},
+        {"topic": "five_elements.water", "source": "Ma Yi", "support": "6/11"},
+        {"topic": "features.mouth_thin", "source": "Lin 1999", "support": "5/5"},
+        {"topic": "five_elements.earth", "source": "SXQB", "support": "11/11"},
+        {"topic": "kretschmer.athletic", "source": "Kretschmer", "support": "9/11"},
+    ]
+    traits = {t["dimension"]: t for t in dimension_verdicts(readings, "ru",
+                                                            mouth_frames=5)}
+    soc = traits["sociability"]
+    assert soc["verdict"] in ("lean_high", "high"), soc
+    # ...and the opposing clause is still visible in the evidence.
+    assert any(e["contribution"] < 0 for e in soc["evidence"])
+    # Privacy resolves positive off the same lips + water.
+    assert traits["inner_privacy"]["verdict"] in ("lean_high", "high")
+    # Perseverance: earth + athletic, no counter-evidence.
+    assert traits["perseverance"]["verdict"] == "high"
+
+
+def test_dimensions_say_unclear_and_how_to_fix():
+    """No usable evidence for a dimension → honest 'not readable' plus
+    concrete steps (questionnaire / closed-mouth frames), never a
+    confident guess."""
+    from backend.services.physiognomy.dimensions import dimension_verdicts
+
+    readings = [{"topic": "five_elements.earth", "source": "SXQB",
+                 "support": "3/3"}]
+    traits = {t["dimension"]: t for t in dimension_verdicts(readings, "ru",
+                                                            mouth_frames=0)}
+    emo = traits["emotionality"]
+    assert emo["verdict"] == "unclear"
+    assert any("анкета" in n or "скан" in n for n in emo["needed"])
+    # Mouth-driven privacy evidence is missing, not absent → advice.
+    priv = traits["inner_privacy"]
+    assert any("закрытым ртом" in n for n in priv["needed"])
+
+
+def test_aggregate_exposes_traits():
+    from backend.services.physiognomy.aggregate import analyze_frames
+
+    res = analyze_frames([_adult_metrics()])
+    dims = {t["dimension"] for t in res["traits"]}
+    assert {"sociability", "perseverance", "emotionality"} <= dims
+    for t in res["traits"]:
+        assert t["verdict_label"]
+        if t["verdict"] == "unclear":
+            assert t["needed"], f"unclear without how-to-fix: {t}"
+
+
 def test_aggregate_life_context_attaches_to_reading():
     from backend.services.physiognomy.aggregate import analyze_frames
 
