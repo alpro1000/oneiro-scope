@@ -34,6 +34,92 @@ _COURT_RU = {"upper": "верхний (лоб)", "middle": "средний (гл
              "lower": "нижний (рот-подбородок)"}
 
 
+def compose_narrative(resp: PhysiognomyResponse, locale: str = "ru") -> list[str]:
+    """Weave the dictionary readings into flowing paragraphs — the full
+    portrait a human wants to read BEFORE the bullet points.
+
+    Deterministic composition of KB texts (still the 0.6 tradition
+    tier); no generation — every sentence comes from a cited reading,
+    connectives only glue them together.
+    """
+    ru = locale != "en"
+    by_topic = {r.topic: r for r in resp.readings}
+    paras: list[str] = []
+
+    def txt(topic: str) -> str:
+        r = by_topic.get(topic)
+        return r.text if r else ""
+
+    if resp.primary_element:
+        el_ru = _ELEMENT_RU.get(resp.primary_element, resp.primary_element)
+        primary = txt(f"five_elements.{resp.primary_element}")
+        secondary = txt(f"five_elements.{resp.secondary_element}") if resp.secondary_element else ""
+        if ru:
+            p = f"Основной тип лица — {el_ru}. {primary}"
+            if secondary:
+                p += f" Поверх основного тона звучит {_ELEMENT_RU.get(resp.secondary_element, resp.secondary_element)}: {secondary}"
+        else:
+            p = f"The primary face type is {resp.primary_element.title()}. {primary}"
+            if secondary:
+                p += f" Layered over it is {resp.secondary_element.title()}: {secondary}"
+        paras.append(p)
+
+    if resp.dominant_court:
+        court = txt(f"three_courts.{resp.dominant_court}")
+        lav = txt(f"lavater_zones.{resp.dominant_court}")
+        if court or lav:
+            if ru:
+                p = f"В пропорциях лица доминирует {_COURT_RU.get(resp.dominant_court, resp.dominant_court)} двор. {court}"
+                if lav:
+                    p += f" Западная традиция читает тот же акцент созвучно: {lav}"
+            else:
+                p = f"The {resp.dominant_court} court dominates the facial proportions. {court}"
+                if lav:
+                    p += f" The Western tradition reads the same emphasis similarly: {lav}"
+            paras.append(p)
+
+    western_bits = [r.text for r in resp.readings if r.system in ("corman", "kretschmer", "fwhr")]
+    if western_bits:
+        lead = ("Морфопсихология и конституциональные школы добавляют: "
+                if ru else "Morphopsychology and constitutional schools add: ")
+        paras.append(lead + " ".join(western_bits))
+
+    features = [r.text for r in resp.readings if r.topic.startswith("features.")]
+    if features:
+        lead = "В деталях черт: " if ru else "In the details: "
+        paras.append(lead + "; ".join(features) + ".")
+
+    return paras
+
+
+def compose_theses(resp: PhysiognomyResponse, locale: str = "ru") -> list[str]:
+    """Compact takeaways for memorization — the report's second layer."""
+    ru = locale != "en"
+    out: list[str] = []
+    if resp.primary_element:
+        el = (_ELEMENT_RU.get(resp.primary_element, resp.primary_element)
+              if ru else resp.primary_element.title())
+        sec = ""
+        if resp.secondary_element:
+            sec_name = (_ELEMENT_RU.get(resp.secondary_element, resp.secondary_element)
+                        if ru else resp.secondary_element.title())
+            sec = f" + {sec_name}"
+        out.append((f"Тип: {el}{sec}" if ru else f"Type: {el}{sec}"))
+    if resp.dominant_court:
+        court = (_COURT_RU.get(resp.dominant_court, resp.dominant_court)
+                 if ru else resp.dominant_court)
+        out.append((f"Доминирующий двор: {court}" if ru else f"Dominant court: {court}"))
+    for r in resp.readings:
+        if not r.topic.startswith("features."):
+            continue
+        # First clause of the reading = the memorable core.
+        head = r.text.split(";")[0].split(" — ")[0]
+        if len(head) > 90:
+            head = head[:87] + "…"
+        out.append(head)
+    return out
+
+
 def render_html(resp: PhysiognomyResponse, *, locale: str = "ru") -> str:
     ru = locale != "en"
     t = {
@@ -47,7 +133,29 @@ def render_html(resp: PhysiognomyResponse, *, locale: str = "ru") -> str:
         "source": "источник" if ru else "source",
         "primary": "первичный" if ru else "primary",
         "secondary": "вторичный" if ru else "secondary",
+        "portrait": "Портрет — развёрнуто" if ru else "Portrait — in full",
+        "theses": "Тезисы для запоминания" if ru else "Key takeaways",
+        "portrait_note": (
+            "композиция словарных чтений (0.6); формулировки с источниками — ниже"
+            if ru else
+            "composed from dictionary readings (0.6); sourced wording below"
+        ),
     }
+
+    narrative_html = ""
+    paras = compose_narrative(resp, locale)
+    if paras:
+        body = "".join(f"<p>{escape(p)}</p>" for p in paras)
+        narrative_html = (
+            f"<h2>{t['portrait']}</h2>{body}"
+            f"<div class='sub'>{t['portrait_note']}</div>"
+        )
+
+    theses_html = ""
+    theses = compose_theses(resp, locale)
+    if theses:
+        items = "".join(f"<li>{escape(x)}</li>" for x in theses)
+        theses_html = f"<h2>{t['theses']}</h2><div class='pill'><ul>{items}</ul></div>"
 
     metrics_html = ""
     if resp.metrics:
@@ -107,11 +215,15 @@ table {{ width: 100%; border-collapse: collapse; margin: 6px 0; }}
 td {{ border: 1px solid #dfe3f0; padding: 3px 6px; }}
 .pill {{ background: #eef0fb; border-radius: 8px; padding: 8px 10px;
         margin: 5px 0; }}
+ul {{ margin: 4px 0; padding-left: 18px; }}
+p {{ margin: 6px 0; }}
 .sub {{ font-size: 9.5px; color: #8a8fa8; }}
 .disc {{ font-size: 9px; color: #8a8fa8; border-top: 1px solid #e6e9f5;
         padding-top: 8px; margin-top: 14px; }}
 </style></head><body>
 <h1>🀄 {t['title']}</h1>
+{narrative_html}
+{theses_html}
 {metrics_html}
 {elements_html}
 {readings_html}
