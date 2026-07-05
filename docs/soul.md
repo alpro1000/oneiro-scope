@@ -171,6 +171,19 @@ loading/error/retry states, mobile single-column; FacePage i18n ru/en
 + Header nav item. Backend physiognomy tests 37, frontend 13,
 tsc clean, `next build` green (route 4.18 kB).
 
+**Docs deliverable (same session):** owner asked for a full service
+README plus a standalone frontend design brief to hand to a separate
+design tool. Added `docs/physiognomy/README.md` (confidence ladder,
+detection ladder, three input modes, archive aggregation, the trait-
+dimension verdicts, card report format, honest method limits, target
+audience, mandatory disclaimer — self-contained, no repo context
+needed) and `docs/physiognomy/frontend-design-brief.md` (product/tone,
+the "two registers" design idea — measurement language vs tradition
+language — 5-state page flow for the scanner with real UI copy and
+real verdict data for mockups, palette/type direction without
+prescribing hex codes, mobile-first + a11y requirements, explicit
+don'ts). Docs only, no code change.
+
 **Calibration finding (live, owner):** the thin-lips reading's
 «скупость на слова» clause was contradicted by the owner's report
 («очень разговорчивый») — an expected 0.6-tier miss, resolved by
