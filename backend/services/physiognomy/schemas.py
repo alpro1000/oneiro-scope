@@ -127,6 +127,18 @@ class ElementScore(BaseModel):
     score: float
 
 
+class MethodsSystem(BaseModel):
+    id: str
+    meta: dict
+    components: list[str]
+
+
+class MethodsResponse(BaseModel):
+    systems: list[MethodsSystem]
+    input_modes: list[str]
+    confidence: dict
+
+
 class PhysiognomyResponse(BaseModel):
     metrics: Optional[FaceMetrics] = None
     metrics_provenance: Optional[str] = None

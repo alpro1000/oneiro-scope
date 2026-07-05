@@ -57,6 +57,11 @@ def metrics_from_landmarks(pts: list[list[float]]) -> FaceMetrics:
     face_h = _d(pts[FOREHEAD_TOP], pts[CHIN])
     cheek_w = _d(pts[CHEEK_L], pts[CHEEK_R])
     jaw_w = _d(pts[JAW_L], pts[JAW_R])
+    if face_h < 1e-6 or cheek_w < 1e-6:
+        raise ValueError(
+            "Degenerate landmarks: zero face height or width. "
+            "Send real FaceMesh output."
+        )
 
     brow_y = (pts[BROW_L][1] + pts[BROW_R][1]) / 2.0
     # Vertical spans for the three courts (san ting / Lavater storeys).

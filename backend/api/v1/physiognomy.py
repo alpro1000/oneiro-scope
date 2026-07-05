@@ -7,8 +7,13 @@ from backend.services.physiognomy import (
     PhysiognomyResponse,
     PhysiognomyService,
 )
+from backend.services.physiognomy.schemas import MethodsResponse
 
 router = APIRouter(prefix="/physiognomy", tags=["physiognomy"])
+
+# Upload cap: a face photo has no business being larger than this;
+# without a limit the decode path is a trivial memory/CPU DoS.
+MAX_PHOTO_BYTES = 8 * 1024 * 1024
 
 
 def get_service() -> PhysiognomyService:
@@ -17,11 +22,12 @@ def get_service() -> PhysiognomyService:
 
 @router.get(
     "/methods",
+    response_model=MethodsResponse,
     summary="Supported face-reading systems",
     description="Traditions, primary sources, scientific status and input modes.",
 )
-async def methods() -> dict:
-    return PhysiognomyService.methods()
+async def methods() -> MethodsResponse:
+    return MethodsResponse(**PhysiognomyService.methods())
 
 
 @router.post(
@@ -81,7 +87,19 @@ async def analyze_photo(
             ),
         ) from exc
 
-    data = await file.read()
+    if file.content_type and not file.content_type.startswith("image/"):
+        raise HTTPException(
+            status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
+            f"Expected an image upload, got {file.content_type}",
+        )
+    data = await file.read(MAX_PHOTO_BYTES + 1)
+    if len(data) > MAX_PHOTO_BYTES:
+        raise HTTPException(
+            status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+            f"Photo exceeds {MAX_PHOTO_BYTES // (1024 * 1024)} MB limit",
+        )
+    if not data:
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, "Empty upload")
     img = cv2.imdecode(np.frombuffer(data, np.uint8), cv2.IMREAD_COLOR)
     if img is None:
         raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, "Not an image")

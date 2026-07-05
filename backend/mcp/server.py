@@ -25,6 +25,7 @@ from backend.mcp.tools import astrology as a
 from backend.mcp.tools import dreams as d
 from backend.mcp.tools import geo as g
 from backend.mcp.tools import lunar as l
+from backend.mcp.tools import physiognomy as ph
 from backend.mcp.tools import strategic_astro as sa
 
 logger = logging.getLogger("oneiro.mcp")
@@ -95,6 +96,14 @@ mcp.tool()(ar.aspect_meaning)
 mcp.tool()(ar.planet_dignity)
 mcp.tool()(ar.zodiac_sign)
 mcp.tool()(ar.list_archetype_topics)
+
+# --- Physiognomy (reflective face reading) -----------------------------------
+# Deterministic FaceMesh geometry (1.0) + cited tradition dictionary (0.6 —
+# own tier BELOW symbol dictionaries: physiognomy is not scientifically
+# validated). Self-reflection only; disclaimer in every response/report.
+mcp.tool()(ph.analyze_face)
+mcp.tool()(ph.physiognomy_report)
+mcp.tool()(ph.physiognomy_methods)
 
 
 def main(argv: list[str] | None = None) -> int:
