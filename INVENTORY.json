@@ -343,7 +343,7 @@
     {
       "path": "backend/services/physiognomy",
       "dirs": 1,
-      "files": 6
+      "files": 7
     },
     {
       "path": "backend/services/physiognomy/knowledge_base",
@@ -532,5 +532,5 @@
     }
   ],
   "total_dirs": 105,
-  "total_files": 377
+  "total_files": 378
 }
