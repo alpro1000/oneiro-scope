@@ -123,12 +123,12 @@
     {
       "path": "frontend/lib",
       "dirs": 0,
-      "files": 10
+      "files": 12
     },
     {
       "path": "frontend/components",
       "dirs": 0,
-      "files": 7
+      "files": 8
     },
     {
       "path": "frontend/messages",
@@ -162,7 +162,7 @@
     },
     {
       "path": "frontend/app/[locale]",
-      "dirs": 6,
+      "dirs": 7,
       "files": 2
     },
     {
@@ -187,6 +187,11 @@
     },
     {
       "path": "frontend/app/[locale]/checkout/success",
+      "dirs": 0,
+      "files": 1
+    },
+    {
+      "path": "frontend/app/[locale]/face",
       "dirs": 0,
       "files": 1
     },
@@ -223,7 +228,7 @@
     {
       "path": "frontend/__tests__",
       "dirs": 0,
-      "files": 2
+      "files": 3
     },
     {
       "path": "frontend/styles",
@@ -536,6 +541,6 @@
       "files": 7
     }
   ],
-  "total_dirs": 106,
-  "total_files": 382
+  "total_dirs": 107,
+  "total_files": 387
 }
