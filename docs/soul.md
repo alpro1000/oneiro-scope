@@ -171,6 +171,24 @@ loading/error/retry states, mobile single-column; FacePage i18n ru/en
 + Header nav item. Backend physiognomy tests 37, frontend 13,
 tsc clean, `next build` green (route 4.18 kB).
 
+**Whole-product design brief (same session):** owner asked to extend
+the design pass beyond face-reading to the whole product — natal
+chart, lunar calendar, dream analysis. Added
+`docs/design/product-design-brief.md`: a shared "confidence ladder"
+as the cross-section design idea (1.0 ephemeris/geometry → 0.9 cited
+classical rule → 0.8 symbol dictionary → 0.7 LLM synthesis → 0.6
+physiognomy dictionary, per CLAUDE.md), one shared design system
+(per-section accent over the shared gold/dark base, a reusable
+"finding card" component — same pattern proposed for dream symbols,
+event-forecast factors, and face traits so they don't drift into
+three different card designs), and per-section briefs (astrology's
+3 tabs, lunar widget + month table, dreams' input+report flow) each
+grounded in real schemas (`NatalChartResponse` 6 interpretation
+sections, `DreamAnalysisResponse` fields) and real i18n copy pulled
+from `frontend/messages/ru.json`. Face-reading section defers to the
+existing `docs/physiognomy/frontend-design-brief.md` rather than
+duplicating it. Docs only, no code change.
+
 **Docs deliverable (same session):** owner asked for a full service
 README plus a standalone frontend design brief to hand to a separate
 design tool. Added `docs/physiognomy/README.md` (confidence ladder,
