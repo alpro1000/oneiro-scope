@@ -467,7 +467,7 @@
     },
     {
       "path": ".claude/skills",
-      "dirs": 9,
+      "dirs": 10,
       "files": 1
     },
     {
@@ -482,6 +482,11 @@
     },
     {
       "path": ".claude/skills/deploy-cycle",
+      "dirs": 0,
+      "files": 1
+    },
+    {
+      "path": ".claude/skills/face-portrait",
       "dirs": 0,
       "files": 1
     },
@@ -541,6 +546,6 @@
       "files": 7
     }
   ],
-  "total_dirs": 107,
-  "total_files": 387
+  "total_dirs": 108,
+  "total_files": 388
 }
