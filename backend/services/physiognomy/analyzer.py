@@ -148,10 +148,12 @@ def readings_from_metrics(m: FaceMetrics, locale: str) -> list[Reading]:
             out.append(_feat(feats, "mouth_thin", locale))
         elif m.lip_thickness >= 0.40:
             out.append(_feat(feats, "mouth_full", locale))
-    if m.upper_court >= 0.38:
-        out.append(_feat(feats, "forehead_high", locale))
-    elif m.upper_court <= 0.28:
-        out.append(_feat(feats, "forehead_compact", locale))
+    # No forehead reading from geometry: FaceMesh point 10 sits BELOW
+    # the hairline, so the upper court is systematically small for
+    # everyone (live corpus 2026-07-05: 0.16-0.19 across three
+    # unrelated subjects vs the 0.28 threshold) — "compact forehead"
+    # was an artifact of the mesh, not a trait. Forehead traits are
+    # questionnaire-only until a hairline-aware metric exists.
 
     return out
 
@@ -219,7 +221,7 @@ def readings_from_answers(
 
     unmeasurable = {"heavy_eyelid", "steady_gaze", "brow_thickness",
                     "ears_large", "cheeks_full", "cheekbones_high",
-                    "eye_size"}
+                    "eye_size", "forehead_high"}
     if not mouth_measured:
         unmeasurable.add("lip_fullness")
     for field, value, kb_key in _ANSWER_MAP:

@@ -459,6 +459,38 @@ def test_aggregate_questionnaire_supplements_without_support():
     assert "support" not in by_topic["features.eyelid_heavy"]
 
 
+def test_no_forehead_reading_from_geometry():
+    """FaceMesh point 10 sits below the hairline → the upper court is
+    small for EVERYONE (live corpus: 3 unrelated subjects, 0.16-0.19)
+    — the geometric forehead reading was a mesh artifact."""
+    m = _adult_metrics().model_copy(update={"upper_court": 0.16})
+    resp = SVC.analyze(PhysiognomyRequest(metrics=m))
+    topics = {r.topic for r in resp.readings}
+    assert not {"features.forehead_compact", "features.forehead_high"} & topics
+    # Questionnaire path still reaches forehead traits, even with metrics.
+    resp2 = SVC.analyze(PhysiognomyRequest(
+        metrics=m, features=FeatureAnswers(forehead_high=True),
+    ))
+    assert "features.forehead_high" in {r.topic for r in resp2.readings}
+
+
+def test_signature_ranks_lens_robust_deviations():
+    from backend.services.physiognomy.aggregate import analyze_frames
+
+    res = analyze_frames([_adult_metrics()])
+    sig = res["signature"]
+    assert sig, "signature must not be empty"
+    # Sorted by |deviation|, lens-sensitive metrics excluded.
+    devs = [abs(s["deviation_units"]) for s in sig]
+    assert devs == sorted(devs, reverse=True)
+    assert not any(s["metric"] in ("width_length", "fwhr") for s in sig)
+    # Width-family readings are tagged background, personal ones not.
+    by_topic = {r["topic"]: r for r in res["readings"]}
+    assert by_topic["corman.dilated"].get("scope") == "background"
+    assert "scope" not in by_topic["features.eyes_wide_set"]
+    assert "lens_note" in res
+
+
 def test_aggregate_life_context_attaches_to_reading():
     from backend.services.physiognomy.aggregate import analyze_frames
 
