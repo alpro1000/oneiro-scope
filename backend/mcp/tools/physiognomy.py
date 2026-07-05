@@ -65,13 +65,21 @@ _ALLOWED_READ_ROOTS = _safe_roots(
 )
 
 
+def _resolve_user_path(raw: str) -> Path:
+    """Relative paths are anchored to the PROJECT root, not runtime cwd:
+    cwd is deployment-dependent and no longer an allowed root, so
+    'report.html' must mean the same thing regardless of start dir."""
+    p = Path(raw)
+    return (p if p.is_absolute() else _PROJECT_ROOT / p).resolve()
+
+
 def _safe_report_path(output_path: Optional[str]) -> Path:
     if not output_path:  # None or "" — both mean "use the default"
         # %f + uuid suffix: concurrent calls must never collide.
         stamp = datetime.now().strftime("%Y%m%d_%H%M%S_%f")
         name = f"physiognomy_report_{stamp}_{uuid.uuid4().hex[:8]}.html"
         return Path(tempfile.gettempdir()) / name
-    path = Path(output_path).resolve()
+    path = _resolve_user_path(output_path)
     if not any(path.is_relative_to(root) for root in _ALLOWED_REPORT_ROOTS):
         allowed = ", ".join(str(r) for r in _ALLOWED_REPORT_ROOTS)
         raise ValueError(
@@ -105,7 +113,7 @@ def _analyze(
 
 def _landmarks_from_photo(photo_path: str) -> list[list[float]]:
     """Local-file CV path. Requires the optional mediapipe dependency."""
-    resolved = Path(photo_path).resolve()
+    resolved = _resolve_user_path(photo_path)
     if not any(resolved.is_relative_to(r) for r in _ALLOWED_READ_ROOTS):
         raise ValueError(
             "photo_path must stay under the home, temp or project directory"
@@ -120,7 +128,7 @@ def _landmarks_from_photo(photo_path: str) -> list[list[float]]:
             "or a `features` questionnaire instead."
         ) from exc
 
-    img = cv2.imread(photo_path)
+    img = cv2.imread(str(resolved))
     if img is None:
         raise ValueError(f"Cannot read image: {photo_path}")
     with mp.solutions.face_mesh.FaceMesh(
