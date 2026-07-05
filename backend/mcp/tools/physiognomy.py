@@ -235,6 +235,7 @@ async def analyze_face_archive(
     metrics_list: Optional[list[dict]] = None,
     features: Optional[dict] = None,
     locale: str = "ru",
+    life_context: Optional[dict] = None,
 ) -> dict[str, Any]:
     """Extract the maximum a photo SET can honestly give: every photo
     goes through the auto-zoom detection ladder, unusable frames are
@@ -252,6 +253,9 @@ async def analyze_face_archive(
             addition to photos.
         features: questionnaire dict supplementing unmeasured traits.
         locale: "ru" or "en".
+        life_context: topic → the subject's own verified observation
+            (lived reality outranks the 0.6 tradition tier); rendered
+            side by side with the dictionary reading.
     """
     from backend.services.physiognomy.aggregate import analyze_frames
 
@@ -260,6 +264,7 @@ async def analyze_face_archive(
         frames,
         features=FeatureAnswers(**features) if features else None,
         locale=locale,
+        life_context=life_context,
     )
     result["skipped"] = skipped
     return result

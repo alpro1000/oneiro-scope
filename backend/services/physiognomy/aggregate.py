@@ -94,8 +94,16 @@ def analyze_frames(
     frames: list[FaceMetrics],
     features: Optional[FeatureAnswers] = None,
     locale: str = "ru",
+    life_context: Optional[dict[str, str]] = None,
 ) -> dict:
-    """Aggregate a set of per-frame metrics into one profile."""
+    """Aggregate a set of per-frame metrics into one profile.
+
+    `life_context` maps a reading topic to the subject's own verified
+    observation (e.g. {"features.mouth_thin": "разговорчив; молчит
+    только о сокровенном"}). Per the confidence ladder, lived reality
+    outranks the 0.6 tradition tier — the note is attached to the
+    reading and rendered side by side, never silently averaged away.
+    """
     if not frames:
         raise ValueError("Need at least one FaceMetrics frame")
     loc = "en" if locale == "en" else "ru"
@@ -130,6 +138,8 @@ def analyze_frames(
             # topics — report support only for geometry-backed ones.
             if n:
                 item["support"] = f"{n}/{denom}"
+        if life_context and r.topic in life_context:
+            item["life_context"] = life_context[r.topic]
         readings.append(item)
 
     primaries = [analyzer.element_scores(f)[0].element for f in frames]
@@ -153,6 +163,11 @@ def analyze_frames(
                 "frames whose own readings contain the topic (1.0-tier "
                 "fact; interpretation tier unchanged)"
             ),
+            **({"life_context": (
+                "subject-verified observations attached to readings; "
+                "per the confidence ladder, lived reality outranks the "
+                "0.6 tradition tier"
+            )} if life_context else {}),
         },
         "disclaimer": resp.disclaimer,
     }
