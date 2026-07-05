@@ -72,7 +72,7 @@
 | backend/services/email/templates/es | 0 | 2 |
 | backend/services/email/templates/en | 0 | 2 |
 | backend/services/email/templates/fr | 0 | 2 |
-| backend/services/physiognomy | 1 | 8 |
+| backend/services/physiognomy | 1 | 9 |
 | backend/services/physiognomy/knowledge_base | 0 | 2 |
 | backend/services/strategic | 0 | 4 |
 | backend/services/byok | 0 | 2 |
@@ -112,4 +112,4 @@
 | .github | 1 | 0 |
 | .github/workflows | 0 | 7 |
 
-**ИТОГО:** папок = 108, файлов = 388
+**ИТОГО:** папок = 108, файлов = 389
