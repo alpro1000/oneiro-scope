@@ -101,6 +101,31 @@ def test_mcp_photo_path_confined_to_allowed_roots():
         asyncio.run(analyze_face(photo_path="/etc/passwd"))
 
 
+def test_safe_roots_drops_filesystem_anchor():
+    from pathlib import Path
+
+    from backend.mcp.tools.physiognomy import _safe_roots
+
+    # A root equal to '/' would let every absolute path pass — must be
+    # dropped even if a deployment starts the server with cwd='/'.
+    assert _safe_roots(Path("/")) == ()
+    kept = _safe_roots(Path("/"), Path("/tmp"))
+    assert Path("/tmp") in kept and Path("/") not in kept
+
+
+def test_empty_output_path_falls_back_to_default(tmp_path):
+    import asyncio
+
+    from backend.mcp.tools.physiognomy import physiognomy_report
+
+    res = asyncio.run(physiognomy_report(
+        landmarks=synthetic_landmarks(), output_path="",
+    ))
+    # Empty string means "default": a unique temp file, not cwd.
+    assert res["report_path"].endswith(".html")
+    assert "physiognomy_report_" in res["report_path"]
+
+
 def test_html_report_file_via_mcp_tool(tmp_path):
     import asyncio
 

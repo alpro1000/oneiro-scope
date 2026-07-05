@@ -36,27 +36,37 @@ def _svc() -> PhysiognomyService:
     return _service
 
 
+def _safe_roots(*candidates: Path) -> tuple[Path, ...]:
+    """Drop any candidate that IS a filesystem anchor: if a root
+    resolves to '/', is_relative_to() passes for everything and the
+    confinement silently dies (deployment with cwd='/')."""
+    return tuple(p for p in candidates if p != Path(p.anchor))
+
+
+# Project root from code location, NOT runtime cwd — cwd is
+# deployment-dependent and may be '/'.
+_PROJECT_ROOT = Path(__file__).resolve().parents[3]
+
 # Report files may only land under these roots — MCP can run as a
 # remote HTTP server, so an arbitrary output_path would be a path-
 # traversal write primitive (CWE-22).
-_ALLOWED_REPORT_ROOTS = (
+_ALLOWED_REPORT_ROOTS = _safe_roots(
     Path(tempfile.gettempdir()).resolve(),
-    Path.cwd().resolve(),
+    _PROJECT_ROOT,
 )
-
 
 # Reading photos is likewise confined: in HTTP mode an arbitrary
 # photo_path lets a remote caller probe the server filesystem. Home
 # covers the local-desktop use case (photos in ~/...).
-_ALLOWED_READ_ROOTS = (
+_ALLOWED_READ_ROOTS = _safe_roots(
     Path.home().resolve(),
     Path(tempfile.gettempdir()).resolve(),
-    Path.cwd().resolve(),
+    _PROJECT_ROOT,
 )
 
 
 def _safe_report_path(output_path: Optional[str]) -> Path:
-    if output_path is None:
+    if not output_path:  # None or "" — both mean "use the default"
         # %f + uuid suffix: concurrent calls must never collide.
         stamp = datetime.now().strftime("%Y%m%d_%H%M%S_%f")
         name = f"physiognomy_report_{stamp}_{uuid.uuid4().hex[:8]}.html"
@@ -67,6 +77,8 @@ def _safe_report_path(output_path: Optional[str]) -> Path:
         raise ValueError(
             f"output_path must stay under: {allowed} (got {path})"
         )
+    if path.is_dir():
+        raise ValueError(f"output_path is a directory: {path}")
     return path
 
 
@@ -96,7 +108,7 @@ def _landmarks_from_photo(photo_path: str) -> list[list[float]]:
     resolved = Path(photo_path).resolve()
     if not any(resolved.is_relative_to(r) for r in _ALLOWED_READ_ROOTS):
         raise ValueError(
-            "photo_path must stay under the home, temp or working directory"
+            "photo_path must stay under the home, temp or project directory"
         )
     try:
         import cv2
