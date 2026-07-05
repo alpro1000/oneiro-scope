@@ -24,8 +24,13 @@
       0.36 отвергнут, 0.16 пропущен
 - [ ] Occlusion-флаги: аномальный верхний двор (чёлка/убор) → «зона
       закрыта, не читаем» вместо чтения (принцип честности до черт)
-- [ ] Рендер отчёта по зонам (дворы → черты → элементы → формула), с
-      источником и метрикой под каждым абзацем
+- [x] Рендер отчёта: self-contained HTML по зонам (метрики → элементы →
+      дворы → чтения по системам с источниками) — report.py (2026-07-05)
+- [x] MCP-коннектор: analyze_face / physiognomy_report (файл HTML) /
+      physiognomy_methods в backend/mcp (2026-07-05)
+- [x] Ревью ботов PR#135: zero-guard в geometry, лимит 8MB + content-type
+      + 413/415 на /analyze-photo, response_model для /methods, PII-досье
+      перенесено в gitignored .claude/personal/ (2026-07-05)
 - [ ] Frontend `/[locale]/face`: браузерный FaceLandmarker + анкета-fallback
 - [ ] Опционально: LLM-пересказ отчёта (0.7, поверх readings)
 - [ ] Опционально: mediapipe в prod-требования, если нужен серверный фото-путь

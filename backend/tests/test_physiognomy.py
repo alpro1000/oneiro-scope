@@ -64,6 +64,29 @@ def test_rotated_face_rejected_by_yaw_gate():
         metrics_from_landmarks(pts)
 
 
+def test_degenerate_landmarks_rejected_not_crash():
+    # All points identical → zero face height/width must raise ValueError,
+    # not ZeroDivisionError (API maps ValueError → 422).
+    with pytest.raises(ValueError, match="Degenerate"):
+        metrics_from_landmarks([[5.0, 5.0]] * 468)
+
+
+def test_html_report_file_via_mcp_tool(tmp_path):
+    import asyncio
+
+    from backend.mcp.tools.physiognomy import physiognomy_report
+
+    out = tmp_path / "r.html"
+    res = asyncio.run(physiognomy_report(
+        landmarks=synthetic_landmarks(), output_path=str(out),
+    ))
+    assert res["report_path"] == str(out)
+    html = out.read_text(encoding="utf-8")
+    assert "не валидирована" in html          # disclaimer present
+    assert "Shen Xiang Quan Bian" in html      # sources rendered
+    assert res["primary_element"] == "earth"
+
+
 def test_wide_strong_jaw_classifies_earth():
     resp = SVC.analyze(PhysiognomyRequest(landmarks=synthetic_landmarks()))
     assert resp.primary_element == "earth"

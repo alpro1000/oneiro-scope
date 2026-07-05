@@ -14,7 +14,8 @@
 - API `/api/v1/physiognomy`: GET /methods, POST /analyze (landmarks|metrics|анкета), POST /analyze-photo (серверный CV; mediapipe==0.10.14 + opencv-headless ДОБАВЛЕНЫ в backend/requirements.txt → после деплоя фото считается автоматически; без них — 501 с клиентским путём). Privacy-first вариант: лендмарки в браузере.
 - **Yaw pose-gate** в geometry (асимметрия глаз >0.20 → отказ) — внедрён и проверен на живом кадре. Тесты: 10 passed.
 - Live-валидация на 21 фото владельца (1981–2026): 16 валидных замеров, профиль воспроизводим; 4 калибровочные находки (1 закрыта кодом, 3 в tasks.md: occlusion-флаги, двойная линейка межглазья, детский режим).
-- Досье владельца: `docs/clients/owner_profile_patterns.md` (натал, пояса ACG, календарь 2026–28, замеры, паттерн «застой воды» с протоколом и дедлайнами: 5 писем до 15.07, 5 оплат до 31.08, запуск в окно сен–окт 2026).
+- Досье владельца: `.claude/personal/owner_profile_patterns.md` (gitignored, PII-правило репо; было в docs/clients — вынесено по ревью ботов) (натал, пояса ACG, календарь 2026–28, замеры, паттерн «застой воды» с протоколом и дедлайнами: 5 писем до 15.07, 5 оплат до 31.08, запуск в окно сен–окт 2026).
+- **MCP-коннектор готов:** `analyze_face` / `physiognomy_report` (пишет HTML-файл отчёта, принимает photo_path|landmarks|metrics|анкету) / `physiognomy_methods` — зарегистрированы в backend/mcp/server.py.
 - **Следующий шаг фичи:** frontend `/[locale]/face` — браузерный FaceLandmarker (@mediapipe/tasks-vision, модель в public/) + анкета-fallback; зонный рендер отчёта; опционально LLM-пересказ (0.7).
 - ⚠ Render: проверить, что build с mediapipe/opencv проходит по размеру/времени; если нет — убрать из requirements и жить клиентским путём (сервис деградирует в 501 корректно).
 

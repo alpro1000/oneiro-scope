@@ -146,9 +146,15 @@ Western physiognomy into OneiroScope with a photo-upload flow.
   passed frontals. Remaining 3 findings in tasks.md backlog.
 - mediapipe==0.10.14 + opencv-headless added to backend requirements
   so `/analyze-photo` computes server-side after deploy.
-- Owner profile dossier: `docs/clients/owner_profile_patterns.md`
-  (natal, ACG belts, 2026–28 calendar, photo measurements, water-
-  stagnation pattern + protocol with committed deadlines).
+- Owner profile dossier moved to gitignored `.claude/personal/
+  owner_profile_patterns.md` (bot review caught the repo's own PII rule;
+  full content also delivered to owner as PDFs). NOTE: the file existed
+  in main history via PR #135 — history rewrite left to owner's call.
+- Follow-up PR: bot-review fixes (zero-guard geometry, 8MB+content-type
+  upload cap, response_model for /methods) + physiognomy MCP connector
+  (`analyze_face`, `physiognomy_report` → HTML file, `physiognomy_methods`)
+  + zone-structured HTML report renderer. 12 tests green; e2e smoke:
+  photo → MCP tool → report file.
 
 **Deferred:** frontend `/[locale]/face` page (browser FaceLandmarker +
 questionnaire fallback), occlusion flags, dual-reference eye metric,
