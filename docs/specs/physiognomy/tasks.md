@@ -35,6 +35,10 @@
       tmp/cwd (CWE-22), photo_path — к home/tmp/cwd (анти-зондирование
       ФС в HTTP-режиме), уникальные имена отчётов (%f+uuid), guard на
       пустой ввод, null-guard в рендерере (2026-07-05)
+- [x] Ревью ботов PR#137: cwd-обход ограничения закрыт (корень проекта
+      от __file__ вместо runtime cwd + отбрасывание anchor-корней);
+      пустая строка output_path = default, каталог = ValueError
+      (2026-07-05)
 - [ ] Frontend `/[locale]/face`: браузерный FaceLandmarker + анкета-fallback
 - [ ] Опционально: LLM-пересказ отчёта (0.7, поверх readings)
 - [ ] Опционально: mediapipe в prod-требования, если нужен серверный фото-путь
