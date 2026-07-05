@@ -471,6 +471,41 @@ def test_mcp_archive_from_metric_dicts():
     assert res["skipped"] == []
 
 
+def test_api_archive_aggregates_and_reports_skips():
+    from fastapi.testclient import TestClient
+
+    from backend.app.main import app
+
+    client = TestClient(app)
+    good = synthetic_landmarks()
+    rotated = synthetic_landmarks()
+    rotated[EYE_R_OUT] = [144.0, 100.0]  # yaw-gate reject
+    r = client.post("/api/v1/physiognomy/analyze-archive", json={
+        "frames": [good, good, rotated], "locale": "ru",
+    })
+    assert r.status_code == 200, r.text
+    body = r.json()
+    assert body["frames_used"] == 2
+    assert len(body["skipped"]) == 1 and "frame 2" in body["skipped"][0]
+    assert body["primary_element"] == "earth"
+    assert "unreadable" in body["coverage"]
+    assert "не валидирована" in body["disclaimer"]
+
+
+def test_api_archive_all_rejected_is_422():
+    from fastapi.testclient import TestClient
+
+    from backend.app.main import app
+
+    client = TestClient(app)
+    rotated = synthetic_landmarks()
+    rotated[EYE_R_OUT] = [144.0, 100.0]
+    r = client.post("/api/v1/physiognomy/analyze-archive",
+                    json={"frames": [rotated]})
+    assert r.status_code == 422
+    assert "rejected" in r.json()["detail"]
+
+
 def test_methods_lists_sources_and_status():
     m = PhysiognomyService.methods()
     ids = {s["id"] for s in m["systems"]}

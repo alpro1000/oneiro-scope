@@ -8,12 +8,16 @@
       (2026-07-05)
 - [x] Gate 3 — tests: aggregation math, support counting, coverage
       classes, MCP path. (2026-07-05)
-- [ ] Gate 4 — guided face scanner (frontend `/[locale]/face`):
-      browser FaceLandmarker, live gates (yaw / mouth-closed /
-      brightness symmetry), auto-capture N passing frames,
-      landmarks-only upload, aggregation call, zone report render.
-      UI acceptance per conventions §11 (a11y, loading/error states,
-      mobile).
+- [x] Gate 4 — guided face scanner (frontend `/[locale]/face`):
+      browser FaceLandmarker (@mediapipe/tasks-vision), live gates
+      (face-found / yaw ≤0.15 / mouth ≤0.05 / face-size / cheek
+      brightness symmetry — stricter than the server so captures
+      always pass), auto-capture 5 frames ≥600ms apart,
+      landmarks-only POST to /physiognomy/analyze-archive, profile
+      render with support + coverage map + disclaimer. a11y
+      (aria-live status, labels), loading/error/retry states, mobile
+      single-column. Pure gate math in `lib/face-gates.ts` with unit
+      tests. (2026-07-05)
 - [ ] Gate 5 — (research, separate decision) controlled-capture
       texture pilot: does scanner-grade even lighting make palace
       zones stable enough to measure? Requires new evidence BEFORE

@@ -129,7 +129,8 @@
     "astrology": "Astrology",
     "dreams": "Dreams",
     "pricing": "Pricing",
-    "account": "Account"
+    "account": "Account",
+    "face": "Face"
   },
   "Pricing": {
     "title": "Choose your plan",
@@ -221,5 +222,33 @@
     },
     "goToAccount": "Go to account",
     "startUsing": "Start exploring"
+  },
+  "FacePage": {
+    "title": "Face scanner",
+    "subtitle": "Live tradition reading — the camera guides you; frames never leave your device",
+    "privacy": "Privacy: no photo is uploaded. Only 468 landmark coordinates travel to the server.",
+    "videoLabel": "Camera preview (mirrored)",
+    "start": "Start camera",
+    "loading": "Loading model and camera…",
+    "analyzing": "Computing profile…",
+    "retry": "Try again",
+    "rescan": "Scan again",
+    "gatesLabel": "Frame quality checks",
+    "gateFace": "Face in frame",
+    "gateYaw": "Head straight",
+    "gateMouth": "Mouth closed",
+    "gateSize": "Come closer",
+    "gateLight": "Even lighting",
+    "captured": "Frames: {n}/{total}",
+    "errorNoCamera": "Camera unavailable (HTTPS and camera permission required)",
+    "resultType": "Face type",
+    "framesUsed": "Frames used: {used}, skipped: {skipped}",
+    "support": "support",
+    "reportLabel": "Reading results",
+    "coverageTitle": "What is measurable and what is not",
+    "coverage_measured": "Measured",
+    "coverage_questionnaire_only": "Questionnaire only",
+    "coverage_guided_scan_only": "Guided capture only",
+    "coverage_unreadable": "Unreadable from photos"
   }
 }

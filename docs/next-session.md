@@ -34,10 +34,21 @@
   (measured / questionnaire / guided-scan / unreadable). Чтение
   текстуры дворцов (ци-сэ) по бытовым фото закрыто ЭКСПЕРИМЕНТОМ:
   сырой разброс ×160, с нормировкой на щёку ×26, детский контроль
-  неотличим от взрослого. Gate 4 = frontend guided-сканер
-  (`/[locale]/face`, живые гейты, авто-захват кадров); Gate 5 = пилот
-  controlled-capture текстуры (отдельное решение owner'а).
-- Тесты физиогномики: 35 passed (12 новых за сессию).
+  неотличим от взрослого. Gate 5 = пилот controlled-capture текстуры
+  (отдельное решение owner'а).
+- **Gate 4 СДЕЛАН — guided-сканер** `/[locale]/face`: браузерный
+  FaceLandmarker (@mediapipe/tasks-vision 0.10.14, wasm+модель с CDN,
+  override через NEXT_PUBLIC_FACE_MODEL_URL); живые гейты СТРОЖЕ
+  серверных (yaw 0.15/0.20, рот 0.05/0.06 + размер лица + симметрия
+  света по щекам) → захваченный кадр всегда проходит сервер;
+  авто-захват 5 кадров ≥600мс; на сервер уходят ТОЛЬКО лендмарки
+  (privacy-first). Новый эндпоинт POST /physiognomy/analyze-archive
+  (кап 24 кадра, 422 если все кадры отбиты). Чистая гейт-математика в
+  `frontend/lib/face-gates.ts` (jest 6 тестов), клиент
+  `physiognomy-client.ts`, компонент `FaceScanner.tsx`, переводы
+  FacePage ru/en, пункт «Лицо/Face» в Header.
+- Тесты: backend physiognomy 37 passed; frontend 13 passed;
+  tsc --noEmit чисто.
 
 **🎯 ПЕРВАЯ ЗАДАЧА СЛЕДУЮЩЕЙ СЕССИИ (запрос owner):** прогнать фотографии
 друга «на чистую голову» — с нуля, end-to-end через замерженный

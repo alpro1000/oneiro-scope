@@ -152,10 +152,24 @@ a coverage map (measured / questionnaire-only / guided-scan-only /
 unreadable-in-principle, citing the evidence). Palace-zone texture
 experiments (raw spread ×160; within-frame cheek-normalized still
 ×26; child-skin control indistinguishable from adult) permanently
-closed casual-photo qi-se/palace reading; guided scanner +
-controlled-capture pilot = Gates 4–5 in tasks.md. Tests 35 passed.
-Live: 14 photos → 11 accepted in one call, earth consensus 9/11,
-eye_spacing the only ≤10%-spread metric across ~45 years of frames.
+closed casual-photo qi-se/palace reading; controlled-capture pilot =
+Gate 5 in tasks.md. Live: 14 photos → 11 accepted in one call, earth
+consensus 9/11, eye_spacing the only ≤10%-spread metric across ~45
+years of frames.
+
+**Gate 4 shipped (same session): guided face scanner.** Frontend
+`/[locale]/face`: browser FaceLandmarker (@mediapipe/tasks-vision
+0.10.14; wasm+model from CDN, `NEXT_PUBLIC_FACE_MODEL_URL` override),
+live gates STRICTER than the server (yaw 0.15 vs 0.20, mouth 0.05 vs
+0.06, plus face-size and cheek-brightness symmetry) so every captured
+frame passes server-side; auto-capture 5 frames ≥600ms apart;
+landmarks-only upload (privacy-first) to the new
+POST /physiognomy/analyze-archive (≤24 frames, 422 when all frames
+rejected). Pure gate math extracted to `frontend/lib/face-gates.ts`
+(6 jest tests); `FaceScanner.tsx` with aria-live status,
+loading/error/retry states, mobile single-column; FacePage i18n ru/en
++ Header nav item. Backend physiognomy tests 37, frontend 13,
+tsc clean, `next build` green (route 4.18 kB).
 
 **Calibration finding (live, owner):** the thin-lips reading's
 «скупость на слова» clause was contradicted by the owner's report
