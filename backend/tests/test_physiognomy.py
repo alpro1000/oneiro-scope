@@ -131,20 +131,30 @@ def test_empty_output_path_falls_back_to_default(tmp_path):
     assert "physiognomy_report_" in p.name
 
 
-def test_relative_paths_anchor_to_project_root():
-    from pathlib import Path
+def test_relative_paths_anchor_to_reports_dir():
+    from backend.mcp.tools._files import _REPORTS_DIR
+    from backend.mcp.tools.physiognomy import _safe_report_path
 
-    from backend.mcp.tools.physiognomy import (
-        _PROJECT_ROOT,
-        _resolve_user_path,
-        _safe_report_path,
-    )
+    # Relative report paths must not depend on runtime cwd and must
+    # land inside the dedicated reports dir.
+    assert _safe_report_path("r.html").is_relative_to(_REPORTS_DIR)
 
-    # Relative paths must not depend on runtime cwd.
-    assert _resolve_user_path("reports/r.html") == (
-        _PROJECT_ROOT / "reports/r.html"
-    ).resolve()
-    assert _safe_report_path("reports/r.html").is_relative_to(_PROJECT_ROOT)
+
+def test_project_source_tree_not_writable_via_output_path():
+    from backend.mcp.tools._files import _PROJECT_ROOT
+    from backend.mcp.tools.physiognomy import _safe_report_path
+
+    # The repo tree outside reports/ must be off-limits: otherwise an
+    # HTTP caller gets a write primitive over source files.
+    with pytest.raises(ValueError, match="must stay under"):
+        _safe_report_path(str(_PROJECT_ROOT / "backend" / "evil.html"))
+
+
+def test_non_html_output_rejected(tmp_path):
+    from backend.mcp.tools.physiognomy import _safe_report_path
+
+    with pytest.raises(ValueError, match="must end with .html"):
+        _safe_report_path(str(tmp_path / "report.py"))
 
 
 def test_html_report_file_via_mcp_tool(tmp_path):

@@ -49,6 +49,13 @@
 - [x] MCP: horoscope_report и profile_report_file — гороскоп и полный
       астро-профиль пишутся в HTML-файл; общий safe-path модуль
       _files.py переиспользован из physiognomy (2026-07-05)
+- [x] Ревью ботов PR#140 (Qodo): записи в проект ограничены reports/
+      (весь корень = write-примитив по исходникам для HTTP-вызова);
+      дефолтный tempdir прогоняется через anchor-проверку (TMPDIR=/);
+      output_path обязан оканчиваться на .html; reports/ в .gitignore.
+      3 «критических» Amazon Q отклонены с разбором: no-op-фикс
+      «TOCTOU», getattr для обязательного Pydantic-поля, тавтологичная
+      проверка secondary_element (2026-07-05)
 - [ ] Bэклог (Qodo, информационно): поиск корня проекта по
       маркер-файлам (.git/pyproject) вместо parents[3] — при смене
       структуры репо

@@ -73,3 +73,4 @@ Thumbs.db
 # Personal data — keep local, never commit to public repo
 .claude/personal/
 .claude/skills/me/
+reports/
