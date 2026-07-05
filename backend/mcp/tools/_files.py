@@ -27,10 +27,15 @@ def _safe_roots(*candidates: Path) -> tuple[Path, ...]:
 # deployment-dependent and may be '/'.
 _PROJECT_ROOT = Path(__file__).resolve().parents[3]
 
+# Report writes inside the project are confined to a dedicated subdir:
+# allowing the WHOLE project root would hand an HTTP caller a write
+# primitive over the source tree (overwrite backend/*.py etc.).
+_REPORTS_DIR = _PROJECT_ROOT / "reports"
+
 # Report files may only land under these roots.
 _ALLOWED_REPORT_ROOTS = _safe_roots(
     Path(tempfile.gettempdir()).resolve(),
-    _PROJECT_ROOT,
+    _REPORTS_DIR,
 )
 
 # Reading user-supplied local files (photos) is likewise confined; home
@@ -59,13 +64,22 @@ def _safe_report_path(output_path: Optional[str], prefix: str) -> Path:
         # %f + uuid suffix: concurrent calls must never collide.
         stamp = datetime.now().strftime("%Y%m%d_%H%M%S_%f")
         name = f"{prefix}_{stamp}_{uuid.uuid4().hex[:8]}.html"
-        return Path(tempfile.gettempdir()) / name
-    path = _resolve_user_path(output_path)
+        tmp_root = Path(tempfile.gettempdir()).resolve()
+        # The default branch honors the same anchor rule as user paths:
+        # a pathological TMPDIR=/ must not write into the fs root.
+        if tmp_root == Path(tmp_root.anchor):
+            tmp_root = _REPORTS_DIR
+        return tmp_root / name
+    p = Path(output_path)
+    # Relative report paths anchor to the dedicated reports dir.
+    path = (p if p.is_absolute() else _REPORTS_DIR / p).resolve()
     if not any(path.is_relative_to(root) for root in _ALLOWED_REPORT_ROOTS):
         allowed = ", ".join(str(r) for r in _ALLOWED_REPORT_ROOTS)
         raise ValueError(
             f"output_path must stay under: {allowed} (got {path})"
         )
+    if path.suffix.lower() != ".html":
+        raise ValueError(f"output_path must end with .html (got {path.name})")
     if path.is_dir():
         raise ValueError(f"output_path is a directory: {path}")
     return path
