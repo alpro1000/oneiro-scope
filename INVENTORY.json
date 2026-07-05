@@ -72,11 +72,16 @@
     },
     {
       "path": "docs/specs",
-      "dirs": 1,
+      "dirs": 2,
       "files": 0
     },
     {
       "path": "docs/specs/physiognomy",
+      "dirs": 0,
+      "files": 3
+    },
+    {
+      "path": "docs/specs/photo-max-extraction",
       "dirs": 0,
       "files": 3
     },
@@ -118,12 +123,12 @@
     {
       "path": "frontend/lib",
       "dirs": 0,
-      "files": 10
+      "files": 12
     },
     {
       "path": "frontend/components",
       "dirs": 0,
-      "files": 7
+      "files": 8
     },
     {
       "path": "frontend/messages",
@@ -157,7 +162,7 @@
     },
     {
       "path": "frontend/app/[locale]",
-      "dirs": 6,
+      "dirs": 7,
       "files": 2
     },
     {
@@ -182,6 +187,11 @@
     },
     {
       "path": "frontend/app/[locale]/checkout/success",
+      "dirs": 0,
+      "files": 1
+    },
+    {
+      "path": "frontend/app/[locale]/face",
       "dirs": 0,
       "files": 1
     },
@@ -218,7 +228,7 @@
     {
       "path": "frontend/__tests__",
       "dirs": 0,
-      "files": 2
+      "files": 3
     },
     {
       "path": "frontend/styles",
@@ -343,7 +353,7 @@
     {
       "path": "backend/services/physiognomy",
       "dirs": 1,
-      "files": 6
+      "files": 8
     },
     {
       "path": "backend/services/physiognomy/knowledge_base",
@@ -531,6 +541,6 @@
       "files": 7
     }
   ],
-  "total_dirs": 105,
-  "total_files": 377
+  "total_dirs": 107,
+  "total_files": 387
 }

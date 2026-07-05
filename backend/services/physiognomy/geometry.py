@@ -22,6 +22,8 @@ EYE_R_IN, EYE_R_OUT = 362, 263
 NOSE_BASE = 2
 ALA_L, ALA_R = 98, 327
 LIP_TOP, LIP_BOTTOM = 13, 14
+LIP_TOP_OUT, LIP_BOTTOM_OUT = 0, 17
+MOUTH_L, MOUTH_R = 61, 291
 
 MIN_POINTS = 468
 
@@ -75,6 +77,21 @@ def metrics_from_landmarks(pts: list[list[float]]) -> FaceMetrics:
 
     fwhr_h = abs(pts[LIP_TOP][1] - brow_y) or 1.0
 
+    # Anatomical lip thickness: vermilion heights (outer→inner mid
+    # points) over mouth width. Farkas anthropometry puts the neutral
+    # around (8.4 + 9.7) / 53 mm ≈ 0.34. A smile stretches the mouth
+    # and thins the vermilion (live case 2026-07-05: 0.18-0.21 smiling
+    # vs 0.23-0.31 neutral, same person), so the metric is only
+    # trusted on a near-closed mouth: inner gap ≤ 6% of mouth width.
+    mouth_w = _d(pts[MOUTH_L], pts[MOUTH_R])
+    lip_thickness = None
+    if mouth_w > 1e-6:
+        inner_gap = _d(pts[LIP_TOP], pts[LIP_BOTTOM])
+        if inner_gap / mouth_w <= 0.06:
+            vermilion = (_d(pts[LIP_TOP_OUT], pts[LIP_TOP])
+                         + _d(pts[LIP_BOTTOM], pts[LIP_BOTTOM_OUT]))
+            lip_thickness = round(vermilion / mouth_w, 4)
+
     return FaceMetrics(
         width_length=round(cheek_w / face_h, 4),
         fwhr=round(cheek_w / fwhr_h, 4),
@@ -85,4 +102,5 @@ def metrics_from_landmarks(pts: list[list[float]]) -> FaceMetrics:
         lower_court=round(lower / total, 4),
         nose_width=round(_d(pts[ALA_L], pts[ALA_R]) / cheek_w, 4),
         lip_fullness=round(_d(pts[LIP_TOP], pts[LIP_BOTTOM]) / face_h, 4),
+        lip_thickness=lip_thickness,
     )

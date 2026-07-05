@@ -104,6 +104,88 @@ Recent decisions:
 
 ## §9 Session log
 
+### 2026-07-05 — claude/photo-personality-analysis-2jy29b — auto-zoom detection, anatomical lip metric, longitudinal timeline
+
+**Trigger:** owner ran a live multi-batch photo reading (9 adult +
+5 childhood frames of himself) and asked (a) that the system zoom into
+photos and recognize traits itself instead of the questionnaire, and
+(b) special attention to childhood→adulthood changes.
+
+**Done:**
+- **Auto-zoom detection ladder** (`_landmarks_from_photo`): native →
+  2x/3x upscale on miss (archival prints), then a face-box crop
+  enlarged to ~600px face height for a sharper second pass. Metrics
+  are ratios, so crop-space coordinates need no back-mapping.
+- **Anatomical lip thickness** (`FaceMetrics.lip_thickness`): outer
+  vermilion (0→13 + 14→17) / mouth width (61–291), trusted only on a
+  near-closed mouth (inner gap ≤ 6% of mouth width) — closes the
+  known openness≠thickness gap from #144. Neutral ≈ 0.34 (Farkas);
+  thin ≤ 0.30, full ≥ 0.40, deviations-only like fWHR. Questionnaire
+  mouth answers now yield to geometry when a closed-mouth frame
+  measured the lips (`mouth_measured` param), pass through otherwise.
+- **Longitudinal module** (`services/physiognomy/longitudinal.py`) +
+  MCP tool `physiognomy_timeline`: per-period medians → KB readings
+  diffed by topic (stable / appeared / disappeared) + metric deltas;
+  adult-anthropometry caveat and disclaimer travel in every result.
+- Tests: 9 new (lip thin/full/open/questionnaire-precedence,
+  longitudinal diff, median with missing optionals, MCP timeline);
+  suite 32 passed.
+
+**Live validation (owner's own archive):** 5 closed-mouth adult
+frames gave lip_thickness 0.22–0.29 → mouth_thin, matching the
+owner's self-report given *before* the metric existed. Timeline over
+3 childhood vs 8 adult frames: stable — earth, dilated, wide-set
+eyes, compact forehead, thin lips, low fWHR; appeared — water
+secondary, lower court, athletic; disappeared — pyknic, middle-court
+dominance. Sharper zoom landmarks pushed one borderline frame
+(IMG_2029, asym 0.20) into the yaw gate — honest rejection.
+
+**Addendum (same session, photo-max-extraction):** owner asked for a
+system that extracts the maximum from any photo set, normalizes and
+calibrates what it can, and degrades honestly for the rest; spec
+written (`docs/specs/photo-max-extraction/`), core implemented:
+`services/physiognomy/aggregate.py` + MCP `analyze_face_archive` —
+detection ladder per photo, median profile, per-metric stability,
+per-reading `support` with honest denominators (optional metrics
+count only measurable frames: lips 5/5 closed-mouth, not 5/11), and
+a coverage map (measured / questionnaire-only / guided-scan-only /
+unreadable-in-principle, citing the evidence). Palace-zone texture
+experiments (raw spread ×160; within-frame cheek-normalized still
+×26; child-skin control indistinguishable from adult) permanently
+closed casual-photo qi-se/palace reading; controlled-capture pilot =
+Gate 5 in tasks.md. Live: 14 photos → 11 accepted in one call, earth
+consensus 9/11, eye_spacing the only ≤10%-spread metric across ~45
+years of frames.
+
+**Gate 4 shipped (same session): guided face scanner.** Frontend
+`/[locale]/face`: browser FaceLandmarker (@mediapipe/tasks-vision
+0.10.14; wasm+model from CDN, `NEXT_PUBLIC_FACE_MODEL_URL` override),
+live gates STRICTER than the server (yaw 0.15 vs 0.20, mouth 0.05 vs
+0.06, plus face-size and cheek-brightness symmetry) so every captured
+frame passes server-side; auto-capture 5 frames ≥600ms apart;
+landmarks-only upload (privacy-first) to the new
+POST /physiognomy/analyze-archive (≤24 frames, 422 when all frames
+rejected). Pure gate math extracted to `frontend/lib/face-gates.ts`
+(6 jest tests); `FaceScanner.tsx` with aria-live status,
+loading/error/retry states, mobile single-column; FacePage i18n ru/en
++ Header nav item. Backend physiognomy tests 37, frontend 13,
+tsc clean, `next build` green (route 4.18 kB).
+
+**Calibration finding (live, owner):** the thin-lips reading's
+«скупость на слова» clause was contradicted by the owner's report
+(«очень разговорчивый») — an expected 0.6-tier miss, resolved by
+life-context-wins. The composite itself carried the talkative signal
+3-voices-to-1 (dilated 12/12 + water + childhood pyknic vs the mouth
+clause). Lesson: dictionary voices conflict by design; portraits
+should present conflicting clauses side by side, never averaged into
+one verdict. Possible refinement (backlog): a narrative connective
+for openly contradicting readings.
+
+**Deferred:** brow/eyelid/cheekbone geometric detection (no reliable
+FaceMesh heuristic yet — questionnaire remains their path); server CV
+deps (mediapipe 0.10.14 pin uses legacy `solutions` API removed in
+0.10.20+) still optional, not in requirements.txt.
+
 ### 2026-07-05 — claude/top-cities-living-work-shxind — MCP hardening, two-layer reports, second-subject field test (PRs #136–#144)
 
 **Trigger:** continuation of the physiognomy session — owner asked to

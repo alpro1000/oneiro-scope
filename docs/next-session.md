@@ -5,9 +5,50 @@
 > that's easy to lose. Updated at the end of every substantial session
 > alongside `soul.md §9`.
 
-**Дата последнего обновления:** 2026-07-05
-**Последняя ветка работы:** `claude/top-cities-living-work-shxind` (PRs #135–#144 все замержены; см. §9 soul.md за 2026-07-05)
+**Дата последнего обновления:** 2026-07-05 (вечер)
+**Последняя ветка работы:** `claude/photo-personality-analysis-2jy29b` (auto-zoom + анатомия губ + лонгитюд; НЕ замержена — PR по запросу owner)
 **Текущий main HEAD:** physiognomy + MCP hardening + двухслойные отчёты, все CI-чеки зелёные
+
+**Новое в сессии 2026-07-05 (вечер, photo-personality-analysis):**
+- **Auto-zoom в `_landmarks_from_photo`:** нет лица → апскейл 2x/3x;
+  найдено → кроп бокса лица + увеличение до ~600px и повторный,
+  более точный прогон. Метрики — отношения, координаты кропа валидны.
+- **Анатомическая толщина губ** (`FaceMetrics.lip_thickness`):
+  внешняя кайма (0→13 + 14→17) / ширина рта (61–291), только при
+  закрытом рте (зазор ≤ 6% ширины) — закрыт бэклог из #144. Нейтраль
+  ≈ 0.34 (Farkas), thin ≤ 0.30 / full ≥ 0.40. Анкетный ответ рта
+  уступает геометрии, когда та измерила (`mouth_measured`).
+- **Лонгитюд:** `services/physiognomy/longitudinal.py` + MCP
+  `physiognomy_timeline` — медианы по периодам, diff чтений по topic
+  (stable/appeared/disappeared) + дельты метрик + caveat о взрослой
+  антропометрии. Live: детство→взрослость owner'а — стабильны earth /
+  dilated / широкие глаза / компактный лоб / тонкие губы; появились
+  вода-вторичная, нижний двор, атлетик; ушёл пикник.
+- Метрика губ валидирована вслепую: owner сказал «скорее тонкие» ДО
+  метрики; 5 закрытортных кадров дали 0.22–0.29 → mouth_thin. ✓
+- **photo-max-extraction (спека + ядро):** `docs/specs/
+  photo-max-extraction/` (Gates 1–3 done); `aggregate.py` + MCP
+  `analyze_face_archive` — весь фотоархив одной командой: лестница
+  детекции, медианный профиль, стабильность метрик, support с
+  честными знаменателями (губы 5/5 замеримых), coverage-карта
+  (measured / questionnaire / guided-scan / unreadable). Чтение
+  текстуры дворцов (ци-сэ) по бытовым фото закрыто ЭКСПЕРИМЕНТОМ:
+  сырой разброс ×160, с нормировкой на щёку ×26, детский контроль
+  неотличим от взрослого. Gate 5 = пилот controlled-capture текстуры
+  (отдельное решение owner'а).
+- **Gate 4 СДЕЛАН — guided-сканер** `/[locale]/face`: браузерный
+  FaceLandmarker (@mediapipe/tasks-vision 0.10.14, wasm+модель с CDN,
+  override через NEXT_PUBLIC_FACE_MODEL_URL); живые гейты СТРОЖЕ
+  серверных (yaw 0.15/0.20, рот 0.05/0.06 + размер лица + симметрия
+  света по щекам) → захваченный кадр всегда проходит сервер;
+  авто-захват 5 кадров ≥600мс; на сервер уходят ТОЛЬКО лендмарки
+  (privacy-first). Новый эндпоинт POST /physiognomy/analyze-archive
+  (кап 24 кадра, 422 если все кадры отбиты). Чистая гейт-математика в
+  `frontend/lib/face-gates.ts` (jest 6 тестов), клиент
+  `physiognomy-client.ts`, компонент `FaceScanner.tsx`, переводы
+  FacePage ru/en, пункт «Лицо/Face» в Header.
+- Тесты: backend physiognomy 37 passed; frontend 13 passed;
+  tsc --noEmit чисто.
 
 **🎯 ПЕРВАЯ ЗАДАЧА СЛЕДУЮЩЕЙ СЕССИИ (запрос owner):** прогнать фотографии
 друга «на чистую голову» — с нуля, end-to-end через замерженный
