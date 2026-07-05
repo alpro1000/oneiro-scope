@@ -9,11 +9,14 @@
 **Последняя ветка работы:** `claude/top-cities-living-work-shxind` (физиогномика: мянсян + западные школы; см. §9 soul.md за 2026-07-04)
 **Текущий main HEAD:** interactive astrocartography + все CI-чеки зелёные
 
-**Новое в этой сессии (physiognomy service):**
+**Новое в этой сессии (physiognomy service, боевое крещение и merge):**
 - Сервис `backend/services/physiognomy/`: KB мянсян (5 элементов, 3 двора, 12 дворцов, 20 черт) + западные школы (Лафатер/Корман/Кречмер/fWHR), каждая запись с источником; детерминированная геометрия FaceMesh-лендмарок (1.0) → трактовки традиций (0.6 — НИЖЕ symbol-dict 0.8, физиогномика научно не валидирована).
-- API `/api/v1/physiognomy`: GET /methods, POST /analyze (landmarks|metrics|анкета), POST /analyze-photo (501 без mediapipe → клиентский путь). Privacy-first: фото не покидает браузер.
-- Тесты: `test_physiognomy.py` — 9 passed. Спека: `docs/specs/physiognomy/`.
-- **Следующий шаг фичи:** frontend `/[locale]/face` — браузерный FaceLandmarker (@mediapipe/tasks-vision, модель в public/) + анкета-fallback; опционально LLM-пересказ (0.7).
+- API `/api/v1/physiognomy`: GET /methods, POST /analyze (landmarks|metrics|анкета), POST /analyze-photo (серверный CV; mediapipe==0.10.14 + opencv-headless ДОБАВЛЕНЫ в backend/requirements.txt → после деплоя фото считается автоматически; без них — 501 с клиентским путём). Privacy-first вариант: лендмарки в браузере.
+- **Yaw pose-gate** в geometry (асимметрия глаз >0.20 → отказ) — внедрён и проверен на живом кадре. Тесты: 10 passed.
+- Live-валидация на 21 фото владельца (1981–2026): 16 валидных замеров, профиль воспроизводим; 4 калибровочные находки (1 закрыта кодом, 3 в tasks.md: occlusion-флаги, двойная линейка межглазья, детский режим).
+- Досье владельца: `docs/clients/owner_profile_patterns.md` (натал, пояса ACG, календарь 2026–28, замеры, паттерн «застой воды» с протоколом и дедлайнами: 5 писем до 15.07, 5 оплат до 31.08, запуск в окно сен–окт 2026).
+- **Следующий шаг фичи:** frontend `/[locale]/face` — браузерный FaceLandmarker (@mediapipe/tasks-vision, модель в public/) + анкета-fallback; зонный рендер отчёта; опционально LLM-пересказ (0.7).
+- ⚠ Render: проверить, что build с mediapipe/opencv проходит по размеру/времени; если нет — убрать из requirements и жить клиентским путём (сервис деградирует в 501 корректно).
 
 **Предыдущая сессия (Phase 9, pattern features из живых тестов):**
 - Сервисы: `historic_tz.py` (советское декретное время из координат), `synastry.py` (совместимость, 5 измерений 0–100), `transit_arcs.py` (фазовый таймлайн pressure/support + turning point), `report.py` (JSON+HTML-отчёт одной кнопкой); `astrocartography.py` — clean-флаг удачи, `compare_locations`, `theme_scan`; `solar_return.suggest_locations`.

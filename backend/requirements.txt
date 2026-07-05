@@ -88,3 +88,8 @@ mne==1.7.0
 ruff==0.1.14
 black==23.12.1
 mypy==1.8.0
+
+# Physiognomy: server-side photo landmarks (optional heavy CV path;
+# /physiognomy/analyze-photo returns 501 without these)
+mediapipe==0.10.14
+opencv-python-headless>=4.9,<5.1

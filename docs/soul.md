@@ -133,9 +133,27 @@ Western physiognomy into OneiroScope with a photo-upload flow.
   disclaimer + forbidden-determinism words, questionnaire-only mode,
   no metric/questionnaire duplication).
 
+**Live validation (same session, 21 photos of the owner 1981–2026):**
+- 16 valid reads / 5 honest rejections; adult profile Earth-primary
+  16/16, Metal secondary — reproducible across cameras and decades;
+  same-day 4-photo series: fWHR spread 0.02 = method precision.
+- 4 calibration findings from real photos: child-face/fringe
+  (width_length off-scale), upper-court occlusion, yaw rotation,
+  ICD/eye conflating aperture size with spacing (resolved with PD
+  data: «55» was frame lens width 55-16, PD≈64).
+- **Yaw pose-gate implemented same session** (eye-width asymmetry
+  >0.20 → ValueError; 10 tests green) — rejected the rotated frame,
+  passed frontals. Remaining 3 findings in tasks.md backlog.
+- mediapipe==0.10.14 + opencv-headless added to backend requirements
+  so `/analyze-photo` computes server-side after deploy.
+- Owner profile dossier: `docs/clients/owner_profile_patterns.md`
+  (natal, ACG belts, 2026–28 calendar, photo measurements, water-
+  stagnation pattern + protocol with committed deadlines).
+
 **Deferred:** frontend `/[locale]/face` page (browser FaceLandmarker +
-questionnaire fallback), optional LLM narrative layer (0.7), optional
-mediapipe in prod requirements.
+questionnaire fallback), occlusion flags, dual-reference eye metric,
+child-face mode, zone-structured report renderer, optional LLM
+narrative layer (0.7).
 
 ---
 
