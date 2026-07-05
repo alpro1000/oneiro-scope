@@ -55,7 +55,7 @@
 | backend/api/v1 | 0 | 9 |
 | backend/models | 0 | 7 |
 | backend/mcp | 1 | 3 |
-| backend/mcp/tools | 0 | 8 |
+| backend/mcp/tools | 0 | 9 |
 | backend/alembic | 1 | 2 |
 | backend/alembic/versions | 0 | 1 |
 | backend/middleware | 0 | 2 |
@@ -80,7 +80,7 @@
 | backend/services/dreams/ai | 1 | 2 |
 | backend/services/dreams/ai/prompts | 0 | 1 |
 | backend/services/lunar | 0 | 3 |
-| backend/services/astrology | 6 | 22 |
+| backend/services/astrology | 6 | 23 |
 | backend/services/astrology/policies | 0 | 2 |
 | backend/services/astrology/archetypes | 0 | 9 |
 | backend/services/astrology/engine | 0 | 5 |
@@ -109,4 +109,4 @@
 | .github | 1 | 0 |
 | .github/workflows | 0 | 7 |
 
-**ИТОГО:** папок = 105, файлов = 375
+**ИТОГО:** папок = 105, файлов = 377

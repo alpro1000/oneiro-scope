@@ -163,6 +163,58 @@ def test_html_report_file_via_mcp_tool(tmp_path):
     assert res["primary_element"] == "earth"
 
 
+def test_report_has_narrative_then_theses_layers():
+    from backend.services.physiognomy.report import (
+        compose_narrative,
+        compose_theses,
+        render_html,
+    )
+
+    resp = SVC.analyze(PhysiognomyRequest(landmarks=synthetic_landmarks()))
+    paras = compose_narrative(resp, "ru")
+    theses = compose_theses(resp, "ru")
+    # Narrative weaves multiple readings into flowing paragraphs...
+    assert len(paras) >= 3
+    assert any("Основной тип лица" in p for p in paras)
+    # ...theses are the compact memorization layer.
+    assert any(x.startswith("Тип:") for x in theses)
+    html = render_html(resp, locale="ru")
+    # Order in the report: full portrait BEFORE the takeaways,
+    # takeaways before the raw data.
+    assert html.index("Портрет — развёрнуто") < html.index("Тезисы для запоминания")
+    assert html.index("Тезисы для запоминания") < html.index("Измерения")
+
+
+def test_horoscope_report_renderer_two_layers():
+    from datetime import date, datetime
+    from uuid import uuid4
+
+    from backend.services.astrology.horoscope_report import render_horoscope_html
+    from backend.services.astrology.schemas import (
+        HoroscopePeriod,
+        HoroscopeResponse,
+    )
+
+    resp = HoroscopeResponse(
+        id=uuid4(), period=HoroscopePeriod.DAILY,
+        period_start=date(2026, 7, 5), period_end=date(2026, 7, 5),
+        transits=[], retrograde_planets=[],
+        lunar_phase="waxing_gibbous", lunar_phase_display="Растущая Луна",
+        lunar_day=12,
+        summary="Развёрнутый текст дня.\nВторой абзац разбора.",
+        love_and_relationships="Про отношения подробно.",
+        career_and_finance="Про дело подробно.",
+        recommendations=["Тезис один", "Тезис два"],
+        created_at=datetime(2026, 7, 5, 12, 0),
+    )
+    html = render_horoscope_html(resp, locale="ru")
+    assert html.index("Полный разбор") < html.index("Тезисы для запоминания")
+    assert "Развёрнутый текст дня." in html
+    assert "Тезис один" in html
+    assert "Растущая Луна" in html
+    assert "Рефлексивно-развлекательный" in html  # disclaimer
+
+
 def test_wide_strong_jaw_classifies_earth():
     resp = SVC.analyze(PhysiognomyRequest(landmarks=synthetic_landmarks()))
     assert resp.primary_element == "earth"

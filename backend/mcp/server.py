@@ -47,6 +47,8 @@ mcp = FastMCP(
 mcp.tool()(a.calculate_natal_chart)
 mcp.tool()(a.generate_horoscope)
 mcp.tool()(a.forecast_event)
+mcp.tool()(a.horoscope_report)
+mcp.tool()(a.profile_report_file)
 mcp.tool()(a.list_event_types)
 mcp.tool()(a.list_horoscope_periods)
 

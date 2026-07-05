@@ -132,3 +132,98 @@ def list_event_types() -> list[str]:
 def list_horoscope_periods() -> list[str]:
     """List supported horoscope periods."""
     return [p.value for p in HoroscopePeriod]
+
+
+async def horoscope_report(
+    period: str = "daily",
+    target_date: Optional[str] = None,
+    locale: str = "ru",
+    natal_chart_id: Optional[str] = None,
+    output_path: Optional[str] = None,
+) -> dict[str, Any]:
+    """Generate a horoscope AND write a self-contained HTML report file
+    (print-to-PDF ready). Two-layer structure: full narrative first
+    (summary + love/career/health), then compact takeaways, then the
+    astronomical context (transits, retrogrades, Moon) with provenance.
+
+    Args: same as generate_horoscope, plus:
+        output_path: Where to write the .html; default — a unique file
+            in the system temp directory.
+    """
+    from backend.mcp.tools._files import write_report
+    from backend.services.astrology.horoscope_report import render_horoscope_html
+    from backend.services.astrology.schemas import HoroscopeRequest
+
+    req = HoroscopeRequest(
+        natal_chart_id=UUID(natal_chart_id) if natal_chart_id else None,
+        period=HoroscopePeriod(period),
+        target_date=date_cls.fromisoformat(target_date) if target_date else None,
+        locale=locale,
+    )
+    resp = await _svc().generate_horoscope(req)
+    html = render_horoscope_html(resp, locale=locale)
+    path = write_report(html, output_path, prefix=f"horoscope_{period}")
+    return {
+        "report_path": str(path),
+        "period": period,
+        "period_start": str(resp.period_start),
+        "period_end": str(resp.period_end),
+        "summary_preview": resp.summary[:200],
+        "recommendations_count": len(resp.recommendations),
+    }
+
+
+async def profile_report_file(
+    birth_date: str,
+    birth_time: Optional[str] = None,
+    birth_lat: float = 0.0,
+    birth_lon: float = 0.0,
+    birth_place: Optional[str] = None,
+    current_place_name: Optional[str] = None,
+    current_lat: Optional[float] = None,
+    current_lon: Optional[float] = None,
+    locale: str = "ru",
+    output_path: Optional[str] = None,
+) -> dict[str, Any]:
+    """Build the full astrology profile report (natal snapshot + birth/
+    current city relocation reads + thematic city shortlist + a year of
+    slow transits) AND write it as a self-contained HTML file.
+
+    Args:
+        birth_date: YYYY-MM-DD.
+        birth_time: HH:MM local time; noon fallback drops houses/angles.
+        birth_lat / birth_lon: Birth coordinates (drive historical tz).
+        birth_place: Display name of the birth place.
+        current_place_name / current_lat / current_lon: Optional city of
+            residence for the side-by-side relocation read.
+        locale: "ru" or "en".
+        output_path: Where to write the .html; default — temp dir.
+    """
+    from backend.mcp.tools._files import write_report
+    from backend.services.astrology.historic_tz import resolve_birth_moment
+    from backend.services.astrology.report import build_report, render_html
+
+    moment = resolve_birth_moment(
+        date_cls.fromisoformat(birth_date),
+        time_cls.fromisoformat(birth_time) if birth_time else None,
+        lat=birth_lat, lon=birth_lon,
+    )
+    current = (
+        (current_place_name or "current", current_lat, current_lon)
+        if current_lat is not None and current_lon is not None else None
+    )
+    report = build_report(
+        moment,
+        birth_place=(birth_place or "birth", birth_lat, birth_lon),
+        current_place=current,
+        locale=locale,
+    )
+    html = render_html(report, locale=locale)
+    path = write_report(html, output_path, prefix="astro_profile")
+    return {
+        "report_path": str(path),
+        "timezone": report["birth"]["timezone"],
+        "utc_offset_hours": report["birth"]["utc_offset_hours"],
+        "themes": {k: len(v) for k, v in report["themes"].items()},
+        "year_transits_count": len(report["year_transits"]),
+    }

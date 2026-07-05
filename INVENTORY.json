@@ -268,7 +268,7 @@
     {
       "path": "backend/mcp/tools",
       "dirs": 0,
-      "files": 8
+      "files": 9
     },
     {
       "path": "backend/alembic",
@@ -393,7 +393,7 @@
     {
       "path": "backend/services/astrology",
       "dirs": 6,
-      "files": 22
+      "files": 23
     },
     {
       "path": "backend/services/astrology/policies",
@@ -532,5 +532,5 @@
     }
   ],
   "total_dirs": 105,
-  "total_files": 375
+  "total_files": 377
 }
