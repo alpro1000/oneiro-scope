@@ -37,7 +37,7 @@
     },
     {
       "path": "docs",
-      "dirs": 5,
+      "dirs": 6,
       "files": 43
     },
     {
@@ -49,6 +49,11 @@
       "path": "docs/architecture/modules",
       "dirs": 0,
       "files": 3
+    },
+    {
+      "path": "docs/clients",
+      "dirs": 0,
+      "files": 1
     },
     {
       "path": "docs/steering",
@@ -531,6 +536,6 @@
       "files": 7
     }
   ],
-  "total_dirs": 105,
-  "total_files": 373
+  "total_dirs": 106,
+  "total_files": 374
 }
