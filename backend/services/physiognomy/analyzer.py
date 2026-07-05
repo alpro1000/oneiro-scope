@@ -199,8 +199,9 @@ def readings_from_answers(
     answers: FeatureAnswers, locale: str, skip_measurable: bool = False
 ) -> list[Reading]:
     """Questionnaire path. With `skip_measurable`, only traits that
-    geometry cannot see (eyelid, gaze, brows, ears, cheeks) are added
-    on top of metric readings."""
+    geometry cannot see (eyelid, gaze, brows, ears, cheeks — and the
+    mouth, since the geometric lip metric measures openness, not
+    thickness) are added on top of metric readings."""
     out: list[Reading] = []
     feats = MIANXIANG["features"]
 
@@ -214,7 +215,7 @@ def readings_from_answers(
 
     unmeasurable = {"heavy_eyelid", "steady_gaze", "brow_thickness",
                     "ears_large", "cheeks_full", "cheekbones_high",
-                    "eye_size"}
+                    "eye_size", "lip_fullness"}
     for field, value, kb_key in _ANSWER_MAP:
         if skip_measurable and field not in unmeasurable:
             continue
