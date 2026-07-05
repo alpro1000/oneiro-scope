@@ -185,9 +185,14 @@ def analyze_frames(
     primaries = [analyzer.element_scores(f)[0].element for f in frames]
     consensus = {e: primaries.count(e) for e in dict.fromkeys(primaries)}
 
+    from backend.services.physiognomy.dimensions import dimension_verdicts
+    mouth_frames = sum(1 for f in frames if f.lip_thickness is not None)
+    traits = dimension_verdicts(readings, loc, mouth_frames=mouth_frames)
+
     return {
         "frames_used": len(frames),
         "metrics": median.model_dump(),
+        "traits": traits,
         "signature": signature(median),
         "lens_note": (
             "Ширинные чтения (дилатированный тип, fWHR, вклад ширины в "
