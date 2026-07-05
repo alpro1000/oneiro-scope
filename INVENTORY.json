@@ -37,8 +37,13 @@
     },
     {
       "path": "docs",
-      "dirs": 6,
+      "dirs": 7,
       "files": 43
+    },
+    {
+      "path": "docs/design",
+      "dirs": 0,
+      "files": 1
     },
     {
       "path": "docs/architecture",
@@ -551,6 +556,6 @@
       "files": 7
     }
   ],
-  "total_dirs": 109,
-  "total_files": 391
+  "total_dirs": 110,
+  "total_files": 392
 }
