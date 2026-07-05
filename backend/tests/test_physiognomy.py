@@ -459,6 +459,22 @@ def test_aggregate_questionnaire_supplements_without_support():
     assert "support" not in by_topic["features.eyelid_heavy"]
 
 
+def test_aggregate_life_context_attaches_to_reading():
+    from backend.services.physiognomy.aggregate import analyze_frames
+
+    # Owner-verified reality rides WITH the dictionary clause — the
+    # calibration lesson: conflicting voices side by side, not averaged.
+    note = "разговорчив; молчит только о сокровенном"
+    res = analyze_frames(
+        [_adult_metrics()],
+        life_context={"features.eyes_wide_set": note},
+    )
+    by_topic = {r["topic"]: r for r in res["readings"]}
+    assert by_topic["features.eyes_wide_set"]["life_context"] == note
+    assert "life_context" not in by_topic["five_elements.earth"]
+    assert "lived reality" in res["provenance"]["life_context"]
+
+
 def test_mcp_archive_from_metric_dicts():
     import asyncio
 
