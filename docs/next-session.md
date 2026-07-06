@@ -5,11 +5,25 @@
 > that's easy to lose. Updated at the end of every substantial session
 > alongside `soul.md §9`.
 
-**Дата последнего обновления:** 2026-07-05 (вечер)
-**Последняя ветка работы:** `claude/photo-personality-analysis-2jy29b` (auto-zoom + анатомия губ + лонгитюд; НЕ замержена — PR по запросу owner)
+**Дата последнего обновления:** 2026-07-06
+**Последняя ветка работы:** `claude/astrogeography-relocation-8xbnax` (owner-консульт по астрогеографии + новый skill; docs/skill only, backend не тронут)
 **Текущий main HEAD:** physiognomy + MCP hardening + двухслойные отчёты, все CI-чеки зелёные
 
-**Новое в сессии 2026-07-05 (вечер, photo-personality-analysis):**
+**Новое в сессии 2026-07-06 (astrogeography-relocation):**
+- **Новый skill `.claude/skills/astro-relocation/SKILL.md`** — полный
+  playbook релокационного консульта: bootstrap venv для bare-checkout
+  (без MCP), точные сигнатуры модулей astrology, 10 канонических
+  запросов → рецепты, honesty-правила (clean-флаг, neutral ≠ blocked,
+  линии = физическое присутствие, контекст жизни > геометрии).
+- Live-прогон на owner-профиле: скан 109 городов Европы — MC-линия на
+  всём континенте только Uranus (пик Жирона/Бланес 0.37–0.4°);
+  ретро-верификация транзитов против реальных событий 2025 сошлась
+  (тройной Марс май-июнь + SR Сатурн/Нептун-7); SR-relocation diff
+  Клатови↔Омиш минимален (только Марс 7→6) — фиксировано в soul.md §9.
+- Backend/тесты не менялись — консульт шёл через документированный
+  fallback (direct imports, MOSEPH).
+
+**Предыдущая сессия 2026-07-05 (вечер, photo-personality-analysis):**
 - **Auto-zoom в `_landmarks_from_photo`:** нет лица → апскейл 2x/3x;
   найдено → кроп бокса лица + увеличение до ~600px и повторный,
   более точный прогон. Метрики — отношения, координаты кропа валидны.

@@ -104,6 +104,44 @@ Recent decisions:
 
 ## §9 Session log
 
+### 2026-07-06 — claude/astrogeography-relocation-8xbnax — owner relocation consult end-to-end + /astro-relocation skill
+
+**Trigger:** owner ran a full live astrogeography consult on his own
+chart (birth data via private profile — not committed): current/work/
+study cities, then country scans (CZ 15, ES 12, SI 7, PL 8 cities),
+then a 109-city pan-European sweep, retro-transit verification against
+real 2025 events (layoff, failed language exam, lawsuit), Solar Return
+2025/2026 location comparison (Klatovy vs Omiš vs counterfactuals),
+2-year timing windows, and career/business/practice strategy on top.
+
+**Done (code/infra):**
+- **`.claude/skills/astro-relocation/SKILL.md`** — new skill encoding
+  the whole playbook: venv bootstrap for bare checkouts (no MCP), exact
+  module signatures (`resolve_birth_moment`, `compare_locations`,
+  `theme_scan`, `acg_lines`, `find_transits`, `compute_arc`,
+  `solar_return`, `NatalChartCalculator(SwissEphemeris())`), the ten
+  canonical request→recipe mappings, and the honesty rules — written so
+  a smaller model can run the consult without rediscovery.
+
+**Method findings worth keeping (session-verified):**
+- Pan-European MC scan: for this chart class the ONLY MC line across
+  the whole continent is Uranus (peak Girona/Blanes 0.37–0.4°); no
+  Sun/Saturn/Jupiter-MC anywhere ⇒ "no employment line, only an
+  independence line" is itself the deliverable.
+- SR relocation diffs are usually small (Klatovy vs Omiš: only Mars
+  7th→6th; core 8th-house stack identical) — report the diff honestly
+  instead of overselling SR relocation.
+- Retro-verification worked: May–Jun 2025 layoff matched a triple Mars
+  hit (conj natal Saturn 05-20, sq Mars 05-27, sq Venus 06-08) inside
+  an SR with Saturn+Neptune on the 7th (lawsuit) and Uranus in the 9th
+  (failed exam). Good demo case for the Strategic Analyst posture.
+- Live user correction folded into the skill: ACG lines require
+  physical presence — remote work FOR a market ≠ activating that
+  market's line; and "neutral ≠ blocked" must be stated explicitly.
+
+**Out of scope:** no backend/service changes; consult ran via the
+documented fallback (direct imports, MOSEPH).
+
 ### 2026-07-05 — claude/photo-personality-analysis-2jy29b — auto-zoom detection, anatomical lip metric, longitudinal timeline
 
 **Trigger:** owner ran a live multi-batch photo reading (9 adult +
