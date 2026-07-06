@@ -467,7 +467,7 @@
     },
     {
       "path": ".claude/skills",
-      "dirs": 10,
+      "dirs": 11,
       "files": 1
     },
     {
@@ -497,6 +497,11 @@
     },
     {
       "path": ".claude/skills/lunar",
+      "dirs": 0,
+      "files": 1
+    },
+    {
+      "path": ".claude/skills/astro-relocation",
       "dirs": 0,
       "files": 1
     },
@@ -546,6 +551,6 @@
       "files": 7
     }
   ],
-  "total_dirs": 108,
-  "total_files": 389
+  "total_dirs": 109,
+  "total_files": 390
 }
