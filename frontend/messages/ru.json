@@ -130,7 +130,9 @@
     "dreams": "Сны",
     "pricing": "Тарифы",
     "account": "Аккаунт",
-    "face": "Лицо"
+    "face": "Лицо",
+    "themeDark": "Тёмная тема",
+    "themeLight": "Светлая тема"
   },
   "Pricing": {
     "title": "Выберите тариф",

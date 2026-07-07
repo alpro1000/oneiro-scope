@@ -12,17 +12,23 @@ const config: Config = {
     extend: {
       colors: {
         bg: 'var(--bg)',
+        bgDeep: 'var(--bg-deep)',
         surface: 'var(--surface)',
         surfaceStrong: 'var(--surface-strong)',
         gold: 'var(--gold)',
+        goldStrong: 'var(--gold-strong)',
         goldSoft: 'var(--gold-soft)',
         ink: 'var(--ink)',
         inkMuted: 'var(--ink-muted)',
+        inkFaint: 'var(--ink-faint)',
         accent: 'var(--accent)',
-        danger: 'var(--danger)'
+        danger: 'var(--danger)',
+        border: 'var(--border)'
       },
       fontFamily: {
-        sans: ['var(--font-sans)', 'Inter', 'sans-serif']
+        sans: ['var(--font-sans)', 'Inter', 'sans-serif'],
+        display: ['var(--font-display)', 'Georgia', 'serif'],
+        mono: ['var(--font-mono)', 'ui-monospace', 'monospace']
       },
       boxShadow: {
         gold: 'var(--shadow-gold)'

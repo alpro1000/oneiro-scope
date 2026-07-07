@@ -74,7 +74,7 @@ export default function TimezoneSelector({value, onChange, className = ''}: Prop
   if (loading) {
     return (
       <div className={`flex items-center gap-2 ${className}`}>
-        <span className="text-sm text-ink-muted">{t('loading')}</span>
+        <span className="text-sm text-inkMuted">{t('loading')}</span>
       </div>
     );
   }
@@ -121,7 +121,7 @@ export default function TimezoneSelector({value, onChange, className = ''}: Prop
         id="timezone-select"
         value={value}
         onChange={handleChange}
-        className="rounded-md border border-gold-soft bg-surfaceStrong px-3 py-2 text-sm text-ink transition-colors duration-200 focus:border-gold focus:outline-none focus:ring-2 focus:ring-gold focus:ring-opacity-50"
+        className="rounded-md border border-goldSoft bg-surfaceStrong px-3 py-2 text-sm text-ink transition-colors duration-200 focus:border-gold focus:outline-none focus:ring-2 focus:ring-gold focus:ring-opacity-50"
       >
         {Object.entries(grouped).map(([region, tzList]) => (
           <optgroup key={region} label={region}>
@@ -133,7 +133,7 @@ export default function TimezoneSelector({value, onChange, className = ''}: Prop
           </optgroup>
         ))}
       </select>
-      <p className="text-xs text-ink-muted">{t('description')}</p>
+      <p className="text-xs text-inkMuted">{t('description')}</p>
     </div>
   );
 }

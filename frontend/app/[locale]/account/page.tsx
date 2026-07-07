@@ -92,7 +92,7 @@ export default function AccountPage() {
 
   if (checking) {
     return (
-      <main className="mx-auto max-w-md px-4 py-16 text-center text-ink-muted">
+      <main className="mx-auto max-w-md px-4 py-16 text-center text-inkMuted">
         {t('loading')}
       </main>
     );
@@ -105,8 +105,8 @@ export default function AccountPage() {
       <main className="mx-auto max-w-2xl px-4 py-12 sm:px-6">
         <h1 className="text-2xl font-semibold text-gold">{t('title')}</h1>
 
-        <section className="mt-6 rounded-2xl border border-gold-soft bg-surface p-6">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-ink-muted">
+        <section className="mt-6 rounded-2xl border border-goldSoft bg-surface p-6">
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-inkMuted">
             {t('profile')}
           </h2>
           <dl className="mt-3 space-y-2 text-sm">
@@ -116,28 +116,28 @@ export default function AccountPage() {
           </dl>
         </section>
 
-        <section className="mt-6 rounded-2xl border border-gold-soft bg-surface p-6">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-ink-muted">
+        <section className="mt-6 rounded-2xl border border-goldSoft bg-surface p-6">
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-inkMuted">
             {t('subscription')}
           </h2>
           <div className="mt-3 flex items-center gap-3">
             <span
               className={`rounded-full px-3 py-1 text-xs font-semibold ${
                 tier === 'free'
-                  ? 'bg-surfaceStrong text-ink-muted'
+                  ? 'bg-surfaceStrong text-inkMuted'
                   : 'bg-gold text-bg'
               }`}
             >
               {t(`tiers.${tier}`)}
             </span>
             {sub?.status && (
-              <span className="text-xs text-ink-muted">
+              <span className="text-xs text-inkMuted">
                 {t('status')}: {sub.status}
               </span>
             )}
           </div>
           {sub?.current_period_end && (
-            <p className="mt-2 text-xs text-ink-muted">
+            <p className="mt-2 text-xs text-inkMuted">
               {sub.cancel_at_period_end ? t('endsOn') : t('renewsOn')}:{' '}
               {new Date(sub.current_period_end).toLocaleDateString(locale)}
             </p>
@@ -145,7 +145,7 @@ export default function AccountPage() {
           {tier === 'free' && (
             <Link
               href={`/${locale}/pricing`}
-              className="mt-4 inline-flex rounded-lg bg-gold px-4 py-2 text-sm font-semibold text-bg transition-colors hover:bg-gold-soft"
+              className="mt-4 inline-flex rounded-lg bg-gold px-4 py-2 text-sm font-semibold text-bg transition-colors hover:bg-goldSoft"
             >
               {t('upgrade')}
             </Link>
@@ -155,7 +155,7 @@ export default function AccountPage() {
         <button
           type="button"
           onClick={handleLogout}
-          className="mt-6 text-sm text-ink-muted underline transition-colors hover:text-gold"
+          className="mt-6 text-sm text-inkMuted underline transition-colors hover:text-gold"
         >
           {t('logout')}
         </button>
@@ -169,7 +169,7 @@ export default function AccountPage() {
       <h1 className="text-2xl font-semibold text-gold">
         {mode === 'login' ? t('loginTitle') : t('registerTitle')}
       </h1>
-      <p className="mt-2 text-sm text-ink-muted">
+      <p className="mt-2 text-sm text-inkMuted">
         {mode === 'login' ? t('loginSubtitle') : t('registerSubtitle')}
       </p>
 
@@ -214,7 +214,7 @@ export default function AccountPage() {
         <button
           type="submit"
           disabled={busy}
-          className="inline-flex w-full items-center justify-center rounded-lg bg-gold px-4 py-2.5 text-sm font-semibold text-bg transition-colors hover:bg-gold-soft disabled:opacity-60"
+          className="inline-flex w-full items-center justify-center rounded-lg bg-gold px-4 py-2.5 text-sm font-semibold text-bg transition-colors hover:bg-goldSoft disabled:opacity-60"
         >
           {busy
             ? t('submitting')
@@ -230,7 +230,7 @@ export default function AccountPage() {
           setMode(mode === 'login' ? 'register' : 'login');
           setError(null);
         }}
-        className="mt-4 text-sm text-ink-muted transition-colors hover:text-gold"
+        className="mt-4 text-sm text-inkMuted transition-colors hover:text-gold"
       >
         {mode === 'login' ? t('switchToRegister') : t('switchToLogin')}
       </button>
@@ -241,7 +241,7 @@ export default function AccountPage() {
 function Row({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex justify-between gap-4">
-      <dt className="text-ink-muted">{label}</dt>
+      <dt className="text-inkMuted">{label}</dt>
       <dd className="text-ink">{value}</dd>
     </div>
   );
@@ -273,9 +273,9 @@ function Field({
         onChange={(e) => onChange(e.target.value)}
         autoComplete={autoComplete}
         required={required}
-        className="mt-1 w-full rounded-lg border border-gold-soft bg-surface px-3 py-2 text-sm text-ink outline-none focus:border-gold focus-visible:ring-2 focus-visible:ring-gold"
+        className="mt-1 w-full rounded-lg border border-goldSoft bg-surface px-3 py-2 text-sm text-ink outline-none focus:border-gold focus-visible:ring-2 focus-visible:ring-gold"
       />
-      {hint && <span className="mt-1 block text-xs text-ink-muted">{hint}</span>}
+      {hint && <span className="mt-1 block text-xs text-inkMuted">{hint}</span>}
     </label>
   );
 }

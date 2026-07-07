@@ -1,34 +1,102 @@
 :root {
-  --bg: #0d0d0d;
-  --surface: rgba(19, 19, 19, 0.92);
-  --surface-strong: #161616;
-  --gold: #c3a56a;
-  --gold-soft: rgba(195, 165, 106, 0.24);
-  --ink: #f2ede1;
-  --ink-muted: rgba(242, 237, 225, 0.72);
+  /* Palette from the Claude-Design mockup (2026-07, docs/design/product-design-brief.md):
+     deep indigo/navy dark theme + warm cream light theme, single brass
+     accent across all four sections (spend boldness in one place),
+     ember reserved for warnings/danger. Token NAMES kept stable so
+     existing bg-surface/text-ink/border-gold-soft usages across the
+     app re-theme for free; only VALUES changed. */
+  --bg: #10132c;
+  --bg-deep: #0a0c20;
+  --surface: #1b2050;
+  --surface-strong: #232a62;
+  --gold: #d9b24c;
+  --gold-strong: #f0ce72;
+  --gold-soft: rgba(217, 178, 76, 0.24);
+  --ink: #f1ecda;
+  --ink-muted: #a9b0d6;
+  --ink-faint: #6e76a6;
   --accent: #6ac3c0;
-  --danger: #e05f6b;
-  --font-sans: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  --radius-lg: 24px;
-  --radius-md: 16px;
-  --radius-sm: 12px;
+  --danger: #c2645a;
+  --border: #323a73;
+  --grid-line: rgba(217, 178, 76, 0.1);
+
+  --font-sans: var(--font-body, "Inter"), system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-display: var(--font-display-face, "Fraunces"), ui-serif, Georgia, serif;
+  --font-mono: var(--font-mono-face, "IBM Plex Mono"), ui-monospace, "SFMono-Regular", monospace;
+
+  --radius-lg: 20px;
+  --radius-md: 12px;
+  --radius-sm: 6px;
   --spacing-xs: 0.5rem;
   --spacing-sm: 0.75rem;
   --spacing-md: 1rem;
   --spacing-lg: 1.5rem;
   --spacing-xl: 2rem;
-  --shadow-gold: 0 24px 48px -24px rgba(195, 165, 106, 0.6);
-  --transition-slow: all 0.3s ease-in-out;
-  --transition-fast: all 0.18s ease-in-out;
+  --shadow-gold: 0 20px 50px -20px rgba(0, 0, 0, 0.6);
+  --ease: cubic-bezier(0.22, 0.8, 0.28, 1);
+  --transition-slow: all 0.3s var(--ease);
+  --transition-fast: all 0.18s var(--ease);
   --widget-max-width: 720px;
+
+  /* Camera-viewfinder chrome for the face scanner: fixed across both
+     themes, like real camera hardware UI, never follows the page theme. */
+  --cam-bg: #0a0c20;
+  --cam-border: rgba(240, 206, 114, 0.28);
+  --cam-accent: #f0ce72;
+  --cam-caption-bg: rgba(10, 12, 32, 0.72);
 }
 
 @media (prefers-color-scheme: light) {
   :root {
-    --bg: #f5f2e9;
-    --surface: rgba(255, 255, 255, 0.92);
+    --bg: #f6efdd;
+    --bg-deep: #efe6cd;
+    --surface: #fbf7ec;
     --surface-strong: #ffffff;
-    --ink: #111111;
-    --ink-muted: rgba(17, 17, 17, 0.68);
+    --gold: #a9761e;
+    --gold-strong: #86590f;
+    --gold-soft: rgba(169, 118, 30, 0.16);
+    --ink: #241f14;
+    --ink-muted: #5c5236;
+    --ink-faint: #8a8062;
+    --danger: #8b3a3a;
+    --border: #dccfa6;
+    --grid-line: rgba(169, 118, 30, 0.14);
+    --shadow-gold: 0 20px 45px -22px rgba(90, 70, 20, 0.35);
   }
+}
+
+/* Explicit theme override for a manual toggle (see ThemeToggle.tsx) —
+   must win over the OS media query in both directions. */
+:root[data-theme="dark"] {
+  --bg: #10132c;
+  --bg-deep: #0a0c20;
+  --surface: #1b2050;
+  --surface-strong: #232a62;
+  --gold: #d9b24c;
+  --gold-strong: #f0ce72;
+  --gold-soft: rgba(217, 178, 76, 0.24);
+  --ink: #f1ecda;
+  --ink-muted: #a9b0d6;
+  --ink-faint: #6e76a6;
+  --danger: #c2645a;
+  --border: #323a73;
+  --grid-line: rgba(217, 178, 76, 0.1);
+  --shadow-gold: 0 20px 50px -20px rgba(0, 0, 0, 0.6);
+}
+
+:root[data-theme="light"] {
+  --bg: #f6efdd;
+  --bg-deep: #efe6cd;
+  --surface: #fbf7ec;
+  --surface-strong: #ffffff;
+  --gold: #a9761e;
+  --gold-strong: #86590f;
+  --gold-soft: rgba(169, 118, 30, 0.16);
+  --ink: #241f14;
+  --ink-muted: #5c5236;
+  --ink-faint: #8a8062;
+  --danger: #8b3a3a;
+  --border: #dccfa6;
+  --grid-line: rgba(169, 118, 30, 0.14);
+  --shadow-gold: 0 20px 45px -22px rgba(90, 70, 20, 0.35);
 }

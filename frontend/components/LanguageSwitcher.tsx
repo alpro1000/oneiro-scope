@@ -42,7 +42,7 @@ export default function LanguageSwitcher() {
           className={`rounded px-2 py-1 text-xs font-medium transition-colors ${
             currentLocale === locale.code
               ? 'bg-gold text-bg'
-              : 'text-ink-muted hover:text-gold'
+              : 'text-inkMuted hover:text-gold'
           }`}
           aria-label={`Switch to ${locale.label}`}
         >

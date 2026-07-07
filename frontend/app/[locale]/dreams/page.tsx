@@ -62,41 +62,11 @@ export default function DreamsPage() {
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-slate-900 via-indigo-950 to-slate-900">
-      {/* Header */}
-      <header className="fixed top-0 left-0 right-0 z-50 bg-slate-900/80 backdrop-blur-md border-b border-slate-700/50">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <Link href={`/${locale}`} className="flex items-center gap-2">
-            <span className="text-2xl">☽</span>
-            <span className="text-xl font-semibold text-white">OneiroScope</span>
-          </Link>
-
-          <div className="flex gap-2">
-            <Link
-              href={`/en/dreams`}
-              className={`px-3 py-1.5 rounded-lg text-sm transition-colors ${
-                locale === 'en'
-                  ? 'bg-indigo-500/20 text-indigo-400'
-                  : 'text-slate-400 hover:text-white'
-              }`}
-            >
-              EN
-            </Link>
-            <Link
-              href={`/ru/dreams`}
-              className={`px-3 py-1.5 rounded-lg text-sm transition-colors ${
-                locale === 'ru'
-                  ? 'bg-indigo-500/20 text-indigo-400'
-                  : 'text-slate-400 hover:text-white'
-              }`}
-            >
-              RU
-            </Link>
-          </div>
-        </div>
-      </header>
+      {/* Site-wide nav/theme/language now come from the shared Header
+          in the root layout — this page no longer duplicates it. */}
 
       {/* Content */}
-      <div className="pt-24 pb-12 px-4">
+      <div className="pt-8 pb-12 px-4">
         <div className="container mx-auto max-w-3xl">
           {/* Title */}
           <motion.div

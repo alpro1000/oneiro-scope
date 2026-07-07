@@ -43,18 +43,18 @@ export default function LoadingModal({isOpen, message = 'Calculating...'}: Props
             animate={{scale: 1, opacity: 1}}
             exit={{scale: 0.9, opacity: 0}}
             transition={{delay: 0.1}}
-            className="relative mx-4 flex max-w-md flex-col items-center gap-6 rounded-xl border border-gold-soft bg-surface p-8 shadow-gold"
+            className="relative mx-4 flex max-w-md flex-col items-center gap-6 rounded-xl border border-goldSoft bg-surface p-8 shadow-gold"
           >
             {/* Spinner */}
             <div className="relative h-16 w-16">
-              <div className="absolute inset-0 animate-spin rounded-full border-4 border-gold-soft border-t-gold"></div>
+              <div className="absolute inset-0 animate-spin rounded-full border-4 border-goldSoft border-t-gold"></div>
               <div className="absolute inset-2 animate-pulse rounded-full border-2 border-gold/20"></div>
             </div>
 
             {/* Message */}
             <div className="text-center">
               <h3 className="mb-2 text-lg font-semibold text-ink">{message}</h3>
-              <p className="text-sm text-ink-muted">
+              <p className="text-sm text-inkMuted">
                 Пожалуйста, подождите...
               </p>
             </div>

@@ -171,6 +171,72 @@ loading/error/retry states, mobile single-column; FacePage i18n ru/en
 + Header nav item. Backend physiognomy tests 37, frontend 13,
 tsc clean, `next build` green (route 4.18 kB).
 
+**Design applied to the real frontend (same session):** owner brought
+back a Claude-Design mockup (`oneiroscopemockups.html`, all 4 sections
+as tabs in one file — a deliberate mockup-format device, not a nav
+spec) built from the design briefs above. Asked owner to confirm one
+real architectural fork before touching code: keep the existing 4
+Next.js routes + reskin the shared top `Header`, vs. adopt the
+mockup's single-shell rail nav site-wide. Owner chose the former.
+
+Applied (Phase 1 — tokens/header/shared components, not yet wired
+into page bodies):
+- `tokens.css` repalette: deep-navy/gold-brass dark theme, warm-cream
+  light theme (mockup's exact hex values), single accent across all
+  sections per "spend boldness in one place" (deliberately NOT the
+  per-section-hue the brief originally suggested — better call).
+  Added explicit `:root[data-theme]` overrides alongside the existing
+  `prefers-color-scheme` media query, per artifact-design fundamentals.
+- Fraunces (display, latin-only — no Cyrillic on Google Fonts, RU
+  headings fall back to Georgia intentionally) + Inter (body,
+  latin+cyrillic) + IBM Plex Mono (data/numbers, latin+cyrillic) via
+  `next/font/google` in the root layout — also fixes a latent bug:
+  `--font-sans` referenced `"Inter"` but the font was never actually
+  loaded anywhere.
+- `ThemeInit` (sync inline script, no flash) + `ThemeToggle` (client
+  component, localStorage-persisted) — the site had NO manual theme
+  toggle before, only OS preference.
+- Two shared components per the brief's "one component, not three":
+  `ConfidenceBadge` and `FindingCard` (measurement → tradition quote →
+  plain language → plus/minus, optional `lifeContext` override).
+- `Header` reskinned: Fraunces wordmark, mono uppercase tagline,
+  active-route pill styling, theme toggle wired in (icon-only on
+  mobile — see bug below).
+
+Two real pre-existing bugs found and fixed while touching this code:
+1. **`border-gold-soft`/`text-ink-muted` (hyphenated) never generated
+   any CSS** — Tailwind only emits the literal camelCase config key
+   (`goldSoft`/`inkMuted`), confirmed by compiling the utility CSS
+   directly. This silently no-op'd across 11 files (Header, LunarWidget,
+   LoadingModal, TimezoneSelector, LanguageSwitcher, pricing/account/
+   checkout/calendar pages) since whenever they were written — the
+   gold border accent has never actually rendered anywhere on the
+   site. Fixed with a scoped sed pass, verified zero hyphenated forms
+   remain (`--gold-soft`/`--ink-muted` as actual CSS custom property
+   names in tailwind.config.ts are correct and untouched).
+2. **Home/Dreams/Astrology pages each duplicated the site nav** in a
+   hardcoded `fixed` local `<header>` (slate/amber, no tokens) on top
+   of the shared sticky `Header` from the layout — invisible before
+   because both were similar dark colors; became a visible double-
+   header the moment Header got its new gold/navy skin. Removed the
+   three duplicates (pure nav duplication, zero unique content),
+   adjusted the freed-up top padding.
+3. **Mobile overflow**: ThemeToggle (full label) + 5-locale switcher +
+   hamburger didn't fit under ~400px — confirmed via Playwright at
+   390px and 320px. Fixed by making ThemeToggle icon-only below `sm:`
+   (label returns at desktop width) + `overflow-x-auto` safety net on
+   the mobile controls row.
+
+Verified with Playwright screenshots (not just tsc/build): Calendar
+and Pricing (already token-driven pages) now show the full mockup
+aesthetic correctly in both themes; Home/Dreams/Astrology/Face show
+the reskinned header correctly but their BODY content is still
+hardcoded legacy slate/indigo Tailwind classes, untouched — that
+page-body migration + wiring FindingCard into dream symbols/event
+factors/face traits is explicitly Phase 2, not done here.
+tsc clean, jest 23/23, `next build` green both before and after the
+header-duplication fix.
+
 **Whole-product design brief (same session):** owner asked to extend
 the design pass beyond face-reading to the whole product — natal
 chart, lunar calendar, dream analysis. Added

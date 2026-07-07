@@ -72,7 +72,7 @@ export default function PricingPage() {
         <h1 className="text-3xl font-semibold tracking-tight text-gold sm:text-4xl">
           {t('title')}
         </h1>
-        <p className="mt-4 text-ink-muted">{t('subtitle')}</p>
+        <p className="mt-4 text-inkMuted">{t('subtitle')}</p>
       </header>
 
       {error && (
@@ -91,7 +91,7 @@ export default function PricingPage() {
             className={`relative flex flex-col rounded-2xl border p-6 ${
               plan.featured
                 ? 'border-gold bg-surfaceStrong shadow-lg'
-                : 'border-gold-soft bg-surface'
+                : 'border-goldSoft bg-surface'
             }`}
           >
             {plan.featured && (
@@ -103,10 +103,10 @@ export default function PricingPage() {
             <p className="mt-2 flex items-baseline gap-1">
               <span className="text-3xl font-bold text-ink">{plan.price}</span>
               {plan.key !== 'free' && (
-                <span className="text-sm text-ink-muted">{t('perMonth')}</span>
+                <span className="text-sm text-inkMuted">{t('perMonth')}</span>
               )}
             </p>
-            <p className="mt-2 min-h-[2.5rem] text-sm text-ink-muted">
+            <p className="mt-2 min-h-[2.5rem] text-sm text-inkMuted">
               {t(`plans.${plan.key}.tagline`)}
             </p>
 
@@ -115,10 +115,10 @@ export default function PricingPage() {
                 const on = MATRIX[plan.key][fk];
                 return (
                   <li key={fk} className="flex items-center gap-2">
-                    <span className={on ? 'text-gold' : 'text-ink-muted/50'}>
+                    <span className={on ? 'text-gold' : 'text-inkMuted/50'}>
                       {on ? '✓' : '—'}
                     </span>
-                    <span className={on ? 'text-ink' : 'text-ink-muted/60 line-through'}>
+                    <span className={on ? 'text-ink' : 'text-inkMuted/60 line-through'}>
                       {t(`features.${fk}`)}
                     </span>
                   </li>
@@ -132,8 +132,8 @@ export default function PricingPage() {
               disabled={loadingSlug !== null}
               className={`mt-6 inline-flex w-full items-center justify-center rounded-lg px-4 py-2.5 text-sm font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${
                 plan.featured
-                  ? 'bg-gold text-bg hover:bg-gold-soft'
-                  : 'border border-gold-soft text-gold hover:bg-surfaceStrong'
+                  ? 'bg-gold text-bg hover:bg-goldSoft'
+                  : 'border border-goldSoft text-gold hover:bg-surfaceStrong'
               }`}
             >
               {loadingSlug === plan.slug
@@ -147,9 +147,9 @@ export default function PricingPage() {
       </div>
 
       {/* One-time products */}
-      <section className="mt-12 rounded-2xl border border-gold-soft bg-surface p-6">
+      <section className="mt-12 rounded-2xl border border-goldSoft bg-surface p-6">
         <h2 className="text-lg font-semibold text-gold">{t('oneTime.title')}</h2>
-        <p className="mt-1 text-sm text-ink-muted">{t('oneTime.subtitle')}</p>
+        <p className="mt-1 text-sm text-inkMuted">{t('oneTime.subtitle')}</p>
         <div className="mt-4 grid gap-4 sm:grid-cols-2">
           <OneTimeCard
             title={t('oneTime.natalPdf.name')}
@@ -172,7 +172,7 @@ export default function PricingPage() {
         </div>
       </section>
 
-      <p className="mt-8 text-center text-xs text-ink-muted">
+      <p className="mt-8 text-center text-xs text-inkMuted">
         {t('disclaimer')}{' '}
         <Link href={`/${locale}/account`} className="text-gold underline hover:no-underline">
           {t('manageLink')}
@@ -200,10 +200,10 @@ function OneTimeCard({
   busyLabel: string;
 }) {
   return (
-    <div className="flex items-center justify-between gap-4 rounded-xl border border-gold-soft bg-surfaceStrong p-4">
+    <div className="flex items-center justify-between gap-4 rounded-xl border border-goldSoft bg-surfaceStrong p-4">
       <div>
         <h3 className="font-medium text-ink">{title}</h3>
-        <p className="mt-0.5 text-xs text-ink-muted">{desc}</p>
+        <p className="mt-0.5 text-xs text-inkMuted">{desc}</p>
       </div>
       <div className="flex flex-col items-end gap-1">
         <span className="text-lg font-bold text-gold">{price}</span>
@@ -211,7 +211,7 @@ function OneTimeCard({
           type="button"
           onClick={onBuy}
           disabled={busy}
-          className="rounded-md border border-gold-soft px-3 py-1.5 text-xs font-semibold text-gold transition-colors hover:bg-surface disabled:opacity-60"
+          className="rounded-md border border-goldSoft px-3 py-1.5 text-xs font-semibold text-gold transition-colors hover:bg-surface disabled:opacity-60"
         >
           {busy ? busyLabel : buyLabel}
         </button>

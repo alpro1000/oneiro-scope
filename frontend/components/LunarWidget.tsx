@@ -160,7 +160,7 @@ export default function LunarWidget({initialData, locale}: Props) {
 
   return (
     <section
-      className="w-full max-w-3xl rounded-lg border border-gold-soft bg-surface p-6 shadow-gold backdrop-blur-lg transition-[box-shadow,transform] duration-lunar ease-lunar hover:shadow-[0_32px_64px_-28px_rgba(195,165,106,0.75)]"
+      className="w-full max-w-3xl rounded-lg border border-goldSoft bg-surface p-6 shadow-gold backdrop-blur-lg transition-[box-shadow,transform] duration-lunar ease-lunar hover:shadow-[0_32px_64px_-28px_rgba(195,165,106,0.75)]"
       aria-live="polite"
     >
       <div className="flex flex-col gap-6">
@@ -174,23 +174,23 @@ export default function LunarWidget({initialData, locale}: Props) {
             <h2 className="text-3xl font-semibold text-ink">
               {currentData.phase}
             </h2>
-            <p className="text-sm text-ink-muted">{t('updated', {date: formattedDate})}</p>
+            <p className="text-sm text-inkMuted">{t('updated', {date: formattedDate})}</p>
           </div>
-          <div className="flex flex-col items-start gap-2 rounded-md border border-gold-soft bg-surfaceStrong px-4 py-3">
+          <div className="flex flex-col items-start gap-2 rounded-md border border-goldSoft bg-surfaceStrong px-4 py-3">
             <span className="text-xs font-medium uppercase tracking-[0.25em] text-gold">
               {t('lunarDay', {day: currentData.lunar_day})}
             </span>
             {currentData.lunar_day_start_time && (
-              <span className="text-xs text-gold-soft">
+              <span className="text-xs text-goldSoft">
                 {currentData.lunar_day_start_time} — {t('lunarDayStarted', {day: currentData.lunar_day})}
               </span>
             )}
-            <span className="text-sm text-ink-muted">{currentData.description}</span>
+            <span className="text-sm text-inkMuted">{currentData.description}</span>
           </div>
         </div>
 
         {/* Recommendation */}
-        <div className="rounded-md border border-gold-soft bg-surfaceStrong p-4 text-sm leading-relaxed text-ink">
+        <div className="rounded-md border border-goldSoft bg-surfaceStrong p-4 text-sm leading-relaxed text-ink">
           <h3 className="mb-2 text-sm font-semibold uppercase tracking-[0.2em] text-gold">
             {t('recommendation')}
           </h3>
@@ -217,8 +217,8 @@ export default function LunarWidget({initialData, locale}: Props) {
             transition={{duration: 0.3, ease: 'easeInOut'}}
             className="overflow-hidden"
           >
-            <div className="mt-6 rounded-lg border border-gold-soft bg-surfaceStrong p-4">
-              {isLoading && <p className="text-sm text-ink-muted">{t('loading')}</p>}
+            <div className="mt-6 rounded-lg border border-goldSoft bg-surfaceStrong p-4">
+              {isLoading && <p className="text-sm text-inkMuted">{t('loading')}</p>}
               {status === 'error' && (
                 <div className="flex flex-col items-start gap-3">
                   <p role="alert" className="text-sm text-danger">
@@ -267,7 +267,7 @@ export default function LunarWidget({initialData, locale}: Props) {
                               {formatDateLabel(day.date, locale)}
                             </td>
                             <td className="py-2 pr-4 align-top font-medium text-gold">{day.lunar_day}</td>
-                            <td className="py-2 pr-4 align-top text-ink-muted">{day.description}</td>
+                            <td className="py-2 pr-4 align-top text-inkMuted">{day.description}</td>
                             <td className="py-2 align-top text-ink">{day.recommendation}</td>
                           </tr>
                         );

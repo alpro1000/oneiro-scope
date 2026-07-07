@@ -38,14 +38,14 @@ export default async function CalendarPage({params}: {params: {locale: string}})
         <h1 className="text-4xl font-semibold tracking-tight text-gold sm:text-5xl">
           {t('title')}
         </h1>
-        <p className="max-w-2xl text-base text-ink-muted sm:text-lg">{t('subtitle')}</p>
+        <p className="max-w-2xl text-base text-inkMuted sm:text-lg">{t('subtitle')}</p>
       </header>
       {initialError ? (
         <div className="w-full max-w-3xl rounded-lg border border-danger/40 bg-danger/5 p-6 text-center text-ink">
           <p className="text-lg font-semibold text-danger">{t('error.title')}</p>
-          <p className="mt-2 text-sm text-ink-muted">{t('error.subtitle')}</p>
-          <p className="mt-4 text-xs text-ink-muted">{initialError}</p>
-          <p className="mt-6 text-sm text-ink-muted">{t('error.cta')}</p>
+          <p className="mt-2 text-sm text-inkMuted">{t('error.subtitle')}</p>
+          <p className="mt-4 text-xs text-inkMuted">{initialError}</p>
+          <p className="mt-6 text-sm text-inkMuted">{t('error.cta')}</p>
         </div>
       ) : (
         initial && <LunarWidget initialData={initial} locale={locale} />

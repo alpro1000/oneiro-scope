@@ -5,9 +5,51 @@
 > that's easy to lose. Updated at the end of every substantial session
 > alongside `soul.md §9`.
 
-**Дата последнего обновления:** 2026-07-05 (вечер)
-**Последняя ветка работы:** `claude/photo-personality-analysis-2jy29b` (auto-zoom + анатомия губ + лонгитюд; НЕ замержена — PR по запросу owner)
-**Текущий main HEAD:** physiognomy + MCP hardening + двухслойные отчёты, все CI-чеки зелёные
+**Дата последнего обновления:** 2026-07-06
+**Последняя ветка работы:** `claude/photo-personality-analysis-2jy29b` (design-system Phase 1; НЕ замержена — PR по запросу owner)
+**Текущий main HEAD:** physiognomy (auto-zoom, signature, trait verdicts, life-context, скилл /face-portrait) — всё замержено
+
+**Новое в сессии 2026-07-06 (дизайн-система, Phase 1):**
+- Owner принёс дизайн-макет от Claude Design (`oneiroscopemockups.html`)
+  по мастер-брифу `docs/design/product-design-brief.md`. Решено (owner
+  выбрал): 4 маршрута остаются, реальный рельс-нав из макета НЕ
+  внедряем — переодеваем только общий `Header.tsx`.
+- **Токены** (`tokens.css`): новая палитра тёмная/светлая точно из
+  макета, единый золотисто-латунный акцент (не по разделам — так
+  лучше). Добавлены `:root[data-theme]` оверрайды рядом с media query.
+- **Шрифты через `next/font/google`**: Fraunces (display, только
+  latin — на Cyrillic заголовках честный fallback на Georgia) + Inter
+  (body) + IBM Plex Mono (данные/числа) — заодно закрыт скрытый баг:
+  `--font-sans` ссылался на "Inter", который никогда не подключался.
+- **ThemeToggle** (новый — на сайте раньше не было ручного
+  переключения темы) + `ThemeInit` (sync-скрипт без вспышки).
+- **Два общих компонента** по брифу: `ConfidenceBadge`, `FindingCard`
+  (измерение → цитата традиции → человеческий текст → плюсы/минусы,
+  опционально `lifeContext`) — ПОКА НЕ вставлены ни на одну страницу
+  (это Phase 2: символы снов, факторы прогноза события, черты лица).
+- **2 реальных пре-существующих бага найдены и исправлены**:
+  1. `border-gold-soft`/`text-ink-muted` (через дефис) никогда не
+     генерировали CSS — Tailwind принимает только camelCase
+     (`goldSoft`/`inkMuted`). Золотая рамка НИКОГДА не рендерилась
+     нигде на сайте. Исправлено sed-проходом по 11 файлам.
+  2. Home/Dreams/Astrology дублировали навигацию — свой хардкод
+     `fixed`-хедер (`slate`/`amber`) поверх общего `Header` из layout.
+     Убрано (чистое дублирование, уникального контента не было).
+  3. Мобильный оverflow: тоггл темы + 5 языков + гамбургер не
+     помещались < 400px — тоггл стал иконкой без текста на мобильном.
+- Проверено визуально Playwright-скриншотами (не только tsc/build):
+  Calendar и Pricing (уже на токенах) выглядят как макет, в обеих
+  темах; Home/Dreams/Astrology/Face — шапка переодета, но ТЕЛО
+  страниц всё ещё на хардкоженых slate/indigo классах — не трогали.
+- Тесты: 3 новых файла (ConfidenceBadge, FindingCard, ThemeToggle),
+  jest 23/23, tsc чисто, `next build` зелёный дважды.
+
+**Phase 2 (следующая сессия, кандидат):** вписать `FindingCard` в
+реальные данные — символы снов (dreams/page.tsx), факторы прогноза
+события (astrology/page.tsx, вкладка «Прогноз события»), признаки
+лица (`FaceScanner.tsx`); мигрировать тело Home/Dreams/Astrology/Face
+с хардкод-slate на токены; собрать натальное колесо/лунное колесо
+(SVG, как в макете).
 
 **Новое в сессии 2026-07-05 (вечер, photo-personality-analysis):**
 - **Auto-zoom в `_landmarks_from_photo`:** нет лица → апскейл 2x/3x;

@@ -1,14 +1,16 @@
 'use client';
 
 import Link from 'next/link';
-import {useParams} from 'next/navigation';
+import {useParams, usePathname} from 'next/navigation';
 import {useTranslations} from 'next-intl';
 import {useState} from 'react';
 import LanguageSwitcher from './LanguageSwitcher';
+import ThemeToggle from './ThemeToggle';
 
 export default function Header() {
   const params = useParams();
   const locale = params?.locale as string || 'ru';
+  const pathname = usePathname();
   const t = useTranslations('Header');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -23,14 +25,14 @@ export default function Header() {
   ];
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-gold-soft bg-surface/95 backdrop-blur supports-[backdrop-filter]:bg-surface/80">
+    <header className="sticky top-0 z-50 w-full border-b border-goldSoft bg-surface/95 backdrop-blur supports-[backdrop-filter]:bg-surface/80">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
         {/* Logo */}
         <Link
           href={`/${locale}`}
           className="flex items-center gap-3 transition-opacity hover:opacity-80"
         >
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-gold to-gold-soft shadow-md">
+          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-gold to-goldSoft shadow-md">
             <svg
               viewBox="0 0 100 100"
               className="h-6 w-6"
@@ -47,32 +49,41 @@ export default function Header() {
             </svg>
           </div>
           <div className="hidden sm:flex flex-col">
-            <span className="text-lg font-semibold tracking-tight text-gold">
+            <span className="font-display text-lg font-semibold tracking-tight text-gold">
               OneiroScope
             </span>
-            <span className="text-xs text-ink-muted tracking-wide">
+            <span className="font-mono text-[0.65rem] uppercase tracking-widest text-inkFaint">
               {t('tagline')}
             </span>
           </div>
         </Link>
 
-        {/* Desktop Navigation + Language Switcher */}
-        <div className="hidden md:flex items-center gap-4">
-          <nav className="flex items-center gap-2">
+        {/* Desktop Navigation + Theme + Language Switcher */}
+        <div className="hidden md:flex items-center gap-3">
+          <nav className="flex items-center gap-1">
             {navLinks.map((link) => (
-              <NavLink key={link.href} href={link.href} label={link.label} />
+              <NavLink
+                key={link.href}
+                href={link.href}
+                label={link.label}
+                active={pathname === link.href}
+              />
             ))}
           </nav>
+          <ThemeToggle />
           <LanguageSwitcher />
         </div>
 
-        {/* Mobile: Language Switcher + Hamburger */}
-        <div className="flex md:hidden items-center gap-2">
+        {/* Mobile: Theme + Language Switcher + Hamburger. Scrolls
+            horizontally as a safety net on the narrowest phones rather
+            than clipping controls off-screen. */}
+        <div className="flex md:hidden items-center gap-2 overflow-x-auto">
+          <ThemeToggle />
           <LanguageSwitcher />
           <button
             type="button"
             onClick={() => setMobileMenuOpen((prev) => !prev)}
-            className="inline-flex items-center justify-center rounded-md p-2 text-gold hover:bg-surfaceStrong focus:outline-none focus-visible:ring-2 focus-visible:ring-gold"
+            className="inline-flex shrink-0 items-center justify-center rounded-md p-2 text-gold hover:bg-surfaceStrong focus:outline-none focus-visible:ring-2 focus-visible:ring-gold"
             aria-expanded={mobileMenuOpen}
             aria-label={mobileMenuOpen ? 'Close menu' : 'Open menu'}
           >
@@ -91,7 +102,7 @@ export default function Header() {
 
       {/* Mobile Menu */}
       {mobileMenuOpen && (
-        <nav className="md:hidden border-t border-gold-soft bg-surface/95 backdrop-blur">
+        <nav className="md:hidden border-t border-goldSoft bg-surface/95 backdrop-blur">
           <div className="flex flex-col px-4 py-2 space-y-1">
             {navLinks.map((link) => (
               <Link
@@ -110,11 +121,16 @@ export default function Header() {
   );
 }
 
-function NavLink({href, label}: {href: string; label: string}) {
+function NavLink({href, label, active}: {href: string; label: string; active: boolean}) {
   return (
     <Link
       href={href}
-      className="rounded-md px-3 py-2 text-sm font-medium text-ink transition-colors hover:bg-surfaceStrong hover:text-gold focus:outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2 focus-visible:ring-offset-bg"
+      aria-current={active ? 'page' : undefined}
+      className={`rounded-full border px-3.5 py-1.5 text-sm font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2 focus-visible:ring-offset-bg ${
+        active
+          ? 'border-border bg-surfaceStrong text-goldStrong shadow-gold'
+          : 'border-transparent text-inkMuted hover:bg-surface hover:text-ink'
+      }`}
     >
       {label}
     </Link>
