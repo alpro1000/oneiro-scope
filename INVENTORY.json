@@ -133,12 +133,12 @@
     {
       "path": "frontend/lib",
       "dirs": 0,
-      "files": 12
+      "files": 13
     },
     {
       "path": "frontend/components",
       "dirs": 0,
-      "files": 12
+      "files": 14
     },
     {
       "path": "frontend/messages",
@@ -238,7 +238,7 @@
     {
       "path": "frontend/__tests__",
       "dirs": 0,
-      "files": 6
+      "files": 8
     },
     {
       "path": "frontend/styles",
@@ -557,5 +557,5 @@
     }
   ],
   "total_dirs": 110,
-  "total_files": 399
+  "total_files": 404
 }

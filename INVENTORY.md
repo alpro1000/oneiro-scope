@@ -28,8 +28,8 @@
 | frontend | 12 | 13 |
 | frontend/i18n | 0 | 1 |
 | frontend/e2e | 0 | 2 |
-| frontend/lib | 0 | 12 |
-| frontend/components | 0 | 12 |
+| frontend/lib | 0 | 13 |
+| frontend/components | 0 | 14 |
 | frontend/messages | 0 | 5 |
 | frontend/public | 0 | 2 |
 | frontend/.storybook | 0 | 2 |
@@ -49,7 +49,7 @@
 | frontend/app/api | 2 | 0 |
 | frontend/app/api/lunar | 0 | 1 |
 | frontend/app/api/timezones | 0 | 1 |
-| frontend/__tests__ | 0 | 6 |
+| frontend/__tests__ | 0 | 8 |
 | frontend/styles | 0 | 2 |
 | config | 0 | 2 |
 | backend | 11 | 5 |
@@ -114,4 +114,4 @@
 | .github | 1 | 0 |
 | .github/workflows | 0 | 7 |
 
-**ИТОГО:** папок = 110, файлов = 399
+**ИТОГО:** папок = 110, файлов = 404
