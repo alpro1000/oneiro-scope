@@ -28,15 +28,16 @@
 | frontend | 12 | 13 |
 | frontend/i18n | 0 | 1 |
 | frontend/e2e | 0 | 2 |
-| frontend/lib | 0 | 13 |
-| frontend/components | 0 | 14 |
+| frontend/lib | 0 | 14 |
+| frontend/components | 0 | 15 |
 | frontend/messages | 0 | 5 |
-| frontend/public | 0 | 2 |
+| frontend/public | 0 | 1 |
 | frontend/.storybook | 0 | 2 |
 | frontend/types | 0 | 2 |
 | frontend/stories | 0 | 1 |
 | frontend/app | 2 | 2 |
-| frontend/app/[locale] | 7 | 2 |
+| frontend/app/[locale] | 8 | 2 |
+| frontend/app/[locale]/astrocartography | 0 | 1 |
 | frontend/app/[locale]/pricing | 0 | 1 |
 | frontend/app/[locale]/dreams | 0 | 1 |
 | frontend/app/[locale]/account | 0 | 1 |
@@ -114,4 +115,4 @@
 | .github | 1 | 0 |
 | .github/workflows | 0 | 7 |
 
-**ИТОГО:** папок = 110, файлов = 404
+**ИТОГО:** папок = 111, файлов = 406

@@ -133,12 +133,12 @@
     {
       "path": "frontend/lib",
       "dirs": 0,
-      "files": 13
+      "files": 14
     },
     {
       "path": "frontend/components",
       "dirs": 0,
-      "files": 14
+      "files": 15
     },
     {
       "path": "frontend/messages",
@@ -148,7 +148,7 @@
     {
       "path": "frontend/public",
       "dirs": 0,
-      "files": 2
+      "files": 1
     },
     {
       "path": "frontend/.storybook",
@@ -172,8 +172,13 @@
     },
     {
       "path": "frontend/app/[locale]",
-      "dirs": 7,
+      "dirs": 8,
       "files": 2
+    },
+    {
+      "path": "frontend/app/[locale]/astrocartography",
+      "dirs": 0,
+      "files": 1
     },
     {
       "path": "frontend/app/[locale]/pricing",
@@ -556,6 +561,6 @@
       "files": 7
     }
   ],
-  "total_dirs": 110,
-  "total_files": 404
+  "total_dirs": 111,
+  "total_files": 406
 }
