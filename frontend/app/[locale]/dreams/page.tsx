@@ -7,10 +7,29 @@ import Link from 'next/link';
 import { motion } from 'framer-motion';
 import VoiceInput from '../../../components/VoiceInput';
 import LoadingModal from '../../../components/LoadingModal';
+import ConfidenceBadge from '../../../components/ConfidenceBadge';
+import FindingCard from '../../../components/FindingCard';
 import {
   analyzeDream,
   type DreamAnalysisResponse,
+  type DreamSymbol,
 } from '../../../lib/dreams-client';
+
+// Hall/Van de Castle category labels (matches backend/api/v1/dreams.py
+// /categories endpoint) — used only to caption a symbol's measurement
+// line, not to invent new content.
+const CATEGORY_LABEL: Record<string, {ru: string; en: string}> = {
+  characters: {ru: 'персонажи', en: 'characters'},
+  social_interactions: {ru: 'взаимодействия', en: 'social interactions'},
+  activities: {ru: 'действия', en: 'activities'},
+  striving: {ru: 'цели', en: 'striving'},
+  misfortunes: {ru: 'неудачи', en: 'misfortunes'},
+  good_fortunes: {ru: 'удачи', en: 'good fortunes'},
+  emotions: {ru: 'эмоции', en: 'emotions'},
+  settings: {ru: 'место действия', en: 'settings'},
+  objects: {ru: 'предметы', en: 'objects'},
+  descriptive_elements: {ru: 'детали', en: 'descriptive elements'},
+};
 
 export default function DreamsPage() {
   const t = useTranslations('DreamsPage');
@@ -60,8 +79,26 @@ export default function DreamsPage() {
     return emotions[emotion]?.[locale as 'ru' | 'en'] || emotion;
   };
 
+  const symbolCardProps = (symbol: DreamSymbol) => {
+    const ru = locale === 'ru';
+    const category = CATEGORY_LABEL[symbol.category]?.[ru ? 'ru' : 'en'] || symbol.category;
+    return {
+      title: symbol.symbol.charAt(0).toUpperCase() + symbol.symbol.slice(1),
+      seenLabel: ru ? 'Система увидела' : 'System saw',
+      seenText: ru
+        ? `категория: ${category} · значимость ${Math.round(symbol.significance * 100)}%`
+        : `category: ${category} · significance ${Math.round(symbol.significance * 100)}%`,
+      traditionQuote: ru ? symbol.interpretation_ru : symbol.interpretation_en,
+      traditionSource: symbol.archetype
+        ? (ru
+            ? `юнгианская школа толкования снов · архетип: ${symbol.archetype}`
+            : `Jungian dream interpretation · archetype: ${symbol.archetype}`)
+        : (ru ? 'традиционные сонники' : 'traditional dream dictionaries'),
+    };
+  };
+
   return (
-    <main className="min-h-screen bg-gradient-to-b from-slate-900 via-indigo-950 to-slate-900">
+    <main className="oneiro-grid-bg min-h-screen bg-bg">
       {/* Site-wide nav/theme/language now come from the shared Header
           in the root layout — this page no longer duplicates it. */}
 
@@ -74,10 +111,10 @@ export default function DreamsPage() {
             animate={{ opacity: 1, y: 0 }}
             className="text-center mb-8"
           >
-            <h1 className="text-3xl md:text-4xl font-bold text-white mb-3">
+            <h1 className="font-display text-3xl font-semibold text-ink mb-3 md:text-4xl">
               {t('title')}
             </h1>
-            <p className="text-slate-300">{t('subtitle')}</p>
+            <p className="text-inkMuted">{t('subtitle')}</p>
           </motion.div>
 
           {/* Input Section */}
@@ -85,7 +122,7 @@ export default function DreamsPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="bg-slate-800/50 border border-slate-700/50 rounded-2xl p-6 mb-6"
+            className="rounded-2xl border border-border bg-surface p-6 mb-6"
           >
             {/* Textarea */}
             <textarea
@@ -94,25 +131,25 @@ export default function DreamsPage() {
               placeholder={t('inputPlaceholder')}
               className="
                 w-full h-48 p-4
-                bg-slate-900/50 border border-slate-700
-                rounded-xl text-white placeholder-slate-500
-                focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent
+                bg-bgDeep border border-border
+                rounded-xl text-ink placeholder-inkFaint
+                focus:outline-none focus:ring-2 focus:ring-gold focus:border-transparent
                 resize-none
               "
             />
 
             {/* Dream date (optional) */}
             <div className="mt-4">
-              <label className="block text-slate-400 text-sm mb-2">
+              <label className="block text-inkMuted text-sm mb-2">
                 {locale === 'ru' ? 'Дата сна (опционально)' : 'Dream date (optional)'}
               </label>
               <input
                 type="date"
                 value={dreamDate}
                 onChange={(e) => setDreamDate(e.target.value)}
-                className="w-full md:w-auto p-3 bg-slate-900/50 border border-slate-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full md:w-auto p-3 bg-bgDeep border border-border rounded-lg text-ink focus:outline-none focus:ring-2 focus:ring-gold"
               />
-              <p className="text-slate-500 text-xs mt-1">
+              <p className="text-inkFaint text-xs mt-1">
                 {locale === 'ru'
                   ? 'Указание даты добавит лунный контекст к анализу'
                   : 'Adding date will include lunar context in analysis'}
@@ -131,11 +168,10 @@ export default function DreamsPage() {
                 onClick={handleAnalyze}
                 disabled={!dreamText.trim() || isAnalyzing}
                 className="
-                  px-8 py-3 rounded-xl
-                  bg-gradient-to-r from-indigo-500 to-purple-600
-                  text-white font-medium
-                  transition-all duration-300
-                  hover:from-indigo-600 hover:to-purple-700
+                  px-8 py-3 rounded-full
+                  bg-gold text-bgDeep font-semibold
+                  transition-colors duration-200
+                  hover:bg-goldStrong
                   disabled:opacity-50 disabled:cursor-not-allowed
                   flex items-center gap-2
                 "
@@ -143,7 +179,7 @@ export default function DreamsPage() {
                 {isAnalyzing ? (
                   <>
                     <motion.div
-                      className="w-5 h-5 border-2 border-white border-t-transparent rounded-full"
+                      className="w-5 h-5 border-2 border-bgDeep border-t-transparent rounded-full"
                       animate={{ rotate: 360 }}
                       transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
                     />
@@ -159,7 +195,7 @@ export default function DreamsPage() {
             </div>
 
             {/* Methodology note */}
-            <p className="text-slate-500 text-sm mt-4 text-center">
+            <p className="text-inkFaint text-sm mt-4 text-center">
               {t('methodology')}
             </p>
           </motion.div>
@@ -169,9 +205,9 @@ export default function DreamsPage() {
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="mb-6 p-4 bg-red-900/30 border border-red-500/30 rounded-xl"
+              className="mb-6 p-4 bg-danger/10 border border-danger/30 rounded-xl"
             >
-              <p className="text-red-300">{error}</p>
+              <p className="text-danger">{error}</p>
             </motion.div>
           )}
 
@@ -183,66 +219,59 @@ export default function DreamsPage() {
               className="space-y-6"
             >
               {/* Summary Card */}
-              <div className="bg-gradient-to-br from-indigo-900/30 to-purple-900/30 border border-indigo-500/30 rounded-2xl p-6">
-                <h2 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
+              <div className="rounded-2xl border border-border bg-surface p-6">
+                <h2 className="font-display text-xl font-semibold text-ink mb-4 flex items-center gap-2">
                   <span>🌙</span>
                   {locale === 'ru' ? 'Краткое резюме' : 'Summary'}
                 </h2>
-                <p className="text-slate-300 text-lg">{analysis.summary}</p>
+                <p className="text-inkMuted text-lg">{analysis.summary}</p>
 
                 {/* Emotion indicator */}
                 <div className="mt-4 flex items-center gap-4">
                   <div className="flex items-center gap-2">
-                    <span className="text-slate-400 text-sm">
-                      {locale === 'ru' ? 'Эмоция:' : 'Emotion:'}
+                    <span className="font-mono text-[0.68rem] uppercase tracking-widest text-inkFaint">
+                      {locale === 'ru' ? 'Эмоция' : 'Emotion'}
                     </span>
-                    <span className="text-indigo-400 font-medium">
+                    <span className="font-display font-semibold text-goldStrong">
                       {getEmotionLabel(analysis.primary_emotion)}
                     </span>
                   </div>
-                  <div className="flex-1 h-2 bg-slate-700 rounded-full overflow-hidden max-w-32">
+                  <div className="flex-1 h-2 bg-border rounded-full overflow-hidden max-w-32">
                     <div
-                      className="h-full bg-indigo-500 rounded-full"
+                      className="h-full bg-gold rounded-full"
                       style={{ width: `${analysis.emotion_intensity * 100}%` }}
                     />
                   </div>
+                </div>
+
+                <div className="mt-4">
+                  <ConfidenceBadge
+                    score={0.7}
+                    source={locale === 'ru' ? 'сопоставление символов · ИИ-интерпретация' : 'symbol matching · AI interpretation'}
+                  />
                 </div>
               </div>
 
               {/* Symbols */}
               {analysis.symbols.length > 0 && (
-                <div className="bg-slate-800/50 border border-slate-700/50 rounded-2xl p-6">
-                  <h3 className="text-lg font-semibold text-white mb-4">
+                <div className="findings-section">
+                  <h3 className="font-display text-lg font-semibold text-ink mb-4">
                     {locale === 'ru' ? 'Найденные символы' : 'Found Symbols'}
                   </h3>
-                  <div className="space-y-3">
-                    {analysis.symbols.slice(0, 5).map((symbol, i) => (
-                      <div key={i} className="p-3 bg-slate-900/50 rounded-lg">
-                        <div className="flex items-center justify-between mb-1">
-                          <span className="text-indigo-400 font-medium capitalize">
-                            {symbol.symbol}
-                          </span>
-                          {symbol.archetype && (
-                            <span className="text-xs text-slate-500 bg-slate-800 px-2 py-1 rounded">
-                              {symbol.archetype}
-                            </span>
-                          )}
-                        </div>
-                        <p className="text-slate-300 text-sm">
-                          {locale === 'ru' ? symbol.interpretation_ru : symbol.interpretation_en}
-                        </p>
-                      </div>
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                    {analysis.symbols.slice(0, 6).map((symbol, i) => (
+                      <FindingCard key={i} {...symbolCardProps(symbol)} />
                     ))}
                   </div>
                 </div>
               )}
 
               {/* Full Interpretation */}
-              <div className="bg-slate-800/50 border border-slate-700/50 rounded-2xl p-6">
-                <h3 className="text-lg font-semibold text-white mb-4">
+              <div className="rounded-2xl border border-border bg-surface p-6">
+                <h3 className="font-display text-lg font-semibold text-ink mb-4">
                   {locale === 'ru' ? 'Полная интерпретация' : 'Full Interpretation'}
                 </h3>
-                <div className="text-slate-300 space-y-3">
+                <div className="text-inkMuted space-y-3">
                   {analysis.interpretation.split('\n').map((line, i) => (
                     <p key={i}>{line}</p>
                   ))}
@@ -253,15 +282,15 @@ export default function DreamsPage() {
               {(analysis.themes.length > 0 || analysis.archetypes.length > 0) && (
                 <div className="grid md:grid-cols-2 gap-4">
                   {analysis.themes.length > 0 && (
-                    <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-4">
-                      <h4 className="text-white font-medium mb-2">
+                    <div className="rounded-xl border border-border bg-surface p-4">
+                      <h4 className="font-display font-semibold text-ink mb-2">
                         {locale === 'ru' ? 'Темы' : 'Themes'}
                       </h4>
                       <div className="flex flex-wrap gap-2">
                         {analysis.themes.map((theme, i) => (
                           <span
                             key={i}
-                            className="px-3 py-1 bg-indigo-900/50 text-indigo-300 rounded-full text-sm"
+                            className="px-3 py-1 rounded-full border border-border bg-surfaceStrong font-mono text-xs text-inkMuted"
                           >
                             {theme}
                           </span>
@@ -270,15 +299,15 @@ export default function DreamsPage() {
                     </div>
                   )}
                   {analysis.archetypes.length > 0 && (
-                    <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-4">
-                      <h4 className="text-white font-medium mb-2">
+                    <div className="rounded-xl border border-border bg-surface p-4">
+                      <h4 className="font-display font-semibold text-ink mb-2">
                         {locale === 'ru' ? 'Архетипы' : 'Archetypes'}
                       </h4>
                       <div className="flex flex-wrap gap-2">
                         {analysis.archetypes.map((archetype, i) => (
                           <span
                             key={i}
-                            className="px-3 py-1 bg-purple-900/50 text-purple-300 rounded-full text-sm capitalize"
+                            className="px-3 py-1 rounded-full border border-gold font-mono text-xs text-goldStrong capitalize"
                           >
                             {archetype.replace(/_/g, ' ')}
                           </span>
@@ -291,23 +320,19 @@ export default function DreamsPage() {
 
               {/* Lunar Context */}
               {analysis.lunar_context && (
-                <div className="bg-gradient-to-r from-indigo-900/30 to-slate-800/50 border border-indigo-500/20 rounded-xl p-4">
-                  <h4 className="text-white font-medium mb-2 flex items-center gap-2">
+                <div className="rounded-xl border border-border bg-surface p-4">
+                  <h4 className="font-display font-semibold text-ink mb-2 flex items-center gap-2">
                     <span>🌙</span>
                     {locale === 'ru' ? 'Лунный контекст' : 'Lunar Context'}
                   </h4>
-                  <div className="flex items-center gap-4 text-sm text-slate-400 mb-2">
-                    <span>
-                      {locale === 'ru'
-                        ? `${analysis.lunar_context.lunar_day}-й лунный день`
-                        : `Lunar day ${analysis.lunar_context.lunar_day}`}
-                    </span>
-                    <span>{analysis.lunar_context.lunar_phase}</span>
-                    {analysis.lunar_context.moon_sign && (
-                      <span>{analysis.lunar_context.moon_sign}</span>
-                    )}
+                  <div className="mb-2 rounded-md border border-border bg-bgDeep px-3 py-2 font-mono text-xs text-inkMuted">
+                    {locale === 'ru'
+                      ? `${analysis.lunar_context.lunar_day}-й лунный день`
+                      : `Lunar day ${analysis.lunar_context.lunar_day}`}
+                    {' · '}{analysis.lunar_context.lunar_phase}
+                    {analysis.lunar_context.moon_sign && ` · ${analysis.lunar_context.moon_sign}`}
                   </div>
-                  <p className="text-slate-300 text-sm">
+                  <p className="text-inkMuted text-sm">
                     {locale === 'ru'
                       ? analysis.lunar_context.interpretation_ru
                       : analysis.lunar_context.interpretation_en}
@@ -317,14 +342,14 @@ export default function DreamsPage() {
 
               {/* Recommendations */}
               {analysis.recommendations.length > 0 && (
-                <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-4">
-                  <h4 className="text-white font-medium mb-3">
+                <div className="rounded-xl border border-border bg-surface p-4">
+                  <h4 className="font-display font-semibold text-ink mb-3">
                     {locale === 'ru' ? 'Рекомендации' : 'Recommendations'}
                   </h4>
                   <ul className="space-y-2">
                     {analysis.recommendations.map((rec, i) => (
-                      <li key={i} className="text-slate-300 text-sm flex items-start gap-2">
-                        <span className="text-indigo-400">•</span>
+                      <li key={i} className="text-inkMuted text-sm flex items-start gap-2">
+                        <span className="text-gold">—</span>
                         {rec}
                       </li>
                     ))}
@@ -333,7 +358,7 @@ export default function DreamsPage() {
               )}
 
               {/* Methodology footer */}
-              <p className="text-center text-slate-500 text-xs">
+              <p className="text-center text-inkFaint text-xs">
                 {analysis.methodology}
               </p>
             </motion.div>
@@ -343,7 +368,7 @@ export default function DreamsPage() {
           <div className="text-center mt-8">
             <Link
               href={`/${locale}`}
-              className="text-slate-400 hover:text-white transition-colors"
+              className="text-inkMuted hover:text-gold transition-colors"
             >
               ← {locale === 'ru' ? 'На главную' : 'Back to Home'}
             </Link>

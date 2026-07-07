@@ -49,4 +49,25 @@ describe('FindingCard', () => {
     expect(screen.getByText('Custom plus')).toBeInTheDocument();
     expect(screen.getByText('Custom minus')).toBeInTheDocument();
   });
+
+  it('renders measurement + tradition only when the source data has no gloss or plus/minus (dream symbols)', () => {
+    const {title, seenText, traditionQuote, traditionSource} = base;
+    render(
+      <FindingCard
+        title={title}
+        seenText={seenText}
+        traditionQuote={traditionQuote}
+        traditionSource={traditionSource}
+      />
+    );
+    expect(screen.getByText(traditionQuote)).toBeInTheDocument();
+    expect(screen.queryByText('Что усиливает')).not.toBeInTheDocument();
+    expect(screen.queryByText('На что обратить внимание')).not.toBeInTheDocument();
+  });
+
+  it('shows only the supplied side of the balance grid when just one is given', () => {
+    render(<FindingCard {...base} minusText={undefined} />);
+    expect(screen.getByText('Что усиливает')).toBeInTheDocument();
+    expect(screen.queryByText('На что обратить внимание')).not.toBeInTheDocument();
+  });
 });

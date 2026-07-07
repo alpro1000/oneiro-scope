@@ -145,13 +145,13 @@ export default function CityAutocomplete({
           placeholder={placeholder}
           disabled={disabled}
           className={`
-            w-full p-3 pr-10 bg-slate-900/50 border rounded-lg text-white placeholder-slate-500
+            w-full p-3 pr-10 bg-bgDeep border rounded-lg text-ink placeholder-inkFaint
             focus:outline-none focus:ring-2 transition-all
             ${selectedCity
               ? 'border-green-500 focus:ring-green-500'
               : showError
                 ? 'border-red-500 focus:ring-red-500'
-                : 'border-slate-700 focus:ring-amber-500'
+                : 'border-border focus:ring-gold'
             }
             disabled:opacity-50 disabled:cursor-not-allowed
           `}
@@ -213,17 +213,17 @@ export default function CityAutocomplete({
             initial={{opacity: 0, y: -10}}
             animate={{opacity: 1, y: 0}}
             exit={{opacity: 0, y: -10}}
-            className="absolute z-10 w-full mt-2 bg-slate-800 border border-slate-700 rounded-lg shadow-xl max-h-60 overflow-y-auto"
+            className="absolute z-10 w-full mt-2 bg-surfaceStrong border border-border rounded-lg shadow-xl max-h-60 overflow-y-auto"
           >
             {suggestions.map((city, index) => (
               <button
                 key={`${city.name}-${city.country}-${index}`}
                 type="button"
                 onClick={() => handleSelect(city)}
-                className="w-full px-4 py-3 text-left hover:bg-slate-700 transition-colors flex flex-col gap-1 border-b border-slate-700 last:border-b-0"
+                className="w-full px-4 py-3 text-left hover:bg-surface transition-colors flex flex-col gap-1 border-b border-border last:border-b-0"
               >
-                <span className="text-white font-medium">{city.name}</span>
-                <span className="text-xs text-slate-400">
+                <span className="text-ink font-medium">{city.name}</span>
+                <span className="text-xs text-inkMuted">
                   {city.adminName && `${city.adminName}, `}{city.country}
                 </span>
               </button>

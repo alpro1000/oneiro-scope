@@ -14,12 +14,42 @@ export interface ArchiveReading {
   source: string;
   confidence: number;
   support?: string; // e.g. "5/5" — share of frames confirming the topic
+  scope?: 'background'; // lens-sensitive (close-range width family), not a personal trait
+  life_context?: string; // subject-verified note overriding this clause
+}
+
+export interface TraitEvidence {
+  topic: string;
+  clause: string;
+  contribution: number;
+  source: string;
+}
+
+export interface TraitVerdict {
+  dimension: string;
+  label: string;
+  verdict: 'high' | 'lean_high' | 'unclear' | 'lean_low' | 'low';
+  verdict_label: string;
+  score: number;
+  conflicted: boolean;
+  evidence: TraitEvidence[];
+  needed: string[];
+}
+
+export interface SignatureMetric {
+  metric: string;
+  median: number;
+  neutral: number;
+  deviation_units: number;
 }
 
 export interface ArchiveResponse {
   frames_used: number;
   skipped: string[];
   metrics: Record<string, number | null>;
+  traits: TraitVerdict[];
+  signature: SignatureMetric[];
+  lens_note: string;
   stability: Record<
     string,
     { median: number; spread: number; frames: number; stable: boolean }

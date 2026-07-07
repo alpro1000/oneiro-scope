@@ -251,6 +251,10 @@
     "coverage_measured": "Измерено",
     "coverage_questionnaire_only": "Только анкета",
     "coverage_guided_scan_only": "Только управляемая съёмка",
-    "coverage_unreadable": "Нечитаемо по фото"
+    "coverage_unreadable": "Нечитаемо по фото",
+    "traitsTitle": "Черты — вердикт системы",
+    "needed": "Чтобы было видно",
+    "findingsTitle": "Признаки лица",
+    "backgroundTitle": "Фон съёмки"
   }
 }

@@ -26,7 +26,7 @@ export default function HomePage() {
   ];
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900">
+    <main className="oneiro-grid-bg min-h-screen bg-bg">
       {/* Site-wide nav/theme/language now come from the shared Header
           in the root layout — this page no longer duplicates it. */}
 
@@ -37,7 +37,7 @@ export default function HomePage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
-            className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6"
+            className="font-display text-4xl font-semibold text-ink mb-6 md:text-5xl lg:text-6xl"
           >
             {t('title')}
           </motion.h1>
@@ -46,7 +46,7 @@ export default function HomePage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.1 }}
-            className="text-lg md:text-xl text-slate-300 max-w-2xl mx-auto mb-12"
+            className="text-lg md:text-xl text-inkMuted max-w-2xl mx-auto mb-12"
           >
             {t('subtitle')}
           </motion.p>
@@ -121,17 +121,17 @@ export default function HomePage() {
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.4 }}
-            className="bg-slate-800/50 border border-slate-700/50 rounded-2xl p-8 text-center"
+            className="rounded-2xl border border-border bg-surface p-8 text-center"
           >
             <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-gradient-to-br from-rose-500 to-pink-600 flex items-center justify-center text-4xl">
               🎤
             </div>
 
-            <h3 className="text-2xl font-bold text-white mb-3">
+            <h3 className="font-display text-2xl font-semibold text-ink mb-3">
               {t('voiceInput.title')}
             </h3>
 
-            <p className="text-slate-300 mb-6 max-w-md mx-auto">
+            <p className="text-inkMuted mb-6 max-w-md mx-auto">
               {t('voiceInput.description')}
             </p>
 
@@ -160,16 +160,16 @@ export default function HomePage() {
             transition={{ duration: 0.5, delay: 0.5 }}
           >
             <Link href={`/${locale}/calendar`}>
-              <div className="bg-slate-800/30 border border-slate-700/50 rounded-2xl p-6 hover:bg-slate-800/50 transition-colors cursor-pointer">
+              <div className="rounded-2xl border border-border bg-surface/60 p-6 transition-colors hover:bg-surface cursor-pointer">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-4">
                     <span className="text-3xl">📅</span>
                     <div>
-                      <h4 className="text-white font-medium">{t('lunarCalendar.title')}</h4>
-                      <p className="text-slate-400 text-sm">{t('lunarCalendar.subtitle')}</p>
+                      <h4 className="font-display font-semibold text-ink">{t('lunarCalendar.title')}</h4>
+                      <p className="text-inkMuted text-sm">{t('lunarCalendar.subtitle')}</p>
                     </div>
                   </div>
-                  <span className="text-slate-400">→</span>
+                  <span className="text-inkFaint">→</span>
                 </div>
               </div>
             </Link>
@@ -178,12 +178,12 @@ export default function HomePage() {
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-slate-800 py-8 px-4">
+      <footer className="border-t border-border py-8 px-4">
         <div className="container mx-auto text-center">
-          <p className="text-slate-500 text-sm">
+          <p className="text-inkMuted text-sm">
             {t('footer.disclaimer')}
           </p>
-          <p className="text-slate-600 text-xs mt-4">
+          <p className="text-inkFaint text-xs mt-4">
             © 2024 OneiroScope. {t('footer.rights')}
           </p>
         </div>

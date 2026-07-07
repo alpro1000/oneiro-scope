@@ -5,11 +5,45 @@
 > that's easy to lose. Updated at the end of every substantial session
 > alongside `soul.md §9`.
 
-**Дата последнего обновления:** 2026-07-06
-**Последняя ветка работы:** `claude/photo-personality-analysis-2jy29b` (design-system Phase 1; НЕ замержена — PR по запросу owner)
+**Дата последнего обновления:** 2026-07-07
+**Последняя ветка работы:** `claude/photo-personality-analysis-2jy29b` (design-system Phase 1+2; НЕ замержена — PR по запросу owner)
 **Текущий main HEAD:** physiognomy (auto-zoom, signature, trait verdicts, life-context, скилл /face-portrait) — всё замержено
 
-**Новое в сессии 2026-07-06 (дизайн-система, Phase 1):**
+**Новое в сессии 2026-07-07 (дизайн-система, Phase 2 — тело страниц):**
+- Owner сказал "Phase 2 НАЧИНАЙ" — перенос токенов/общих компонентов из
+  Phase 1 в реальный контент страниц (Phase 1 переодел только шапку).
+- Home/Dreams/Astrology/Face — тело страниц переведено с хардкод
+  slate/indigo классов на токены (`bg-bg`, `text-ink`/`inkMuted`,
+  `border-border`, `bg-surface`/`surfaceStrong`, `font-display`);
+  яркие градиентные акценты (карточки сервисов, микрофон,
+  семантические recording/error цвета) оставлены как есть намеренно.
+- `FindingCard` вписан в три реальных источника данных (без выдумывания
+  структуры, которой нет в схеме): символы снов, транзиты гороскопа и
+  прогноза события в astrology/page.tsx (эти данные УЖЕ приходили с
+  бэкенда, но раньше нигде не рендерились), личные/фоновые чтения в
+  FaceScanner. `natalResult.aspects` тоже раньше не рендерился — теперь
+  список аспектов под колесом. `ConfidenceBadge`: 1.0 vs 0.85 по факту
+  наличия времени рождения (не выдумано).
+- Два новых SVG-компонента с честными упрощениями: `NatalWheel`
+  (Овен всегда сверху; ASC точен только до знака — API не отдаёт
+  точный градус ASC) и `LunarWheel` (8 фаз, реальные phaseKey/
+  illumination). +9 jest-тестов.
+- Побочный фикс (найден при визуальной проверке страницы астрологии,
+  не входил в план из 5 пунктов, но был виден прямо на мигрируемой
+  странице): `CityAutocomplete.tsx` и `VoiceInput.tsx` всё ещё были на
+  хардкод slate/amber с ДО-Phase-1 времён → серый невзрачный блок на
+  светлой теме. Нейтральные состояния переведены на токены, зелёный/
+  красный success/error и recording/error цвета оставлены буквальными
+  (тот же принцип: акцент — токен, семантическое состояние — нет).
+- Проверено Playwright-скриншотами в обеих темах: CityAutocomplete
+  теперь рендерится верно светлая+тёмная; "выцветший" вид вкладок
+  Гороскоп/Прогноз в первом раунде скриншотов оказался framer-motion
+  fade-in, пойманным скриншотом на середине анимации — не баг стилей.
+  Calendar/Face/Dreams-empty подтверждены чистыми.
+  tsc чисто, jest 34/34 (8 suites), `next build` зелёный (astrology
+  route 7.92 kB, face 6.47 kB).
+
+**Предыдущая сессия 2026-07-06 (дизайн-система, Phase 1):**
 - Owner принёс дизайн-макет от Claude Design (`oneiroscopemockups.html`)
   по мастер-брифу `docs/design/product-design-brief.md`. Решено (owner
   выбрал): 4 маршрута остаются, реальный рельс-нав из макета НЕ
@@ -44,12 +78,7 @@
 - Тесты: 3 новых файла (ConfidenceBadge, FindingCard, ThemeToggle),
   jest 23/23, tsc чисто, `next build` зелёный дважды.
 
-**Phase 2 (следующая сессия, кандидат):** вписать `FindingCard` в
-реальные данные — символы снов (dreams/page.tsx), факторы прогноза
-события (astrology/page.tsx, вкладка «Прогноз события»), признаки
-лица (`FaceScanner.tsx`); мигрировать тело Home/Dreams/Astrology/Face
-с хардкод-slate на токены; собрать натальное колесо/лунное колесо
-(SVG, как в макете).
+**Phase 2 — ✅ DONE 2026-07-07** (см. запись выше).
 
 **Новое в сессии 2026-07-05 (вечер, photo-personality-analysis):**
 - **Auto-zoom в `_landmarks_from_photo`:** нет лица → апскейл 2x/3x;

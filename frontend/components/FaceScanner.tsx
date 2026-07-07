@@ -26,6 +26,16 @@ import {
   analyzeFaceArchive,
   type ArchiveResponse,
 } from '../lib/physiognomy-client';
+import { topicTitle } from '../lib/physiognomy-topics';
+import FindingCard from './FindingCard';
+
+const VERDICT_STYLE: Record<string, string> = {
+  high: 'border-gold bg-goldSoft text-goldStrong',
+  lean_high: 'border-gold/60 bg-surfaceStrong text-goldStrong',
+  lean_low: 'border-border bg-surfaceStrong text-inkMuted',
+  low: 'border-border bg-surfaceStrong text-inkMuted',
+  unclear: 'border-danger/50 bg-danger/10 text-danger',
+};
 
 const TARGET_FRAMES = 5;
 const CAPTURE_SPACING_MS = 600; // spread captures over distinct moments
@@ -218,15 +228,32 @@ export default function FaceScanner({ locale }: { locale: string }) {
     { key: 'lightOk', label: t('gateLight') },
   ];
 
+  // A reading's `text` is already the composed dictionary clause (no
+  // separate quote/gloss split exists in the API) — same honest
+  // minimal-card choice as dream symbols: measurement + quote, no
+  // fabricated human paraphrase or plus/minus.
+  const readingCardProps = (r: ArchiveResponse['readings'][number]) => ({
+    title: topicTitle(r.topic, locale),
+    seenText: r.support
+      ? `${t('support')}: ${r.support}`
+      : (locale === 'ru' ? 'из анкеты' : 'from questionnaire'),
+    traditionQuote: r.text,
+    traditionSource: `${r.source} · ${r.confidence}`,
+    lifeContext: r.life_context,
+  });
+
+  const personalReadings = result?.readings.filter((r) => r.scope !== 'background') ?? [];
+  const backgroundReadings = result?.readings.filter((r) => r.scope === 'background') ?? [];
+
   return (
     <div className="mx-auto w-full max-w-2xl">
       {/* Privacy note is permanent — it IS the product promise. */}
-      <p className="mb-4 rounded-lg bg-indigo-500/10 p-3 text-sm text-indigo-200">
+      <p className="mb-4 rounded-lg border border-goldSoft bg-goldSoft p-3 text-sm text-ink">
         🔒 {t('privacy')}
       </p>
 
       {phase !== 'done' && (
-        <div className="relative overflow-hidden rounded-2xl bg-slate-950">
+        <div className="relative overflow-hidden rounded-2xl" style={{background: 'var(--cam-bg)', border: '1px solid var(--cam-border)'}}>
           <video
             ref={videoRef}
             playsInline
@@ -236,7 +263,10 @@ export default function FaceScanner({ locale }: { locale: string }) {
           />
           <canvas ref={canvasRef} className="hidden" aria-hidden="true" />
           {phase === 'scanning' && (
-            <div className="absolute bottom-2 left-2 rounded-lg bg-slate-900/80 px-3 py-1 text-sm text-white">
+            <div
+              className="absolute bottom-2 left-2 rounded-full px-3 py-1 font-mono text-sm"
+              style={{background: 'var(--cam-caption-bg)', color: 'var(--cam-accent)'}}
+            >
               {t('captured', { n: captured, total: TARGET_FRAMES })}
             </div>
           )}
@@ -247,23 +277,23 @@ export default function FaceScanner({ locale }: { locale: string }) {
         {phase === 'idle' && (
           <button
             onClick={start}
-            className="w-full rounded-xl bg-indigo-600 px-6 py-3 font-semibold text-white transition-colors hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+            className="w-full rounded-full bg-gold px-6 py-3 font-semibold text-bgDeep transition-colors hover:bg-goldStrong focus:outline-none focus:ring-2 focus:ring-gold"
           >
             {t('start')}
           </button>
         )}
         {phase === 'loading' && (
-          <p className="animate-pulse text-slate-300">{t('loading')}</p>
+          <p className="animate-pulse text-inkMuted">{t('loading')}</p>
         )}
         {phase === 'scanning' && (
           <ul className="grid gap-1 sm:grid-cols-2" aria-label={t('gatesLabel')}>
             {gateItems.map(({ key, label }) => (
               <li
                 key={key}
-                className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm ${
+                className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm transition-colors ${
                   gates[key]
-                    ? 'bg-emerald-500/15 text-emerald-300'
-                    : 'bg-slate-800/70 text-slate-400'
+                    ? 'bg-goldSoft text-goldStrong'
+                    : 'bg-surfaceStrong text-inkFaint'
                 }`}
               >
                 <span aria-hidden="true">{gates[key] ? '✓' : '○'}</span>
@@ -273,14 +303,14 @@ export default function FaceScanner({ locale }: { locale: string }) {
           </ul>
         )}
         {phase === 'analyzing' && (
-          <p className="animate-pulse text-slate-300">{t('analyzing')}</p>
+          <p className="animate-pulse text-inkMuted">{t('analyzing')}</p>
         )}
         {phase === 'error' && (
-          <div className="rounded-lg bg-rose-500/10 p-4 text-rose-300">
+          <div className="rounded-lg border border-danger/30 bg-danger/10 p-4 text-danger">
             <p>{error}</p>
             <button
               onClick={start}
-              className="mt-3 rounded-lg bg-rose-600/80 px-4 py-2 text-sm font-medium text-white hover:bg-rose-500"
+              className="mt-3 rounded-full bg-danger/80 px-4 py-2 text-sm font-medium text-ink hover:bg-danger"
             >
               {t('retry')}
             </button>
@@ -290,14 +320,14 @@ export default function FaceScanner({ locale }: { locale: string }) {
 
       {phase === 'done' && result && (
         <section aria-label={t('reportLabel')}>
-          <div className="mb-4 rounded-xl bg-slate-800/60 p-4">
-            <h2 className="text-lg font-semibold text-white">
+          <div className="mb-6 rounded-xl border border-border bg-surface p-4">
+            <h2 className="font-display text-lg font-semibold text-ink">
               {t('resultType')}:{' '}
-              <span className="text-indigo-300">
+              <span className="text-goldStrong">
                 {result.primary_element} + {result.secondary_element}
               </span>
             </h2>
-            <p className="mt-1 text-sm text-slate-400">
+            <p className="mt-1 text-sm text-inkMuted">
               {t('framesUsed', {
                 used: result.frames_used,
                 skipped: result.skipped.length,
@@ -305,41 +335,99 @@ export default function FaceScanner({ locale }: { locale: string }) {
             </p>
           </div>
 
-          <ul className="space-y-3">
-            {result.readings.map((r) => (
-              <li key={r.topic} className="rounded-xl bg-slate-800/60 p-4">
-                <p className="text-slate-100">{r.text}</p>
-                <p className="mt-2 text-xs text-slate-500">
-                  {r.source} · {r.confidence}
-                  {r.support ? ` · ${t('support')}: ${r.support}` : ''}
-                </p>
-              </li>
-            ))}
-          </ul>
+          {/* Trait verdicts — the weighted consensus, not the raw
+              (sometimes conflicting) dictionary clauses. */}
+          {result.traits.length > 0 && (
+            <div className="mb-6 rounded-xl border border-border bg-surface p-4">
+              <h3 className="mb-3 font-mono text-xs uppercase tracking-widest text-inkFaint">
+                {t('traitsTitle')}
+              </h3>
+              <ul className="space-y-2">
+                {result.traits.map((trait) => (
+                  <li
+                    key={trait.dimension}
+                    className={`rounded-lg border px-3 py-2 ${VERDICT_STYLE[trait.verdict] || VERDICT_STYLE.unclear}`}
+                  >
+                    <div className="flex items-center justify-between gap-3 flex-wrap">
+                      <span className="font-display font-semibold">{trait.label}</span>
+                      <span className="font-mono text-xs uppercase tracking-wide">
+                        {trait.verdict_label} · {trait.score >= 0 ? '+' : ''}{trait.score.toFixed(2)}
+                      </span>
+                    </div>
+                    {trait.evidence.length > 0 && (
+                      <p className="mt-1 font-mono text-xs text-inkMuted">
+                        {trait.evidence
+                          .map((e) => `${e.contribution >= 0 ? '+' : ''}${e.contribution} ${e.clause}`)
+                          .join(' · ')}
+                      </p>
+                    )}
+                    {trait.needed.map((n, i) => (
+                      <p key={i} className="mt-1 text-xs text-inkMuted">
+                        ⚠ {t('needed')}: {n}
+                      </p>
+                    ))}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
 
-          <div className="mt-6 rounded-xl bg-slate-800/40 p-4">
-            <h3 className="mb-2 text-sm font-semibold uppercase tracking-wide text-slate-400">
+          {/* Findings — measurement + cited dictionary clause; no
+              fabricated human gloss or plus/minus (the API doesn't
+              carry that split for physiognomy readings). */}
+          {personalReadings.length > 0 && (
+            <div className="mb-6">
+              <h3 className="mb-3 font-mono text-xs uppercase tracking-widest text-inkFaint">
+                {t('findingsTitle')}
+              </h3>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                {personalReadings.map((r) => (
+                  <FindingCard key={r.topic} {...readingCardProps(r)} />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Background — lens-sensitive, not personal (see lens_note). */}
+          {backgroundReadings.length > 0 && (
+            <div className="mb-6 rounded-xl border border-dashed border-border bg-surface/60 p-4">
+              <h3 className="mb-2 font-mono text-xs uppercase tracking-widest text-inkFaint">
+                🌫 {t('backgroundTitle')}
+              </h3>
+              <ul className="space-y-1 text-sm text-inkMuted">
+                {backgroundReadings.map((r) => (
+                  <li key={r.topic}>{r.text}</li>
+                ))}
+              </ul>
+              {result.lens_note && (
+                <p className="mt-2 text-xs text-inkFaint">{result.lens_note}</p>
+              )}
+            </div>
+          )}
+
+          <div className="rounded-xl border border-border bg-surface/40 p-4">
+            <h3 className="mb-2 font-mono text-xs uppercase tracking-widest text-inkFaint">
               {t('coverageTitle')}
             </h3>
             <dl className="space-y-2 text-sm">
               {Object.entries(result.coverage).map(([k, v]) => (
                 <div key={k}>
-                  <dt className="font-medium text-slate-300">
+                  <dt className="font-medium text-inkMuted">
                     {t(`coverage_${k}`)}
                   </dt>
-                  <dd className="text-slate-500">{v}</dd>
+                  <dd className="text-inkFaint">{v}</dd>
                 </div>
               ))}
             </dl>
           </div>
 
-          <p className="mt-6 text-xs leading-relaxed text-slate-500">
+          <p className="mt-6 text-xs leading-relaxed text-inkFaint">
             {result.disclaimer}
           </p>
 
           <button
             onClick={start}
-            className="mt-6 w-full rounded-xl bg-slate-700 px-6 py-3 font-semibold text-white transition-colors hover:bg-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+            className="mt-6 w-full rounded-full border border-border bg-surfaceStrong px-6 py-3 font-semibold text-ink transition-colors hover:border-gold focus:outline-none focus:ring-2 focus:ring-gold"
           >
             {t('rescan')}
           </button>

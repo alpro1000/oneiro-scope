@@ -17,3 +17,18 @@ body {
   background-color: var(--gold);
   color: var(--bg);
 }
+
+/* Shared "app shell" backdrop from the Claude-Design mockup: a faint
+   scattered dot grid in the gold family, present but never competing
+   with foreground content. One class so every page reads as the same
+   product instead of each inventing its own background. */
+.oneiro-grid-bg {
+  background-image:
+    radial-gradient(1px 1px at 8% 15%, var(--grid-line) 40%, transparent 41%),
+    radial-gradient(1px 1px at 22% 68%, var(--grid-line) 40%, transparent 41%),
+    radial-gradient(1px 1px at 47% 30%, var(--grid-line) 40%, transparent 41%),
+    radial-gradient(1px 1px at 68% 78%, var(--grid-line) 40%, transparent 41%),
+    radial-gradient(1px 1px at 85% 22%, var(--grid-line) 40%, transparent 41%),
+    radial-gradient(1px 1px at 93% 60%, var(--grid-line) 40%, transparent 41%);
+  background-attachment: fixed;
+}

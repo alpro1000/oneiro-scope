@@ -4,6 +4,14 @@
  * and face-reading traits — never three divergent designs. Four
  * visually distinct zones: measurement (mono) -> tradition quote
  * (serif italic, cited) -> plain-language explanation -> plus/minus.
+ *
+ * humanText/plusText/minusText are optional: not every KB entry has a
+ * separate plain-language gloss or a strength/weakness pair (dream
+ * symbols carry only category + one interpretation) — omit rather
+ * than fabricate content the source data doesn't have. Domains that
+ * DO have both (physiognomy traits, event-forecast factors) should
+ * still always supply them; that discipline lives at the call site,
+ * not here.
  */
 export interface FindingCardProps {
   title: string;
@@ -11,11 +19,11 @@ export interface FindingCardProps {
   seenText: string;
   traditionQuote: string;
   traditionSource: string;
-  humanText: string;
+  humanText?: string;
   plusLabel?: string;
-  plusText: string;
+  plusText?: string;
   minusLabel?: string;
-  minusText: string;
+  minusText?: string;
   /** Subject-verified observation overriding the dictionary clause —
    * lived reality outranks the 0.6 tradition tier (life-context). */
   lifeContext?: string;
@@ -52,7 +60,9 @@ export default function FindingCard({
         </cite>
       </blockquote>
 
-      <p className="m-0 text-sm leading-relaxed text-inkMuted">{humanText}</p>
+      {humanText && (
+        <p className="m-0 text-sm leading-relaxed text-inkMuted">{humanText}</p>
+      )}
 
       {lifeContext && (
         <p className="m-0 rounded-md border border-gold bg-goldSoft px-3 py-2 text-sm leading-relaxed text-ink">
@@ -60,20 +70,26 @@ export default function FindingCard({
         </p>
       )}
 
-      <div className="grid grid-cols-1 gap-3 border-t border-border pt-3 text-sm sm:grid-cols-2">
-        <div className="flex flex-col gap-1">
-          <span className="font-mono text-[0.62rem] uppercase tracking-widest text-goldStrong">
-            {plusLabel}
-          </span>
-          <span className="text-inkMuted">{plusText}</span>
+      {(plusText || minusText) && (
+        <div className="grid grid-cols-1 gap-3 border-t border-border pt-3 text-sm sm:grid-cols-2">
+          {plusText && (
+            <div className="flex flex-col gap-1">
+              <span className="font-mono text-[0.62rem] uppercase tracking-widest text-goldStrong">
+                {plusLabel}
+              </span>
+              <span className="text-inkMuted">{plusText}</span>
+            </div>
+          )}
+          {minusText && (
+            <div className="flex flex-col gap-1">
+              <span className="font-mono text-[0.62rem] uppercase tracking-widest text-danger">
+                {minusLabel}
+              </span>
+              <span className="text-inkMuted">{minusText}</span>
+            </div>
+          )}
         </div>
-        <div className="flex flex-col gap-1">
-          <span className="font-mono text-[0.62rem] uppercase tracking-widest text-danger">
-            {minusLabel}
-          </span>
-          <span className="text-inkMuted">{minusText}</span>
-        </div>
-      </div>
+      )}
     </article>
   );
 }

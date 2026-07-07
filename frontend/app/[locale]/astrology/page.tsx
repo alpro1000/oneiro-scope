@@ -13,9 +13,13 @@ import {
   type NatalChartResponse,
   type HoroscopeResponse,
   type EventForecastResponse,
+  type TransitInfo,
 } from '../../../lib/astrology-client';
 import LoadingModal from '../../../components/LoadingModal';
 import CityAutocomplete from '../../../components/CityAutocomplete';
+import ConfidenceBadge from '../../../components/ConfidenceBadge';
+import FindingCard from '../../../components/FindingCard';
+import NatalWheel from '../../../components/NatalWheel';
 
 type Tab = 'natalChart' | 'horoscope' | 'eventForecast';
 
@@ -50,6 +54,18 @@ const SIGN_DATA: Record<string, { symbol: string; en: string; ru: string }> = {
   capricorn: { symbol: '♑', en: 'Capricorn', ru: 'Козерог' },
   aquarius: { symbol: '♒', en: 'Aquarius', ru: 'Водолей' },
   pisces: { symbol: '♓', en: 'Pisces', ru: 'Рыбы' },
+};
+
+// Aspect type display names — cited nowhere per-aspect in the backend,
+// so the FindingCard source caption stays a generic "по натальным
+// транзитам" rather than inventing a citation.
+const ASPECT_LABEL: Record<string, { en: string; ru: string }> = {
+  conjunction: { en: 'conjunction', ru: 'соединение' },
+  sextile: { en: 'sextile', ru: 'секстиль' },
+  square: { en: 'square', ru: 'квадрат' },
+  trine: { en: 'trine', ru: 'трин' },
+  opposition: { en: 'opposition', ru: 'оппозиция' },
+  quincunx: { en: 'quincunx', ru: 'квинконс' },
 };
 
 export default function AstrologyPage() {
@@ -111,6 +127,22 @@ export default function AstrologyPage() {
   }, []);
 
   const displayEventTypes = eventTypes.length > 0 ? eventTypes : defaultEventTypes;
+
+  const transitCardProps = (transit: TransitInfo) => {
+    const ru = locale === 'ru';
+    const from = PLANET_DATA[transit.transiting_planet?.toLowerCase()] || {symbol: '●', en: transit.transiting_planet, ru: transit.transiting_planet};
+    const to = PLANET_DATA[transit.natal_planet?.toLowerCase()] || {symbol: '●', en: transit.natal_planet, ru: transit.natal_planet};
+    const aspect = ASPECT_LABEL[transit.aspect?.toLowerCase()] || {en: transit.aspect, ru: transit.aspect};
+    return {
+      title: `${from.symbol} ${ru ? from.ru : from.en} — ${ru ? aspect.ru : aspect.en} — ${to.symbol} ${ru ? to.ru : to.en}`,
+      seenLabel: ru ? 'Система увидела' : 'System saw',
+      seenText: ru
+        ? `орбис ${transit.orb}° · точная дата ${transit.exact_date}`
+        : `orb ${transit.orb}° · exact date ${transit.exact_date}`,
+      traditionQuote: transit.description,
+      traditionSource: ru ? 'по натальным транзитам' : 'natal transit reading',
+    };
+  };
 
   const handleCalculateNatalChart = async () => {
     if (!birthDate || !birthPlace) return;
@@ -175,7 +207,7 @@ export default function AstrologyPage() {
   };
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-slate-900 via-amber-950/20 to-slate-900">
+    <main className="oneiro-grid-bg min-h-screen bg-bg">
       {/* Site-wide nav/theme/language now come from the shared Header
           in the root layout — this page no longer duplicates it. */}
 
@@ -188,10 +220,10 @@ export default function AstrologyPage() {
             animate={{ opacity: 1, y: 0 }}
             className="text-center mb-8"
           >
-            <h1 className="text-3xl md:text-4xl font-bold text-white mb-3">
+            <h1 className="font-display text-3xl font-semibold text-ink mb-3 md:text-4xl">
               {t('title')}
             </h1>
-            <p className="text-slate-300">{t('subtitle')}</p>
+            <p className="text-inkMuted">{t('subtitle')}</p>
           </motion.div>
 
           {/* Tabs */}
@@ -199,19 +231,20 @@ export default function AstrologyPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="flex justify-center gap-2 mb-8"
+            className="flex justify-center gap-1 mb-8 rounded-full border border-border bg-surface p-1 w-fit mx-auto flex-wrap"
           >
             {tabs.map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
+                aria-current={activeTab === tab.id ? 'true' : undefined}
                 className={`
-                  px-4 py-2 rounded-lg text-sm font-medium
-                  transition-all duration-300
+                  px-4 py-2 rounded-full text-sm font-medium
+                  transition-colors duration-200
                   ${
                     activeTab === tab.id
-                      ? 'bg-amber-500 text-white'
-                      : 'bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700'
+                      ? 'bg-gold text-bgDeep'
+                      : 'text-inkMuted hover:text-ink'
                   }
                 `}
               >
@@ -229,42 +262,42 @@ export default function AstrologyPage() {
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -20 }}
-                className="bg-slate-800/50 border border-slate-700/50 rounded-2xl p-6"
+                className="rounded-2xl border border-border bg-surface p-6"
               >
-                <h2 className="text-xl font-semibold text-white mb-6">
+                <h2 className="font-display text-xl font-semibold text-ink mb-6">
                   {t('natalChart.title')}
                 </h2>
 
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-slate-300 text-sm mb-2">
+                    <label className="block text-inkMuted text-sm mb-2">
                       {t('natalChart.birthDate')} *
                     </label>
                     <input
                       type="date"
                       value={birthDate}
                       onChange={(e) => setBirthDate(e.target.value)}
-                      className="w-full p-3 bg-slate-900/50 border border-slate-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
+                      className="w-full p-3 bg-bgDeep border border-border rounded-lg text-ink focus:outline-none focus:ring-2 focus:ring-gold"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-slate-300 text-sm mb-2">
+                    <label className="block text-inkMuted text-sm mb-2">
                       {t('natalChart.birthTime')}
                     </label>
                     <input
                       type="time"
                       value={birthTime}
                       onChange={(e) => setBirthTime(e.target.value)}
-                      className="w-full p-3 bg-slate-900/50 border border-slate-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
+                      className="w-full p-3 bg-bgDeep border border-border rounded-lg text-ink focus:outline-none focus:ring-2 focus:ring-gold"
                     />
-                    <p className="text-slate-500 text-xs mt-1">
+                    <p className="text-inkFaint text-xs mt-1">
                       {t('natalChart.unknownTime')}
                     </p>
                   </div>
 
                   <div>
-                    <label className="block text-slate-300 text-sm mb-2">
+                    <label className="block text-inkMuted text-sm mb-2">
                       {t('natalChart.birthPlace')} *
                     </label>
                     <CityAutocomplete
@@ -279,11 +312,11 @@ export default function AstrologyPage() {
                   <button
                     onClick={handleCalculateNatalChart}
                     disabled={!birthDate || !birthPlace || isCalculating}
-                    className="w-full py-3 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 text-white font-medium transition-all hover:from-amber-600 hover:to-orange-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                    className="w-full py-3 rounded-full bg-gold text-bgDeep font-semibold transition-colors hover:bg-goldStrong disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                   >
                     {isCalculating ? (
                       <motion.div
-                        className="w-5 h-5 border-2 border-white border-t-transparent rounded-full"
+                        className="w-5 h-5 border-2 border-bgDeep border-t-transparent rounded-full"
                         animate={{ rotate: 360 }}
                         transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
                       />
@@ -299,9 +332,9 @@ export default function AstrologyPage() {
                   <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="mt-6 p-4 bg-red-900/30 border border-red-500/30 rounded-xl"
+                    className="mt-6 p-4 bg-danger/10 border border-danger/30 rounded-xl"
                   >
-                    <p className="text-red-300">{natalError}</p>
+                    <p className="text-danger">{natalError}</p>
                   </motion.div>
                 )}
 
@@ -310,21 +343,42 @@ export default function AstrologyPage() {
                   <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="mt-6 p-4 bg-gradient-to-br from-amber-900/30 to-orange-900/30 border border-amber-500/30 rounded-xl"
+                    className="mt-6 p-4 rounded-xl border border-border bg-surfaceStrong"
                   >
-                    <div className="grid grid-cols-2 gap-4 mb-4">
-                      <div>
-                        <span className="text-amber-400 text-sm">☉ {locale === 'ru' ? 'Солнце' : 'Sun'}</span>
-                        <p className="text-white font-medium">
+                    <div className="mb-4">
+                      <ConfidenceBadge
+                        score={birthTime ? 1.0 : 0.85}
+                        source={
+                          birthTime
+                            ? (locale === 'ru' ? 'расчёт по эфемеридам · точное время рождения' : 'ephemeris calculation · exact birth time')
+                            : (locale === 'ru' ? 'расчёт по эфемеридам · время рождения не указано, дома/асцендент недоступны' : 'ephemeris calculation · no birth time, houses/ascendant unavailable')
+                        }
+                      />
+                    </div>
+
+                    {natalResult.planets && natalResult.planets.length > 0 && (
+                      <div className="mb-4 flex justify-center rounded-lg border border-border bg-surface p-3">
+                        <NatalWheel
+                          planets={natalResult.planets}
+                          aspects={natalResult.aspects || []}
+                          ascendantSign={natalResult.ascendant}
+                        />
+                      </div>
+                    )}
+
+                    <div className="grid grid-cols-2 gap-4 mb-4 sm:grid-cols-4">
+                      <div className="rounded-lg border border-border bg-surface p-3">
+                        <span className="font-mono text-[0.62rem] uppercase tracking-widest text-inkFaint">☉ {locale === 'ru' ? 'Солнце' : 'Sun'}</span>
+                        <p className="font-display font-semibold text-ink mt-1">
                           {(() => {
                             const signInfo = SIGN_DATA[natalResult.sun_sign?.toLowerCase()] || { symbol: '', en: natalResult.sun_sign, ru: natalResult.sun_sign };
                             return `${signInfo.symbol} ${locale === 'ru' ? signInfo.ru : signInfo.en}`;
                           })()}
                         </p>
                       </div>
-                      <div>
-                        <span className="text-amber-400 text-sm">☽ {locale === 'ru' ? 'Луна' : 'Moon'}</span>
-                        <p className="text-white font-medium">
+                      <div className="rounded-lg border border-border bg-surface p-3">
+                        <span className="font-mono text-[0.62rem] uppercase tracking-widest text-inkFaint">☽ {locale === 'ru' ? 'Луна' : 'Moon'}</span>
+                        <p className="font-display font-semibold text-ink mt-1">
                           {(() => {
                             const signInfo = SIGN_DATA[natalResult.moon_sign?.toLowerCase()] || { symbol: '', en: natalResult.moon_sign, ru: natalResult.moon_sign };
                             return `${signInfo.symbol} ${locale === 'ru' ? signInfo.ru : signInfo.en}`;
@@ -332,11 +386,22 @@ export default function AstrologyPage() {
                         </p>
                       </div>
                       {natalResult.ascendant && (
-                        <div>
-                          <span className="text-amber-400 text-sm">↑ {locale === 'ru' ? 'Асцендент' : 'Ascendant'}</span>
-                          <p className="text-white font-medium">
+                        <div className="rounded-lg border border-border bg-surface p-3">
+                          <span className="font-mono text-[0.62rem] uppercase tracking-widest text-inkFaint">ASC {locale === 'ru' ? 'Асцендент' : 'Ascendant'}</span>
+                          <p className="font-display font-semibold text-ink mt-1">
                             {(() => {
                               const signInfo = SIGN_DATA[natalResult.ascendant?.toLowerCase()] || { symbol: '', en: natalResult.ascendant, ru: natalResult.ascendant };
+                              return `${signInfo.symbol} ${locale === 'ru' ? signInfo.ru : signInfo.en}`;
+                            })()}
+                          </p>
+                        </div>
+                      )}
+                      {natalResult.midheaven && (
+                        <div className="rounded-lg border border-border bg-surface p-3">
+                          <span className="font-mono text-[0.62rem] uppercase tracking-widest text-inkFaint">MC {locale === 'ru' ? 'Середина неба' : 'Midheaven'}</span>
+                          <p className="font-display font-semibold text-ink mt-1">
+                            {(() => {
+                              const signInfo = SIGN_DATA[natalResult.midheaven?.toLowerCase()] || { symbol: '', en: natalResult.midheaven, ru: natalResult.midheaven };
                               return `${signInfo.symbol} ${locale === 'ru' ? signInfo.ru : signInfo.en}`;
                             })()}
                           </p>
@@ -346,8 +411,8 @@ export default function AstrologyPage() {
 
                     {/* Planet positions */}
                     {natalResult.planets && natalResult.planets.length > 0 && (
-                      <div className="mb-4">
-                        <h4 className="text-amber-400 font-medium mb-2">
+                      <div className="mb-4 rounded-lg border border-border bg-surface p-3">
+                        <h4 className="font-mono text-[0.68rem] uppercase tracking-widest text-inkFaint mb-2">
                           {locale === 'ru' ? 'Планеты' : 'Planets'}
                         </h4>
                         <div className="grid grid-cols-2 md:grid-cols-3 gap-2 text-sm">
@@ -360,13 +425,37 @@ export default function AstrologyPage() {
                             const signInfo = SIGN_DATA[signKey.toLowerCase()] || { symbol: '', en: signKey, ru: signKey };
 
                             return (
-                              <div key={planetKey} className="flex items-center gap-1 text-slate-300">
-                                <span className="text-amber-300">{planetInfo.symbol}</span>
+                              <div key={planetKey} className="flex items-center gap-1 text-inkMuted">
+                                <span className="text-gold">{planetInfo.symbol}</span>
                                 <span>{locale === 'ru' ? planetInfo.ru : planetInfo.en}</span>
-                                <span className="text-amber-400">
+                                <span className="text-goldStrong">
                                   {signInfo.symbol} {locale === 'ru' ? signInfo.ru : signInfo.en}
                                 </span>
-                                {planet.retrograde && <span className="text-red-400">℞</span>}
+                                {planet.retrograde && <span className="text-danger">℞</span>}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Aspects — fetched but previously unrendered */}
+                    {natalResult.aspects && natalResult.aspects.length > 0 && (
+                      <div className="mb-4 rounded-lg border border-border bg-surface p-3">
+                        <h4 className="font-mono text-[0.68rem] uppercase tracking-widest text-inkFaint mb-2">
+                          {locale === 'ru' ? 'Аспекты' : 'Aspects'}
+                        </h4>
+                        <div className="space-y-1 text-sm">
+                          {natalResult.aspects.slice(0, 8).map((aspect: any, i: number) => {
+                            const p1 = PLANET_DATA[aspect.planet1?.toLowerCase()] || {symbol: '●', en: aspect.planet1, ru: aspect.planet1};
+                            const p2 = PLANET_DATA[aspect.planet2?.toLowerCase()] || {symbol: '●', en: aspect.planet2, ru: aspect.planet2};
+                            const asp = ASPECT_LABEL[aspect.aspect_type?.toLowerCase()] || {en: aspect.aspect_type, ru: aspect.aspect_type};
+                            return (
+                              <div key={i} className="flex items-center gap-2 text-inkMuted">
+                                <span>{p1.symbol} {locale === 'ru' ? p1.ru : p1.en}</span>
+                                <span className="text-goldStrong">{locale === 'ru' ? asp.ru : asp.en}</span>
+                                <span>{p2.symbol} {locale === 'ru' ? p2.ru : p2.en}</span>
+                                <span className="font-mono text-xs text-inkFaint">{aspect.orb}°</span>
                               </div>
                             );
                           })}
@@ -375,7 +464,7 @@ export default function AstrologyPage() {
                     )}
 
                     {natalResult.interpretation && (
-                      <p className="text-slate-300">{natalResult.interpretation}</p>
+                      <p className="text-inkMuted">{natalResult.interpretation}</p>
                     )}
                   </motion.div>
                 )}
@@ -389,21 +478,21 @@ export default function AstrologyPage() {
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -20 }}
-                className="bg-slate-800/50 border border-slate-700/50 rounded-2xl p-6"
+                className="rounded-2xl border border-border bg-surface p-6"
               >
-                <h2 className="text-xl font-semibold text-white mb-6">
+                <h2 className="font-display text-xl font-semibold text-ink mb-6">
                   {t('horoscope.title')}
                 </h2>
 
-                <div className="flex gap-2 mb-6">
+                <div className="flex gap-1 mb-6 rounded-full border border-border bg-bgDeep p-1 w-fit flex-wrap">
                   {horoscopePeriods.map((period) => (
                     <button
                       key={period}
                       onClick={() => setHoroscopePeriod(period)}
-                      className={`px-4 py-2 rounded-lg text-sm transition-all ${
+                      className={`px-4 py-2 rounded-full text-sm transition-colors ${
                         horoscopePeriod === period
-                          ? 'bg-amber-500 text-white'
-                          : 'bg-slate-700 text-slate-400 hover:bg-slate-600'
+                          ? 'bg-gold text-bgDeep'
+                          : 'text-inkMuted hover:text-ink'
                       }`}
                     >
                       {t(`horoscope.${period}`)}
@@ -414,11 +503,11 @@ export default function AstrologyPage() {
                 <button
                   onClick={handleGetHoroscope}
                   disabled={isCalculating}
-                  className="w-full py-3 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 text-white font-medium disabled:opacity-50 flex items-center justify-center gap-2"
+                  className="w-full py-3 rounded-full bg-gold text-bgDeep font-semibold transition-colors hover:bg-goldStrong disabled:opacity-50 flex items-center justify-center gap-2"
                 >
                   {isCalculating ? (
                     <motion.div
-                      className="w-5 h-5 border-2 border-white border-t-transparent rounded-full"
+                      className="w-5 h-5 border-2 border-bgDeep border-t-transparent rounded-full"
                       animate={{ rotate: 360 }}
                       transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
                     />
@@ -433,9 +522,9 @@ export default function AstrologyPage() {
                   <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="mt-6 p-4 bg-red-900/30 border border-red-500/30 rounded-xl"
+                    className="mt-6 p-4 bg-danger/10 border border-danger/30 rounded-xl"
                   >
-                    <p className="text-red-300">{horoscopeError}</p>
+                    <p className="text-danger">{horoscopeError}</p>
                   </motion.div>
                 )}
 
@@ -443,30 +532,44 @@ export default function AstrologyPage() {
                   <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="mt-6 p-4 bg-gradient-to-br from-amber-900/30 to-orange-900/30 border border-amber-500/30 rounded-xl"
+                    className="mt-6 p-4 rounded-xl border border-border bg-surfaceStrong"
                   >
                     {/* Lunar info */}
-                    <div className="flex items-center gap-4 mb-4 text-sm text-slate-400">
-                      <span>☽ {horoscopeResult.lunar_phase}</span>
-                      <span>{locale === 'ru' ? `День ${horoscopeResult.lunar_day}` : `Day ${horoscopeResult.lunar_day}`}</span>
+                    <div className="mb-4 rounded-md border border-border bg-bgDeep px-3 py-2 font-mono text-xs text-inkMuted">
+                      ☽ {horoscopeResult.lunar_phase}
+                      {' · '}{locale === 'ru' ? `день ${horoscopeResult.lunar_day}` : `day ${horoscopeResult.lunar_day}`}
                       {horoscopeResult.retrograde_planets.length > 0 && (
-                        <span className="text-amber-400">
-                          ℞ {horoscopeResult.retrograde_planets.join(', ')}
+                        <span className="text-goldStrong">
+                          {' · ℞ '}{horoscopeResult.retrograde_planets.join(', ')}
                         </span>
                       )}
                     </div>
 
-                    <p className="text-slate-300 mb-4">{horoscopeResult.summary}</p>
+                    <p className="text-inkMuted mb-4">{horoscopeResult.summary}</p>
+
+                    {/* Transits — fetched but previously unrendered */}
+                    {horoscopeResult.transits && horoscopeResult.transits.length > 0 && (
+                      <div className="mb-4">
+                        <h4 className="font-mono text-[0.68rem] uppercase tracking-widest text-inkFaint mb-3">
+                          {locale === 'ru' ? 'Активные транзиты' : 'Active transits'}
+                        </h4>
+                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                          {horoscopeResult.transits.slice(0, 4).map((transit, i) => (
+                            <FindingCard key={i} {...transitCardProps(transit)} />
+                          ))}
+                        </div>
+                      </div>
+                    )}
 
                     {horoscopeResult.recommendations && horoscopeResult.recommendations.length > 0 && (
                       <>
-                        <h4 className="text-amber-400 font-medium mb-2">
+                        <h4 className="font-display font-semibold text-ink mb-2">
                           {t('eventForecast.recommendations')}:
                         </h4>
                         <ul className="space-y-2">
                           {horoscopeResult.recommendations.map((rec: string, i: number) => (
-                            <li key={i} className="text-slate-300 flex items-start gap-2">
-                              <span className="text-amber-400">•</span>
+                            <li key={i} className="text-inkMuted flex items-start gap-2">
+                              <span className="text-gold">—</span>
                               {rec}
                             </li>
                           ))}
@@ -485,33 +588,33 @@ export default function AstrologyPage() {
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -20 }}
-                className="bg-slate-800/50 border border-slate-700/50 rounded-2xl p-6"
+                className="rounded-2xl border border-border bg-surface p-6"
               >
-                <h2 className="text-xl font-semibold text-white mb-6">
+                <h2 className="font-display text-xl font-semibold text-ink mb-6">
                   {t('eventForecast.title')}
                 </h2>
 
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-slate-300 text-sm mb-2">
+                    <label className="block text-inkMuted text-sm mb-2">
                       {t('eventForecast.eventDate')} *
                     </label>
                     <input
                       type="date"
                       value={eventDate}
                       onChange={(e) => setEventDate(e.target.value)}
-                      className="w-full p-3 bg-slate-900/50 border border-slate-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
+                      className="w-full p-3 bg-bgDeep border border-border rounded-lg text-ink focus:outline-none focus:ring-2 focus:ring-gold"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-slate-300 text-sm mb-2">
+                    <label className="block text-inkMuted text-sm mb-2">
                       {t('eventForecast.eventType')}
                     </label>
                     <select
                       value={eventType}
                       onChange={(e) => setEventType(e.target.value)}
-                      className="w-full p-3 bg-slate-900/50 border border-slate-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
+                      className="w-full p-3 bg-bgDeep border border-border rounded-lg text-ink focus:outline-none focus:ring-2 focus:ring-gold"
                     >
                       {displayEventTypes.map((type) => (
                         <option key={type.value} value={type.value}>
@@ -522,7 +625,7 @@ export default function AstrologyPage() {
                   </div>
 
                   <div>
-                    <label className="block text-slate-300 text-sm mb-2">
+                    <label className="block text-inkMuted text-sm mb-2">
                       {t('eventForecast.eventLocation')}
                     </label>
                     <CityAutocomplete
@@ -537,11 +640,11 @@ export default function AstrologyPage() {
                   <button
                     onClick={handleGetForecast}
                     disabled={!eventDate || isCalculating}
-                    className="w-full py-3 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 text-white font-medium disabled:opacity-50 flex items-center justify-center gap-2"
+                    className="w-full py-3 rounded-full bg-gold text-bgDeep font-semibold transition-colors hover:bg-goldStrong disabled:opacity-50 flex items-center justify-center gap-2"
                   >
                     {isCalculating ? (
                       <motion.div
-                        className="w-5 h-5 border-2 border-white border-t-transparent rounded-full"
+                        className="w-5 h-5 border-2 border-bgDeep border-t-transparent rounded-full"
                         animate={{ rotate: 360 }}
                         transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
                       />
@@ -557,9 +660,9 @@ export default function AstrologyPage() {
                   <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="mt-6 p-4 bg-red-900/30 border border-red-500/30 rounded-xl"
+                    className="mt-6 p-4 bg-danger/10 border border-danger/30 rounded-xl"
                   >
-                    <p className="text-red-300">{forecastError}</p>
+                    <p className="text-danger">{forecastError}</p>
                   </motion.div>
                 )}
 
@@ -568,52 +671,57 @@ export default function AstrologyPage() {
                   <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="mt-6 p-4 bg-gradient-to-br from-amber-900/30 to-orange-900/30 border border-amber-500/30 rounded-xl"
+                    className="mt-6 p-4 rounded-xl border border-border bg-surfaceStrong"
                   >
-                    {/* Favorability Score */}
-                    <div className="text-center mb-6">
-                      <div className="text-4xl font-bold text-amber-400 mb-1">
-                        {forecastResult.favorability_score}%
+                    {/* Favorability Score — a gauge, matching the mockup's
+                        event-forecast screen; semantic tone (not the
+                        page accent) since this genuinely is a good/bad
+                        signal. */}
+                    <div className="mb-6">
+                      <div className="flex items-baseline gap-3 flex-wrap">
+                        <span className="font-display text-3xl font-semibold text-goldStrong">
+                          {forecastResult.favorability_score}%
+                        </span>
+                        <span className="text-inkMuted">{forecastResult.favorability_level}</span>
                       </div>
-                      <div className="text-slate-300">{forecastResult.favorability_level}</div>
-
-                      {/* Progress bar */}
-                      <div className="w-full h-2 bg-slate-700 rounded-full mt-3 overflow-hidden">
+                      <div className="relative h-2.5 rounded-full mt-3 overflow-hidden bg-border">
                         <motion.div
                           initial={{ width: 0 }}
                           animate={{ width: `${forecastResult.favorability_score}%` }}
                           className={`h-full rounded-full ${
                             forecastResult.favorability_score >= 70
-                              ? 'bg-green-500'
+                              ? 'bg-gold'
                               : forecastResult.favorability_score >= 40
-                              ? 'bg-amber-500'
-                              : 'bg-red-500'
+                              ? 'bg-goldSoft'
+                              : 'bg-danger'
                           }`}
                         />
                       </div>
                     </div>
 
-                    {/* Factors */}
+                    {/* Factors — flat strings from the backend, no
+                        per-factor measurement/citation to build a
+                        FindingCard from; kept as a clean two-column list. */}
                     <div className="grid md:grid-cols-2 gap-4 mb-4">
                       <div>
-                        <h4 className="text-green-400 font-medium mb-2">
+                        <h4 className="font-mono text-[0.68rem] uppercase tracking-widest text-goldStrong mb-2">
                           ✓ {t('eventForecast.positiveFactors')}
                         </h4>
                         <ul className="space-y-1">
                           {forecastResult.positive_factors.map((factor: string, i: number) => (
-                            <li key={i} className="text-slate-300 text-sm">
+                            <li key={i} className="text-inkMuted text-sm">
                               {factor}
                             </li>
                           ))}
                         </ul>
                       </div>
                       <div>
-                        <h4 className="text-amber-400 font-medium mb-2">
+                        <h4 className="font-mono text-[0.68rem] uppercase tracking-widest text-danger mb-2">
                           ⚠ {t('eventForecast.riskFactors')}
                         </h4>
                         <ul className="space-y-1">
                           {forecastResult.risk_factors.map((factor: string, i: number) => (
-                            <li key={i} className="text-slate-300 text-sm">
+                            <li key={i} className="text-inkMuted text-sm">
                               {factor}
                             </li>
                           ))}
@@ -621,16 +729,34 @@ export default function AstrologyPage() {
                       </div>
                     </div>
 
+                    {/* Transits — fetched but previously unrendered;
+                        the one part of this response with real
+                        measurement (orb, exact date) to back a
+                        FindingCard. */}
+                    {forecastResult.transits && forecastResult.transits.length > 0 && (
+                      <div className="mb-4">
+                        <h4 className="font-mono text-[0.68rem] uppercase tracking-widest text-inkFaint mb-3">
+                          {locale === 'ru' ? 'Активные транзиты' : 'Active transits'}
+                        </h4>
+                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                          {forecastResult.transits.slice(0, 4).map((transit, i) => (
+                            <FindingCard key={i} {...transitCardProps(transit)} />
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
                     {/* Recommendations */}
                     {forecastResult.recommendations && forecastResult.recommendations.length > 0 && (
                       <div className="mb-4">
-                        <h4 className="text-white font-medium mb-2">
+                        <h4 className="font-display font-semibold text-ink mb-2">
                           💡 {t('eventForecast.recommendations')}
                         </h4>
                         <ul className="space-y-1">
                           {forecastResult.recommendations.map((rec: string, i: number) => (
-                            <li key={i} className="text-slate-300 text-sm">
-                              • {rec}
+                            <li key={i} className="text-inkMuted text-sm flex items-start gap-2">
+                              <span className="text-gold">—</span>
+                              {rec}
                             </li>
                           ))}
                         </ul>
@@ -639,30 +765,28 @@ export default function AstrologyPage() {
 
                     {/* Lunar info */}
                     {forecastResult.lunar_phase && (
-                      <div className="mb-4 p-3 bg-slate-700/50 rounded-lg">
-                        <div className="flex items-center gap-3 text-sm text-slate-300">
-                          <span>☽ {forecastResult.lunar_phase}</span>
-                          <span>{locale === 'ru' ? `День ${forecastResult.lunar_day}` : `Day ${forecastResult.lunar_day}`}</span>
-                          {forecastResult.retrograde_planets && forecastResult.retrograde_planets.length > 0 && (
-                            <span className="text-amber-400">
-                              ℞ {forecastResult.retrograde_planets.join(', ')}
-                            </span>
-                          )}
-                        </div>
+                      <div className="mb-4 rounded-md border border-border bg-bgDeep px-3 py-2 font-mono text-xs text-inkMuted">
+                        ☽ {forecastResult.lunar_phase}
+                        {' · '}{locale === 'ru' ? `день ${forecastResult.lunar_day}` : `day ${forecastResult.lunar_day}`}
+                        {forecastResult.retrograde_planets && forecastResult.retrograde_planets.length > 0 && (
+                          <span className="text-goldStrong">
+                            {' · ℞ '}{forecastResult.retrograde_planets.join(', ')}
+                          </span>
+                        )}
                       </div>
                     )}
 
                     {/* Alternative dates */}
                     {forecastResult.alternative_dates && forecastResult.alternative_dates.length > 0 && (
                       <div>
-                        <h4 className="text-white font-medium mb-2">
+                        <h4 className="font-display font-semibold text-ink mb-2">
                           📅 {t('eventForecast.alternativeDates')}
                         </h4>
                         <div className="flex gap-2 flex-wrap">
                           {forecastResult.alternative_dates.map((date: string) => (
                             <span
                               key={date}
-                              className="px-3 py-1 bg-slate-700 rounded-lg text-slate-300 text-sm"
+                              className="px-3 py-1 rounded-full border border-border bg-surface font-mono text-xs text-inkMuted"
                             >
                               {date}
                             </span>
@@ -680,7 +804,7 @@ export default function AstrologyPage() {
           <div className="text-center mt-8">
             <Link
               href={`/${locale}`}
-              className="text-slate-400 hover:text-white transition-colors"
+              className="text-inkMuted hover:text-gold transition-colors"
             >
               ← {locale === 'ru' ? 'На главную' : 'Back to Home'}
             </Link>

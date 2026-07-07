@@ -251,6 +251,10 @@
     "coverage_measured": "Measured",
     "coverage_questionnaire_only": "Questionnaire only",
     "coverage_guided_scan_only": "Guided capture only",
-    "coverage_unreadable": "Unreadable from photos"
+    "coverage_unreadable": "Unreadable from photos",
+    "traitsTitle": "Traits — the system's verdict",
+    "needed": "To make this readable",
+    "findingsTitle": "Facial traits",
+    "backgroundTitle": "Lens background"
   }
 }

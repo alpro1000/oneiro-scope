@@ -283,6 +283,58 @@ FaceMesh heuristic yet — questionnaire remains their path); server CV
 deps (mediapipe 0.10.14 pin uses legacy `solutions` API removed in
 0.10.20+) still optional, not in requirements.txt.
 
+**Phase 2 shipped (same session): design applied to real page bodies.**
+Owner said "Phase 2 НАЧИНАЙ" — wiring the tokens/shared components from
+Phase 1 into the actual page content, not just the shell.
+- Home/Dreams/Astrology/Face page bodies migrated off hardcoded
+  slate/indigo Tailwind classes onto the token set (`bg-bg`,
+  `text-ink`/`inkMuted`, `border-border`, `bg-surface`/`surfaceStrong`,
+  `font-display`), keeping vivid gradient accents (service cards, mic
+  circle, semantic recording/error colors) as deliberate non-token
+  exceptions.
+- `FindingCard` wired into three real data domains, each populating
+  only the fields its actual schema supports (no fabricated structure):
+  dream symbols (category+significance+one interpretation), astrology
+  transits in both the Horoscope and Event Forecast tabs (real orb/date
+  data that was already being fetched but never rendered before this
+  session), and FaceScanner's `personalReadings`/`backgroundReadings`.
+  Astrology's `natalResult.aspects` (also previously fetched-but-
+  unrendered) now lists under the chart. `ConfidenceBadge` used with a
+  real, non-fabricated distinction: 1.0 vs 0.85 depending on whether
+  birth time was given.
+- Two new SVG diagram components, each backed by real API data with
+  documented honest simplifications: `NatalWheel` (fixed Aries-at-top
+  ring; sign-boundary-only ASC precision since the API doesn't return
+  an exact ASC degree) and `LunarWheel` (8-phase ring, real
+  `phaseKey`/`illumination`). 9 new jest tests across both.
+- Incidental fix, found while visually verifying the astrology page
+  (not part of the original 5-item plan but directly broken on the
+  very pages being migrated): `CityAutocomplete.tsx` and
+  `VoiceInput.tsx` still had hardcoded `slate-*`/`amber-*` literals
+  from before the Phase 1 token system existed, rendering as a washed-
+  out grey box on the light theme. Migrated their neutral/base styling
+  to tokens (`bgDeep`/`ink`/`inkFaint`/`border`/`gold`,
+  `surfaceStrong`/`surface`/`inkMuted`, `ring-offset-bg`) while
+  deliberately keeping the green/red success/error and red/amber
+  recording/error states as literal Tailwind colors — consistent with
+  the session's running distinction between accent hue (tokenized) and
+  semantic state color (not tokenized).
+- Verified with Playwright screenshots on both themes (not just
+  tsc/jest/build): CityAutocomplete now renders correctly light+dark;
+  the astrology Horoscope/Event tabs' washed-out look in the first
+  round of screenshots was confirmed to be a framer-motion fade-in
+  caught mid-animation by the screenshot timing, not a styling bug —
+  the tab content wraps in `motion.div` with an opacity animate.
+  Calendar, Face, and Dreams-empty screenshots all confirmed clean.
+  tsc clean, jest 34/34 (8 suites), `next build` green
+  (astrology route 7.92 kB, face 6.47 kB).
+
+**Out of scope this session:** VoiceInput's non-neutral gradient
+button styling (kept as-is, matches the session's semantic-color
+precedent); no backend running in this sandbox so horoscope/dream/
+city-search network calls fall back to mock/error states in every
+screenshot — expected, not a regression.
+
 ### 2026-07-05 — claude/top-cities-living-work-shxind — MCP hardening, two-layer reports, second-subject field test (PRs #136–#144)
 
 **Trigger:** continuation of the physiognomy session — owner asked to

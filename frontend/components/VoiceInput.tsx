@@ -163,7 +163,7 @@ export default function VoiceInput({
           flex items-center justify-center
           transition-all duration-300
           disabled:opacity-50 disabled:cursor-not-allowed
-          focus:outline-none focus:ring-4 focus:ring-offset-2 focus:ring-offset-slate-900
+          focus:outline-none focus:ring-4 focus:ring-offset-2 focus:ring-offset-bg
           ${
             state === 'listening'
               ? 'bg-red-500 hover:bg-red-600 focus:ring-red-500/50'
@@ -251,7 +251,7 @@ export default function VoiceInput({
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 10 }}
-            className="text-slate-400 text-sm"
+            className="text-inkMuted text-sm"
           >
             {t('processing')}
           </motion.p>
@@ -274,7 +274,7 @@ export default function VoiceInput({
             key="not-supported"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="text-slate-500 text-sm text-center max-w-[200px]"
+            className="text-inkFaint text-sm text-center max-w-[200px]"
           >
             {t('notSupported')}
           </motion.p>

@@ -7,6 +7,7 @@ import {fetchLunarDayClient} from '../lib/lunar-client';
 import {buildMockLunarDay} from '../lib/lunar-mock';
 import type {LunarDayPayload} from '../lib/lunar-server';
 import TimezoneSelector, {getStoredTimezone} from './TimezoneSelector';
+import LunarWheel from './LunarWheel';
 
 function formatDateLabel(dateIso: string, locale: string): string {
   const date = new Date(dateIso);
@@ -168,14 +169,19 @@ export default function LunarWidget({initialData, locale}: Props) {
         <TimezoneSelector value={timezone} onChange={setTimezone} />
 
         {/* Current Day Info */}
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div className="flex flex-col gap-2">
             <span className="text-sm uppercase tracking-[0.3em] text-gold">{t('phase')}</span>
-            <h2 className="text-3xl font-semibold text-ink">
+            <h2 className="font-display text-3xl font-semibold text-ink">
               {currentData.phase}
             </h2>
             <p className="text-sm text-inkMuted">{t('updated', {date: formattedDate})}</p>
           </div>
+          {(currentData.phase_key || typeof currentData.illumination === 'number') && (
+            <div className="w-24 shrink-0 self-center sm:self-start">
+              <LunarWheel phaseKey={currentData.phase_key} illumination={currentData.illumination} />
+            </div>
+          )}
           <div className="flex flex-col items-start gap-2 rounded-md border border-goldSoft bg-surfaceStrong px-4 py-3">
             <span className="text-xs font-medium uppercase tracking-[0.25em] text-gold">
               {t('lunarDay', {day: currentData.lunar_day})}
