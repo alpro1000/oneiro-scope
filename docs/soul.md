@@ -335,6 +335,64 @@ precedent); no backend running in this sandbox so horoscope/dream/
 city-search network calls fall back to mock/error states in every
 screenshot — expected, not a regression.
 
+**Astrocartography map shipped (same session, later): owner asked
+"а мы ещё делали карту астрогеографии... чтобы пользователь мог
+видеть свои линии и тыкать в место".** Found it already existed as
+`frontend/public/astrocartography.html` (PR #130) — a fully working
+interactive Leaflet map (ACG lines, click-to-inspect, plain-language
+verdict) that was NEVER wired into the actual site: no route, no nav
+item, no design tokens, orphaned static HTML only reachable by typing
+the URL directly. Worse, it hardcoded the owner's real birth date/
+time/city as the page's default chart, served as public static
+content. Asked owner how to proceed (AskUserQuestion); chose "build it
+as a real site page."
+- Deleted the orphan file (PII exposure + superseded).
+- New `/[locale]/astrocartography` page, `lib/astrocartography-client.ts`,
+  `components/AstrocartographyMap.tsx` — this time backed by the REAL
+  backend endpoints (`POST .../astrocartography/chart` for the GeoJSON
+  line set, `POST .../astrocartography/point` for click-to-inspect)
+  instead of the old file's hand-rolled client-side trig with a frozen
+  chart. Added `leaflet` + `react-leaflet` deps (new to the project),
+  dynamically imported with `ssr:false` since Leaflet needs `window`.
+- Birth form: date/time/timezone (a plain local `<select>`, deliberately
+  NOT `TimezoneSelector` — that component persists to the same
+  localStorage key the lunar widget uses for the user's *current*
+  timezone; reusing it here would have silently overwritten that
+  unrelated preference) + `CityAutocomplete` for lat/lon (the
+  astrocartography endpoints need raw coordinates and don't geocode
+  server-side, unlike the natal-chart endpoint).
+- Click result renders through the same `FindingCard` +
+  `ConfidenceBadge` (0.8, "relocation rule-set") pattern as the rest of
+  Phase 2, plus 4 angle detail cards (Asc/MC/IC/Desc) with each
+  contact's orb.
+- Nav: `Header.map` added to all 5 locales; full `AstrocartographyPage`
+  content translated ru/en only — de/es/fr get the menu label but not
+  page content, matching the existing FacePage precedent (a pre-
+  existing gap, not a new one).
+- **Real bug caught only by live end-to-end testing:** the line-color
+  lookup in `AstrocartographyMap.tsx` matched planet names case-
+  sensitively, but the backend returns them capitalized ("Sun",
+  "Saturn") while the color map's keys are lowercase — every ACG line
+  would have rendered in one fallback color instead of a distinct hue
+  per planet. Invisible to tsc/jest/mocked screenshots; only surfaced
+  once a real FastAPI backend was actually running and returning real
+  data. Fixed with `.toLowerCase()` at the lookup site.
+- Verified by standing up the real backend locally (sqlite+aiosqlite,
+  no mocks) and running a full Playwright round trip: city search →
+  build map → real ACG lines in distinct planet colors → click a point
+  → FindingCard renders live angle/contact data (Pluto/Moon/Venus on
+  angles, "clean luck" badge). Also caught the backend's own rate
+  limiter kicking in on rapid repeated test clicks (429 handled
+  gracefully with the existing error-state UI) — confirms the
+  middleware works, not a frontend bug. Basemap tiles didn't load in
+  this sandbox (proxy blocks the external CARTO CDN) — an environment
+  limitation, not a code defect; the ACG lines themselves don't depend
+  on tile images.
+- tsc clean, jest 34/34 unchanged (Leaflet/map components aren't unit-
+  tested in this repo, consistent with other browser-API-heavy
+  components like FaceScanner/VoiceInput/CityAutocomplete), `next
+  build` green (astrocartography route 6.83 kB).
+
 ### 2026-07-05 — claude/top-cities-living-work-shxind — MCP hardening, two-layer reports, second-subject field test (PRs #136–#144)
 
 **Trigger:** continuation of the physiognomy session — owner asked to

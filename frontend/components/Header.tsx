@@ -18,6 +18,7 @@ export default function Header() {
     {href: `/${locale}`, label: t('home')},
     {href: `/${locale}/calendar`, label: t('calendar')},
     {href: `/${locale}/astrology`, label: t('astrology')},
+    {href: `/${locale}/astrocartography`, label: t('map')},
     {href: `/${locale}/dreams`, label: t('dreams')},
     {href: `/${locale}/face`, label: t('face')},
     {href: `/${locale}/pricing`, label: t('pricing')},

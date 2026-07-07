@@ -108,6 +108,46 @@
       "alternativeDates": "Alternative Dates"
     }
   },
+  "AstrocartographyPage": {
+    "title": "Places Map",
+    "subtitle": "Asc/MC/IC/Desc lines across the whole planet — click any point to see what's strong or tense there",
+    "formTitle": "Birth data",
+    "birthDate": "Date of birth",
+    "birthTime": "Time of birth (optional)",
+    "birthTimezone": "Birth timezone",
+    "birthPlace": "Place of birth",
+    "unknownTime": "If time is unknown, noon will be used",
+    "buildButton": "Build map",
+    "building": "Computing lines…",
+    "buildError": "Failed to build the map",
+    "hint": "Click any point on the map — I'll show the 4 angles there and what's easy or hard.",
+    "showLines": "Show lines",
+    "hideLines": "Hide lines",
+    "legendTitle": "Planets",
+    "legendLines": "Lines: solid = MC · dashed = IC · dotted = Asc · dash-dot = Desc",
+    "inspecting": "Computing point…",
+    "inspectError": "Failed to inspect this point",
+    "resultTitle": "This place",
+    "seenLabel": "Angles here",
+    "noAngleContacts": "no planets near this angle",
+    "traditionSource": "Astro*Carto*Graphy (Jim Lewis, 1976) — classical angle practice",
+    "plusLabel": "What supports it",
+    "minusLabel": "What to watch for",
+    "cleanLuck": "Clean luck: a benefic sits on an angle with no tense contact nearby",
+    "angles": {
+      "asc": "ASC · Self & body",
+      "mc": "MC · Career & status",
+      "ic": "IC · Home & roots",
+      "desc": "DESC · Partnerships"
+    },
+    "angleDesc": {
+      "asc": "how you come across, what you project",
+      "mc": "work, reputation, public purpose",
+      "ic": "family, home life, inner peace, property",
+      "desc": "marriage, allies, relationships with others"
+    },
+    "disclaimer": "Reflective/entertainment content. Angles are astronomy (Swiss Ephemeris); the summary is a deterministic rule, not a prediction, not medical/legal/financial advice. Depends on how accurate the birth time is."
+  },
   "VoiceInput": {
     "start": "Start Recording",
     "stop": "Stop",
@@ -128,6 +168,7 @@
     "calendar": "Calendar",
     "astrology": "Astrology",
     "dreams": "Dreams",
+    "map": "Places Map",
     "pricing": "Pricing",
     "account": "Account",
     "face": "Face",
