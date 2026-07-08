@@ -914,6 +914,14 @@ While running real chart tests through the new tools, discovered my prior manual
 
 **Verified:** 14/14 smoke tests green (`pytest backend/tests/test_mcp_smoke.py backend/tests/test_agent_smoke.py`).
 
+**2026-07-08 — `/client-report` run, no repo changes (client-report skill):**
+- Generated a full Czech-language client report for a new client (11.2.1986, 12:50, Plzeň, CZ; current city = birth city). MCP server not connected this session → used the documented fallback path (direct imports from `backend.services.astrology`, package `__init__` stubbed to skip the heavy `AstrologyService` import chain).
+- Environment had none of pyswisseph/timezonefinder/matplotlib installed — created a scratch venv and installed them there; no changes to `backend/requirements.txt` or any repo file. `world.geojson` (Natural Earth 110m) fetched fresh into scratchpad (no cached copy existed in-repo).
+- Notable finding surfaced by the pipeline: natal Mercury/Venus/Jupiter sit within ~2° of this client's own MC, so `theme_scan` over `DEFAULT_CITIES` lit up almost the entire Central-European band (Munich +11.9, Rome +9.9, Milan +9.3, Zurich +8.4, Berlin +8.2, Prague +6.4) as "clean" career/luck cities — all clean, none flagged. Plzeň itself scores +8.3 clean via `compare_locations`, so the honest read was "no relocation needed," not a generic city list.
+- Home/relationships themes returned almost nothing over the default pool (only one weak, non-clean hit each) — reported as an honest gap rather than forcing a recommendation.
+- Solar Return 2026 computed for Plzeň per client's confirmation; 5 bodies (Sun/Mercury/Venus/Mars/Pluto) landed in SR house 1 — flagged as an unusually self-focused year.
+- Delivered: 5-page PDF (`Astrologicky_profil_Plzen_2026.pdf`) + embedded astrocartography map, entirely in Czech, disclaimer included. No repo files were modified; all script/data artifacts live in the session scratchpad only.
+
 *(append new entries above this line on next session)*
 
 ---
