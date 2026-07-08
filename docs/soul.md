@@ -86,6 +86,7 @@ See `docs/steering/tech.md` for technology choices and `docs/steering/structure.
 
 Recent decisions:
 - **2026-05-26** — Adopting MCP-first architecture. MCP server wraps existing FastAPI services as tools; ADK agent built on top; skills consume the agent. Rationale: reusable across Claude Desktop / Cursor / web Claude Code; one set of contracts.
+- **2026-07-08** — `/client-report` PDFs must carry an inline plain-language glossary (angles/aspects/flags/theme meaning) instead of relying on the reader asking a follow-up. Trigger: a live client couldn't parse the transit table in a delivered report. Encoded as a non-negotiable behavior rule + PDF-structure step 1b in `.claude/skills/client-report/SKILL.md`. Also documented there: `astrocartography.theme_scan`'s displayed `score` is the *general* composite (`_score_hits`: Venus/Jupiter/Saturn/Mars/Pluto weighted; Uranus/Mercury/Sun/Moon weighted 0) — a tight, theme-relevant Uranus-MC or Mercury-Desc hit can carry a low composite score while still being a real, tight, meaningful contact. Two different-sounding readings of the same city ("great for luck" vs "great for business") can both be correct — they're reading different planets on different angles, not contradicting each other. Report the specific planet/angle/orb, not just the numeric score, whenever the composite score looks unremarkable but a matches[] entry is tight.
 
 ## §7 Deployment notes
 

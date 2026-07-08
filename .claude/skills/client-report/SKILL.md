@@ -77,6 +77,34 @@ Options (append to the command):
 - **Relocation ≠ prescription.** Where the chart is neutral at home,
   say so ("уезжать не предписано"); frame cities as "в гости за
   подзарядкой" unless the client explicitly plans to move.
+- **Explain the jargon inline — don't make the client ask twice.**
+  (owner feedback, 2026-07-08: a report was sent without this and the
+  client couldn't read the transit table at all). Every report needs a
+  short plain-language glossary covering: the four angles (ASC = как
+  проявляешься, MC = карьера/статус, DESC = партнёрства, IC = дом/тыл);
+  aspect words (конъюнкция/трин/секстиль = мягко работает вместе,
+  квадратура/оппозиция = трение, требующее внимания); the 🟢/🔴 and
+  ✅чисто/⚠️с минусом flags; and one line on what each theme
+  (luck/career/relationships/home) actually scans for (which planets,
+  which angle). Put it right after the header, before the first table
+  that uses this vocabulary — don't assume the reader already knows.
+- **The composite `score` is NOT theme-weighted — say so when it
+  matters.** `astrocartography.theme_scan`'s `score` field is the
+  general composite from `_score_hits` (Venus/Jupiter weighted
+  positive, Saturn/Mars/Pluto negative; **Uranus, Mercury, Sun, Moon
+  are not weighted at all**, i.e. contribute 0 to that number). A city
+  can have a razor-tight, genuinely meaningful theme hit — e.g. Uranus
+  conjunct MC at 0.4° (career theme: innovation/tech/entrepreneurial
+  reputation) or Mercury conjunct Desc at 0.3° (relationships theme:
+  contract/negotiation-based partnerships) — and still show a low
+  composite `score`, because that scorer only "sees" Venus/Jupiter/
+  Saturn/Mars/Pluto. Don't let a low score imply "no signal" when the
+  `matches` list has a tight non-weighted-planet hit; call out the
+  actual orb and planet instead of leaning on the numeric score alone.
+  This is exactly why two different readings of the same city (e.g.
+  "good for luck" vs "good for business") can both be true — they're
+  reading different planets on different angles, not contradicting
+  each other.
 - Every PDF ends with the standard disclaimer block (reflective /
   entertainment; not medical, psychological, legal or financial
   advice; birth-time sensitivity).
@@ -104,6 +132,8 @@ HTTP endpoint's HTML) instead.
 ## PDF structure (keep this order)
 
 1. Header: name-free label, birth data, resolved tz + source.
+1b. «Как читать этот отчёт»: compact glossary box (angles, aspects,
+   🟢/🔴, ✅/⚠️ flags, one line per theme) — see the jargon rule above.
 2. «Личность — полный портрет»: one-sentence essence, placements
    table, strengths, challenges (Луна/ASC/MC first, then aspects; call
    out grand trines/stelliums explicitly).
