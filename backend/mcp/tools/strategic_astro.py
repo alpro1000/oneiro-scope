@@ -28,9 +28,11 @@ from backend.services.astrology.astrocartography import (
     RelocationResult,
     acg_lines,
     chart_geometry,
+    full_angle_breakdown,
     relocate,
     relocation_summary,
     scan_cities,
+    score_explanation,
 )
 from backend.services.astrology.astrocartography import (
     compare_locations as _compare_locations,
@@ -226,9 +228,15 @@ async def astrocartography_point(
     """Relocate the chart to one clicked point and explain it in plain words.
 
     Returns the four relocated angles (Asc/MC/IC/Desc ecliptic longitudes),
-    the natal planets sitting on those angles within `orb_deg`, and a
-    rule-based work/life summary. Angle geometry is ASTRONOMY (conf 1.0);
-    the summary is a symbol-tier reflection (conf 0.8) — never a prediction.
+    EVERY natal planet within `orb_deg` of any angle (not pre-filtered to
+    one theme) with a cited archetype description each, a rule-based
+    work/life summary, and an explanation of what actually drives the
+    composite score (so a low score is never mistaken for "nothing here"
+    when a real, tight, unweighted-planet contact exists). Angle geometry
+    is ASTRONOMY (conf 1.0); descriptions are cited archetype (conf 0.9);
+    the one-line summary is a symbol-tier reflection (conf 0.8) — never a
+    prediction. Let the reader decide what matters to them (business,
+    love, home) instead of the tool pre-filtering into a single lens.
 
     Args:
         birth_date: YYYY-MM-DD.
@@ -253,7 +261,9 @@ async def astrocartography_point(
         },
         "angle_themes": _ANGLE_THEME,
         "contacts": [_hit_to_dict(h) for h in result.angle_hits],
+        "full_breakdown": full_angle_breakdown(result, orb_deg=orb_deg),
         "score": result.score,
+        "score_explanation": score_explanation(result, locale=locale),
         "summary": relocation_summary(result, locale=locale),
     }
 

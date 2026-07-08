@@ -88,23 +88,38 @@ Options (append to the command):
   (luck/career/relationships/home) actually scans for (which planets,
   which angle). Put it right after the header, before the first table
   that uses this vocabulary — don't assume the reader already knows.
-- **The composite `score` is NOT theme-weighted — say so when it
-  matters.** `astrocartography.theme_scan`'s `score` field is the
-  general composite from `_score_hits` (Venus/Jupiter weighted
-  positive, Saturn/Mars/Pluto negative; **Uranus, Mercury, Sun, Moon
-  are not weighted at all**, i.e. contribute 0 to that number). A city
-  can have a razor-tight, genuinely meaningful theme hit — e.g. Uranus
-  conjunct MC at 0.4° (career theme: innovation/tech/entrepreneurial
-  reputation) or Mercury conjunct Desc at 0.3° (relationships theme:
-  contract/negotiation-based partnerships) — and still show a low
-  composite `score`, because that scorer only "sees" Venus/Jupiter/
-  Saturn/Mars/Pluto. Don't let a low score imply "no signal" when the
-  `matches` list has a tight non-weighted-planet hit; call out the
-  actual orb and planet instead of leaning on the numeric score alone.
-  This is exactly why two different readings of the same city (e.g.
-  "good for luck" vs "good for business") can both be true — they're
-  reading different planets on different angles, not contradicting
-  each other.
+- **Show ALL four angles for every city, not one pre-filtered theme.**
+  (owner feedback, 2026-07-08: "надо учитывать все возможные варианты и
+  человек пусть сам решает" — list every angle contact and what it
+  means; let the reader decide what they care about instead of the
+  report silently filtering to one lens.) For every city that gets a
+  detailed writeup (birth/current city, shortlisted candidates), call
+  `astrocartography.full_angle_breakdown(result)` — it returns EVERY
+  natal planet within orb of EVERY angle (Asc/MC/IC/Desc), each with a
+  cited archetype description (confidence 0.9, composed from
+  `archetypes.planet_in_house` since angles anchor houses 1/4/7/10) and
+  a benefic/challenging/neutral tag. `theme_scan`'s single-theme
+  ranking is still useful for shortlisting candidates out of a big
+  pool, but the actual per-city writeup should show the full picture.
+- **Always show the composite `score`, but explain it — good or bad.**
+  Call `astrocartography.score_explanation(result)` alongside the
+  score. `_score_hits` only weighs Venus/Jupiter/Sun/Moon (positive,
+  Venus/Jupiter at 3.0 vs Sun/Moon at 1.0) and Saturn/Mars/Pluto
+  (negative) — **Mercury, Uranus and Neptune contribute exactly 0**
+  regardless of orb. A city can have a razor-tight, genuinely
+  meaningful contact — e.g. Uranus conjunct MC at 0.4° (career:
+  innovation/tech/entrepreneurial reputation) or Mercury conjunct Desc
+  at 0.3° (relationships: contract/negotiation-based partnerships) —
+  and still show a low or flat composite score, because the scorer
+  can't see those planets at all. A low score does NOT automatically
+  mean "nothing here" (`score_explanation` says so explicitly when
+  `driving` is empty but `unweighted` isn't) — and when the score
+  genuinely IS low/negative because of a real malefic contact, name
+  which one and its orb (`score_explanation` does this too), don't
+  just show the number. This is exactly why two different readings of
+  the same city (e.g. "good for luck" vs "good for business") can both
+  be true — they're reading different planets on different angles, not
+  contradicting each other.
 - Every PDF ends with the standard disclaimer block (reflective /
   entertainment; not medical, psychological, legal or financial
   advice; birth-time sensitivity).
