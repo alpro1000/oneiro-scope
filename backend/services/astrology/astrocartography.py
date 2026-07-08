@@ -377,6 +377,7 @@ def full_angle_breakdown(result: "RelocationResult", *, orb_deg: float = 8.0) ->
             "angle": h.angle,
             "orb_deg": h.orb_deg,
             "tag": tag,
+            "strength": contact_strength(h),
             "description": arche["description"],
             "source": arche["source"],
         })
@@ -385,14 +386,17 @@ def full_angle_breakdown(result: "RelocationResult", *, orb_deg: float = 8.0) ->
 
 def score_explanation(result: "RelocationResult", locale: str = "ru") -> dict:
     """Plain-language caveat for the composite `score`, naming exactly which
-    contacts drove it and which real (but unweighted) contacts it ignores.
+    contacts drove it, which real (but unweighted) contacts it ignores, and
+    the valence-free `total_significance` so nothing is lost.
 
     `_score_hits` only weighs Venus/Jupiter/Sun/Moon (positive) and
     Saturn/Mars/Pluto (negative) — Mercury, Uranus and Neptune contribute
-    exactly 0 regardless of orb. A low or negative score therefore does
-    NOT mean "nothing here": check `driving` (what set the number) against
-    `unweighted` (real contacts the number can't see) before calling a
-    place "quiet" or "bad".
+    exactly 0 regardless of orb (see `contact_strength`/`total_significance`
+    docstring for why: they don't have an agreed classical/modern valence,
+    so we don't invent one). A low or negative `score` therefore does NOT
+    mean "nothing here": check `driving` (what set the number) and
+    `total_significance` (everything, unsigned) before calling a place
+    "quiet" or "bad".
     """
     ru = locale == "ru"
     weighted_planets = set(_BENEFICS) | set(_MALEFICS)
@@ -403,6 +407,7 @@ def score_explanation(result: "RelocationResult", locale: str = "ru") -> dict:
     ]
     driving.sort(key=lambda h: h.orb_deg)
     unweighted.sort(key=lambda h: h.orb_deg)
+    sig = total_significance(result, orb_deg=8.0)
 
     def name(p: str) -> str:
         return _PLANET_RU[p] if ru else p
@@ -411,10 +416,12 @@ def score_explanation(result: "RelocationResult", locale: str = "ru") -> dict:
         if not driving and not unweighted:
             verdict = "Тихая зона: ни один натальный объект не подходит близко ни к одному углу."
         elif not driving:
+            tightest = unweighted[0]
             verdict = (
                 "Композитный балл близок к нулю, но это не значит «пусто»: "
-                "есть реальные точные контакты (см. ниже), просто эта формула "
-                "их не считает."
+                f"есть реальный точный контакт — {name(tightest.planet)}→{tightest.angle} "
+                f"({tightest.orb_deg:.2f}°) — просто эта формула его не считает "
+                f"(общая «загруженность» углов без учёта плюс/минус: {sig})."
             )
         elif result.score <= 0:
             malefics_here = [h for h in driving if h.planet in _MALEFICS]
@@ -427,14 +434,21 @@ def score_explanation(result: "RelocationResult", locale: str = "ru") -> dict:
             verdict = "Балл положительный за счёт: " + ", ".join(
                 f"{name(h.planet)}→{h.angle} ({h.orb_deg:.2f}°)" for h in driving if h.planet in _BENEFICS
             )
+        if unweighted and driving:
+            verdict += (
+                f" Помимо этого есть {len(unweighted)} контакт(ов), не учтённых в балле "
+                f"(Меркурий/Уран/Нептун) — см. полный разбор ниже, не судите по одному баллу."
+            )
     else:
         if not driving and not unweighted:
             verdict = "Quiet zone: no natal body sits close to any angle here."
         elif not driving:
+            tightest = unweighted[0]
             verdict = (
                 "The composite score is near zero, but that isn't \"empty\": "
-                "real tight contacts exist below — this formula just doesn't "
-                "count them."
+                f"a real tight contact exists — {tightest.planet}→{tightest.angle} "
+                f"({tightest.orb_deg:.2f}°) — this formula just doesn't count it "
+                f"(total unsigned angle load: {sig})."
             )
         elif result.score <= 0:
             malefics_here = [h for h in driving if h.planet in _MALEFICS]
@@ -447,14 +461,21 @@ def score_explanation(result: "RelocationResult", locale: str = "ru") -> dict:
             verdict = "Positive score driven by: " + ", ".join(
                 f"{h.planet}→{h.angle} ({h.orb_deg:.2f}°)" for h in driving if h.planet in _BENEFICS
             )
+        if unweighted and driving:
+            verdict += (
+                f" There are also {len(unweighted)} unscored contact(s) "
+                f"(Mercury/Uranus/Neptune) — see the full breakdown, don't judge by the score alone."
+            )
 
     return {
         "plain": verdict,
         "score": result.score,
+        "total_significance": sig,
         "driving": [{"planet": h.planet, "angle": h.angle, "orb_deg": h.orb_deg} for h in driving],
         "unweighted": [{"planet": h.planet, "angle": h.angle, "orb_deg": h.orb_deg} for h in unweighted],
         "confidence": 0.8,
-        "source": "composite scorer caveat (Venus/Jupiter/Sun/Moon +, Saturn/Mars/Pluto -, Mercury/Uranus/Neptune = 0)",
+        "source": "composite scorer caveat (Venus/Jupiter/Sun/Moon +, Saturn/Mars/Pluto -, Mercury/Uranus/Neptune "
+                  "unscored but counted in total_significance)",
     }
 
 
@@ -647,6 +668,44 @@ def _score_hits(hits: list[AngleHit]) -> float:
         falloff = max(0.0, 1.0 - h.orb_deg / 7.0)
         total += pw * aw * falloff
     return round(total, 2)
+
+
+# Valence-free strength — "how tight and prominent is this contact",
+# regardless of whether the planet has an agreed +/- valence at all.
+#
+# `_score_hits` above only judges the 7 classical bodies Ptolemy's
+# Tetrabiblos (2nd c. CE) actually names as benefic (Venus, Jupiter) or
+# malefic (Saturn, Mars) — Sun/Moon get a mild, non-classical +1 (a
+# modern-popular-astrology convention, not Ptolemy's; the comment above
+# calling them "neutral" while coding them as +1 was already an
+# inconsistency in this file before this docstring). Mercury is
+# classically "common" (takes on whichever nature it's aspected by —
+# never assigned a fixed sign), and Uranus/Neptune/Pluto are modern
+# (post-1781) additions with no agreed classical valence at all; most
+# modern astrologers read them as transformational in FLAVOR (Uranus =
+# disruption, Neptune = dissolution, Pluto = intensity) rather than
+# good/bad. Inventing a +/- sign for those three just to fold them into
+# `score` would misrepresent a genuine "no consensus" as a citation —
+# so instead of forcing them in, every contact (all 10 bodies) gets
+# counted here, unsigned, so nothing is invisible to the reader even
+# though `score` can't see it.
+def contact_strength(hit: "AngleHit", *, max_orb: float = 7.0) -> float:
+    """Angle-weighted tightness of one contact, independent of planet
+    valence. Every one of the 10 tracked planets contributes."""
+    falloff = max(0.0, 1.0 - hit.orb_deg / max_orb)
+    return round(_ANGLE_WEIGHT[hit.angle] * falloff, 3)
+
+
+def total_significance(result: "RelocationResult", *, orb_deg: float = 8.0) -> float:
+    """Sum of `contact_strength` across every angle hit within `orb_deg`,
+    regardless of planet or valence. Complements the classical `score`:
+    a place can have a low or negative `score` and still have a HIGH
+    total_significance (a lot going on — just not the classical
+    benefic/malefic kind)."""
+    return round(
+        sum(contact_strength(h) for h in result.angle_hits if h.orb_deg <= orb_deg),
+        2,
+    )
 
 
 def scan_cities(

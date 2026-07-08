@@ -120,6 +120,29 @@ Options (append to the command):
   the same city (e.g. "good for luck" vs "good for business") can both
   be true — they're reading different planets on different angles, not
   contradicting each other.
+- **Always show `total_significance` next to `score` — nothing gets
+  dropped.** (owner feedback, 2026-07-08: "надо добавить все контакты
+  ... чтобы не терять ничего" — don't just caveat the score in prose,
+  surface a real number for the planets it excludes.) `score` is a
+  *valence* judgment and can only ever cover the 7 bodies with an
+  agreed classical/modern +/- (Ptolemy's Tetrabiblos names Venus/
+  Jupiter benefic, Saturn/Mars malefic; Sun/Moon get a mild modern-
+  popular +1 baked into this codebase already). Mercury is classically
+  "common" (takes the nature of whatever it touches — never a fixed
+  sign) and Uranus/Neptune/Pluto are modern (post-1781) additions with
+  no agreed valence at all — inventing a +/- for them would misrepresent
+  a real "no consensus" as a citation, so don't. Instead call
+  `astrocartography.total_significance(result)` (or read it off
+  `score_explanation()["total_significance"]`, already wired in) — an
+  unsigned, angle/orb-weighted sum across ALL 10 bodies. Report both
+  numbers side by side. Concrete case that motivated this: Girona (this
+  session) scores only +0.74 (weak Sun-Desc is the only classically
+  scored contact) but has `total_significance` **3.58** — higher than
+  Warsaw's 3.1 (score +5.72) — because Girona's Uranus-MC (0.37°) and
+  Mercury-Desc (0.35°) are both razor-tight, just unscored. Without
+  `total_significance` visible, a reader would wrongly conclude Girona
+  is "quieter" than Warsaw; it isn't, it's just quiet in the specific
+  classical-valence sense.
 - Every PDF ends with the standard disclaimer block (reflective /
   entertainment; not medical, psychological, legal or financial
   advice; birth-time sensitivity).
