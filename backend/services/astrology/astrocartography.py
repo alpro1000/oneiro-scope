@@ -324,6 +324,293 @@ def relocation_summary(result: "RelocationResult", locale: str = "ru") -> dict:
     }
 
 
+# Weights for the heuristic score. Astrology tradition treats Venus/Jupiter
+# as benefics, Saturn/Pluto/Mars as challenging on angles. Sun/Moon are
+# strong but neutral.
+_BENEFICS = {"Venus": 3.0, "Jupiter": 3.0, "Sun": 1.0, "Moon": 1.0}
+_MALEFICS = {"Saturn": -1.5, "Pluto": -1.5, "Mars": -1.0}
+_ANGLE_WEIGHT = {"Asc": 2.0, "MC": 2.0, "IC": 1.5, "Desc": 1.0}
+
+
+def _score_hits(hits: list[AngleHit]) -> float:
+    """Heuristic: sum of (planet weight) * (angle weight) * orb falloff."""
+    total = 0.0
+    for h in hits:
+        pw = _BENEFICS.get(h.planet, 0) + _MALEFICS.get(h.planet, 0)
+        aw = _ANGLE_WEIGHT[h.angle]
+        # Linear falloff to zero at orb_deg=7.
+        falloff = max(0.0, 1.0 - h.orb_deg / 7.0)
+        total += pw * aw * falloff
+    return round(total, 2)
+
+
+# Valence-free strength — "how tight and prominent is this contact",
+# regardless of whether the planet has an agreed +/- valence at all.
+#
+# `_score_hits` above only judges the 7 classical bodies Ptolemy's
+# Tetrabiblos (2nd c. CE) actually names as benefic (Venus, Jupiter) or
+# malefic (Saturn, Mars) — Sun/Moon get a mild, non-classical +1 (a
+# modern-popular-astrology convention, not Ptolemy's; the comment above
+# calling them "neutral" while coding them as +1 was already an
+# inconsistency in this file before this docstring). Mercury is
+# classically "common" (takes on whichever nature it's aspected by —
+# never assigned a fixed sign), and Uranus/Neptune/Pluto are modern
+# (post-1781) additions with no agreed classical valence at all; most
+# modern astrologers read them as transformational in FLAVOR (Uranus =
+# disruption, Neptune = dissolution, Pluto = intensity) rather than
+# good/bad. Inventing a +/- sign for those three just to fold them into
+# `score` would misrepresent a genuine "no consensus" as a citation —
+# so instead of forcing them in, every contact (all 10 bodies) gets
+# counted here, unsigned, so nothing is invisible to the reader even
+# though `score` can't see it.
+def contact_strength(hit: "AngleHit", *, max_orb: float = 7.0) -> float:
+    """Angle-weighted tightness of one contact, independent of planet
+    valence. Every one of the 10 tracked planets contributes."""
+    falloff = max(0.0, 1.0 - hit.orb_deg / max_orb)
+    return round(_ANGLE_WEIGHT[hit.angle] * falloff, 3)
+
+
+def total_significance(result: "RelocationResult", *, orb_deg: float = 8.0) -> float:
+    """Sum of `contact_strength` across every angle hit within `orb_deg`,
+    regardless of planet or valence. Complements the classical `score`:
+    a place can have a low or negative `score` and still have a HIGH
+    total_significance (a lot going on — just not the classical
+    benefic/malefic kind)."""
+    return round(
+        sum(contact_strength(h) for h in result.angle_hits if h.orb_deg <= orb_deg),
+        2,
+    )
+
+
+# Full angle breakdown — cited, all planets, all four angles ----------------
+#
+# `relocation_summary`/`theme_scan` above pre-filter into a single lens
+# (work vs home vs "the luck theme") and can hide a genuinely tight,
+# meaningful contact just because it's on a planet that lens doesn't look
+# at (owner feedback 2026-07-08: a razor-tight Uranus-MC hit read as
+# "nothing" under the luck/composite score even though it's a real,
+# citable business-relevant signal). `full_angle_breakdown` instead lists
+# EVERY natal planet within orb of EVERY angle, so the reader — not the
+# scorer — decides what they care about (business vs love vs family vs
+# money). Angles anchor the classical house cusps (Asc=1, IC=4, Desc=7,
+# MC=10 — Jim Lewis, Astro*Carto*Graphy, 1976, reads angle lines exactly
+# this way), so descriptions reuse the cited `planet_in_house_archetype`
+# composition (Tompkins/Hand/Sasportas, confidence 0.9) instead of a new,
+# uncited angle table.
+_ANGLE_TO_HOUSE = {"Asc": 1, "IC": 4, "Desc": 7, "MC": 10}
+
+
+def angle_hit_archetype(planet: str, angle: str) -> dict:
+    """Cited archetype (confidence 0.9) for a planet sitting on an angle."""
+    from backend.services.astrology.archetypes.planet_in_house import (
+        planet_in_house_archetype,
+    )
+    return planet_in_house_archetype(planet.lower(), _ANGLE_TO_HOUSE[angle])
+
+
+def full_angle_breakdown(result: "RelocationResult", *, orb_deg: float = 8.0) -> list[dict]:
+    """Every natal planet within `orb_deg` of any angle at this location,
+    each with its cited description and a benefic/malefic/neutral tag. Use
+    this instead of (or alongside) a single theme filter so the reader
+    sees the whole picture and can decide what matters to them.
+
+    Tag uses the SAME weighting as the composite `score` (`_BENEFICS`/
+    `_MALEFICS`, defined below with `_score_hits`) so the two stay
+    consistent: Venus/Jupiter/Sun/Moon = benefic, Saturn/Mars/Pluto =
+    challenging, Mercury/Uranus/Neptune = neutral (truly unweighted).
+    """
+    rows = []
+    for h in sorted(result.angle_hits, key=lambda h: h.orb_deg):
+        if h.orb_deg > orb_deg:
+            continue
+        if h.planet in _BENEFICS:
+            tag = "benefic"
+        elif h.planet in _MALEFICS:
+            tag = "challenging"
+        else:
+            tag = "neutral"
+        arche = angle_hit_archetype(h.planet, h.angle)
+        rows.append({
+            "planet": h.planet,
+            "angle": h.angle,
+            "orb_deg": h.orb_deg,
+            "tag": tag,
+            "strength": contact_strength(h),
+            "description": arche["description"],
+            "source": arche["source"],
+        })
+    return rows
+
+
+# Home-vs-work axis split ----------------------------------------------------
+#
+# Pattern surfaced 2026-07-08 comparing candidate cities for "where do I
+# live vs where do I work": a single composite score or a flat contact
+# list can completely hide that a city's whole signal sits on one life
+# axis. Concrete case: Girona/Blanes/Barcelona carry ALL their
+# significance on Uranus-MC/Mercury-Desc/Sun-Desc (career, partnerships)
+# and essentially none on IC/Asc (home, self) — while Brno/Ostrava are
+# the mirror image (Moon-Asc, Venus-IC, Mars-IC; nothing on MC/Desc). A
+# ranked list of "best cities" without this split reads as one
+# undifferentiated answer to two different questions.
+_HOME_ANGLES = {"IC", "Asc"}
+_WORK_ANGLES = {"MC", "Desc"}
+
+
+def home_vs_work_focus(
+    result: "RelocationResult", *, orb_deg: float = 8.0, locale: str = "ru"
+) -> dict:
+    """Split `total_significance` into a home axis (IC/Asc = houses 4/1:
+    home, roots, self) and a work axis (MC/Desc = houses 10/7: career,
+    partnerships), so "where to live" and "where to work" can be answered
+    separately for the same city instead of blended into one number.
+    """
+    hits = [h for h in result.angle_hits if h.orb_deg <= orb_deg]
+    home_hits = sorted((h for h in hits if h.angle in _HOME_ANGLES), key=lambda h: h.orb_deg)
+    work_hits = sorted((h for h in hits if h.angle in _WORK_ANGLES), key=lambda h: h.orb_deg)
+    home_sig = round(sum(contact_strength(h) for h in home_hits), 2)
+    work_sig = round(sum(contact_strength(h) for h in work_hits), 2)
+
+    ru = locale == "ru"
+    if home_sig == 0 and work_sig == 0:
+        verdict = (
+            "Тихая зона по обеим осям — ни дом, ни работа здесь картой не выделены."
+            if ru else
+            "Quiet on both axes — neither home nor work is highlighted here."
+        )
+    elif work_sig > home_sig * 1.5:
+        verdict = (
+            "Рабочая зона: сигнал сосредоточен на карьере/партнёрствах (MC/Desc), "
+            "почти ничего на доме (IC/Asc)."
+            if ru else
+            "Work zone: signal concentrated on career/partnerships (MC/Desc), "
+            "almost nothing on home (IC/Asc)."
+        )
+    elif home_sig > work_sig * 1.5:
+        verdict = (
+            "Домашняя зона: сигнал сосредоточен на доме/самоощущении (IC/Asc), "
+            "почти ничего на карьере (MC/Desc)."
+            if ru else
+            "Home zone: signal concentrated on home/self (IC/Asc), "
+            "almost nothing on career (MC/Desc)."
+        )
+    else:
+        verdict = (
+            "Смешанная зона: дом и работа представлены на углах примерно поровну."
+            if ru else
+            "Mixed zone: home and work are roughly evenly represented on the angles."
+        )
+
+    def _hit_dicts(hs: list["AngleHit"]) -> list[dict]:
+        return [{"planet": h.planet, "angle": h.angle, "orb_deg": h.orb_deg} for h in hs]
+
+    return {
+        "plain": verdict,
+        "home_significance": home_sig,
+        "work_significance": work_sig,
+        "home_hits": _hit_dicts(home_hits),
+        "work_hits": _hit_dicts(work_hits),
+        "confidence": 0.8,
+        "source": "home axis = IC/Asc (houses 4/1), work axis = MC/Desc (houses 10/7) "
+                  "— classical angle-to-house mapping",
+    }
+
+
+def score_explanation(result: "RelocationResult", locale: str = "ru") -> dict:
+    """Plain-language caveat for the composite `score`, naming exactly which
+    contacts drove it, which real (but unweighted) contacts it ignores, and
+    the valence-free `total_significance` so nothing is lost.
+
+    `_score_hits` only weighs Venus/Jupiter/Sun/Moon (positive) and
+    Saturn/Mars/Pluto (negative) — Mercury, Uranus and Neptune contribute
+    exactly 0 regardless of orb (see `contact_strength`/`total_significance`
+    docstring for why: they don't have an agreed classical/modern valence,
+    so we don't invent one). A low or negative `score` therefore does NOT
+    mean "nothing here": check `driving` (what set the number) and
+    `total_significance` (everything, unsigned) before calling a place
+    "quiet" or "bad".
+    """
+    ru = locale == "ru"
+    weighted_planets = set(_BENEFICS) | set(_MALEFICS)
+    driving = [h for h in result.angle_hits if h.planet in weighted_planets and h.orb_deg <= 7.0]
+    unweighted = [
+        h for h in result.angle_hits
+        if h.planet not in weighted_planets and h.orb_deg <= 8.0
+    ]
+    driving.sort(key=lambda h: h.orb_deg)
+    unweighted.sort(key=lambda h: h.orb_deg)
+    sig = total_significance(result, orb_deg=8.0)
+
+    def name(p: str) -> str:
+        return _PLANET_RU[p] if ru else p
+
+    if ru:
+        if not driving and not unweighted:
+            verdict = "Тихая зона: ни один натальный объект не подходит близко ни к одному углу."
+        elif not driving:
+            tightest = unweighted[0]
+            verdict = (
+                "Композитный балл близок к нулю, но это не значит «пусто»: "
+                f"есть реальный точный контакт — {name(tightest.planet)}→{tightest.angle} "
+                f"({tightest.orb_deg:.2f}°) — просто эта формула его не считает "
+                f"(общая «загруженность» углов без учёта плюс/минус: {sig})."
+            )
+        elif result.score <= 0:
+            malefics_here = [h for h in driving if h.planet in _MALEFICS]
+            verdict = (
+                "Балл невысокий/отрицательный, и на то есть причина: "
+                + ", ".join(f"{name(h.planet)}→{h.angle} ({h.orb_deg:.2f}°)" for h in malefics_here)
+                if malefics_here else "Балл невысокий: слабые или нейтральные попадания без выраженного плюса."
+            )
+        else:
+            verdict = "Балл положительный за счёт: " + ", ".join(
+                f"{name(h.planet)}→{h.angle} ({h.orb_deg:.2f}°)" for h in driving if h.planet in _BENEFICS
+            )
+        if unweighted and driving:
+            verdict += (
+                f" Помимо этого есть {len(unweighted)} контакт(ов), не учтённых в балле "
+                f"(Меркурий/Уран/Нептун) — см. полный разбор ниже, не судите по одному баллу."
+            )
+    else:
+        if not driving and not unweighted:
+            verdict = "Quiet zone: no natal body sits close to any angle here."
+        elif not driving:
+            tightest = unweighted[0]
+            verdict = (
+                "The composite score is near zero, but that isn't \"empty\": "
+                f"a real tight contact exists — {tightest.planet}→{tightest.angle} "
+                f"({tightest.orb_deg:.2f}°) — this formula just doesn't count it "
+                f"(total unsigned angle load: {sig})."
+            )
+        elif result.score <= 0:
+            malefics_here = [h for h in driving if h.planet in _MALEFICS]
+            verdict = (
+                "The score is low/negative, and here's why: "
+                + ", ".join(f"{h.planet}→{h.angle} ({h.orb_deg:.2f}°)" for h in malefics_here)
+                if malefics_here else "Low score: weak or neutral hits, no strong plus."
+            )
+        else:
+            verdict = "Positive score driven by: " + ", ".join(
+                f"{h.planet}→{h.angle} ({h.orb_deg:.2f}°)" for h in driving if h.planet in _BENEFICS
+            )
+        if unweighted and driving:
+            verdict += (
+                f" There are also {len(unweighted)} unscored contact(s) "
+                f"(Mercury/Uranus/Neptune) — see the full breakdown, don't judge by the score alone."
+            )
+
+    return {
+        "plain": verdict,
+        "score": result.score,
+        "total_significance": sig,
+        "driving": [{"planet": h.planet, "angle": h.angle, "orb_deg": h.orb_deg} for h in driving],
+        "unweighted": [{"planet": h.planet, "angle": h.angle, "orb_deg": h.orb_deg} for h in unweighted],
+        "confidence": 0.8,
+        "source": "composite scorer caveat (Venus/Jupiter/Sun/Moon +, Saturn/Mars/Pluto -, Mercury/Uranus/Neptune "
+                  "unscored but counted in total_significance)",
+    }
+
+
 # Multi-location comparison + thematic scan --------------------------------
 
 # theme -> predicate over (planet, angle). Mirrors the four questions
@@ -372,6 +659,9 @@ def compare_locations(
                 ],
                 "score": r.score,
                 "summary": relocation_summary(r, locale=locale),
+                "full_breakdown": full_angle_breakdown(r, orb_deg=orb_deg),
+                "score_explanation": score_explanation(r, locale=locale),
+                "axis_focus": home_vs_work_focus(r, orb_deg=orb_deg, locale=locale),
             }
         )
     return out
@@ -491,26 +781,6 @@ def relocate(
         angle_hits=hits,
         score=score,
     )
-
-
-# Weights for the heuristic score. Astrology tradition treats Venus/Jupiter
-# as benefics, Saturn/Pluto/Mars as challenging on angles. Sun/Moon are
-# strong but neutral.
-_BENEFICS = {"Venus": 3.0, "Jupiter": 3.0, "Sun": 1.0, "Moon": 1.0}
-_MALEFICS = {"Saturn": -1.5, "Pluto": -1.5, "Mars": -1.0}
-_ANGLE_WEIGHT = {"Asc": 2.0, "MC": 2.0, "IC": 1.5, "Desc": 1.0}
-
-
-def _score_hits(hits: list[AngleHit]) -> float:
-    """Heuristic: sum of (planet weight) * (angle weight) * orb falloff."""
-    total = 0.0
-    for h in hits:
-        pw = _BENEFICS.get(h.planet, 0) + _MALEFICS.get(h.planet, 0)
-        aw = _ANGLE_WEIGHT[h.angle]
-        # Linear falloff to zero at orb_deg=7.
-        falloff = max(0.0, 1.0 - h.orb_deg / 7.0)
-        total += pw * aw * falloff
-    return round(total, 2)
 
 
 def scan_cities(

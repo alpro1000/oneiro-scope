@@ -5,9 +5,12 @@
 > that's easy to lose. Updated at the end of every substantial session
 > alongside `soul.md §9`.
 
-**Дата последнего обновления:** 2026-07-05 (вечер)
+**Дата последнего обновления:** 2026-07-08 (см. запись ниже — report-only, без изменений кода)
 **Последняя ветка работы:** `claude/photo-personality-analysis-2jy29b` (auto-zoom + анатомия губ + лонгитюд; НЕ замержена — PR по запросу owner)
 **Текущий main HEAD:** physiognomy + MCP hardening + двухслойные отчёты, все CI-чеки зелёные
+
+**Сессия 2026-07-08 — `/client-report`, без изменений кода репозитория:**
+Сгенерирован полный клиентский PDF-отчёт (натал + транзиты 2026 + Solar Return + астрокартография) на чешском языке для нового клиента (11.02.1986 12:50 Плзень, ЧР). MCP-сервер не был подключён в сессии → использован документированный fallback (прямые импорты `backend.services.astrology`, инициализатор пакета застаблен, чтобы не тянуть тяжёлый `AstrologyService`). Окружение сессии не имело pyswisseph/timezonefinder/matplotlib — поставлены в scratch-venv, `world.geojson` (Natural Earth 110m) скачан во временный scratchpad; **репозиторий не менялся** (requirements.txt не трогали), кроме записи в `docs/soul.md §9`. Заметка для будущих сессий с `/client-report` на bare-checkout: fallback-путь скилла реально работает, но требует ~3 доп. pip-пакета и сетевой доступ для world.geojson (кэш в репо отсутствует) — можно закэшировать geojson в `docs/templates/` или scratchpad конвенции, если это будет происходить часто.
 
 **Новое в сессии 2026-07-05 (вечер, photo-personality-analysis):**
 - **Auto-zoom в `_landmarks_from_photo`:** нет лица → апскейл 2x/3x;

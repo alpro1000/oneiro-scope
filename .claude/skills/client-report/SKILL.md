@@ -77,6 +77,89 @@ Options (append to the command):
 - **Relocation ≠ prescription.** Where the chart is neutral at home,
   say so ("уезжать не предписано"); frame cities as "в гости за
   подзарядкой" unless the client explicitly plans to move.
+- **Explain the jargon inline — don't make the client ask twice.**
+  (owner feedback, 2026-07-08: a report was sent without this and the
+  client couldn't read the transit table at all). Every report needs a
+  short plain-language glossary covering: the four angles (ASC = как
+  проявляешься, MC = карьера/статус, DESC = партнёрства, IC = дом/тыл);
+  aspect words (конъюнкция/трин/секстиль = мягко работает вместе,
+  квадратура/оппозиция = трение, требующее внимания); the 🟢/🔴 and
+  ✅чисто/⚠️с минусом flags; and one line on what each theme
+  (luck/career/relationships/home) actually scans for (which planets,
+  which angle). Put it right after the header, before the first table
+  that uses this vocabulary — don't assume the reader already knows.
+- **Show ALL four angles for every city, not one pre-filtered theme.**
+  (owner feedback, 2026-07-08: "надо учитывать все возможные варианты и
+  человек пусть сам решает" — list every angle contact and what it
+  means; let the reader decide what they care about instead of the
+  report silently filtering to one lens.) For every city that gets a
+  detailed writeup (birth/current city, shortlisted candidates), call
+  `astrocartography.full_angle_breakdown(result)` — it returns EVERY
+  natal planet within orb of EVERY angle (Asc/MC/IC/Desc), each with a
+  cited archetype description (confidence 0.9, composed from
+  `archetypes.planet_in_house` since angles anchor houses 1/4/7/10) and
+  a benefic/challenging/neutral tag. `theme_scan`'s single-theme
+  ranking is still useful for shortlisting candidates out of a big
+  pool, but the actual per-city writeup should show the full picture.
+- **Always show the composite `score`, but explain it — good or bad.**
+  Call `astrocartography.score_explanation(result)` alongside the
+  score. `_score_hits` only weighs Venus/Jupiter/Sun/Moon (positive,
+  Venus/Jupiter at 3.0 vs Sun/Moon at 1.0) and Saturn/Mars/Pluto
+  (negative) — **Mercury, Uranus and Neptune contribute exactly 0**
+  regardless of orb. A city can have a razor-tight, genuinely
+  meaningful contact — e.g. Uranus conjunct MC at 0.4° (career:
+  innovation/tech/entrepreneurial reputation) or Mercury conjunct Desc
+  at 0.3° (relationships: contract/negotiation-based partnerships) —
+  and still show a low or flat composite score, because the scorer
+  can't see those planets at all. A low score does NOT automatically
+  mean "nothing here" (`score_explanation` says so explicitly when
+  `driving` is empty but `unweighted` isn't) — and when the score
+  genuinely IS low/negative because of a real malefic contact, name
+  which one and its orb (`score_explanation` does this too), don't
+  just show the number. This is exactly why two different readings of
+  the same city (e.g. "good for luck" vs "good for business") can both
+  be true — they're reading different planets on different angles, not
+  contradicting each other.
+- **Always show `total_significance` next to `score` — nothing gets
+  dropped.** (owner feedback, 2026-07-08: "надо добавить все контакты
+  ... чтобы не терять ничего" — don't just caveat the score in prose,
+  surface a real number for the planets it excludes.) `score` is a
+  *valence* judgment and can only ever cover the 7 bodies with an
+  agreed classical/modern +/- (Ptolemy's Tetrabiblos names Venus/
+  Jupiter benefic, Saturn/Mars malefic; Sun/Moon get a mild modern-
+  popular +1 baked into this codebase already). Mercury is classically
+  "common" (takes the nature of whatever it touches — never a fixed
+  sign) and Uranus/Neptune/Pluto are modern (post-1781) additions with
+  no agreed valence at all — inventing a +/- for them would misrepresent
+  a real "no consensus" as a citation, so don't. Instead call
+  `astrocartography.total_significance(result)` (or read it off
+  `score_explanation()["total_significance"]`, already wired in) — an
+  unsigned, angle/orb-weighted sum across ALL 10 bodies. Report both
+  numbers side by side. Concrete case that motivated this: Girona (this
+  session) scores only +0.74 (weak Sun-Desc is the only classically
+  scored contact) but has `total_significance` **3.58** — higher than
+  Warsaw's 3.1 (score +5.72) — because Girona's Uranus-MC (0.37°) and
+  Mercury-Desc (0.35°) are both razor-tight, just unscored. Without
+  `total_significance` visible, a reader would wrongly conclude Girona
+  is "quieter" than Warsaw; it isn't, it's just quiet in the specific
+  classical-valence sense.
+- **When the client is comparing "where to live" vs "where to work" —
+  or asks about several candidate cities together — split by axis, not
+  just by score.** (owner feedback, 2026-07-08: comparing Girona/
+  Blanes/Barcelona against Brno/Ostrava/Plzeň for "live vs work"
+  surfaced that a city's whole signal can sit on ONE life axis, which a
+  single ranked list completely hides.) Call
+  `astrocartography.home_vs_work_focus(result)` per candidate — it
+  splits `total_significance` into a home axis (IC/Asc: houses 4/1) and
+  a work axis (MC/Desc: houses 10/7) and returns a plain verdict ("work
+  zone" / "home zone" / "mixed" / "quiet on both"). Concrete case: in
+  the same session, Girona/Blanes/Barcelona carried ALL their
+  significance on the work axis (Uranus-MC, Mercury-Desc, Sun-Desc) and
+  literally 0 on the home axis, while Brno/Ostrava were the mirror
+  image (Moon-Asc, Venus-IC, Mars-IC; 0 on the work axis) — so "which
+  city is best" doesn't even have one answer; it's two different
+  answers to two different questions. Whenever a report ranks or
+  compares ≥2 cities, show the axis split, not just the composite score.
 - Every PDF ends with the standard disclaimer block (reflective /
   entertainment; not medical, psychological, legal or financial
   advice; birth-time sensitivity).
@@ -104,6 +187,8 @@ HTTP endpoint's HTML) instead.
 ## PDF structure (keep this order)
 
 1. Header: name-free label, birth data, resolved tz + source.
+1b. «Как читать этот отчёт»: compact glossary box (angles, aspects,
+   🟢/🔴, ✅/⚠️ flags, one line per theme) — see the jargon rule above.
 2. «Личность — полный портрет»: one-sentence essence, placements
    table, strengths, challenges (Луна/ASC/MC first, then aspects; call
    out grand trines/stelliums explicitly).

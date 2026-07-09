@@ -186,8 +186,35 @@ def render_html(report: dict, *, locale: str = "ru") -> str:
         "year": "Год: медленные транзиты" if ru else "Year: slow transits",
         "clean": "чисто" if ru else "clean",
         "mixed": "с минусом" if ru else "mixed",
+        "glossary_title": "Как читать этот отчёт" if ru else "How to read this report",
     }
     b = report["birth"]
+
+    glossary_html = (
+        """<div class="pill">
+<b>ASC</b> — как ты проявляешься, первое впечатление · <b>MC</b> — карьера, статус ·
+<b>DESC</b> — партнёрства, союзы · <b>IC</b> — дом, тыл, семья.<br>
+Конъюнкция/трин/секстиль — планета работает мягко и заодно с этой сферой; квадратура/оппозиция —
+трение, требующее внимания, не запрет. Чем меньше орб (°), тем точнее и сильнее контакт.<br>
+✅ чисто = рядом на углах нет Марса/Сатурна/Плутона; ⚠️ с минусом = есть, вместе с плюсом идёт и трение.<br>
+Общий балл считает только Венеру/Юпитер/Солнце/Луну (плюс) и Сатурн/Марс/Плутон (минус) — Меркурий,
+Уран и Нептун в него не входят, даже если стоят точно на углу (у них просто нет общепринятого
+классического «плюс/минус»). Поэтому рядом всегда показана «загруженность углов» — сумма ВСЕХ
+контактов без деления на плюс/минус; город может быть тихим по баллу, но шумным по загруженности —
+и у каждого города ниже расписаны ВСЕ найденные контакты, а не только те, что видит балл.</div>"""
+        if ru else
+        """<div class="pill">
+<b>ASC</b> — how you come across · <b>MC</b> — career, status ·
+<b>DESC</b> — partnerships · <b>IC</b> — home, roots, family.<br>
+Conjunction/trine/sextile = the planet works smoothly with that area; square/opposition = friction
+worth noting, not a verdict. Smaller orb (°) = tighter, stronger contact.<br>
+✅ clean = no Mars/Saturn/Pluto on any angle nearby; ⚠️ mixed = there is one alongside the plus.<br>
+The composite score only counts Venus/Jupiter/Sun/Moon (+) and Saturn/Mars/Pluto (−) — Mercury,
+Uranus and Neptune are NOT counted even when exactly on an angle (they have no agreed classical
++/- valence). That's why an "angle load" number is always shown alongside — the unsigned sum of
+ALL contacts — so a place can be quiet by score but loud by load; every city below also lists ALL
+found contacts, not just the ones the score can see.</div>"""
+    )
 
     def row(cells: list[str], tag: str = "td") -> str:
         return "<tr>" + "".join(f"<{tag}>{c}</{tag}>" for c in cells) + "</tr>"
@@ -197,17 +224,31 @@ def render_html(report: dict, *, locale: str = "ru") -> str:
         for k, v in report["natal"].items()
     )
 
+    _TAG_ICON = {"benefic": "🟢", "challenging": "🔴", "neutral": "⚪"}
     reloc_blocks = ""
     for r in report["relocations"]:
-        hits = ", ".join(
-            f"{h['planet']}→{h['angle']} {h['orb_deg']}°"
-            for h in r["angle_hits"][:6]
-        )
         s = r["summary"]
+        full = r.get("full_breakdown", [])
+        breakdown_rows = "".join(
+            row([
+                _TAG_ICON.get(h["tag"], ""),
+                f"{h['planet']}→{h['angle']}",
+                f"{h['orb_deg']:.2f}°",
+                escape(h["description"]),
+            ])
+            for h in full
+        ) or row(["—", "—", "—", "нет контактов в пределах орба" if ru else "no contacts within orb"])
+        score_expl = r.get("score_explanation", {})
+        score_note = score_expl.get("plain", "")
+        sig = score_expl.get("total_significance")
+        sig_label = (
+            f" · загруженность углов (все планеты) {sig}" if ru else f" · angle load (all planets) {sig}"
+        ) if sig is not None else ""
         reloc_blocks += (
             f"<div class='pill'><b>{escape(r['name'])}</b> · score "
-            f"{r['score']:+.1f}<br>{escape(hits) or '—'}<br>"
-            f"<i>{escape(s['plain'])}</i></div>"
+            f"{r['score']:+.1f}{sig_label} — <i>{escape(score_note)}</i><br>"
+            f"<i>{escape(s['plain'])}</i>"
+            f"<table>{breakdown_rows}</table></div>"
         )
 
     theme_blocks = ""
@@ -259,6 +300,7 @@ th {{ background: #f0f2fb; }}
 <div>{escape(b['place'])} · {escape(b['utc'])} UTC
  · tz {escape(b['timezone'])} ({b['utc_offset_hours']:+.1f}h,
  {escape(b['tz_source'])})</div>
+<h2>{t['glossary_title']}</h2>{glossary_html}
 <h2>{t['natal']}</h2><table>{natal_rows}</table>
 <h2>{t['reloc']}</h2>{reloc_blocks}
 <h2>{t['themes']}</h2>{theme_blocks}
