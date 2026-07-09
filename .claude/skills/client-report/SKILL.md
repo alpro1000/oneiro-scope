@@ -143,6 +143,23 @@ Options (append to the command):
   `total_significance` visible, a reader would wrongly conclude Girona
   is "quieter" than Warsaw; it isn't, it's just quiet in the specific
   classical-valence sense.
+- **When the client is comparing "where to live" vs "where to work" —
+  or asks about several candidate cities together — split by axis, not
+  just by score.** (owner feedback, 2026-07-08: comparing Girona/
+  Blanes/Barcelona against Brno/Ostrava/Plzeň for "live vs work"
+  surfaced that a city's whole signal can sit on ONE life axis, which a
+  single ranked list completely hides.) Call
+  `astrocartography.home_vs_work_focus(result)` per candidate — it
+  splits `total_significance` into a home axis (IC/Asc: houses 4/1) and
+  a work axis (MC/Desc: houses 10/7) and returns a plain verdict ("work
+  zone" / "home zone" / "mixed" / "quiet on both"). Concrete case: in
+  the same session, Girona/Blanes/Barcelona carried ALL their
+  significance on the work axis (Uranus-MC, Mercury-Desc, Sun-Desc) and
+  literally 0 on the home axis, while Brno/Ostrava were the mirror
+  image (Moon-Asc, Venus-IC, Mars-IC; 0 on the work axis) — so "which
+  city is best" doesn't even have one answer; it's two different
+  answers to two different questions. Whenever a report ranks or
+  compares ≥2 cities, show the axis split, not just the composite score.
 - Every PDF ends with the standard disclaimer block (reflective /
   entertainment; not medical, psychological, legal or financial
   advice; birth-time sensitivity).

@@ -29,6 +29,7 @@ from backend.services.astrology.astrocartography import (
     acg_lines,
     chart_geometry,
     full_angle_breakdown,
+    home_vs_work_focus,
     relocate,
     relocation_summary,
     scan_cities,
@@ -237,6 +238,10 @@ async def astrocartography_point(
     the one-line summary is a symbol-tier reflection (conf 0.8) — never a
     prediction. Let the reader decide what matters to them (business,
     love, home) instead of the tool pre-filtering into a single lens.
+    Also returns `axis_focus`: a place's significance split into a home
+    axis (IC/Asc) and a work axis (MC/Desc) — some cities carry their
+    entire signal on one axis only (e.g. all career/partnership, nothing
+    home), which a single blended score would hide.
 
     Args:
         birth_date: YYYY-MM-DD.
@@ -264,6 +269,7 @@ async def astrocartography_point(
         "full_breakdown": full_angle_breakdown(result, orb_deg=orb_deg),
         "score": result.score,
         "score_explanation": score_explanation(result, locale=locale),
+        "axis_focus": home_vs_work_focus(result, orb_deg=orb_deg, locale=locale),
         "summary": relocation_summary(result, locale=locale),
     }
 

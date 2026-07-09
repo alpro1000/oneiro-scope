@@ -384,6 +384,80 @@ def full_angle_breakdown(result: "RelocationResult", *, orb_deg: float = 8.0) ->
     return rows
 
 
+# Home-vs-work axis split ----------------------------------------------------
+#
+# Pattern surfaced 2026-07-08 comparing candidate cities for "where do I
+# live vs where do I work": a single composite score or a flat contact
+# list can completely hide that a city's whole signal sits on one life
+# axis. Concrete case: Girona/Blanes/Barcelona carry ALL their
+# significance on Uranus-MC/Mercury-Desc/Sun-Desc (career, partnerships)
+# and essentially none on IC/Asc (home, self) — while Brno/Ostrava are
+# the mirror image (Moon-Asc, Venus-IC, Mars-IC; nothing on MC/Desc). A
+# ranked list of "best cities" without this split reads as one
+# undifferentiated answer to two different questions.
+_HOME_ANGLES = {"IC", "Asc"}
+_WORK_ANGLES = {"MC", "Desc"}
+
+
+def home_vs_work_focus(
+    result: "RelocationResult", *, orb_deg: float = 8.0, locale: str = "ru"
+) -> dict:
+    """Split `total_significance` into a home axis (IC/Asc = houses 4/1:
+    home, roots, self) and a work axis (MC/Desc = houses 10/7: career,
+    partnerships), so "where to live" and "where to work" can be answered
+    separately for the same city instead of blended into one number.
+    """
+    hits = [h for h in result.angle_hits if h.orb_deg <= orb_deg]
+    home_hits = sorted((h for h in hits if h.angle in _HOME_ANGLES), key=lambda h: h.orb_deg)
+    work_hits = sorted((h for h in hits if h.angle in _WORK_ANGLES), key=lambda h: h.orb_deg)
+    home_sig = round(sum(contact_strength(h) for h in home_hits), 2)
+    work_sig = round(sum(contact_strength(h) for h in work_hits), 2)
+
+    ru = locale == "ru"
+    if home_sig == 0 and work_sig == 0:
+        verdict = (
+            "Тихая зона по обеим осям — ни дом, ни работа здесь картой не выделены."
+            if ru else
+            "Quiet on both axes — neither home nor work is highlighted here."
+        )
+    elif work_sig > home_sig * 1.5:
+        verdict = (
+            "Рабочая зона: сигнал сосредоточен на карьере/партнёрствах (MC/Desc), "
+            "почти ничего на доме (IC/Asc)."
+            if ru else
+            "Work zone: signal concentrated on career/partnerships (MC/Desc), "
+            "almost nothing on home (IC/Asc)."
+        )
+    elif home_sig > work_sig * 1.5:
+        verdict = (
+            "Домашняя зона: сигнал сосредоточен на доме/самоощущении (IC/Asc), "
+            "почти ничего на карьере (MC/Desc)."
+            if ru else
+            "Home zone: signal concentrated on home/self (IC/Asc), "
+            "almost nothing on career (MC/Desc)."
+        )
+    else:
+        verdict = (
+            "Смешанная зона: дом и работа представлены на углах примерно поровну."
+            if ru else
+            "Mixed zone: home and work are roughly evenly represented on the angles."
+        )
+
+    def _hit_dicts(hs: list["AngleHit"]) -> list[dict]:
+        return [{"planet": h.planet, "angle": h.angle, "orb_deg": h.orb_deg} for h in hs]
+
+    return {
+        "plain": verdict,
+        "home_significance": home_sig,
+        "work_significance": work_sig,
+        "home_hits": _hit_dicts(home_hits),
+        "work_hits": _hit_dicts(work_hits),
+        "confidence": 0.8,
+        "source": "home axis = IC/Asc (houses 4/1), work axis = MC/Desc (houses 10/7) "
+                  "— classical angle-to-house mapping",
+    }
+
+
 def score_explanation(result: "RelocationResult", locale: str = "ru") -> dict:
     """Plain-language caveat for the composite `score`, naming exactly which
     contacts drove it, which real (but unweighted) contacts it ignores, and
@@ -529,6 +603,7 @@ def compare_locations(
                 "summary": relocation_summary(r, locale=locale),
                 "full_breakdown": full_angle_breakdown(r, orb_deg=orb_deg),
                 "score_explanation": score_explanation(r, locale=locale),
+                "axis_focus": home_vs_work_focus(r, orb_deg=orb_deg, locale=locale),
             }
         )
     return out
