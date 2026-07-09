@@ -324,6 +324,64 @@ def relocation_summary(result: "RelocationResult", locale: str = "ru") -> dict:
     }
 
 
+# Weights for the heuristic score. Astrology tradition treats Venus/Jupiter
+# as benefics, Saturn/Pluto/Mars as challenging on angles. Sun/Moon are
+# strong but neutral.
+_BENEFICS = {"Venus": 3.0, "Jupiter": 3.0, "Sun": 1.0, "Moon": 1.0}
+_MALEFICS = {"Saturn": -1.5, "Pluto": -1.5, "Mars": -1.0}
+_ANGLE_WEIGHT = {"Asc": 2.0, "MC": 2.0, "IC": 1.5, "Desc": 1.0}
+
+
+def _score_hits(hits: list[AngleHit]) -> float:
+    """Heuristic: sum of (planet weight) * (angle weight) * orb falloff."""
+    total = 0.0
+    for h in hits:
+        pw = _BENEFICS.get(h.planet, 0) + _MALEFICS.get(h.planet, 0)
+        aw = _ANGLE_WEIGHT[h.angle]
+        # Linear falloff to zero at orb_deg=7.
+        falloff = max(0.0, 1.0 - h.orb_deg / 7.0)
+        total += pw * aw * falloff
+    return round(total, 2)
+
+
+# Valence-free strength — "how tight and prominent is this contact",
+# regardless of whether the planet has an agreed +/- valence at all.
+#
+# `_score_hits` above only judges the 7 classical bodies Ptolemy's
+# Tetrabiblos (2nd c. CE) actually names as benefic (Venus, Jupiter) or
+# malefic (Saturn, Mars) — Sun/Moon get a mild, non-classical +1 (a
+# modern-popular-astrology convention, not Ptolemy's; the comment above
+# calling them "neutral" while coding them as +1 was already an
+# inconsistency in this file before this docstring). Mercury is
+# classically "common" (takes on whichever nature it's aspected by —
+# never assigned a fixed sign), and Uranus/Neptune/Pluto are modern
+# (post-1781) additions with no agreed classical valence at all; most
+# modern astrologers read them as transformational in FLAVOR (Uranus =
+# disruption, Neptune = dissolution, Pluto = intensity) rather than
+# good/bad. Inventing a +/- sign for those three just to fold them into
+# `score` would misrepresent a genuine "no consensus" as a citation —
+# so instead of forcing them in, every contact (all 10 bodies) gets
+# counted here, unsigned, so nothing is invisible to the reader even
+# though `score` can't see it.
+def contact_strength(hit: "AngleHit", *, max_orb: float = 7.0) -> float:
+    """Angle-weighted tightness of one contact, independent of planet
+    valence. Every one of the 10 tracked planets contributes."""
+    falloff = max(0.0, 1.0 - hit.orb_deg / max_orb)
+    return round(_ANGLE_WEIGHT[hit.angle] * falloff, 3)
+
+
+def total_significance(result: "RelocationResult", *, orb_deg: float = 8.0) -> float:
+    """Sum of `contact_strength` across every angle hit within `orb_deg`,
+    regardless of planet or valence. Complements the classical `score`:
+    a place can have a low or negative `score` and still have a HIGH
+    total_significance (a lot going on — just not the classical
+    benefic/malefic kind)."""
+    return round(
+        sum(contact_strength(h) for h in result.angle_hits if h.orb_deg <= orb_deg),
+        2,
+    )
+
+
 # Full angle breakdown — cited, all planets, all four angles ----------------
 #
 # `relocation_summary`/`theme_scan` above pre-filter into a single lens
@@ -722,64 +780,6 @@ def relocate(
         desc=round(desc, 4),
         angle_hits=hits,
         score=score,
-    )
-
-
-# Weights for the heuristic score. Astrology tradition treats Venus/Jupiter
-# as benefics, Saturn/Pluto/Mars as challenging on angles. Sun/Moon are
-# strong but neutral.
-_BENEFICS = {"Venus": 3.0, "Jupiter": 3.0, "Sun": 1.0, "Moon": 1.0}
-_MALEFICS = {"Saturn": -1.5, "Pluto": -1.5, "Mars": -1.0}
-_ANGLE_WEIGHT = {"Asc": 2.0, "MC": 2.0, "IC": 1.5, "Desc": 1.0}
-
-
-def _score_hits(hits: list[AngleHit]) -> float:
-    """Heuristic: sum of (planet weight) * (angle weight) * orb falloff."""
-    total = 0.0
-    for h in hits:
-        pw = _BENEFICS.get(h.planet, 0) + _MALEFICS.get(h.planet, 0)
-        aw = _ANGLE_WEIGHT[h.angle]
-        # Linear falloff to zero at orb_deg=7.
-        falloff = max(0.0, 1.0 - h.orb_deg / 7.0)
-        total += pw * aw * falloff
-    return round(total, 2)
-
-
-# Valence-free strength — "how tight and prominent is this contact",
-# regardless of whether the planet has an agreed +/- valence at all.
-#
-# `_score_hits` above only judges the 7 classical bodies Ptolemy's
-# Tetrabiblos (2nd c. CE) actually names as benefic (Venus, Jupiter) or
-# malefic (Saturn, Mars) — Sun/Moon get a mild, non-classical +1 (a
-# modern-popular-astrology convention, not Ptolemy's; the comment above
-# calling them "neutral" while coding them as +1 was already an
-# inconsistency in this file before this docstring). Mercury is
-# classically "common" (takes on whichever nature it's aspected by —
-# never assigned a fixed sign), and Uranus/Neptune/Pluto are modern
-# (post-1781) additions with no agreed classical valence at all; most
-# modern astrologers read them as transformational in FLAVOR (Uranus =
-# disruption, Neptune = dissolution, Pluto = intensity) rather than
-# good/bad. Inventing a +/- sign for those three just to fold them into
-# `score` would misrepresent a genuine "no consensus" as a citation —
-# so instead of forcing them in, every contact (all 10 bodies) gets
-# counted here, unsigned, so nothing is invisible to the reader even
-# though `score` can't see it.
-def contact_strength(hit: "AngleHit", *, max_orb: float = 7.0) -> float:
-    """Angle-weighted tightness of one contact, independent of planet
-    valence. Every one of the 10 tracked planets contributes."""
-    falloff = max(0.0, 1.0 - hit.orb_deg / max_orb)
-    return round(_ANGLE_WEIGHT[hit.angle] * falloff, 3)
-
-
-def total_significance(result: "RelocationResult", *, orb_deg: float = 8.0) -> float:
-    """Sum of `contact_strength` across every angle hit within `orb_deg`,
-    regardless of planet or valence. Complements the classical `score`:
-    a place can have a low or negative `score` and still have a HIGH
-    total_significance (a lot going on — just not the classical
-    benefic/malefic kind)."""
-    return round(
-        sum(contact_strength(h) for h in result.angle_hits if h.orb_deg <= orb_deg),
-        2,
     )
 
 
