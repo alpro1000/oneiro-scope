@@ -58,6 +58,15 @@ class DreamAnalyzer:
     # future testing finds more same-stem, different-meaning pairs.
     _STEM_FALLBACK_EXCLUDE = {"жених"}
 
+    # Keywords that are themselves complete, indeclinable words but whose
+    # letters are also a prefix of unrelated longer words — the \w* wildcard
+    # below would swallow those unrelated words whole. Found live: "авто"
+    # (colloquial "car", doesn't inflect) matched inside "авторитетный"
+    # (authoritative), firing a false "vehicle" symbol for a dream that
+    # never mentioned a vehicle. These keywords get an exact-word match
+    # instead of the wildcard suffix.
+    _NO_WILDCARD_KEYWORDS = {"авто"}
+
     def _compile_patterns(self):
         """Compile regex patterns for efficient matching"""
         self.symbol_patterns = {}
@@ -70,7 +79,9 @@ class DreamAnalyzer:
                 for kw in keywords:
                     escaped_kw = re.escape(kw)
                     # Check if keyword contains Cyrillic characters
-                    if re.search(r'[а-яА-ЯёЁ]', kw):
+                    if kw in self._NO_WILDCARD_KEYWORDS:
+                        pattern_parts.append(rf'\b{escaped_kw}\b')
+                    elif re.search(r'[а-яА-ЯёЁ]', kw):
                         # Russian word: match root + any ending (handles inflections)
                         # E.g., "машина" matches "машины", "машину", "машине"
                         pattern_parts.append(rf'\b{escaped_kw}\w*\b')
