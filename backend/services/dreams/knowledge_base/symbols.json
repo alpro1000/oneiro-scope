@@ -329,6 +329,24 @@
       "interpretation_ru": "Деньги во снах часто символизируют самооценку, власть или энергию. Находить деньги — обнаруживать личные ресурсы, терять — страх потери."
     },
     {
+      "id": "treasure",
+      "keywords": [
+        "treasure",
+        "hoard",
+        "stash",
+        "buried treasure",
+        "клад",
+        "сокровище",
+        "скарб",
+        "закопанный"
+      ],
+      "category": "good_fortunes",
+      "archetype": "self",
+      "significance": 0.8,
+      "interpretation_en": "Discovering a hidden treasure or hoard echoes Jung's 'treasure hard to attain' — the Self encountered through descent into the unconscious. Unlike ordinary found money, a buried/hidden find points to long-dormant inner resources or a forgotten part of one's history coming to light. What the dreamer does with the find (keep it, share it, is it contested by others) is often as significant as the discovery itself.",
+      "interpretation_ru": "Обнаружение спрятанного клада или скарба перекликается с юнгианским «трудно достижимым сокровищем» — образом Самости, обретаемой через спуск в бессознательное. В отличие от просто найденных денег, спрятанная находка указывает на давно дремлющие внутренние ресурсы или на всплывающую на поверхность забытую часть личной истории. То, как сновидец поступает с находкой (оставляет себе, делится, оспаривают ли её другие), часто не менее значимо, чем сама находка."
+    },
+    {
       "id": "wedding",
       "keywords": [
         "wedding",

@@ -50,6 +50,14 @@ class DreamAnalyzer:
         except FileNotFoundError:
             return {"symbols": [], "emotions": {}, "archetypes": {}}
 
+    # Keywords whose stem collides with an unrelated word and must NOT
+    # feed the stem-based fallback match (exact/prefix regex still
+    # applies to them normally). Found live: "жених" (groom) stems to
+    # "жен", identical to "жена" (wife) — any dream mentioning a wife
+    # was silently scored as a wedding symbol. Extend this set if
+    # future testing finds more same-stem, different-meaning pairs.
+    _STEM_FALLBACK_EXCLUDE = {"жених"}
+
     def _compile_patterns(self):
         """Compile regex patterns for efficient matching"""
         self.symbol_patterns = {}
@@ -71,13 +79,16 @@ class DreamAnalyzer:
                         pattern_parts.append(rf'\b{escaped_kw}\b')
 
                 pattern = '(' + '|'.join(pattern_parts) + ')'
+                stem_keywords = [
+                    kw for kw in keywords if kw not in self._STEM_FALLBACK_EXCLUDE
+                ]
                 self.symbol_patterns[symbol["id"]] = {
                     "pattern": re.compile(pattern, re.IGNORECASE),
                     "data": symbol,
                     # Stems of Cyrillic keywords: «змея» and «змею» share
                     # the stem «зме», so inflected Russian dream text still
                     # reaches the symbol when the regex prefix misses.
-                    "stems": morphology.keyword_stems(keywords),
+                    "stems": morphology.keyword_stems(stem_keywords),
                 }
 
         # Emotion patterns
@@ -95,8 +106,9 @@ class DreamAnalyzer:
                 re.IGNORECASE
             ),
             "female": re.compile(
-                r'\b(woman|women|girl|mother|sister|she|her|'
-                r'женщина|женщины|девушка|мать|сестра|она|её)\b',
+                r'\b(woman|women|girl|mother|sister|wife|she|her|'
+                r'женщина|женщины|девушка|мать|сестра|'
+                r'жена|жены|жену|жене|женой|она|её)\b',
                 re.IGNORECASE
             ),
             "animal": re.compile(
@@ -114,8 +126,9 @@ class DreamAnalyzer:
                 re.IGNORECASE
             ),
             "aggressive": re.compile(
-                r'\b(fight|attack|hit|kill|angry|chase|'
-                r'драка|атака|ударить|убить|злой|погоня)\b',
+                r'\b(fight|attack|hit|kill|angry|chase|push|shove|'
+                r'драка|атака|ударить|убить|злой|погоня|'
+                r'оттолкнул|оттолкнула|отпихиваю|отпихнул|отталкиваю)\b',
                 re.IGNORECASE
             ),
             "sexual": re.compile(
