@@ -107,20 +107,31 @@ en.wikipedia, TV Tropes).
 
 ### Как сгенерировать (скрипт проекта)
 
-`scripts/generate_fandorin_portrait.py` — генерация через OpenAI
-`gpt-image-1`. Промпт (EN, с вшитыми negative-подсказками) уже внутри.
+`scripts/generate_fandorin_portrait.py` — два провайдера, оба умеют
+generate и edit. Промпт (EN, с вшитыми negative-подсказками) уже внутри.
+
+| Провайдер | Модель | Ключ | Пакет |
+|---|---|---|---|
+| `openai` (по умолч.) | gpt-image-1 | `OPENAI_API_KEY` | `openai` |
+| `gemini` | gemini-2.5-flash-image | `GEMINI_API_KEY` | `google-genai` |
 
 ```bash
+# OpenAI:
 export OPENAI_API_KEY=sk-...
-pip install -U openai                       # если pinned версия отклонит модель/размер
-
-# с нуля по канону:
+pip install -U openai
 python scripts/generate_fandorin_portrait.py --n 4 --size 1024x1536
+
+# Google (fallback):
+export GEMINI_API_KEY=...
+pip install google-genai
+python scripts/generate_fandorin_portrait.py --provider gemini --n 4
 
 # переделать вариант Акунина (4 правки: виски / возраст / взгляд / усы):
 python scripts/generate_fandorin_portrait.py --mode edit --reference akunin.png
+python scripts/generate_fandorin_portrait.py --provider gemini --mode edit --reference akunin.png
 ```
 
+`--size` у Gemini используется как подсказка ориентации (3:4 портрет).
 PNG падают в `docs/specs/fandorin-portrait/output/` (в git не коммитятся).
 
 ### Negative prompt
