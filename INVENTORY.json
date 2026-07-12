@@ -8,7 +8,7 @@
     {
       "path": "scripts",
       "dirs": 0,
-      "files": 3
+      "files": 4
     },
     {
       "path": "external",
@@ -552,5 +552,5 @@
     }
   ],
   "total_dirs": 109,
-  "total_files": 390
+  "total_files": 391
 }

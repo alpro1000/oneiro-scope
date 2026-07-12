@@ -3,7 +3,7 @@
 | Путь | Папок | Файлов |
 |---|---:|---:|
 | . | 15 | 20 |
-| scripts | 0 | 3 |
+| scripts | 0 | 4 |
 | external | 2 | 0 |
 | external/pyswisseph | 1 | 1 |
 | external/pyswisseph/swisseph | 0 | 1 |
@@ -113,4 +113,4 @@
 | .github | 1 | 0 |
 | .github/workflows | 0 | 7 |
 
-**ИТОГО:** папок = 109, файлов = 390
+**ИТОГО:** папок = 109, файлов = 391
