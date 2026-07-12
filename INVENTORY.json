@@ -72,13 +72,18 @@
     },
     {
       "path": "docs/specs",
-      "dirs": 2,
+      "dirs": 3,
       "files": 0
     },
     {
       "path": "docs/specs/physiognomy",
       "dirs": 0,
       "files": 3
+    },
+    {
+      "path": "docs/specs/fandorin-portrait",
+      "dirs": 0,
+      "files": 1
     },
     {
       "path": "docs/specs/photo-max-extraction",
@@ -546,6 +551,6 @@
       "files": 7
     }
   ],
-  "total_dirs": 108,
-  "total_files": 389
+  "total_dirs": 109,
+  "total_files": 390
 }

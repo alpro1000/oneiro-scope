@@ -16,8 +16,9 @@
 | docs/templates | 2 | 0 |
 | docs/templates/_TEMPLATE_spec | 0 | 3 |
 | docs/templates/_TEMPLATE_bug | 0 | 4 |
-| docs/specs | 2 | 0 |
+| docs/specs | 3 | 0 |
 | docs/specs/physiognomy | 0 | 3 |
+| docs/specs/fandorin-portrait | 0 | 1 |
 | docs/specs/photo-max-extraction | 0 | 3 |
 | docs/deployment | 0 | 1 |
 | etl | 1 | 5 |
@@ -112,4 +113,4 @@
 | .github | 1 | 0 |
 | .github/workflows | 0 | 7 |
 
-**ИТОГО:** папок = 108, файлов = 389
+**ИТОГО:** папок = 109, файлов = 390
