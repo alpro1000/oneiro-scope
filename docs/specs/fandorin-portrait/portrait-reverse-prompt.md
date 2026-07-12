@@ -105,6 +105,24 @@ en.wikipedia, TV Tropes).
 > frock coat, high white wing collar. Late imperial Russia, circa 1906.
 > Realistic oil-portrait style, restrained, dignified.
 
+### Как сгенерировать (скрипт проекта)
+
+`scripts/generate_fandorin_portrait.py` — генерация через OpenAI
+`gpt-image-1`. Промпт (EN, с вшитыми negative-подсказками) уже внутри.
+
+```bash
+export OPENAI_API_KEY=sk-...
+pip install -U openai                       # если pinned версия отклонит модель/размер
+
+# с нуля по канону:
+python scripts/generate_fandorin_portrait.py --n 4 --size 1024x1536
+
+# переделать вариант Акунина (4 правки: виски / возраст / взгляд / усы):
+python scripts/generate_fandorin_portrait.py --mode edit --reference akunin.png
+```
+
+PNG падают в `docs/specs/fandorin-portrait/output/` (в git не коммитятся).
+
 ### Negative prompt
 > изнурённое/впалое лицо, усталые или грустные глаза, вид старше 45,
 > седая щетина/борода, тяжёлая челюсть, широкое лицо, романтическая
