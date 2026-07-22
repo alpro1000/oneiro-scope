@@ -47,6 +47,17 @@ def test_natal_geometry_basics(geo):
     assert geo["provenance"]["ephemeris_engine"] == "SwissEph/MOSEPH"
 
 
+def test_legacy_timezone_alias():
+    """Deprecated IANA names (merged in tzdata 2022b) must still resolve."""
+    legacy = natal_geometry("1985-03-10", "08:00", "Europe/Zaporozhye",
+                            47.8388, 35.1396)
+    canonical = natal_geometry("1985-03-10", "08:00", "Europe/Kyiv",
+                               47.8388, 35.1396)
+    assert legacy["utc"] == canonical["utc"]
+    with pytest.raises(Exception, match="canonical IANA name"):
+        natal_geometry("1985-03-10", "08:00", "Mars/Olympus", 0.0, 0.0)
+
+
 def test_sect_and_part_of_fortune_formula(geo):
     # 14:30 local in May in Moscow — Sun above horizon → day chart.
     assert geo["sect"] == "day"

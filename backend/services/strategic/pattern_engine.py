@@ -21,7 +21,7 @@ import json
 from datetime import date as date_cls, datetime, time as time_cls, timedelta, timezone
 from pathlib import Path
 from typing import Any, Optional
-from zoneinfo import ZoneInfo
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 try:
     import swisseph as swe
@@ -71,11 +71,34 @@ _PROVENANCE = {
 
 # --- primitives ---------------------------------------------------------------
 
+# Legacy IANA names dropped from minimal tzdata installs (merged into
+# canonical zones in tzdata 2022b; offsets identical since 1970, so the
+# alias is historically correct for birth charts of living people).
+_TZ_ALIASES: dict[str, str] = {
+    "Europe/Zaporozhye": "Europe/Kyiv",
+    "Europe/Uzhgorod": "Europe/Kyiv",
+    "Europe/Kiev": "Europe/Kyiv",
+}
+
+
+def _zone(tz_name: str) -> ZoneInfo:
+    try:
+        return ZoneInfo(tz_name)
+    except ZoneInfoNotFoundError:
+        alias = _TZ_ALIASES.get(tz_name)
+        if alias is not None:
+            return ZoneInfo(alias)
+        raise ZoneInfoNotFoundError(
+            f"Unknown timezone {tz_name!r} — pass a canonical IANA name "
+            f"(e.g. 'Europe/Kyiv'); resolve places via the geo tools."
+        )
+
+
 def _to_utc(birth_date: str, birth_time: str, tz_name: str) -> datetime:
     d = date_cls.fromisoformat(birth_date)
     t = time_cls.fromisoformat(birth_time)
     local = datetime(d.year, d.month, d.day, t.hour, t.minute, t.second,
-                     tzinfo=ZoneInfo(tz_name))
+                     tzinfo=_zone(tz_name))
     return local.astimezone(timezone.utc)
 
 
@@ -463,7 +486,7 @@ def electional_day(
     day_start: int = 6, day_end: int = 22, step_min: int = 30,
 ) -> dict[str, Any]:
     """Hour-by-hour Moon data for one day: aspects, VoC, phase, Mercury."""
-    tz = ZoneInfo(tz_name)
+    tz = _zone(tz_name)
     d = date_cls.fromisoformat(target_date)
     natal_pts = {n: geo["planets"][n]["lon"] for n in _ELECTIONAL_NATAL}
     natal_pts["asc"] = geo["angles"]["asc"]
