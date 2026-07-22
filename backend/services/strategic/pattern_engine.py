@@ -346,7 +346,10 @@ def decade_map(
     years = max(1, min(int(years), 12))
     natal_pts = _natal_points(geo)
 
-    # monthly hit scan with dedupe per (planet, aspect, point)
+    # 10-day hit scan with dedupe per (planet, aspect, point). Monthly is
+    # too coarse: Saturn near its solar conjunction moves ~3.7°/month and
+    # Jupiter up to ~7.5°/month — both can leap clean over a ±1.5° window
+    # (verified against a hand-run scan during implementation).
     last_seen: dict[tuple[str, str, str], date_cls] = {}
     hits_by_year: dict[int, list[dict]] = {y: [] for y in range(start_year, start_year + years)}
     d = date_cls(start_year, 1, 1)
@@ -376,7 +379,7 @@ def decade_map(
                         "orb_deg": orb, "flags": flags,
                     })
                 last_seen[key] = d
-        d = (d.replace(day=1) + timedelta(days=32)).replace(day=1)
+        d += timedelta(days=10)
 
     out_years = []
     for y in range(start_year, start_year + years):
@@ -461,7 +464,9 @@ def life_pivots(
                                    "date": f"{d.year}-{d.month:02d}",
                                    "age": d.year - birth_year})
                 last[key] = d
-        d = (d.replace(day=1) + timedelta(days=32)).replace(day=1)
+        # 10-day grid: fast Saturn (~3.7°/month near its solar conjunction)
+        # leaps over a ±1° window on a monthly grid — verified vs hand-run.
+        d += timedelta(days=10)
 
     windows.sort(key=lambda w: w["date"])
     questions = [
@@ -473,7 +478,7 @@ def life_pivots(
     return {"windows": windows, "cycles": cycles,
             "validation_questions": questions,
             "scan": {"from_year": from_year, "to_year": to_year,
-                     "orb_deg": 1.0, "step": "monthly"}}
+                     "orb_deg": 1.0, "step": "10d"}}
 
 
 # --- pattern: electional-day --------------------------------------------------

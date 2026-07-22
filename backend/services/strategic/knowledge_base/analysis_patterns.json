@@ -130,7 +130,7 @@
         "layer": "astronomy",
         "steps": [
           "for each year: Saturn/Jupiter/Uranus/Neptune/Pluto sign, degree, natal house transited",
-          "conjunctions/hard aspects of transiting slow planets to natal points (orb <=1.5)",
+          "conjunctions/hard aspects of transiting slow planets to natal points (orb <=1.5) on a 10-day grid",
           "planetary returns (Saturn return, Jupiter return) and their exact windows",
           "ingresses of slow planets over natal angles (ASC/MC/IC/DSC)"
         ]
@@ -180,7 +180,7 @@
       "computes": {
         "layer": "astronomy",
         "steps": [
-          "scan monthly: slow planets (Saturn/Uranus/Neptune/Pluto) conjunct natal ASC/MC/IC/DSC and Sun/Moon (orb <=1)",
+          "scan on a 10-day grid: slow planets (Saturn/Uranus/Neptune/Pluto) conjunct natal ASC/MC/IC/DSC and Sun/Moon (orb <=1)",
           "dedupe into event-windows (>~14 months apart = separate event)",
           "flag IC / 4th-house-cusp crossings and Uranus/Neptune over ASC as RELOCATION markers",
           "mark Saturn return and Uranus opposition (midlife) ages"

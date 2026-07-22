@@ -129,6 +129,19 @@ def test_life_pivots_structure(geo):
     assert len(lp["validation_questions"]) == len(lp["windows"])
 
 
+def test_life_pivots_catches_fast_saturn_return(geo):
+    """Regression: the 10-day grid must not leap over fast-Saturn passes.
+
+    1990 fixture: natal Saturn ~25° Capricorn → first Saturn return falls
+    in 2019-2020. A monthly grid can miss ±1° windows entirely (Saturn
+    moves up to ~3.7°/month near its solar conjunction).
+    """
+    lp = life_pivots(geo, from_year=2018, to_year=2021)
+    returns = [c for c in lp["cycles"] if c["cycle"] == "saturn_return"]
+    assert returns, "first Saturn return must be detected in 2018-2021"
+    assert all(28 <= c["age"] <= 31 for c in returns)
+
+
 def test_life_pivots_rejects_bad_window(geo):
     with pytest.raises(ValueError):
         life_pivots(geo, from_year=2020, to_year=2019)
