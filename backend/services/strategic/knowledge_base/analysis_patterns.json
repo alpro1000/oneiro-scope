@@ -9,15 +9,23 @@
       "Every interpretive output carries the reflective/entertainment disclaimer (disclaimer.py).",
       "PII of third parties is never analysed; physiognomy patterns are self-reflection only (western.json ethics_note)."
     ],
-    "provenance_of_this_file": "Distilled from OneiroScope session 2026-07 (owner's own natal analysis + Fandorin reverse-physiognomy). Each pattern was first run by hand, then generalised."
+    "provenance_of_this_file": "Distilled from OneiroScope session 2026-07 (owner's own natal analysis + Fandorin reverse-physiognomy). Each pattern was first run by hand, then generalised.",
+    "implementation": "Engine: backend/services/strategic/pattern_engine.py · tools: backend/mcp/tools/strategic_patterns.py · skills: .claude/skills/<skill>/ · tests: backend/tests/test_strategic_patterns.py"
   },
-
   "patterns": [
     {
       "id": "money-contour",
-      "name": {"ru": "Денежный контур", "en": "Money contour"},
-      "offers": {"ru": "Как у тебя устроены деньги и где потолок дохода", "en": "How your money works and where the ceiling is"},
-      "inputs": ["natal_chart"],
+      "name": {
+        "ru": "Денежный контур",
+        "en": "Money contour"
+      },
+      "offers": {
+        "ru": "Как у тебя устроены деньги и где потолок дохода",
+        "en": "How your money works and where the ceiling is"
+      },
+      "inputs": [
+        "natal_chart"
+      ],
       "computes": {
         "layer": "astronomy",
         "steps": [
@@ -38,17 +46,36 @@
           "dignified money ruler => strong instinct for value/price"
         ]
       },
-      "output": ["earning_style", "wealth_ceiling_domain", "money_flow_houses", "linchpin_flag", "fortune_domain"],
-      "confidence_layers": ["astronomy", "astrology_symbolic"],
+      "output": [
+        "earning_style",
+        "wealth_ceiling_domain",
+        "money_flow_houses",
+        "linchpin_flag",
+        "fortune_domain"
+      ],
+      "confidence_layers": [
+        "astronomy",
+        "astrology_symbolic"
+      ],
       "requires_disclaimer": true,
-      "no_determinism": true
+      "no_determinism": true,
+      "mcp_tool": "money_contour",
+      "skill": "money-contour",
+      "status": "implemented"
     },
-
     {
       "id": "vocation-map",
-      "name": {"ru": "Карта призвания", "en": "Vocation map"},
-      "offers": {"ru": "Кем тебе быть — кластеры подходящих профессий с обоснованием", "en": "What you could be — profession clusters with rationale"},
-      "inputs": ["natal_chart"],
+      "name": {
+        "ru": "Карта призвания",
+        "en": "Vocation map"
+      },
+      "offers": {
+        "ru": "Кем тебе быть — кластеры подходящих профессий с обоснованием",
+        "en": "What you could be — profession clusters with rationale"
+      },
+      "inputs": [
+        "natal_chart"
+      ],
       "computes": {
         "layer": "astronomy",
         "steps": [
@@ -69,17 +96,36 @@
           "flag the 'sweet spot' = combination that engages both the strongest earning signal and the strongest expression signal"
         ]
       },
-      "output": ["profession_clusters[]", "sweet_spot", "where_it_does_not_flow"],
-      "confidence_layers": ["astronomy", "astrology_symbolic"],
+      "output": [
+        "profession_clusters[]",
+        "sweet_spot",
+        "where_it_does_not_flow"
+      ],
+      "confidence_layers": [
+        "astronomy",
+        "astrology_symbolic"
+      ],
       "requires_disclaimer": true,
-      "no_determinism": true
+      "no_determinism": true,
+      "mcp_tool": "vocation_map",
+      "skill": "vocation-map",
+      "status": "implemented"
     },
-
     {
       "id": "decade-map",
-      "name": {"ru": "Декада", "en": "Decade map"},
-      "offers": {"ru": "Разбор ближайшего десятилетия по годам: фазы, окна старта и урожая", "en": "Year-by-year decade breakdown: phases, launch and harvest windows"},
-      "inputs": ["natal_chart", "start_year", "years=10"],
+      "name": {
+        "ru": "Декада",
+        "en": "Decade map"
+      },
+      "offers": {
+        "ru": "Разбор ближайшего десятилетия по годам: фазы, окна старта и урожая",
+        "en": "Year-by-year decade breakdown: phases, launch and harvest windows"
+      },
+      "inputs": [
+        "natal_chart",
+        "start_year",
+        "years=10"
+      ],
       "computes": {
         "layer": "astronomy",
         "steps": [
@@ -99,17 +145,38 @@
           "when age_psychology stage aligns (Levinson/Saturn-return ages) cite it to lift confidence"
         ]
       },
-      "output": ["phase_blocks[]", "launch_window", "harvest_window", "per_year_table"],
-      "confidence_layers": ["astronomy", "age_psychology", "astrology_symbolic"],
+      "output": [
+        "phase_blocks[]",
+        "launch_window",
+        "harvest_window",
+        "per_year_table"
+      ],
+      "confidence_layers": [
+        "astronomy",
+        "age_psychology",
+        "astrology_symbolic"
+      ],
       "requires_disclaimer": true,
-      "no_determinism": true
+      "no_determinism": true,
+      "mcp_tool": "decade_map",
+      "skill": "decade-map",
+      "status": "implemented"
     },
-
     {
       "id": "life-pivots",
-      "name": {"ru": "Лента переломов", "en": "Life-pivot timeline"},
-      "offers": {"ru": "Проверь карту по своей жизни: датированные переломы и вероятные смены места жительства", "en": "Validate the chart against your life: dated pivots and likely relocations"},
-      "inputs": ["natal_chart", "scan_from_year", "scan_to_year"],
+      "name": {
+        "ru": "Лента переломов",
+        "en": "Life-pivot timeline"
+      },
+      "offers": {
+        "ru": "Проверь карту по своей жизни: датированные переломы и вероятные смены места жительства",
+        "en": "Validate the chart against your life: dated pivots and likely relocations"
+      },
+      "inputs": [
+        "natal_chart",
+        "scan_from_year",
+        "scan_to_year"
+      ],
       "computes": {
         "layer": "astronomy",
         "steps": [
@@ -131,17 +198,38 @@
         "layer": "user_context",
         "note": "When the user confirms a window, that window's insight upgrades from astrology_symbolic (0.8) to a convergence of astronomy + user_context (HIGH). Confirmed hits calibrate which of the user's sensitive points fire strongest, improving decade-map for the same user."
       },
-      "output": ["dated_pivot_windows[]", "relocation_flags[]", "validation_questions[]"],
-      "confidence_layers": ["astronomy", "astrology_symbolic", "user_context"],
+      "output": [
+        "dated_pivot_windows[]",
+        "relocation_flags[]",
+        "validation_questions[]"
+      ],
+      "confidence_layers": [
+        "astronomy",
+        "astrology_symbolic",
+        "user_context"
+      ],
       "requires_disclaimer": true,
-      "no_determinism": true
+      "no_determinism": true,
+      "mcp_tool": "life_pivots",
+      "skill": "life-pivots",
+      "status": "implemented"
     },
-
     {
       "id": "electional-day",
-      "name": {"ru": "Электив дня", "en": "Electional day"},
-      "offers": {"ru": "Лучшие часы дня для важного действия (разговор, подпись, старт)", "en": "Best hours of a day for an important action"},
-      "inputs": ["natal_chart", "target_date", "location", "action_type"],
+      "name": {
+        "ru": "Электив дня",
+        "en": "Electional day"
+      },
+      "offers": {
+        "ru": "Лучшие часы дня для важного действия (разговор, подпись, старт)",
+        "en": "Best hours of a day for an important action"
+      },
+      "inputs": [
+        "natal_chart",
+        "target_date",
+        "location",
+        "action_type"
+      ],
       "computes": {
         "layer": "astronomy",
         "steps": [
@@ -160,17 +248,37 @@
           "map action_type (contract/negotiation/move) to the ruler to watch (e.g. Mercury retrograde for contracts)"
         ]
       },
-      "output": ["best_hours[]", "avoid_hours[]", "phase_framing", "ruler_caution"],
-      "confidence_layers": ["astronomy", "astrology_symbolic"],
+      "output": [
+        "best_hours[]",
+        "avoid_hours[]",
+        "phase_framing",
+        "ruler_caution"
+      ],
+      "confidence_layers": [
+        "astronomy",
+        "astrology_symbolic"
+      ],
       "requires_disclaimer": true,
-      "no_determinism": true
+      "no_determinism": true,
+      "mcp_tool": "electional_day",
+      "skill": "electional-day",
+      "status": "implemented"
     },
-
     {
       "id": "reverse-physiognomy",
-      "name": {"ru": "Персонаж → лицо", "en": "Character to face"},
-      "offers": {"ru": "Опиши характер (или литературного героя) — получи промпт для генерации портрета", "en": "Describe a character — get a face-generation prompt"},
-      "inputs": ["character_traits[] (or sourced canon)", "target_age", "era_style"],
+      "name": {
+        "ru": "Персонаж → лицо",
+        "en": "Character to face"
+      },
+      "offers": {
+        "ru": "Опиши характер (или литературного героя) — получи промпт для генерации портрета",
+        "en": "Describe a character — get a face-generation prompt"
+      },
+      "inputs": [
+        "character_traits[] (or sourced canon)",
+        "target_age",
+        "era_style"
+      ],
       "computes": {
         "layer": "astrology_symbolic",
         "note": "Not ephemeris: this reads the physiognomy KB (backend/services/physiognomy/knowledge_base/{mianxiang,western}.json) in REVERSE.",
@@ -188,11 +296,22 @@
           "output feeds scripts/generate_fandorin_portrait.py-style generators (openai gpt-image / google gemini)"
         ]
       },
-      "output": ["face_feature_spec", "prompt_ru", "prompt_en", "negative_prompt"],
-      "confidence_layers": ["astrology_symbolic", "llm_narrative"],
+      "output": [
+        "face_feature_spec",
+        "prompt_ru",
+        "prompt_en",
+        "negative_prompt"
+      ],
+      "confidence_layers": [
+        "astrology_symbolic",
+        "llm_narrative"
+      ],
       "requires_disclaimer": true,
       "no_determinism": true,
-      "ethics_gate": "fictional_or_self_only"
+      "ethics_gate": "fictional_or_self_only",
+      "mcp_tool": "reverse_physiognomy_prompt",
+      "skill": "character-face",
+      "status": "implemented"
     }
   ]
 }

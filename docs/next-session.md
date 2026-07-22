@@ -5,9 +5,25 @@
 > that's easy to lose. Updated at the end of every substantial session
 > alongside `soul.md §9`.
 
-**Дата последнего обновления:** 2026-07-08 (см. запись ниже — report-only, без изменений кода)
-**Последняя ветка работы:** `claude/photo-personality-analysis-2jy29b` (auto-zoom + анатомия губ + лонгитюд; НЕ замержена — PR по запросу owner)
+**Дата последнего обновления:** 2026-07-21
+**Последняя ветка работы:** `claude/fandorin-portrait-generation-d422my` (паттерны-каталог реализован: 6 skills + 6 MCP tools + engine; НЕ замержена — PR по запросу owner)
 **Текущий main HEAD:** physiognomy + MCP hardening + двухслойные отчёты, все CI-чеки зелёные
+
+**Новое в сессии 2026-07-21 (fandorin-portrait-generation):**
+- **Каталог паттернов реализован целиком** — 6 пар skill+MCP tool поверх
+  общего движка `backend/services/strategic/pattern_engine.py`:
+  `/money-contour`, `/vocation-map`, `/decade-map`, `/life-pivots`
+  (петля валидации жизнью), `/electional-day`, `/character-face`
+  (обратная физиогномика, гейт fictional_or_self_only). Тесты:
+  `test_strategic_patterns.py` 13 passed; smoke-set обновлён.
+- Движок импортируем без стека astrology-service (своя таблица
+  достоинств, Moshier) — по образцу lunar/engine.py.
+- **Фандорин-кейс** (`docs/specs/fandorin-portrait/`) + генератор
+  портретов `scripts/generate_fandorin_portrait.py` (openai/gemini,
+  generate/edit).
+- Следующее: прогнать skills против живого MCP-сервера; PR в main по
+  команде owner; рассмотреть кэш подтверждённых life-pivots ответов
+  (user_context) в персональном хранилище, НЕ в репо (PII).
 
 **Сессия 2026-07-08 — `/client-report`, без изменений кода репозитория:**
 Сгенерирован полный клиентский PDF-отчёт (натал + транзиты 2026 + Solar Return + астрокартография) на чешском языке для нового клиента (11.02.1986 12:50 Плзень, ЧР). MCP-сервер не был подключён в сессии → использован документированный fallback (прямые импорты `backend.services.astrology`, инициализатор пакета застаблен, чтобы не тянуть тяжёлый `AstrologyService`). Окружение сессии не имело pyswisseph/timezonefinder/matplotlib — поставлены в scratch-venv, `world.geojson` (Natural Earth 110m) скачан во временный scratchpad; **репозиторий не менялся** (requirements.txt не трогали), кроме записи в `docs/soul.md §9`. Заметка для будущих сессий с `/client-report` на bare-checkout: fallback-путь скилла реально работает, но требует ~3 доп. pip-пакета и сетевой доступ для world.geojson (кэш в репо отсутствует) — можно закэшировать geojson в `docs/templates/` или scratchpad конвенции, если это будет происходить часто.

@@ -13,14 +13,21 @@ symbolic interpretation last, provenance always.** Outputs are `Insight`
 objects (`backend/services/strategic/layers.py`) carrying `Source` +
 `Confidence`. Disclaimer required; no deterministic language.
 
-| Pattern | Offers the user | Deterministic (1.0) | Symbolic (0.8) |
-|---|---|---|---|
-| `money-contour` | how their money works + ceiling | 2/8 houses, rulers, dispositors, Part of Fortune, linchpin | earning style, wealth-ceiling domain |
-| `vocation-map` | profession clusters with rationale | MC+ruler, 2/6/10, dignities, angularity | 3–5 vocation families + sweet spot |
-| `decade-map` | decade year-by-year | slow-planet transits by natal house, returns, angle ingresses | phase themes, launch/harvest windows |
-| `life-pivots` | validate chart vs life + relocations | slow planets conj angles/luminaries (dated) | dated pivots; **validation loop → user_context upgrade** |
-| `electional-day` | best hours for an action | Moon-by-hour, aspects, void-of-course, phase | begin-vs-release, ruler caution |
-| `reverse-physiognomy` | character → portrait prompt | physiognomy KB read in reverse | RU/EN generation + negative prompt |
+| Pattern | Offers the user | MCP tool | Skill | Status |
+|---|---|---|---|---|
+| `money-contour` | how their money works + ceiling | `money_contour` | `/money-contour` | ✅ implemented |
+| `vocation-map` | profession clusters with rationale | `vocation_map` | `/vocation-map` | ✅ implemented |
+| `decade-map` | decade year-by-year | `decade_map` | `/decade-map` | ✅ implemented |
+| `life-pivots` | validate chart vs life + relocations | `life_pivots` | `/life-pivots` | ✅ implemented |
+| `electional-day` | best hours for an action | `electional_day` | `/electional-day` | ✅ implemented |
+| `reverse-physiognomy` | character → portrait prompt | `reverse_physiognomy_prompt` | `/character-face` | ✅ implemented |
+
+Deterministic core (astronomy 1.0): 2/8/11 houses with rulers/dignities/
+Part of Fortune + linchpin · MC complex + work houses + angularity ·
+slow-planet decade scans with returns and angle crossings · dated pivot
+windows with relocation markers · Moon-by-half-hour with aspects,
+void-of-course, phase, Mercury-retrograde flag · physiognomy KB reverse
+lookup (dictionary tier 0.6, `fictional_or_self_only` ethics gate).
 
 ## Layering
 
@@ -40,8 +47,18 @@ astronomy + user_context convergence (HIGH), and the confirmed hits calibrate
 which of the user's sensitive points fire strongest — feeding a sharper
 `decade-map` for the same user.
 
-## Next
+## Implementation
 
-Each row is ready to scaffold as a skill + MCP tool. Suggested first build:
-`money-contour` and `decade-map` (highest user pull, pure-ephemeris, no
-external deps).
+- Engine (deterministic core): `backend/services/strategic/pattern_engine.py`
+  — importable without the astrology-service stack (own compact dignity
+  table, Moshier mode, no geocoder deps), mirroring `lunar/engine.py`.
+- MCP tools: `backend/mcp/tools/strategic_patterns.py`, registered in
+  `backend/mcp/server.py` (Phase 10 section). Tools return data + a
+  `interpretation_rules_ref` into this catalog; skills interpret, labelled.
+- Skills: `.claude/skills/{money-contour,vocation-map,decade-map,life-pivots,electional-day,character-face}/SKILL.md`.
+- Tests: `backend/tests/test_strategic_patterns.py` (neutral fixture chart,
+  no PII) + registration entries in `backend/tests/test_mcp_smoke.py`.
+
+Birth-place resolution stays in the geo tools (`search_city`,
+`validate_birth_data`) — pattern tools take lat/lon/tz, per the layering
+rule.

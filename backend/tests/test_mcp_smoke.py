@@ -46,6 +46,13 @@ async def test_all_tools_registered():
         "compute_transits",
         "astrocartography_scan",
         "solar_return_chart",
+        # analysis patterns (Phase 10)
+        "money_contour",
+        "vocation_map",
+        "decade_map",
+        "life_pivots",
+        "electional_day",
+        "reverse_physiognomy_prompt",
         # archetype tables (Phase 8)
         "mc_in_sign",
         "sun_in_sign",
