@@ -1,0 +1,317 @@
+{
+  "_meta": {
+    "purpose": "Reusable strategic-analysis patterns the service can offer users. Each pattern is a recipe: deterministic computation (Swiss Ephemeris / KB lookup) first, symbolic interpretation last, always labelled with provenance. Emits Insight objects (see backend/services/strategic/layers.py).",
+    "layer_refs": "Layer enum values used below match backend/services/strategic/layers.py: astronomy=1.0, astrology_symbolic=0.8, user_context=0.9, age_psychology=0.9, llm_narrative=0.7.",
+    "hard_rules": [
+      "Deterministic math (positions, houses, transits, void-of-course) is computed, never LLM-generated.",
+      "Every surfaced statement carries Source + Confidence; symbolic reading never overrides a hard layer.",
+      "No deterministic language (no 'will/будет/точно') — enforced by no_determinism.py.",
+      "Every interpretive output carries the reflective/entertainment disclaimer (disclaimer.py).",
+      "PII of third parties is never analysed; physiognomy patterns are self-reflection only (western.json ethics_note)."
+    ],
+    "provenance_of_this_file": "Distilled from OneiroScope session 2026-07 (owner's own natal analysis + Fandorin reverse-physiognomy). Each pattern was first run by hand, then generalised.",
+    "implementation": "Engine: backend/services/strategic/pattern_engine.py · tools: backend/mcp/tools/strategic_patterns.py · skills: .claude/skills/<skill>/ · tests: backend/tests/test_strategic_patterns.py"
+  },
+  "patterns": [
+    {
+      "id": "money-contour",
+      "name": {
+        "ru": "Денежный контур",
+        "en": "Money contour"
+      },
+      "offers": {
+        "ru": "Как у тебя устроены деньги и где потолок дохода",
+        "en": "How your money works and where the ceiling is"
+      },
+      "inputs": [
+        "natal_chart"
+      ],
+      "computes": {
+        "layer": "astronomy",
+        "steps": [
+          "2nd house cusp sign + ruler + ruler's house/sign/dignity",
+          "8th house cusp sign + ruler + ruler's house/sign/dignity; occupants of 8th",
+          "Part of Fortune (day: ASC+Moon-Sun; night: ASC+Sun-Moon) with sect from Sun's house",
+          "linchpin detector: are the 2nd- and 8th-house rulers within <=8 deg (same money engine)?",
+          "11th house (gain-from-career) ruler + occupants"
+        ]
+      },
+      "interprets": {
+        "layer": "astrology_symbolic",
+        "rules": [
+          "2nd = personal earning STYLE (salaried vs self-generated vs dealing), from cusp sign + ruler placement (house of ruler = where income flows)",
+          "8th = shared/other-people's money, investment, leverage; strong/tenanted 8th or Node in 8th => wealth ceiling higher via capital than salary",
+          "linchpin present => personal and investment income are one engine (dealer/investor/broker archetype)",
+          "Part of Fortune house/sign = domain of felt prosperity/ease; its dispositor's house refines it",
+          "dignified money ruler => strong instinct for value/price"
+        ]
+      },
+      "output": [
+        "earning_style",
+        "wealth_ceiling_domain",
+        "money_flow_houses",
+        "linchpin_flag",
+        "fortune_domain"
+      ],
+      "confidence_layers": [
+        "astronomy",
+        "astrology_symbolic"
+      ],
+      "requires_disclaimer": true,
+      "no_determinism": true,
+      "mcp_tool": "money_contour",
+      "skill": "money-contour",
+      "status": "implemented"
+    },
+    {
+      "id": "vocation-map",
+      "name": {
+        "ru": "Карта призвания",
+        "en": "Vocation map"
+      },
+      "offers": {
+        "ru": "Кем тебе быть — кластеры подходящих профессий с обоснованием",
+        "en": "What you could be — profession clusters with rationale"
+      },
+      "inputs": [
+        "natal_chart"
+      ],
+      "computes": {
+        "layer": "astronomy",
+        "steps": [
+          "MC sign + MC ruler (house/sign)",
+          "planets conjunct MC (<=8 deg)",
+          "2nd/6th/10th house tenancy + rulers",
+          "planets in essential dignity (own sign/exaltation)",
+          "angular planets (in 1/4/7/10)"
+        ]
+      },
+      "interprets": {
+        "layer": "astrology_symbolic",
+        "rules": [
+          "MC + MC-ruler placement = core public-role signal; MC-ruler's house shows the arena",
+          "planet conjunct MC colours the public image (e.g. Neptune=vision/brand/image)",
+          "dignified + angular planets = amplified talents => name the cluster they support",
+          "cluster the signals into 3-5 vocation families, each cited to its placement",
+          "flag the 'sweet spot' = combination that engages both the strongest earning signal and the strongest expression signal"
+        ]
+      },
+      "output": [
+        "profession_clusters[]",
+        "sweet_spot",
+        "where_it_does_not_flow"
+      ],
+      "confidence_layers": [
+        "astronomy",
+        "astrology_symbolic"
+      ],
+      "requires_disclaimer": true,
+      "no_determinism": true,
+      "mcp_tool": "vocation_map",
+      "skill": "vocation-map",
+      "status": "implemented"
+    },
+    {
+      "id": "decade-map",
+      "name": {
+        "ru": "Декада",
+        "en": "Decade map"
+      },
+      "offers": {
+        "ru": "Разбор ближайшего десятилетия по годам: фазы, окна старта и урожая",
+        "en": "Year-by-year decade breakdown: phases, launch and harvest windows"
+      },
+      "inputs": [
+        "natal_chart",
+        "start_year",
+        "years=10"
+      ],
+      "computes": {
+        "layer": "astronomy",
+        "steps": [
+          "for each year: Saturn/Jupiter/Uranus/Neptune/Pluto sign, degree, natal house transited",
+          "conjunctions/hard aspects of transiting slow planets to natal points (orb <=1.5) on a 10-day grid",
+          "planetary returns (Saturn return, Jupiter return) and their exact windows",
+          "ingresses of slow planets over natal angles (ASC/MC/IC/DSC)"
+        ]
+      },
+      "interprets": {
+        "layer": "astrology_symbolic",
+        "rules": [
+          "Saturn's natal-house transit = the life area being consolidated/built that ~2.5yr span (primary timer for Saturn-type charts)",
+          "Jupiter's yearly house = area of expansion/opportunity",
+          "2nd Saturn return (~age 58) framed as culmination/harvest, not endpoint",
+          "group years into phase-blocks with one theme each; label a launch window and a harvest window",
+          "when age_psychology stage aligns (Levinson/Saturn-return ages) cite it to lift confidence"
+        ]
+      },
+      "output": [
+        "phase_blocks[]",
+        "launch_window",
+        "harvest_window",
+        "per_year_table"
+      ],
+      "confidence_layers": [
+        "astronomy",
+        "age_psychology",
+        "astrology_symbolic"
+      ],
+      "requires_disclaimer": true,
+      "no_determinism": true,
+      "mcp_tool": "decade_map",
+      "skill": "decade-map",
+      "status": "implemented"
+    },
+    {
+      "id": "life-pivots",
+      "name": {
+        "ru": "Лента переломов",
+        "en": "Life-pivot timeline"
+      },
+      "offers": {
+        "ru": "Проверь карту по своей жизни: датированные переломы и вероятные смены места жительства",
+        "en": "Validate the chart against your life: dated pivots and likely relocations"
+      },
+      "inputs": [
+        "natal_chart",
+        "scan_from_year",
+        "scan_to_year"
+      ],
+      "computes": {
+        "layer": "astronomy",
+        "steps": [
+          "scan on a 10-day grid: slow planets (Saturn/Uranus/Neptune/Pluto) conjunct natal ASC/MC/IC/DSC and Sun/Moon (orb <=1)",
+          "dedupe into event-windows (>~14 months apart = separate event)",
+          "flag IC / 4th-house-cusp crossings and Uranus/Neptune over ASC as RELOCATION markers",
+          "mark Saturn return and Uranus opposition (midlife) ages"
+        ]
+      },
+      "interprets": {
+        "layer": "astrology_symbolic",
+        "rules": [
+          "angle crossings = change-of-life-chapter markers; IC/4th = home/residence specifically",
+          "present as dated windows with a life-theme each, NOT as claimed biography",
+          "explicitly ask the user which windows landed and whether they were moves"
+        ]
+      },
+      "validation_loop": {
+        "layer": "user_context",
+        "note": "When the user confirms a window, that window's insight upgrades from astrology_symbolic (0.8) to a convergence of astronomy + user_context (HIGH). Confirmed hits calibrate which of the user's sensitive points fire strongest, improving decade-map for the same user."
+      },
+      "output": [
+        "dated_pivot_windows[]",
+        "relocation_flags[]",
+        "validation_questions[]"
+      ],
+      "confidence_layers": [
+        "astronomy",
+        "astrology_symbolic",
+        "user_context"
+      ],
+      "requires_disclaimer": true,
+      "no_determinism": true,
+      "mcp_tool": "life_pivots",
+      "skill": "life-pivots",
+      "status": "implemented"
+    },
+    {
+      "id": "electional-day",
+      "name": {
+        "ru": "Электив дня",
+        "en": "Electional day"
+      },
+      "offers": {
+        "ru": "Лучшие часы дня для важного действия (разговор, подпись, старт)",
+        "en": "Best hours of a day for an important action"
+      },
+      "inputs": [
+        "natal_chart",
+        "target_date",
+        "location",
+        "action_type"
+      ],
+      "computes": {
+        "layer": "astronomy",
+        "steps": [
+          "Moon longitude per 30 min across waking hours (local tz)",
+          "Moon aspects to natal Sun/Mercury/relevant rulers (tight orb)",
+          "void-of-course detection (Moon's last aspect before sign change)",
+          "Moon phase (waxing/waning) for begin-vs-release framing"
+        ]
+      },
+      "interprets": {
+        "layer": "astrology_symbolic",
+        "rules": [
+          "waxing = beginnings/acquiring (e.g. move-in); waning = release/handover",
+          "Moon trine/sextile natal luminary = supportive personal window for the action",
+          "void-of-course hours flagged as 'do routine, avoid final commitments'",
+          "map action_type (contract/negotiation/move) to the ruler to watch (e.g. Mercury retrograde for contracts)"
+        ]
+      },
+      "output": [
+        "best_hours[]",
+        "avoid_hours[]",
+        "phase_framing",
+        "ruler_caution"
+      ],
+      "confidence_layers": [
+        "astronomy",
+        "astrology_symbolic"
+      ],
+      "requires_disclaimer": true,
+      "no_determinism": true,
+      "mcp_tool": "electional_day",
+      "skill": "electional-day",
+      "status": "implemented"
+    },
+    {
+      "id": "reverse-physiognomy",
+      "name": {
+        "ru": "Персонаж → лицо",
+        "en": "Character to face"
+      },
+      "offers": {
+        "ru": "Опиши характер (или литературного героя) — получи промпт для генерации портрета",
+        "en": "Describe a character — get a face-generation prompt"
+      },
+      "inputs": [
+        "character_traits[] (or sourced canon)",
+        "target_age",
+        "era_style"
+      ],
+      "computes": {
+        "layer": "astrology_symbolic",
+        "note": "Not ephemeris: this reads the physiognomy KB (backend/services/physiognomy/knowledge_base/{mianxiang,western}.json) in REVERSE.",
+        "steps": [
+          "map each character trait to KB face-type entries (mianxiang five-elements, Corman, Kretschmer, Lavater zones)",
+          "collect the implied facial features (face shape, cheekbones, gaze, brow, etc.)",
+          "compose a positive generation prompt + negative prompt in RU/EN"
+        ]
+      },
+      "interprets": {
+        "layer": "llm_narrative",
+        "rules": [
+          "traits -> features is a traditional-association mapping, labelled reflective, never claimed as fact about a real person",
+          "only fictional characters or the consenting user's self; never a third party (ethics_note)",
+          "output feeds scripts/generate_fandorin_portrait.py-style generators (openai gpt-image / google gemini)"
+        ]
+      },
+      "output": [
+        "face_feature_spec",
+        "prompt_ru",
+        "prompt_en",
+        "negative_prompt"
+      ],
+      "confidence_layers": [
+        "astrology_symbolic",
+        "llm_narrative"
+      ],
+      "requires_disclaimer": true,
+      "no_determinism": true,
+      "ethics_gate": "fictional_or_self_only",
+      "mcp_tool": "reverse_physiognomy_prompt",
+      "skill": "character-face",
+      "status": "implemented"
+    }
+  ]
+}

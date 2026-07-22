@@ -6,9 +6,239 @@
       "files": 20
     },
     {
-      "path": "scripts",
+      "path": ".claude",
+      "dirs": 1,
+      "files": 1
+    },
+    {
+      "path": ".claude/skills",
+      "dirs": 16,
+      "files": 1
+    },
+    {
+      "path": ".claude/skills/cost-report",
+      "dirs": 0,
+      "files": 1
+    },
+    {
+      "path": ".claude/skills/dream",
+      "dirs": 0,
+      "files": 1
+    },
+    {
+      "path": ".claude/skills/vocation-map",
+      "dirs": 0,
+      "files": 1
+    },
+    {
+      "path": ".claude/skills/lunar",
+      "dirs": 0,
+      "files": 1
+    },
+    {
+      "path": ".claude/skills/client-report",
+      "dirs": 0,
+      "files": 1
+    },
+    {
+      "path": ".claude/skills/money-contour",
+      "dirs": 0,
+      "files": 1
+    },
+    {
+      "path": ".claude/skills/deploy-cycle",
+      "dirs": 0,
+      "files": 1
+    },
+    {
+      "path": ".claude/skills/decade-map",
+      "dirs": 0,
+      "files": 1
+    },
+    {
+      "path": ".claude/skills/natal",
+      "dirs": 0,
+      "files": 1
+    },
+    {
+      "path": ".claude/skills/face-portrait",
+      "dirs": 0,
+      "files": 1
+    },
+    {
+      "path": ".claude/skills/validate-prod",
+      "dirs": 0,
+      "files": 1
+    },
+    {
+      "path": ".claude/skills/life-pivots",
+      "dirs": 0,
+      "files": 1
+    },
+    {
+      "path": ".claude/skills/electional-day",
+      "dirs": 0,
+      "files": 1
+    },
+    {
+      "path": ".claude/skills/research-symbol",
+      "dirs": 0,
+      "files": 1
+    },
+    {
+      "path": ".claude/skills/horoscope",
+      "dirs": 0,
+      "files": 1
+    },
+    {
+      "path": ".claude/skills/character-face",
+      "dirs": 0,
+      "files": 1
+    },
+    {
+      "path": "frontend",
+      "dirs": 12,
+      "files": 13
+    },
+    {
+      "path": "frontend/e2e",
+      "dirs": 0,
+      "files": 2
+    },
+    {
+      "path": "frontend/public",
+      "dirs": 0,
+      "files": 2
+    },
+    {
+      "path": "frontend/.storybook",
+      "dirs": 0,
+      "files": 2
+    },
+    {
+      "path": "frontend/types",
+      "dirs": 0,
+      "files": 2
+    },
+    {
+      "path": "frontend/stories",
+      "dirs": 0,
+      "files": 1
+    },
+    {
+      "path": "frontend/styles",
+      "dirs": 0,
+      "files": 2
+    },
+    {
+      "path": "frontend/messages",
+      "dirs": 0,
+      "files": 5
+    },
+    {
+      "path": "frontend/components",
+      "dirs": 0,
+      "files": 8
+    },
+    {
+      "path": "frontend/lib",
+      "dirs": 0,
+      "files": 12
+    },
+    {
+      "path": "frontend/i18n",
+      "dirs": 0,
+      "files": 1
+    },
+    {
+      "path": "frontend/__tests__",
       "dirs": 0,
       "files": 3
+    },
+    {
+      "path": "frontend/app",
+      "dirs": 2,
+      "files": 2
+    },
+    {
+      "path": "frontend/app/api",
+      "dirs": 2,
+      "files": 0
+    },
+    {
+      "path": "frontend/app/api/lunar",
+      "dirs": 0,
+      "files": 1
+    },
+    {
+      "path": "frontend/app/api/timezones",
+      "dirs": 0,
+      "files": 1
+    },
+    {
+      "path": "frontend/app/[locale]",
+      "dirs": 7,
+      "files": 2
+    },
+    {
+      "path": "frontend/app/[locale]/astrology",
+      "dirs": 0,
+      "files": 1
+    },
+    {
+      "path": "frontend/app/[locale]/pricing",
+      "dirs": 0,
+      "files": 1
+    },
+    {
+      "path": "frontend/app/[locale]/account",
+      "dirs": 0,
+      "files": 1
+    },
+    {
+      "path": "frontend/app/[locale]/dreams",
+      "dirs": 0,
+      "files": 1
+    },
+    {
+      "path": "frontend/app/[locale]/checkout",
+      "dirs": 1,
+      "files": 0
+    },
+    {
+      "path": "frontend/app/[locale]/checkout/success",
+      "dirs": 0,
+      "files": 1
+    },
+    {
+      "path": "frontend/app/[locale]/(calendar)",
+      "dirs": 1,
+      "files": 0
+    },
+    {
+      "path": "frontend/app/[locale]/(calendar)/calendar",
+      "dirs": 0,
+      "files": 1
+    },
+    {
+      "path": "frontend/app/[locale]/face",
+      "dirs": 0,
+      "files": 1
+    },
+    {
+      "path": "oneiro-scope",
+      "dirs": 0,
+      "files": 0
+    },
+    {
+      "path": ".github",
+      "dirs": 1,
+      "files": 0
+    },
+    {
+      "path": ".github/workflows",
+      "dirs": 0,
+      "files": 7
     },
     {
       "path": "external",
@@ -36,207 +266,12 @@
       "files": 3
     },
     {
-      "path": "docs",
-      "dirs": 5,
-      "files": 43
-    },
-    {
-      "path": "docs/architecture",
-      "dirs": 1,
-      "files": 5
-    },
-    {
-      "path": "docs/architecture/modules",
-      "dirs": 0,
-      "files": 3
-    },
-    {
-      "path": "docs/steering",
-      "dirs": 0,
-      "files": 5
-    },
-    {
-      "path": "docs/templates",
-      "dirs": 2,
-      "files": 0
-    },
-    {
-      "path": "docs/templates/_TEMPLATE_spec",
-      "dirs": 0,
-      "files": 3
-    },
-    {
-      "path": "docs/templates/_TEMPLATE_bug",
-      "dirs": 0,
-      "files": 4
-    },
-    {
-      "path": "docs/specs",
-      "dirs": 2,
-      "files": 0
-    },
-    {
-      "path": "docs/specs/physiognomy",
-      "dirs": 0,
-      "files": 3
-    },
-    {
-      "path": "docs/specs/photo-max-extraction",
-      "dirs": 0,
-      "files": 3
-    },
-    {
-      "path": "docs/deployment",
-      "dirs": 0,
-      "files": 1
-    },
-    {
-      "path": "etl",
-      "dirs": 1,
-      "files": 5
-    },
-    {
-      "path": "etl/input",
-      "dirs": 0,
-      "files": 1
-    },
-    {
-      "path": "assets",
-      "dirs": 0,
-      "files": 2
-    },
-    {
-      "path": "frontend",
-      "dirs": 12,
-      "files": 13
-    },
-    {
-      "path": "frontend/i18n",
-      "dirs": 0,
-      "files": 1
-    },
-    {
-      "path": "frontend/e2e",
-      "dirs": 0,
-      "files": 2
-    },
-    {
-      "path": "frontend/lib",
-      "dirs": 0,
-      "files": 12
-    },
-    {
-      "path": "frontend/components",
-      "dirs": 0,
-      "files": 8
-    },
-    {
-      "path": "frontend/messages",
-      "dirs": 0,
-      "files": 5
-    },
-    {
-      "path": "frontend/public",
-      "dirs": 0,
-      "files": 2
-    },
-    {
-      "path": "frontend/.storybook",
-      "dirs": 0,
-      "files": 2
-    },
-    {
-      "path": "frontend/types",
-      "dirs": 0,
-      "files": 2
-    },
-    {
-      "path": "frontend/stories",
-      "dirs": 0,
-      "files": 1
-    },
-    {
-      "path": "frontend/app",
-      "dirs": 2,
-      "files": 2
-    },
-    {
-      "path": "frontend/app/[locale]",
-      "dirs": 7,
-      "files": 2
-    },
-    {
-      "path": "frontend/app/[locale]/pricing",
-      "dirs": 0,
-      "files": 1
-    },
-    {
-      "path": "frontend/app/[locale]/dreams",
-      "dirs": 0,
-      "files": 1
-    },
-    {
-      "path": "frontend/app/[locale]/account",
-      "dirs": 0,
-      "files": 1
-    },
-    {
-      "path": "frontend/app/[locale]/checkout",
-      "dirs": 1,
-      "files": 0
-    },
-    {
-      "path": "frontend/app/[locale]/checkout/success",
-      "dirs": 0,
-      "files": 1
-    },
-    {
-      "path": "frontend/app/[locale]/face",
-      "dirs": 0,
-      "files": 1
-    },
-    {
-      "path": "frontend/app/[locale]/astrology",
-      "dirs": 0,
-      "files": 1
-    },
-    {
-      "path": "frontend/app/[locale]/(calendar)",
-      "dirs": 1,
-      "files": 0
-    },
-    {
-      "path": "frontend/app/[locale]/(calendar)/calendar",
-      "dirs": 0,
-      "files": 1
-    },
-    {
-      "path": "frontend/app/api",
-      "dirs": 2,
-      "files": 0
-    },
-    {
-      "path": "frontend/app/api/lunar",
-      "dirs": 0,
-      "files": 1
-    },
-    {
-      "path": "frontend/app/api/timezones",
-      "dirs": 0,
-      "files": 1
-    },
-    {
-      "path": "frontend/__tests__",
-      "dirs": 0,
-      "files": 3
-    },
-    {
-      "path": "frontend/styles",
-      "dirs": 0,
-      "files": 2
-    },
-    {
       "path": "config",
+      "dirs": 0,
+      "files": 2
+    },
+    {
+      "path": "styles",
       "dirs": 0,
       "files": 2
     },
@@ -244,16 +279,6 @@
       "path": "backend",
       "dirs": 11,
       "files": 5
-    },
-    {
-      "path": "backend/core",
-      "dirs": 0,
-      "files": 7
-    },
-    {
-      "path": "backend/utils",
-      "dirs": 0,
-      "files": 2
     },
     {
       "path": "backend/api",
@@ -264,6 +289,146 @@
       "path": "backend/api/v1",
       "dirs": 0,
       "files": 9
+    },
+    {
+      "path": "backend/services",
+      "dirs": 8,
+      "files": 0
+    },
+    {
+      "path": "backend/services/byok",
+      "dirs": 0,
+      "files": 2
+    },
+    {
+      "path": "backend/services/astrology",
+      "dirs": 6,
+      "files": 23
+    },
+    {
+      "path": "backend/services/astrology/archetypes",
+      "dirs": 0,
+      "files": 9
+    },
+    {
+      "path": "backend/services/astrology/ai",
+      "dirs": 0,
+      "files": 3
+    },
+    {
+      "path": "backend/services/astrology/validators",
+      "dirs": 0,
+      "files": 2
+    },
+    {
+      "path": "backend/services/astrology/knowledge_base",
+      "dirs": 0,
+      "files": 4
+    },
+    {
+      "path": "backend/services/astrology/policies",
+      "dirs": 0,
+      "files": 2
+    },
+    {
+      "path": "backend/services/astrology/engine",
+      "dirs": 0,
+      "files": 5
+    },
+    {
+      "path": "backend/services/email",
+      "dirs": 1,
+      "files": 2
+    },
+    {
+      "path": "backend/services/email/templates",
+      "dirs": 5,
+      "files": 0
+    },
+    {
+      "path": "backend/services/email/templates/fr",
+      "dirs": 0,
+      "files": 2
+    },
+    {
+      "path": "backend/services/email/templates/en",
+      "dirs": 0,
+      "files": 2
+    },
+    {
+      "path": "backend/services/email/templates/es",
+      "dirs": 0,
+      "files": 2
+    },
+    {
+      "path": "backend/services/email/templates/de",
+      "dirs": 0,
+      "files": 2
+    },
+    {
+      "path": "backend/services/email/templates/ru",
+      "dirs": 0,
+      "files": 2
+    },
+    {
+      "path": "backend/services/lunar",
+      "dirs": 0,
+      "files": 3
+    },
+    {
+      "path": "backend/services/physiognomy",
+      "dirs": 1,
+      "files": 9
+    },
+    {
+      "path": "backend/services/physiognomy/knowledge_base",
+      "dirs": 0,
+      "files": 2
+    },
+    {
+      "path": "backend/services/dreams",
+      "dirs": 3,
+      "files": 6
+    },
+    {
+      "path": "backend/services/dreams/ai",
+      "dirs": 1,
+      "files": 2
+    },
+    {
+      "path": "backend/services/dreams/ai/prompts",
+      "dirs": 0,
+      "files": 1
+    },
+    {
+      "path": "backend/services/dreams/data_sources",
+      "dirs": 0,
+      "files": 3
+    },
+    {
+      "path": "backend/services/dreams/knowledge_base",
+      "dirs": 0,
+      "files": 2
+    },
+    {
+      "path": "backend/services/billing",
+      "dirs": 0,
+      "files": 3
+    },
+    {
+      "path": "backend/services/strategic",
+      "dirs": 1,
+      "files": 5
+    },
+    {
+      "path": "backend/services/strategic/knowledge_base",
+      "dirs": 0,
+      "files": 1
+    },
+    {
+      "path": "backend/core",
+      "dirs": 0,
+      "files": 7
     },
     {
       "path": "backend/models",
@@ -278,7 +443,12 @@
     {
       "path": "backend/mcp/tools",
       "dirs": 0,
-      "files": 9
+      "files": 10
+    },
+    {
+      "path": "backend/utils",
+      "dirs": 0,
+      "files": 2
     },
     {
       "path": "backend/alembic",
@@ -296,149 +466,29 @@
       "files": 2
     },
     {
-      "path": "backend/tests",
-      "dirs": 0,
-      "files": 24
-    },
-    {
       "path": "backend/data",
       "dirs": 0,
       "files": 1
     },
     {
-      "path": "backend/services",
-      "dirs": 8,
-      "files": 0
-    },
-    {
-      "path": "backend/services/billing",
+      "path": "backend/tests",
       "dirs": 0,
-      "files": 3
-    },
-    {
-      "path": "backend/services/email",
-      "dirs": 1,
-      "files": 2
-    },
-    {
-      "path": "backend/services/email/templates",
-      "dirs": 5,
-      "files": 0
-    },
-    {
-      "path": "backend/services/email/templates/ru",
-      "dirs": 0,
-      "files": 2
-    },
-    {
-      "path": "backend/services/email/templates/de",
-      "dirs": 0,
-      "files": 2
-    },
-    {
-      "path": "backend/services/email/templates/es",
-      "dirs": 0,
-      "files": 2
-    },
-    {
-      "path": "backend/services/email/templates/en",
-      "dirs": 0,
-      "files": 2
-    },
-    {
-      "path": "backend/services/email/templates/fr",
-      "dirs": 0,
-      "files": 2
-    },
-    {
-      "path": "backend/services/physiognomy",
-      "dirs": 1,
-      "files": 9
-    },
-    {
-      "path": "backend/services/physiognomy/knowledge_base",
-      "dirs": 0,
-      "files": 2
-    },
-    {
-      "path": "backend/services/strategic",
-      "dirs": 0,
-      "files": 4
-    },
-    {
-      "path": "backend/services/byok",
-      "dirs": 0,
-      "files": 2
-    },
-    {
-      "path": "backend/services/dreams",
-      "dirs": 3,
-      "files": 6
-    },
-    {
-      "path": "backend/services/dreams/knowledge_base",
-      "dirs": 0,
-      "files": 2
-    },
-    {
-      "path": "backend/services/dreams/data_sources",
-      "dirs": 0,
-      "files": 3
-    },
-    {
-      "path": "backend/services/dreams/ai",
-      "dirs": 1,
-      "files": 2
-    },
-    {
-      "path": "backend/services/dreams/ai/prompts",
-      "dirs": 0,
-      "files": 1
-    },
-    {
-      "path": "backend/services/lunar",
-      "dirs": 0,
-      "files": 3
-    },
-    {
-      "path": "backend/services/astrology",
-      "dirs": 6,
-      "files": 23
-    },
-    {
-      "path": "backend/services/astrology/policies",
-      "dirs": 0,
-      "files": 2
-    },
-    {
-      "path": "backend/services/astrology/archetypes",
-      "dirs": 0,
-      "files": 9
-    },
-    {
-      "path": "backend/services/astrology/engine",
-      "dirs": 0,
-      "files": 5
-    },
-    {
-      "path": "backend/services/astrology/knowledge_base",
-      "dirs": 0,
-      "files": 4
-    },
-    {
-      "path": "backend/services/astrology/ai",
-      "dirs": 0,
-      "files": 3
-    },
-    {
-      "path": "backend/services/astrology/validators",
-      "dirs": 0,
-      "files": 2
+      "files": 25
     },
     {
       "path": "backend/app",
       "dirs": 0,
       "files": 2
+    },
+    {
+      "path": "assets",
+      "dirs": 0,
+      "files": 2
+    },
+    {
+      "path": "scripts",
+      "dirs": 0,
+      "files": 4
     },
     {
       "path": "agents",
@@ -456,74 +506,14 @@
       "files": 5
     },
     {
-      "path": "oneiro-scope",
-      "dirs": 0,
-      "files": 0
-    },
-    {
-      "path": ".claude",
+      "path": "etl",
       "dirs": 1,
-      "files": 1
+      "files": 5
     },
     {
-      "path": ".claude/skills",
-      "dirs": 10,
-      "files": 1
-    },
-    {
-      "path": ".claude/skills/cost-report",
+      "path": "etl/input",
       "dirs": 0,
       "files": 1
-    },
-    {
-      "path": ".claude/skills/dream",
-      "dirs": 0,
-      "files": 1
-    },
-    {
-      "path": ".claude/skills/deploy-cycle",
-      "dirs": 0,
-      "files": 1
-    },
-    {
-      "path": ".claude/skills/face-portrait",
-      "dirs": 0,
-      "files": 1
-    },
-    {
-      "path": ".claude/skills/horoscope",
-      "dirs": 0,
-      "files": 1
-    },
-    {
-      "path": ".claude/skills/lunar",
-      "dirs": 0,
-      "files": 1
-    },
-    {
-      "path": ".claude/skills/natal",
-      "dirs": 0,
-      "files": 1
-    },
-    {
-      "path": ".claude/skills/client-report",
-      "dirs": 0,
-      "files": 1
-    },
-    {
-      "path": ".claude/skills/validate-prod",
-      "dirs": 0,
-      "files": 1
-    },
-    {
-      "path": ".claude/skills/research-symbol",
-      "dirs": 0,
-      "files": 1
-    },
-    {
-      "path": "tests",
-      "dirs": 0,
-      "files": 4
     },
     {
       "path": "data",
@@ -531,21 +521,76 @@
       "files": 2
     },
     {
-      "path": "styles",
+      "path": "tests",
       "dirs": 0,
-      "files": 2
+      "files": 4
     },
     {
-      "path": ".github",
-      "dirs": 1,
+      "path": "docs",
+      "dirs": 5,
+      "files": 43
+    },
+    {
+      "path": "docs/templates",
+      "dirs": 2,
       "files": 0
     },
     {
-      "path": ".github/workflows",
+      "path": "docs/templates/_TEMPLATE_spec",
       "dirs": 0,
-      "files": 7
+      "files": 3
+    },
+    {
+      "path": "docs/templates/_TEMPLATE_bug",
+      "dirs": 0,
+      "files": 4
+    },
+    {
+      "path": "docs/architecture",
+      "dirs": 1,
+      "files": 5
+    },
+    {
+      "path": "docs/architecture/modules",
+      "dirs": 0,
+      "files": 3
+    },
+    {
+      "path": "docs/steering",
+      "dirs": 0,
+      "files": 5
+    },
+    {
+      "path": "docs/deployment",
+      "dirs": 0,
+      "files": 1
+    },
+    {
+      "path": "docs/specs",
+      "dirs": 4,
+      "files": 0
+    },
+    {
+      "path": "docs/specs/strategic-patterns",
+      "dirs": 0,
+      "files": 1
+    },
+    {
+      "path": "docs/specs/fandorin-portrait",
+      "dirs": 0,
+      "files": 1
+    },
+    {
+      "path": "docs/specs/physiognomy",
+      "dirs": 0,
+      "files": 3
+    },
+    {
+      "path": "docs/specs/photo-max-extraction",
+      "dirs": 0,
+      "files": 3
     }
   ],
-  "total_dirs": 108,
-  "total_files": 389
+  "total_dirs": 117,
+  "total_files": 402
 }

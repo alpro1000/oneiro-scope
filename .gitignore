@@ -74,3 +74,6 @@ Thumbs.db
 .claude/personal/
 .claude/skills/me/
 reports/
+
+# Generated Fandorin portraits (binary output)
+docs/specs/fandorin-portrait/output/

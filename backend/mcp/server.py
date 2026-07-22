@@ -27,6 +27,7 @@ from backend.mcp.tools import geo as g
 from backend.mcp.tools import lunar as l
 from backend.mcp.tools import physiognomy as ph
 from backend.mcp.tools import strategic_astro as sa
+from backend.mcp.tools import strategic_patterns as sp
 
 logger = logging.getLogger("oneiro.mcp")
 
@@ -98,6 +99,16 @@ mcp.tool()(ar.aspect_meaning)
 mcp.tool()(ar.planet_dignity)
 mcp.tool()(ar.zodiac_sign)
 mcp.tool()(ar.list_archetype_topics)
+
+# --- Analysis patterns (Phase 10: patterns catalog) ---------------------------
+# One tool per pattern in strategic/knowledge_base/analysis_patterns.json.
+# Deterministic data + catalog ref; the paired skill interprets, labelled.
+mcp.tool()(sp.money_contour)
+mcp.tool()(sp.vocation_map)
+mcp.tool()(sp.decade_map)
+mcp.tool()(sp.life_pivots)
+mcp.tool()(sp.electional_day)
+mcp.tool()(sp.reverse_physiognomy_prompt)
 
 # --- Physiognomy (reflective face reading) -----------------------------------
 # Deterministic FaceMesh geometry (1.0) + cited tradition dictionary (0.6 —

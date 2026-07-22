@@ -108,7 +108,60 @@ Recent decisions:
 
 ## §9 Session log
 
-### 2026-07-05 — claude/photo-personality-analysis-2jy29b — auto-zoom detection, anatomical lip metric, longitudinal timeline
+### 2026-07-21 — claude/fandorin-portrait-generation-d422my — reverse physiognomy (Fandorin), portrait generator, patterns catalog → 6 skills + 6 MCP tools
+
+**Trigger:** owner brought Akunin's public request for critique of a
+50-year-old Fandorin portrait; the session grew from one reverse-
+physiognomy case into a full patterns catalog and its implementation.
+
+**Done:**
+- **Fandorin case** (`docs/specs/fandorin-portrait/`): book-canon
+  appearance table, critique of the author's variant, reverse KB
+  mapping (traits → face), RU/EN generation prompt + negative.
+  Owner generated the portrait, posted the reply publicly.
+- **Portrait generator** `scripts/generate_fandorin_portrait.py`:
+  gpt-image-1 + gemini-2.5-flash-image providers, generate/edit
+  modes, output gitignored.
+- **Patterns catalog** `backend/services/strategic/knowledge_base/
+  analysis_patterns.json` + spec `docs/specs/strategic-patterns/`:
+  six session-distilled recipes (money-contour, vocation-map,
+  decade-map, life-pivots, electional-day, reverse-physiognomy),
+  each = deterministic compute (1.0) → symbolic rules (0.8) →
+  optional user_context loop (0.9), disclaimer + no_determinism flags.
+- **Implementation of all six**: engine
+  `backend/services/strategic/pattern_engine.py` (natal geometry with
+  rulers/dignities/sect/Part of Fortune; house blocks + linchpin; MC
+  complex; decade + pivot monthly scans; Moon-by-step electional with
+  void-of-course; reverse-physiognomy KB lookup with
+  fictional_or_self_only gate; importable WITHOUT the astrology-service
+  stack — own compact Ptolemaic dignity table, Moshier mode); MCP tools
+  `backend/mcp/tools/strategic_patterns.py` (registered in server.py,
+  Phase 10 section); six skills in `.claude/skills/`; tests
+  `backend/tests/test_strategic_patterns.py` — **13 passed** (neutral
+  fixture chart, no PII) + smoke-test registration entries.
+- Live validation during the session: owner's own natal/decade/pivot
+  runs (hand-run predecessors of the engine) matched life facts the
+  owner volunteered (наём не идёт; переломные окна) — the life-pivots
+  validation loop is modeled on exactly that exchange.
+
+**Known gaps:** skills call `mcp__oneiro__*` — with the MCP server
+offline they need the documented fallback (direct engine imports);
+electional VoC is 10-min-grid approximate (documented in methodology).
+
+**Addendum (same session): life-pivots validation loop closed live.**
+Owner confirmed/refuted the scanned windows verbally; resulting
+calibration (weights only, biography stays out of the repo — full
+version in gitignored `.claude/personal/astro-calibration.md`, which
+does NOT survive container recycling): **angles/ASC = max weight (3/3
+windows, one month-exact)**; Uranus opposition + Saturn return =
+exact-by-theme; Pluto☌Moon + Saturn☌DSC = confirmed; Moon/MC transits
+= quiet; some relocations invisible to the angle+luminary scan (honest
+miss). Insight "наём не держится" elevated to HIGH (astronomy +
+user_context, confirmed ≥3 independent periods) — it anchors the
+"Saturn-in-2nd 2026-27 = build own income base" decade reading, and
+the vocation-map pattern matched the owner's actual professional
+profile. Apply-forward: Pluto☌ASC 2032-04 is the owner's top-weight
+milestone of the 2026-2036 decade; Moon/MC transits downweighted.
 
 **Trigger:** owner ran a live multi-batch photo reading (9 adult +
 5 childhood frames of himself) and asked (a) that the system zoom into
