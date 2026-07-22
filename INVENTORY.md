@@ -4,17 +4,23 @@
 |---|---:|---:|
 | . | 15 | 20 |
 | .claude | 1 | 1 |
-| .claude/skills | 10 | 1 |
+| .claude/skills | 16 | 1 |
 | .claude/skills/cost-report | 0 | 1 |
 | .claude/skills/dream | 0 | 1 |
+| .claude/skills/vocation-map | 0 | 1 |
 | .claude/skills/lunar | 0 | 1 |
 | .claude/skills/client-report | 0 | 1 |
+| .claude/skills/money-contour | 0 | 1 |
 | .claude/skills/deploy-cycle | 0 | 1 |
+| .claude/skills/decade-map | 0 | 1 |
 | .claude/skills/natal | 0 | 1 |
 | .claude/skills/face-portrait | 0 | 1 |
 | .claude/skills/validate-prod | 0 | 1 |
+| .claude/skills/life-pivots | 0 | 1 |
+| .claude/skills/electional-day | 0 | 1 |
 | .claude/skills/research-symbol | 0 | 1 |
 | .claude/skills/horoscope | 0 | 1 |
+| .claude/skills/character-face | 0 | 1 |
 | frontend | 12 | 13 |
 | frontend/e2e | 0 | 2 |
 | frontend/public | 0 | 2 |
@@ -79,18 +85,18 @@
 | backend/services/dreams/data_sources | 0 | 3 |
 | backend/services/dreams/knowledge_base | 0 | 2 |
 | backend/services/billing | 0 | 3 |
-| backend/services/strategic | 1 | 4 |
+| backend/services/strategic | 1 | 5 |
 | backend/services/strategic/knowledge_base | 0 | 1 |
 | backend/core | 0 | 7 |
 | backend/models | 0 | 7 |
 | backend/mcp | 1 | 3 |
-| backend/mcp/tools | 0 | 9 |
+| backend/mcp/tools | 0 | 10 |
 | backend/utils | 0 | 2 |
 | backend/alembic | 1 | 2 |
 | backend/alembic/versions | 0 | 1 |
 | backend/middleware | 0 | 2 |
 | backend/data | 0 | 1 |
-| backend/tests | 0 | 24 |
+| backend/tests | 0 | 25 |
 | backend/app | 0 | 2 |
 | assets | 0 | 2 |
 | scripts | 0 | 4 |
@@ -115,4 +121,4 @@
 | docs/specs/physiognomy | 0 | 3 |
 | docs/specs/photo-max-extraction | 0 | 3 |
 
-**ИТОГО:** папок = 111, файлов = 393
+**ИТОГО:** папок = 117, файлов = 402
