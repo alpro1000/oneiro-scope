@@ -148,6 +148,21 @@ physiognomy case into a full patterns catalog and its implementation.
 offline they need the documented fallback (direct engine imports);
 electional VoC is 10-min-grid approximate (documented in methodology).
 
+**Addendum (same session): life-pivots validation loop closed live.**
+Owner confirmed/refuted the scanned windows verbally; resulting
+calibration (weights only, biography stays out of the repo — full
+version in gitignored `.claude/personal/astro-calibration.md`, which
+does NOT survive container recycling): **angles/ASC = max weight (3/3
+windows, one month-exact)**; Uranus opposition + Saturn return =
+exact-by-theme; Pluto☌Moon + Saturn☌DSC = confirmed; Moon/MC transits
+= quiet; some relocations invisible to the angle+luminary scan (honest
+miss). Insight "наём не держится" elevated to HIGH (astronomy +
+user_context, confirmed ≥3 independent periods) — it anchors the
+"Saturn-in-2nd 2026-27 = build own income base" decade reading, and
+the vocation-map pattern matched the owner's actual professional
+profile. Apply-forward: Pluto☌ASC 2032-04 is the owner's top-weight
+milestone of the 2026-2036 decade; Moon/MC transits downweighted.
+
 **Trigger:** owner ran a live multi-batch photo reading (9 adult +
 5 childhood frames of himself) and asked (a) that the system zoom into
 photos and recognize traits itself instead of the questionnaire, and
