@@ -64,6 +64,27 @@ services:
       - key: ANTHROPIC_API_KEY
         sync: false
 
+      # --- Remote MCP connector (docs/deploy/mcp-connector.md) -------------
+      # Serves the MCP server at <backend>/mcp so Claude / ChatGPT / Gemini
+      # can add this deployment as a connector.
+      - key: MCP_ENABLED
+        value: "true"
+      - key: MCP_REQUIRE_AUTH
+        value: "true"
+      # Canonical resource id + OAuth audience. Set to this service's public
+      # URL + /mcp once the service has a hostname.
+      - key: MCP_PUBLIC_URL
+        sync: false
+      # External authorization server (any IdP with Dynamic Client
+      # Registration). Without it the MCP surface refuses to mount in
+      # production rather than exposing tools unauthenticated.
+      - key: MCP_AUTH_ISSUER
+        sync: false
+      - key: MCP_AUTH_AUDIENCE
+        sync: false
+      - key: MCP_REQUIRED_SCOPES
+        sync: false
+
   # NOTE: the frontend was moved off Render to Vercel — its env vars (all the
   # *_API_URL values pointing to THIS backend's public URL) now live in the
   # Vercel project settings. See docs/deploy/vercel-frontend.md and
