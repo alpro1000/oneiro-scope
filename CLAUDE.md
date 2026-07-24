@@ -292,6 +292,12 @@ NEXT_PUBLIC_API_URL=http://localhost:8000
 
 ### Render deployment env vars
 
+> **Split deploy (current):** the **frontend now runs on Vercel**, backend +
+> Postgres + Redis stay on Render. See `docs/deploy/vercel-frontend.md`.
+> The `render.yaml` frontend service was removed and backend `ALLOWED_ORIGINS`
+> is now set manually to the Vercel URL. The note below describes the older
+> all-Render wiring — kept for reference / if you ever move the frontend back.
+
 When deploying via `render.yaml`, the frontend and backend must exchange full HTTPS URLs using
 `RENDER_EXTERNAL_URL` to keep SSR from calling `localhost`:
 
