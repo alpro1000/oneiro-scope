@@ -1,9 +1,14 @@
 # FastAPI & ASGI
 fastapi==0.109.0
-uvicorn[standard]==0.27.0
-# Pinned to a post-2.5 release to avoid recursion issues in field __repr__
-pydantic==2.7.4
-pydantic-settings==2.1.0
+# >=0.31.1 required by mcp (its stdio/HTTP transports run on uvicorn).
+uvicorn[standard]>=0.31.1,<1
+# Post-2.5 (avoids the recursion issue in field __repr__) and >=2.11 because
+# claude-agent-sdk needs mcp>=1.23, which requires pydantic>=2.11. fastapi
+# 0.109 accepts any pydantic <3, so the floor is safe to raise.
+pydantic>=2.11,<3
+# >=2.6.1 required by mcp; it only needs pydantic>=2.7.0, so the pydantic
+# pin above still holds. Kept <3 so a major bump can't land unreviewed.
+pydantic-settings>=2.6.1,<3
 
 # Database
 sqlalchemy==2.0.25
@@ -23,7 +28,8 @@ celery[redis]==5.3.6
 python-jose[cryptography]==3.3.0
 email-validator>=2.0  # Pydantic EmailStr
 passlib[bcrypt]==1.7.4
-python-multipart==0.0.6
+# >=0.0.9 required by mcp (form parsing for its HTTP transport).
+python-multipart>=0.0.9,<0.1
 
 # LLM & AI
 openai==1.10.0
@@ -35,7 +41,10 @@ google-auth>=2.27
 boto3>=1.34
 
 # ASR
-openai-whisper==20231117
+# openai-whisper removed: nothing in backend/ imports it, its sdist fails to
+# build (setup.py imports pkg_resources, gone from current setuptools) and it
+# drags in torch. Re-add with a maintained wheel if server-side ASR is ever
+# wired up — speech input is handled client-side by the Web Speech API today.
 vosk==0.3.45
 
 # Lunar calculations
@@ -69,7 +78,13 @@ sentry-sdk[fastapi]==1.40.0
 
 # MCP server + Claude Agent SDK
 # MCP exposes the OneiroScope services as tools for skills/agents.
-mcp[cli]>=1.2
+# Floor set by claude-agent-sdk (needs mcp>=1.23); mcp in turn drives the
+# pydantic>=2.11 floor above. A floor this explicit also keeps pip from
+# backtracking through dozens of releases, which slows the Render build.
+# No [cli] extra: it only adds typer for the `mcp` command-line helper, which
+# nothing here uses (the server runs via `python -m backend.mcp.server` on
+# FastMCP from core mcp), and its typer>=0.16 collides with spacy's typer<0.10.
+mcp>=1.23
 claude-agent-sdk>=0.2
 
 # Testing
