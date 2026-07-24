@@ -21,7 +21,7 @@
 | .claude/skills/research-symbol | 0 | 1 |
 | .claude/skills/horoscope | 0 | 1 |
 | .claude/skills/character-face | 0 | 1 |
-| frontend | 12 | 13 |
+| frontend | 12 | 14 |
 | frontend/e2e | 0 | 2 |
 | frontend/public | 0 | 2 |
 | frontend/.storybook | 0 | 2 |
@@ -107,7 +107,8 @@
 | etl/input | 0 | 1 |
 | data | 0 | 2 |
 | tests | 0 | 4 |
-| docs | 5 | 43 |
+| docs | 6 | 43 |
+| docs/deploy | 0 | 2 |
 | docs/templates | 2 | 0 |
 | docs/templates/_TEMPLATE_spec | 0 | 3 |
 | docs/templates/_TEMPLATE_bug | 0 | 4 |
@@ -121,4 +122,4 @@
 | docs/specs/physiognomy | 0 | 3 |
 | docs/specs/photo-max-extraction | 0 | 3 |
 
-**ИТОГО:** папок = 117, файлов = 402
+**ИТОГО:** папок = 118, файлов = 405

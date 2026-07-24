@@ -41,11 +41,11 @@ services:
       - key: SECRET_KEY
         generateValue: true
 
+      # Frontend now lives on Vercel (see docs/deploy/vercel-frontend.md).
+      # Set this in the Render dashboard to your Vercel URL(s), comma-separated
+      # and WITH scheme, e.g. https://oneiroscope.vercel.app,https://www.oneiroscope.com
       - key: ALLOWED_ORIGINS
-        fromService:
-          type: web
-          name: oneiroscope-frontend
-          envVarKey: RENDER_EXTERNAL_URL
+        sync: false
 
       - key: LUNAR_DEFAULT_TZ
         value: Europe/Moscow
@@ -64,43 +64,7 @@ services:
       - key: ANTHROPIC_API_KEY
         sync: false
 
-  - type: web
-    name: oneiroscope-frontend
-    env: node
-    plan: free
-    rootDir: frontend
-    buildCommand: npm install --include=dev && npm run build
-    startCommand: npm run start -- -p $PORT
-    envVars:
-      - key: NODE_ENV
-        value: production
-      - key: LUNAR_DEFAULT_TZ
-        value: UTC
-
-      - key: NEXT_PUBLIC_API_URL
-        fromService:
-          type: web
-          name: oneiroscope-backend
-          envVarKey: RENDER_EXTERNAL_URL
-
-      - key: ASTROLOGY_API_URL
-        fromService:
-          type: web
-          name: oneiroscope-backend
-          envVarKey: RENDER_EXTERNAL_URL
-      - key: DREAMS_API_URL
-        fromService:
-          type: web
-          name: oneiroscope-backend
-          envVarKey: RENDER_EXTERNAL_URL
-      - key: LUNAR_API_URL
-        fromService:
-          type: web
-          name: oneiroscope-backend
-          envVarKey: RENDER_EXTERNAL_URL
-
-      - key: NEXT_PUBLIC_LUNAR_API_URL
-        fromService:
-          type: web
-          name: oneiroscope-backend
-          envVarKey: RENDER_EXTERNAL_URL
+  # NOTE: the frontend was moved off Render to Vercel — its env vars (all the
+  # *_API_URL values pointing to THIS backend's public URL) now live in the
+  # Vercel project settings. See docs/deploy/vercel-frontend.md and
+  # frontend/.env.example. Render hosts backend + Postgres + Redis only.

@@ -98,7 +98,7 @@
     {
       "path": "frontend",
       "dirs": 12,
-      "files": 13
+      "files": 14
     },
     {
       "path": "frontend/e2e",
@@ -527,8 +527,13 @@
     },
     {
       "path": "docs",
-      "dirs": 5,
+      "dirs": 6,
       "files": 43
+    },
+    {
+      "path": "docs/deploy",
+      "dirs": 0,
+      "files": 2
     },
     {
       "path": "docs/templates",
@@ -591,6 +596,6 @@
       "files": 3
     }
   ],
-  "total_dirs": 117,
-  "total_files": 402
+  "total_dirs": 118,
+  "total_files": 405
 }
