@@ -409,8 +409,8 @@ def life_pivots(
     geo: dict[str, Any], from_year: int, to_year: int,
 ) -> dict[str, Any]:
     """Dated slow-planet conjunctions to angles/luminaries + cycle windows."""
-    if to_year <= from_year:
-        raise ValueError("to_year must be after from_year")
+    if to_year < from_year:
+        raise ValueError("to_year must not be before from_year")
     if to_year - from_year > 60:
         raise ValueError("scan window capped at 60 years")
 
@@ -485,12 +485,29 @@ def life_pivots(
 
 _ELECTIONAL_NATAL = ("sun", "moon", "mercury", "venus", "mars")
 
+# Signed Moon-minus-planet offsets that mark an exact Ptolemaic aspect. The
+# separation-based ASPECTS keys only cover 0..180; a sextile/square/trine with
+# the Moon *behind* the other body sits at 300/270/240, so the VoC scan must
+# watch the mirror angles too or it misses roughly half of all exact aspects.
+_VOC_ANGLES: tuple[int, ...] = tuple(
+    sorted({a for angle in ASPECTS for a in (angle, (360 - angle) % 360)})
+)
+
 
 def electional_day(
     geo: dict[str, Any], target_date: str, tz_name: str,
     day_start: int = 6, day_end: int = 22, step_min: int = 30,
 ) -> dict[str, Any]:
     """Hour-by-hour Moon data for one day: aspects, VoC, phase, Mercury."""
+    if not 0 <= day_start <= 23:
+        raise ValueError("day_start must be in 0..23")
+    if not 0 <= day_end <= 23:
+        raise ValueError("day_end must be in 0..23 (the grid stays inside one day)")
+    if day_end < day_start:
+        raise ValueError("day_end must not be before day_start")
+    if step_min < 1:
+        raise ValueError("step_min must be >= 1")
+
     tz = _zone(tz_name)
     d = date_cls.fromisoformat(target_date)
     natal_pts = {n: geo["planets"][n]["lon"] for n in _ELECTIONAL_NATAL}
@@ -526,7 +543,7 @@ def electional_day(
             mlon = _lon(jd_ut, "moon")[0]
             for p in others:
                 plon = _lon(jd_ut, p)[0]
-                for angle in ASPECTS:
+                for angle in _VOC_ANGLES:
                     diff = ((mlon - plon - angle) + 180.0) % 360.0 - 180.0
                     key = (p, angle)
                     if key in prev_off and prev_off[key] * diff < 0 \
@@ -636,6 +653,13 @@ def _load_kb(fname: str) -> dict:
     return json.loads((_KB_DIR / fname).read_text(encoding="utf-8"))
 
 
+def _localised(node: Any, loc: str) -> str:
+    """Pick the `loc` text from a KB node, falling back to ru."""
+    if not isinstance(node, dict):
+        return ""
+    return node.get(loc) or node.get("ru", "")
+
+
 def reverse_physiognomy(
     traits: list[str], subject_type: str, locale: str = "ru",
 ) -> dict[str, Any]:
@@ -668,15 +692,23 @@ def reverse_physiognomy(
                 node = kbs[fname]
                 for key in path:
                     node = node[key]
-                shape = node.get("shape", {})
-                reading = node.get("reading", node)
+                # Two KB shapes: mianxiang entries nest {shape, reading},
+                # western entries (corman/kretschmer) are flat {ru, en, source}
+                # where the single text carries both the look and the reading.
+                shape = node.get("shape")
+                reading = node.get("reading")
+                if shape is None and reading is None:
+                    shape = reading = node
+                elif shape is None:
+                    shape = reading
+                elif reading is None:
+                    reading = shape
                 matched.append({
                     "trait": trait,
                     "system": fname.replace(".json", ""),
                     "type": path[-1],
-                    "face_features": shape.get(loc) or shape.get("ru", ""),
-                    "kb_reading": (reading.get(loc) or reading.get("ru", ""))
-                    if isinstance(reading, dict) else "",
+                    "face_features": _localised(shape, loc),
+                    "kb_reading": _localised(reading, loc),
                     "source": node.get("source", ""),
                 })
         if not found:

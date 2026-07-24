@@ -142,9 +142,15 @@ def test_life_pivots_catches_fast_saturn_return(geo):
     assert all(28 <= c["age"] <= 31 for c in returns)
 
 
+def test_life_pivots_allows_single_year(geo):
+    """Both bounds are documented inclusive — a one-year scan must work."""
+    lp = life_pivots(geo, from_year=2020, to_year=2020)
+    assert all(w["date"].startswith("2020-") for w in lp["windows"])
+
+
 def test_life_pivots_rejects_bad_window(geo):
     with pytest.raises(ValueError):
-        life_pivots(geo, from_year=2020, to_year=2019)
+        life_pivots(geo, from_year=2020, to_year=2018)
     with pytest.raises(ValueError):
         life_pivots(geo, from_year=1900, to_year=2000)
 
@@ -165,6 +171,43 @@ def test_electional_day_known_date(geo):
 
 
 # --- reverse-physiognomy --------------------------------------------------------
+
+def test_electional_day_voc_sees_mirror_aspects(geo):
+    """Regression: the VoC scan must watch 240/270/300 offsets too.
+
+    With only 0..180 offsets the Moon's last exact aspect before ingress was
+    missed, so 2026-09-02 (Europe/Prague) came back void the whole day.
+    """
+    ed = electional_day(geo, "2026-09-02", "Europe/Prague")
+    assert ed["void_of_course"]["start_local"] == "2026-09-02 12:50"
+    assert not all(s["void_of_course"] for s in ed["steps"])
+    assert ed["supportive_step_times"]
+
+
+@pytest.mark.parametrize(
+    "kwargs",
+    [{"day_end": 24}, {"day_start": 20, "day_end": 8}, {"step_min": 0}],
+)
+def test_electional_day_validates_grid(geo, kwargs):
+    """Bad hour/step arguments raise a clear ValueError, not a raw datetime one."""
+    with pytest.raises(ValueError):
+        electional_day(geo, "2026-09-02", "Europe/Prague", **kwargs)
+
+
+def test_reverse_physiognomy_flat_kb_entries_carry_features():
+    """Regression: western.json nodes are flat {ru,en,source} — not {shape,…}.
+
+    Reading them as nested left face_features empty, so the portrait prompt
+    seed the character-face skill builds was blank.
+    """
+    res = reverse_physiognomy(
+        ["избирательность", "вязкость"], subject_type="fictional"
+    )
+    assert res["matched"], "western traits must match"
+    assert all(m["face_features"] for m in res["matched"])
+    assert all(m["kb_reading"] for m in res["matched"])
+    assert res["face_feature_seed"]
+
 
 def test_reverse_physiognomy_maps_traits():
     res = reverse_physiognomy(
