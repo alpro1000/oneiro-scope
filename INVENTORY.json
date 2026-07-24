@@ -193,7 +193,7 @@
     {
       "path": "docs/deploy",
       "dirs": 0,
-      "files": 2
+      "files": 3
     },
     {
       "path": "docs/steering",
@@ -388,7 +388,7 @@
     {
       "path": "backend/mcp",
       "dirs": 1,
-      "files": 3
+      "files": 4
     },
     {
       "path": "backend/mcp/tools",
@@ -398,7 +398,7 @@
     {
       "path": "backend/tests",
       "dirs": 0,
-      "files": 25
+      "files": 26
     },
     {
       "path": "backend/middleware",
@@ -597,5 +597,5 @@
     }
   ],
   "total_dirs": 118,
-  "total_files": 405
+  "total_files": 408
 }
