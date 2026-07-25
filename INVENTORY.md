@@ -43,7 +43,8 @@
 | docs/deploy | 0 | 3 |
 | docs/steering | 0 | 5 |
 | docs/deployment | 0 | 1 |
-| docs/specs | 4 | 0 |
+| docs/specs | 5 | 0 |
+| docs/specs/product-architecture | 0 | 1 |
 | docs/specs/strategic-patterns | 0 | 1 |
 | docs/specs/photo-max-extraction | 0 | 3 |
 | docs/specs/physiognomy | 0 | 3 |
@@ -81,7 +82,7 @@
 | backend/utils | 0 | 2 |
 | backend/mcp | 1 | 4 |
 | backend/mcp/tools | 0 | 10 |
-| backend/tests | 0 | 26 |
+| backend/tests | 0 | 27 |
 | backend/middleware | 0 | 2 |
 | backend/services | 8 | 0 |
 | backend/services/billing | 0 | 3 |
@@ -99,7 +100,7 @@
 | backend/services/dreams/ai/prompts | 0 | 1 |
 | backend/services/dreams/data_sources | 0 | 3 |
 | backend/services/dreams/knowledge_base | 0 | 2 |
-| backend/services/strategic | 1 | 5 |
+| backend/services/strategic | 1 | 6 |
 | backend/services/strategic/knowledge_base | 0 | 1 |
 | backend/services/astrology | 6 | 23 |
 | backend/services/astrology/archetypes | 0 | 9 |
@@ -122,4 +123,4 @@
 | external/DReAMy | 1 | 1 |
 | external/DReAMy/dreamy | 0 | 3 |
 
-**ИТОГО:** папок = 118, файлов = 408
+**ИТОГО:** папок = 119, файлов = 411
