@@ -35,6 +35,25 @@ class Settings(BaseSettings):
     # CORS
     ALLOWED_ORIGINS: str = "http://localhost:3000"
 
+    # --- Remote MCP (connector surface) -------------------------------------
+    # Serves the MCP server over HTTP so Claude / ChatGPT / Gemini can add it
+    # by URL. See docs/deploy/mcp-connector.md.
+    MCP_ENABLED: bool = True
+    MCP_PATH: str = "/mcp"
+    # Public canonical URL of the MCP endpoint — also the OAuth audience.
+    # e.g. https://oneiroscope-backend.onrender.com/mcp
+    MCP_PUBLIC_URL: str | None = None
+
+    # OAuth 2.1 resource-server settings. The authorization server itself is
+    # external (Auth0 / Clerk / Stytch / WorkOS…); we only validate its tokens.
+    MCP_REQUIRE_AUTH: bool = True
+    MCP_AUTH_ISSUER: str | None = None
+    MCP_AUTH_JWKS_URL: str | None = None  # defaults to issuer + /.well-known/jwks.json
+    MCP_AUTH_AUDIENCE: str | None = None  # defaults to MCP_PUBLIC_URL
+    MCP_REQUIRED_SCOPES: str = ""  # space-separated, empty = none required
+    # Local-only shortcut: a static bearer token. Refused in production.
+    MCP_DEV_TOKEN: str | None = None
+
     @property
     def allowed_origins_list(self) -> List[str]:
         origins: List[str] = []

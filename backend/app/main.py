@@ -64,7 +64,17 @@ async def lifespan(app: FastAPI):
 
     logger.info("Application startup complete")
 
-    yield
+    # The streamable-HTTP transport keeps per-session state, so its session
+    # manager has to be running for the lifetime of the process. Mounted
+    # sub-apps don't get their own lifespan, hence entering it here.
+    mcp_session_manager = getattr(app.state, "mcp_session_manager", None)
+    if mcp_session_manager is not None:
+        async with mcp_session_manager.run():
+            logger.info("Remote MCP session manager running")
+            yield
+            logger.info("Stopping remote MCP session manager...")
+    else:
+        yield
 
     # Shutdown
     logger.info("Shutting down application...")
@@ -172,6 +182,34 @@ app.include_router(users.router, prefix="/api/v1", tags=["Users"])
 app.include_router(physiognomy.router, prefix="/api/v1", tags=["Physiognomy"])
 # app.include_router(asr.router, prefix="/api/v1", tags=["ASR"])  # Coming soon
 # app.include_router(billing.router, prefix="/api/v1", tags=["Billing"])  # Coming soon
+
+
+# --- Remote MCP connector surface --------------------------------------------
+# Mounts the MCP server at settings.MCP_PATH so Claude / ChatGPT / Gemini can
+# add this deployment as a connector by URL — same service, no extra host.
+# Never fatal: if the mcp package or its auth config is missing, the REST API
+# still boots and only this surface is skipped (see backend/mcp/remote.py).
+from backend.mcp.remote import (  # noqa: E402  (after app creation by design)
+    PROTECTED_RESOURCE_PATH,
+    build_mcp_http_app,
+    protected_resource_metadata,
+)
+
+
+@app.get(PROTECTED_RESOURCE_PATH, include_in_schema=False)
+async def oauth_protected_resource():
+    """RFC 9728 metadata: which authorization server guards the MCP endpoint.
+
+    Clients fetch this after a 401 to learn where to send the user to log in.
+    """
+    return protected_resource_metadata()
+
+
+_mcp_app, _mcp_session_manager = build_mcp_http_app()
+if _mcp_app is not None:
+    app.mount(settings.MCP_PATH, _mcp_app)
+    app.state.mcp_session_manager = _mcp_session_manager
+    logger.info("Remote MCP mounted at %s", settings.MCP_PATH)
 
 
 # Root endpoint
