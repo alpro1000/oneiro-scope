@@ -13,8 +13,9 @@ Birth place is passed as lat/lon/timezone: resolve city names first via
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, Optional
 
+from backend.services.strategic.analysis_plan import build_plan
 from backend.services.strategic.disclaimer import DISCLAIMER_RU
 from backend.services.strategic.pattern_engine import (
     decade_map as _decade_map,
@@ -37,6 +38,41 @@ def _base(pattern_id: str, layer: str, confidence: float) -> dict[str, Any]:
         "interpretation_rules_ref": f"{_CATALOG}#{pattern_id}",
         "disclaimer": DISCLAIMER_RU,
     }
+
+
+def analysis_plan(
+    known_inputs: Optional[list[str]] = None,
+    completed_stages: Optional[list[str]] = None,
+    locale: str = "ru",
+) -> dict[str, Any]:
+    """List everything this server can compute, in the order a reading is built.
+
+    CALL THIS FIRST when a user asks for astrology/dream/face analysis and you
+    are unsure what to offer. It answers three questions at once: what can run
+    with the inputs you already have, what is blocked and on which input, and
+    which single step comes next. Then work down `ready` in order, or ask the
+    questions in `questions_to_ask` to unblock more.
+
+    The plan is deterministic data — no interpretation. Stage names and
+    questions come back in the requested language so they can be shown as-is.
+
+    Args:
+        known_inputs: input keys already collected. Recognised keys:
+            "birth_date", "birth_time", "birth_place", "target_date",
+            "start_year", "scan_years", "cities", "partner_birth_data",
+            "dream_text", "face_photos", "character_traits".
+        completed_stages: stage ids already run in this conversation (e.g.
+            ["natal-chart"]) so they stop being offered as the next step.
+        locale: "ru" (default) or "en".
+    """
+    out = _base("analysis-plan", "astronomy", 1.0)
+    out.pop("interpretation_rules_ref", None)
+    out["computed"] = build_plan(known_inputs, completed_stages, locale)
+    out["how_to_use"] = (
+        "Take `next_step`, call its `tool`; if `questions_to_ask` is non-empty, "
+        "ask those first. Re-call with `completed_stages` to advance."
+    )
+    return out
 
 
 def money_contour(

@@ -103,6 +103,9 @@ mcp.tool()(ar.list_archetype_topics)
 # --- Analysis patterns (Phase 10: patterns catalog) ---------------------------
 # One tool per pattern in strategic/knowledge_base/analysis_patterns.json.
 # Deterministic data + catalog ref; the paired skill interprets, labelled.
+# analysis_plan is the entry point: it tells the model what can be computed
+# and in which order, so nothing gets forgotten in a reading.
+mcp.tool()(sp.analysis_plan)
 mcp.tool()(sp.money_contour)
 mcp.tool()(sp.vocation_map)
 mcp.tool()(sp.decade_map)

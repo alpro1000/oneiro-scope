@@ -108,6 +108,55 @@ Recent decisions:
 
 ## §9 Session log
 
+### 2026-07-24 — claude/fandorin-portrait-generation-d422my — deploy unblocked, MCP connector, product architecture decided
+
+**Trigger:** owner drove the split-deploy rollout, Render kept failing, and the
+session turned into three decisions plus the code to back them.
+
+**Deploy fixes (merged #153, #154):** the Render build was blocked by a chain
+of dependency conflicts introduced when `mcp` and `claude-agent-sdk` were added
+without reconciling older pins — httpx, then `openai-whisper` (unbuildable
+sdist, unused, dropped with torch), then pydantic → 2.11, pydantic-settings,
+python-multipart, uvicorn, and finally `mcp[cli]`'s typer colliding with spacy
+(dropped the extra). Whole requirements file now resolves clean.
+Also #154: five review defects, notably the void-of-course scan missing
+240/270/300 offsets (it declared entire days void).
+
+**MCP connector (merged #155):** `backend/mcp/remote.py` — streamable-HTTP
+transport mounted into the FastAPI app at `/mcp`, plus the OAuth 2.1 *resource
+server* half (RFC 9728 discovery, JWKS validation, 401 + WWW-Authenticate,
+scope enforcement). Authorization server stays external by design. Fails closed
+in production without an issuer. Runbook: `docs/deploy/mcp-connector.md`.
+
+**Product architecture DECIDED (`docs/specs/product-architecture/`):**
+MCP-first. The chat is the product surface; the website is a thin portal with
+four jobs (explain / sign up / pay / issue access) plus legal pages. Rich web
+UI deferred; the Next.js frontend is parked, not deleted; Vercel is off the
+critical path. Accepted cost: free-tier chat users are unreachable for now.
+
+**Orchestrator (`analysis_plan`):** new MCP tool that answers "what can be
+computed and in what order" — `next_step`, `ready` (canonical order),
+`blocked` with the exact missing input, verbatim ru/en questions, `completed`.
+Dependencies are advisory (`better_after`), missing birth time degrades rather
+than blocks (`degraded_without`). This is the fix for the real weakness of a
+45-tool connector: neither the model nor the user knows what to ask for.
+Tests: `test_analysis_plan.py` (9 passed, 1 skipped without the mcp package).
+
+**Brand decision:** keep OneiroScope for now. Trademark/market check found
+`Oneiros` dream apps and `Oneiroscope Games` as neighbours and `.com` taken →
+usable but not clean (~6.5/10). No domain purchased: the connector needs no
+custom domain, the directory display name carries the description, and with
+zero users renaming later is as cheap as renaming now. Revisit when there are
+users and a paid clearance is affordable. Candidates explored and rejected
+with reasons: Kairoscope (opaque), Astrolab (domain gone), AstralLens (occult
+connotation + one letter from an existing AstroLens app), AstroPrism
+(unpronounceable in RU).
+
+**Still open:** nobody has pressed Deploy on Render — that is the only thing
+between the repo and a live connector. Then: portal, then STAVAGENT golden set
+before Cemex Pitch Days.
+
+
 ### 2026-07-21 — claude/fandorin-portrait-generation-d422my — reverse physiognomy (Fandorin), portrait generator, patterns catalog → 6 skills + 6 MCP tools
 
 **Trigger:** owner brought Akunin's public request for critique of a
