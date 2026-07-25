@@ -207,8 +207,13 @@
     },
     {
       "path": "docs/specs",
-      "dirs": 4,
+      "dirs": 5,
       "files": 0
+    },
+    {
+      "path": "docs/specs/product-architecture",
+      "dirs": 0,
+      "files": 1
     },
     {
       "path": "docs/specs/strategic-patterns",
@@ -398,7 +403,7 @@
     {
       "path": "backend/tests",
       "dirs": 0,
-      "files": 26
+      "files": 27
     },
     {
       "path": "backend/middleware",
@@ -488,7 +493,7 @@
     {
       "path": "backend/services/strategic",
       "dirs": 1,
-      "files": 5
+      "files": 6
     },
     {
       "path": "backend/services/strategic/knowledge_base",
@@ -596,6 +601,6 @@
       "files": 3
     }
   ],
-  "total_dirs": 118,
-  "total_files": 408
+  "total_dirs": 119,
+  "total_files": 411
 }
