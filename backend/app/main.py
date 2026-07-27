@@ -192,6 +192,11 @@ app.include_router(portal_router)
 # Account page: plan, own model keys, data export, deletion — the few things
 # a chat connector cannot do. See backend/portal/account.py.
 app.include_router(account_router)
+# Connector self-check at /connect/diagnostics — a URL that names whatever is
+# misconfigured, for whoever is clicking through a dashboard.
+from backend.portal.diagnostics import router as diagnostics_router  # noqa: E402
+
+app.include_router(diagnostics_router)
 # app.include_router(asr.router, prefix="/api/v1", tags=["ASR"])  # Coming soon
 # app.include_router(billing.router, prefix="/api/v1", tags=["Billing"])  # Coming soon
 

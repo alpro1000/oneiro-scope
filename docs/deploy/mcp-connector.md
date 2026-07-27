@@ -97,6 +97,14 @@ are worth knowing by shape:
 
 ## 3. Verify the deployment
 
+Start with **`<backend>/connect/diagnostics`** — the server checks its own
+configuration and names whichever of the failure modes above is present, with
+the environment variable that fixes it. `ready: true` means all of them are
+clear. It is deliberately public and secret-free, so a browser agent or a
+non-technical owner can read it.
+
+By hand:
+
 ```bash
 # discovery document — 404 on a public server, your AS once MCP_AUTH_ISSUER is set
 curl -s https://<backend>/.well-known/oauth-protected-resource | jq

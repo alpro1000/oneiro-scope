@@ -99,6 +99,9 @@ CONTENT: dict[str, dict[str, str]] = {
         "trouble_free_h": "Не видно кнопки в ChatGPT",
         "trouble_free_b": "включите режим разработчика; на бесплатном плане "
                           "свои коннекторы недоступны.",
+        "diagnostics_link": "Самопроверка коннектора",
+        "diagnostics_note": "страница показывает, что именно не настроено "
+                            "на этом сервере.",
         "pricing_title": "Тарифы",
         "pricing_lede": "Оплата за доступ, а не за каждый вопрос.",
         "pricing_col_plan": "План", "pricing_col_included": "Что входит",
@@ -183,6 +186,9 @@ CONTENT: dict[str, dict[str, str]] = {
         "trouble_free_h": "No button in ChatGPT",
         "trouble_free_b": "enable Developer mode; custom connectors are not "
                           "available on the free plan.",
+        "diagnostics_link": "Connector self-check",
+        "diagnostics_note": "reports exactly what is misconfigured on this "
+                            "server.",
         "pricing_title": "Pricing",
         "pricing_lede": "You pay for access, not per question.",
         "pricing_col_plan": "Plan", "pricing_col_included": "Included",
