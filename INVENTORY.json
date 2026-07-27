@@ -193,7 +193,7 @@
     {
       "path": "docs/deploy",
       "dirs": 0,
-      "files": 4
+      "files": 5
     },
     {
       "path": "docs/steering",
@@ -403,7 +403,7 @@
     {
       "path": "backend/tests",
       "dirs": 0,
-      "files": 29
+      "files": 31
     },
     {
       "path": "backend/middleware",
@@ -573,7 +573,7 @@
     {
       "path": "backend/portal",
       "dirs": 1,
-      "files": 3
+      "files": 4
     },
     {
       "path": "backend/portal/templates",
@@ -612,5 +612,5 @@
     }
   ],
   "total_dirs": 121,
-  "total_files": 425
+  "total_files": 429
 }

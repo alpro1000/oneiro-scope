@@ -40,7 +40,7 @@
 | agents/prompts | 0 | 5 |
 | agents/specialists | 0 | 5 |
 | docs | 6 | 43 |
-| docs/deploy | 0 | 4 |
+| docs/deploy | 0 | 5 |
 | docs/steering | 0 | 5 |
 | docs/deployment | 0 | 1 |
 | docs/specs | 5 | 0 |
@@ -82,7 +82,7 @@
 | backend/utils | 0 | 2 |
 | backend/mcp | 1 | 4 |
 | backend/mcp/tools | 0 | 10 |
-| backend/tests | 0 | 29 |
+| backend/tests | 0 | 31 |
 | backend/middleware | 0 | 2 |
 | backend/services | 8 | 0 |
 | backend/services/billing | 0 | 3 |
@@ -116,7 +116,7 @@
 | backend/api/v1 | 0 | 9 |
 | backend/core | 0 | 7 |
 | backend/data | 0 | 1 |
-| backend/portal | 1 | 3 |
+| backend/portal | 1 | 4 |
 | backend/portal/templates | 0 | 8 |
 | assets | 0 | 2 |
 | external | 2 | 0 |
@@ -125,4 +125,4 @@
 | external/DReAMy | 1 | 1 |
 | external/DReAMy/dreamy | 0 | 3 |
 
-**ИТОГО:** папок = 121, файлов = 425
+**ИТОГО:** папок = 121, файлов = 429
