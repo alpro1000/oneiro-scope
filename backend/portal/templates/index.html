@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>{{ t.hero_title }}</h1>
+<p class="lede">{{ t.hero_lede }}</p>
+
+<div class="card">
+  <p style="margin:0 0 8px"><strong>{{ t.works_in }}</strong></p>
+  <p style="margin:0"><span class="pill">Claude</span><span class="pill">ChatGPT</span><span class="pill">Gemini</span>
+  <span class="muted">— {{ t.works_in_note }}</span></p>
+  <p style="margin:10px 0 0"><a href="/connect">{{ t.cta_connect }} →</a></p>
+</div>
+
+<h2>{{ t.why_title }}</h2>
+<ul>
+  <li><strong>{{ t.why_1_h }}</strong> — {{ t.why_1_b }}</li>
+  <li><strong>{{ t.why_2_h }}</strong> — {{ t.why_2_b }}</li>
+  <li><strong>{{ t.why_3_h }}</strong> — {{ t.why_3_b }}</li>
+  <li><strong>{{ t.why_4_h }}</strong> — {{ t.why_4_b }}</li>
+</ul>
+
+<h2>{{ t.what_title }}</h2>
+<p class="muted">{{ t.what_note }}</p>
+{% for track in tracks %}
+  <h3>{{ track.name }}</h3>
+  <table>
+    <tbody>
+    {% for stage in track.stages %}
+      <tr>
+        <td style="white-space:nowrap"><strong>{{ stage.name }}</strong></td>
+        <td>{{ stage.answers }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+{% endfor %}
+
+<h2>{{ t.ladder_title }}</h2>
+<p>{{ t.ladder_body }}</p>
+<table>
+  <thead><tr><th>{{ t.ladder_col_layer }}</th><th>{{ t.ladder_col_conf }}</th></tr></thead>
+  <tbody>
+    <tr><td>{{ t.ladder_astronomy }}</td><td>1.0</td></tr>
+    <tr><td>{{ t.ladder_classical }}</td><td>0.9</td></tr>
+    <tr><td>{{ t.ladder_dictionary }}</td><td>0.8</td></tr>
+    <tr><td>{{ t.ladder_llm }}</td><td>0.7</td></tr>
+    <tr><td>{{ t.ladder_physio }}</td><td>0.6</td></tr>
+  </tbody>
+</table>
+{% endblock %}

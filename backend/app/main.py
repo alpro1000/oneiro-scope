@@ -180,6 +180,13 @@ app.include_router(auth.router, prefix="/api/v1", tags=["Auth"])
 app.include_router(billing.router, prefix="/api/v1", tags=["Billing"])
 app.include_router(users.router, prefix="/api/v1", tags=["Users"])
 app.include_router(physiognomy.router, prefix="/api/v1", tags=["Physiognomy"])
+
+# Portal: server-rendered landing / connect / pricing / legal pages. Same
+# service as the API and /mcp — no second host, no build step.
+# See docs/specs/product-architecture/.
+from backend.portal.router import router as portal_router  # noqa: E402
+
+app.include_router(portal_router)
 # app.include_router(asr.router, prefix="/api/v1", tags=["ASR"])  # Coming soon
 # app.include_router(billing.router, prefix="/api/v1", tags=["Billing"])  # Coming soon
 
@@ -212,10 +219,10 @@ if _mcp_app is not None:
     logger.info("Remote MCP mounted at %s", settings.MCP_PATH)
 
 
-# Root endpoint
-@app.get("/")
+# Root endpoint — the portal owns "/", so API metadata moves to /api
+@app.get("/api")
 async def root():
-    """Root endpoint - API information"""
+    """API information (the human-facing landing page lives at /)"""
     return {
         "name": settings.APP_NAME,
         "version": settings.VERSION,
