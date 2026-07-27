@@ -149,13 +149,12 @@ class HvdcCoder:
             for w in words
         }
 
-        # Character forms → gender: exact surface form first (so «жених»
-        # stays male), then stems. The stem map is built female-first —
-        # feminine а-declension stems are short and collide with masculine
-        # bases (stem(«жена») == stem(«жених») == «жен»), and the feminine
-        # reading is the frequent one for such collisions.
+        # Character lexicon. Russian tokens resolve through the pymorphy3
+        # LEMMA (жены/жене/женой → жена; отца → отец; пса → пёс; детьми →
+        # ребёнок), so the lexicon lists dictionary forms only. English
+        # tokens match exact forms. The old stem map misgendered whole
+        # classes: stem(«жених») == stem(«жена») == «жен».
         self._char_forms: Dict[str, str] = {}
-        self._char_stems: Dict[str, str] = {}
         self._char_phrases: List[Tuple[str, str]] = []
         for gender in ("female", "male", "indefinite", "animal"):
             by_lang = lex["characters"].get(gender, {})
@@ -165,12 +164,22 @@ class HvdcCoder:
                     if " " in norm:
                         self._char_phrases.append((norm, gender))
                     else:
+                        key = (
+                            morphology.lemma_info(norm).normal_form
+                            if _is_cyrillic(norm)
+                            else norm
+                        )
+                        self._char_forms.setdefault(key, gender)
+                        # Surface form as written stays a valid key too
+                        # («матери» lemma is «мать», both must resolve).
                         self._char_forms.setdefault(norm, gender)
-                        st = morphology.stem(norm) if _is_cyrillic(norm) else norm
-                        self._char_stems.setdefault(st, gender)
 
-        self._male_agent_tails = ("ател", "ител")
-        self._female_agent_tails = ("тельниц", "льниц")
+        # Агентивные суффиксы применяются к ЛЕММЕ и только к одушевлённым
+        # существительным (animacy-гейт pymorphy3): «наблюдатель» → male,
+        # «учительница» → female; «граница», «постель», «чайник» отсечены
+        # неодушевлённостью, «лисица» — не-агентивным суффиксом.
+        self._male_agent_tails = ("тель", "щик", "чик", "ник")
+        self._female_agent_tails = ("тельница", "льница", "щица", "чица")
 
         # Acts: exact forms, prefix roots, and multiword substring patterns.
         self._acts = []
@@ -307,10 +316,28 @@ class HvdcCoder:
 
     def clause_negates_presence(self, clause: Clause, token_index: int) -> bool:
         """Existential negation kills nouns: «там не было воды», "there was
-        no water", «без денег». Any negator before the noun in the clause."""
-        return any(
-            t.text in self._negators for t in clause.tokens[:token_index]
-        )
+        no water", «без денег». Any negator before the noun in the clause.
+
+        Russian also negates existence with the noun FIRST — родительный
+        отрицания: «водителя не было», «воды нет». Caught by negator +
+        existential right after a genitive-marked noun (the genitive is
+        what separates it from «мама не была рада», where the nominative
+        subject is present, just not glad)."""
+        if any(t.text in self._negators for t in clause.tokens[:token_index]):
+            return True
+        noun = clause.tokens[token_index] if token_index < len(clause.tokens) else None
+        if noun is not None and _is_cyrillic(noun.text):
+            info = morphology.lemma_info(noun.text)
+            if info.case in ("gent", "gen2"):
+                after = clause.tokens[token_index + 1 : token_index + 4]
+                has_negator = any(t.text in self._negators for t in after)
+                has_existential = any(
+                    t.text in ("было", "был", "была", "нет", "видно", "оказалось")
+                    for t in after
+                )
+                if has_negator and has_existential:
+                    return True
+        return False
 
     def location_rejected_after(self, clauses: List[Clause], clause_index: int) -> bool:
         """«…копать в деревьях, а я решил копать не там» — the setting is
@@ -334,27 +361,33 @@ class HvdcCoder:
         if exact:
             return exact
         if _is_cyrillic(token):
-            st = morphology.stem(token)
-            gender = self._char_stems.get(st)
+            info = morphology.lemma_info(token)
+            gender = self._char_forms.get(info.normal_form)
             if gender:
                 return gender
-            # Агентивные суффиксы: «наблюдатель/водитель» → male,
-            # «наблюдательница/учительница» → female. Узкие хвосты, чтобы
-            # «постель» или «граница» не стали персонажами.
-            if len(st) >= 6:
-                if st.endswith(self._female_agent_tails):
+            # Агентивные суффиксы по лемме, только для одушевлённых
+            # существительных: «водителя» → водитель → male.
+            if info.pos == "NOUN" and info.animate and len(info.normal_form) >= 6:
+                if info.normal_form.endswith(self._female_agent_tails):
                     return "female"
-                if st.endswith(self._male_agent_tails):
+                if info.normal_form.endswith(self._male_agent_tails):
                     return "male"
             return None
         # "ex-girlfriend" carries the same character as "girlfriend".
         if token.startswith("ex-"):
-            return self._char_stems.get(token[3:])
-        return self._char_stems.get(token)
+            return self._char_forms.get(token[3:])
+        return None
+
+    def _character_key(self, token: str) -> str:
+        """Dedup key: lemma for Russian («отца … отец» — один персонаж),
+        the token itself for English."""
+        if _is_cyrillic(token):
+            return morphology.lemma_info(token).normal_form
+        return token[3:] if token.startswith("ex-") else token
 
     def find_characters(self, clauses: List[Clause]) -> List[CharacterMention]:
         mentions: List[CharacterMention] = []
-        seen_stems: set = set()
+        seen_keys: set = set()
         for clause in clauses:
             for tok in clause.tokens:
                 gender = self._character_gender(tok.text)
@@ -362,29 +395,24 @@ class HvdcCoder:
                     continue
                 if self.clause_negates_presence(clause, tok.index):
                     continue  # «никого не было», «без людей»
-                key = morphology.stem(tok.text) if _is_cyrillic(tok.text) else tok.text
-                if key in seen_stems:
+                key = self._character_key(tok.text)
+                if key in seen_keys:
                     continue  # одно существительное = один персонаж
-                seen_stems.add(key)
+                seen_keys.add(key)
                 mentions.append(
                     CharacterMention(
                         noun=tok.text, gender=gender, clause_index=clause.index
                     )
                 )
             for phrase, gender in self._char_phrases:
-                if phrase in clause.text and phrase not in seen_stems:
+                if phrase in clause.text and phrase not in seen_keys:
                     # «old man» — если «man» уже посчитан токеном, фраза
                     # описывает того же персонажа, не второго.
-                    last_word = phrase.split()[-1]
-                    last_key = (
-                        morphology.stem(last_word)
-                        if _is_cyrillic(last_word)
-                        else last_word
-                    )
-                    if last_key in seen_stems:
+                    last_key = self._character_key(phrase.split()[-1])
+                    if last_key in seen_keys:
                         continue
-                    seen_stems.add(phrase)
-                    seen_stems.add(last_key)
+                    seen_keys.add(phrase)
+                    seen_keys.add(last_key)
                     mentions.append(
                         CharacterMention(
                             noun=phrase, gender=gender, clause_index=clause.index

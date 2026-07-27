@@ -55,13 +55,21 @@ class DreamAnalyzer:
         self._compile_patterns()
 
     def _load_knowledge_base(self) -> Dict:
-        """Load symbol knowledge base from JSON"""
+        """Load symbol knowledge base from JSON.
+
+        A missing KB is a broken deployment, not an empty dictionary: the
+        old `except FileNotFoundError: return {}` made the analyzer
+        silently find zero symbols forever — the exact silent-fallback
+        class banned by conventions.md §12."""
         kb_path = Path(__file__).parent / "knowledge_base" / "symbols.json"
-        try:
-            with open(kb_path, "r", encoding="utf-8") as f:
-                return json.load(f)
-        except FileNotFoundError:
-            return {"symbols": [], "emotions": {}, "archetypes": {}}
+        if not kb_path.exists():
+            raise RuntimeError(
+                f"Dream symbol knowledge base missing: {kb_path}. "
+                "The file ships with the repository — a missing KB means a "
+                "broken checkout or build, not an empty symbol set."
+            )
+        with open(kb_path, "r", encoding="utf-8") as f:
+            return json.load(f)
 
     def _compile_patterns(self):
         """Compile regex patterns for efficient matching"""

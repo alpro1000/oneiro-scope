@@ -188,6 +188,14 @@ class InsufficientIndicator(BaseModel):
 class NormComparisonResult(BaseModel):
     """Comparison of dream content to Hall/Van de Castle norms"""
     gender_used: str = Field(..., description="Gender norms used (male/female)")
+    method_note_ru: Optional[str] = Field(
+        None,
+        description="Honest scope note: coder is precision-first vs human-coded norms",
+    )
+    method_note_en: Optional[str] = Field(
+        None,
+        description="Honest scope note: coder is precision-first vs human-coded norms",
+    )
     overall_typicality: float = Field(
         ...,
         ge=0,
@@ -266,6 +274,14 @@ class DreamAnalysisResponse(BaseModel):
     disclaimer: Optional[str] = Field(
         None,
         description="Reflective/entertainment framing — required on every dreams response",
+    )
+    degraded: List[str] = Field(
+        default_factory=list,
+        description=(
+            "Explicit degradation ledger: supplementary computations that "
+            "were requested but failed ('field: reason'). Empty = full data. "
+            "Silent nulls on data paths are banned (conventions.md §12)."
+        ),
     )
 
 

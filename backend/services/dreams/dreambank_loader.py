@@ -77,48 +77,28 @@ class DreamBankLoader:
         self._load_norms()
 
     def _load_norms(self):
-        """Load normative data from JSON file"""
-        norms_path = Path(__file__).parent / "knowledge_base" / "hvdc_norms.json"
-        try:
-            with open(norms_path, "r", encoding="utf-8") as f:
-                data = json.load(f)
-                self.norms = data.get("norms", {})
-                self.indicators = data.get("indicators", {})
-                self.thresholds = data.get("interpretation_thresholds", {
-                    "significant_deviation": 15,
-                    "moderate_deviation": 10
-                })
-                logger.info(f"Loaded HVDC norms: {len(self.indicators)} indicators")
-        except FileNotFoundError:
-            logger.warning("HVDC norms file not found, using defaults")
-            self._set_default_norms()
-        except json.JSONDecodeError as e:
-            logger.error(f"Error parsing HVDC norms: {e}")
-            self._set_default_norms()
+        """Load normative data from JSON file.
 
-    def _set_default_norms(self):
-        """Set hardcoded default norms if file not available"""
-        logger.info("Using hardcoded default HVDC norms (fallback mode)")
-        self.norms = {
-            "male": {
-                "characters": {"male_percent": 67, "female_percent": 33},
-                "social_interactions": {"aggression_friendliness_ratio": 0.59},
-                "emotions": {"negative_percent": 80},
-                "success_failure": {"success_percent": 51}
-            },
-            "female": {
-                "characters": {"male_percent": 48, "female_percent": 52},
-                "social_interactions": {"aggression_friendliness_ratio": 0.32},
-                "emotions": {"negative_percent": 80},
-                "success_failure": {"success_percent": 42}
-            }
-        }
-        self.thresholds = {
+        The norms table ships with the repository. Silently swapping the
+        cited Hall & Van de Castle values for hardcoded defaults (the old
+        behaviour) is exactly the silent-fallback class banned by
+        conventions.md §12 — a missing or unparseable norms file must be
+        loud, because every comparison downstream cites this source."""
+        norms_path = Path(__file__).parent / "knowledge_base" / "hvdc_norms.json"
+        if not norms_path.exists():
+            raise RuntimeError(
+                f"HVdC norms file missing: {norms_path}. It ships with the "
+                "repository — refusing to substitute silent defaults."
+            )
+        with open(norms_path, "r", encoding="utf-8") as f:
+            data = json.load(f)  # a JSONDecodeError here must propagate
+        self.norms = data.get("norms", {})
+        self.indicators = data.get("indicators", {})
+        self.thresholds = data.get("interpretation_thresholds", {
             "significant_deviation": 15,
-            "moderate_deviation": 10,
-            "ratio_significant_deviation_percent": 50,
-            "ratio_moderate_deviation_percent": 25,
-        }
+            "moderate_deviation": 10
+        })
+        logger.info(f"Loaded HVDC norms: {len(self.indicators)} indicators")
 
     def get_norm(self, gender: Gender, category: str, indicator: str) -> Optional[float]:
         """Get specific norm value for gender/category/indicator"""

@@ -6,6 +6,15 @@ not by what the engine outputs. The test prints per-category precision
 and recall (micro-averaged over dreams) and fails CI when any category
 drops below its floor.
 
+SCOPE OF THE NUMBERS: annotations and coder share an author, so this
+measures INTERNAL CONSISTENCY and guards against regressions — it is not
+external accuracy. A shared misreading of the HVdC rules would pass here
+unnoticed. External check: a second annotator codes the same texts blind
+(golden/blind_annotation_template.json) and scripts/kappa_golden.py
+reports weighted Cohen's kappa per category; disagreements get
+adjudicated against the primary source and whichever side is wrong
+(golds OR coder) gets fixed.
+
 Floors are set from the measured 2026-07-27 baseline (P=1.00 everywhere;
 R=0.70–1.00) with a small margin. Recall floors below 1.0 correspond to
 DOCUMENTED gaps: modal inability («не мог кричать»), gesture verbs
@@ -189,6 +198,25 @@ def test_negated_symbols_do_not_appear(analyzer):
     ids = {s.symbol for s in symbols}
     assert "water" not in ids
     assert "fire" not in ids
+
+
+def test_genitive_of_negation_removes_character(analyzer):
+    """«Водителя не было видно» — родительный отрицания: существительное
+    стоит ПЕРЕД «не было», персонаж отсутствует. А «мама не была рада» —
+    именительный: мама в сцене есть."""
+    *_, coding_absent = analyzer.analyze("Водителя не было видно.", "ru")
+    assert coding_absent.characters == []
+    *_, coding_present = analyzer.analyze("Мама не была рада подарку.", "ru")
+    assert [c.gender for c in coding_present.characters] == ["female"]
+
+
+def test_lemma_distinguishes_bride_groom_class(analyzer):
+    """стем(«жених») == стем(«жена») — класс коллизий, закрытый
+    pymorphy3-леммой, а не заплаткой на точную форму."""
+    *_, with_wife = analyzer.analyze("Мы с женой прыгали от счастья.", "ru")
+    assert [c.gender for c in with_wife.characters] == ["female"]
+    *_, with_groom = analyzer.analyze("Жениха ждали у алтаря.", "ru")
+    assert [c.gender for c in with_groom.characters] == ["male"]
 
 
 def test_rejected_location_does_not_appear(analyzer):

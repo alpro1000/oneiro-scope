@@ -1,23 +1,54 @@
-"""Light Russian morphology for symbol matching.
+"""Russian morphology for symbol and character matching.
 
-The dream knowledge base stores keywords as dictionary forms ("змея",
-"вода", "мать"), but real dream texts arrive inflected («змею», «воду»,
-«матери») — exact/prefix matching misses most Russian case endings, so
-symbols silently drop out of the analysis. Live testing showed a typical
-Russian dream losing 5 of 8 symbols to this.
+Two tiers live here:
 
-This module implements the Snowball (Porter) stemmer for Russian in pure
-Python — no dependencies — so the analyzer can compare *stems* of text
-tokens against *stems* of keywords: «змею» → «зме» == stem(«змея»).
-Suppletive verb forms the stemmer cannot unify («лечу»/«летать») are
-covered by extra word forms in symbols.json.
+1. **Snowball (Porter) stemmer** — pure Python, used for SYMBOL keyword
+   matching: «змею» → «зме» == stem(«змея»). Cheap and adequate for
+   keyword roots.
+2. **pymorphy3 lemmatizer** (`lemma_info`) — used for CHARACTER
+   detection, where stems are not enough: stem(«жених») == stem(«жена»)
+   == «жен», so prefix/stem matching misgendered characters; fleeting
+   vowels (отца/отец, пса/пёс) and suppletion (детьми/ребёнок) break
+   stems entirely. pymorphy3 is a HARD dependency — a lemmatizer that
+   silently degrades to stems would misgender characters without a
+   trace, and silent fallbacks are banned on data paths
+   (conventions.md §12).
 
-Reference: M.F. Porter, "Russian stemming algorithm", snowballstem.org.
+Reference: M.F. Porter, "Russian stemming algorithm", snowballstem.org;
+pymorphy3 (OpenCorpora dictionaries).
 """
 
 from __future__ import annotations
 
 import re
+from dataclasses import dataclass
+from functools import lru_cache
+
+import pymorphy3
+
+_MORPH = pymorphy3.MorphAnalyzer()
+
+
+@dataclass(frozen=True)
+class LemmaInfo:
+    normal_form: str   # normalized (ё→е) dictionary form
+    pos: str | None    # pymorphy POS tag (NOUN, ADJF, ...)
+    gender: str | None  # masc | femn | neut | None
+    animate: bool      # True only for tagged-animate words
+    case: str | None   # nomn | gent | datv | accs | ablt | loct | None
+
+
+@lru_cache(maxsize=16384)
+def lemma_info(word: str) -> LemmaInfo:
+    """Lemma + grammatical facts for a (Cyrillic) token via pymorphy3."""
+    parse = _MORPH.parse(word)[0]
+    return LemmaInfo(
+        normal_form=normalize(parse.normal_form),
+        pos=str(parse.tag.POS) if parse.tag.POS else None,
+        gender=str(parse.tag.gender) if parse.tag.gender else None,
+        animate=str(parse.tag.animacy) == "anim",
+        case=str(parse.tag.case) if parse.tag.case else None,
+    )
 
 _VOWELS = "аеиоуыэюя"
 

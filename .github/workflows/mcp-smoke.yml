@@ -62,7 +62,9 @@ jobs:
             redis \
             httpx \
             uvicorn \
-            aiosqlite
+            aiosqlite \
+            "pymorphy3>=2.0" \
+            pymorphy3-dicts-ru
           # The block above is deliberately not requirements.txt — these are the
           # small pure-python pieces `backend.app.main` needs to import, so the
           # connector tests exercise the real app. The heavy ones (mediapipe,
