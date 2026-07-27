@@ -47,8 +47,30 @@ from backend.services.astrology.synastry import (
     compute_synastry as _compute_synastry,
     synastry_summary as _synastry_summary,
 )
+from backend.mcp.tools._menu import (
+    CITIES,
+    PARTNER_BIRTH,
+    TARGET_DATE,
+    birth_inputs,
+    with_menu,
+)
 from backend.services.astrology.transit_arcs import compute_arc as _compute_arc
 from backend.services.astrology.transits_engine import find_transits
+
+
+def _known(
+    birth_date: str,
+    birth_time: str,
+    birth_timezone: str,
+    *extra: str,
+) -> list[str]:
+    """Plan input keys these tools' own arguments already imply.
+
+    A caller able to name the birth timezone has resolved the birth place
+    already — the plan cares that the location is pinned down, not how it got
+    there — so `birth_timezone` counts as a known place.
+    """
+    return birth_inputs(birth_date, birth_time, birth_place=birth_timezone) + list(extra)
 
 
 def _natal_jd(
@@ -95,22 +117,27 @@ async def compute_transits(
     start_d = date_cls.fromisoformat(start)
     end_d = date_cls.fromisoformat(end)
     events = find_transits(jd, start_d, end_d, orb_deg=orb_deg)
-    return {
-        "layer": "astronomy",
-        "methodology": "Swiss Ephemeris (MOSEPH analytic); orb at midnight UT",
-        "window": {"start": start, "end": end, "orb_deg": orb_deg},
-        "transit_count": len(events),
-        "transits": [
-            {
-                "transiting": e.transiting,
-                "aspect": e.aspect,
-                "natal": e.natal,
-                "exact_date": e.exact_date,
-                "orb_at_midnight": e.orb_at_midnight,
-            }
-            for e in events
-        ],
-    }
+    return with_menu(
+        {
+            "layer": "astronomy",
+            "methodology": "Swiss Ephemeris (MOSEPH analytic); orb at midnight UT",
+            "window": {"start": start, "end": end, "orb_deg": orb_deg},
+            "transit_count": len(events),
+            "transits": [
+                {
+                    "transiting": e.transiting,
+                    "aspect": e.aspect,
+                    "natal": e.natal,
+                    "exact_date": e.exact_date,
+                    "orb_at_midnight": e.orb_at_midnight,
+                }
+                for e in events
+            ],
+        },
+        domain="astro",
+        known_inputs=_known(birth_date, birth_time, birth_timezone),
+        completed=["transits"],
+    )
 
 
 def _hit_to_dict(h: AngleHit) -> dict:
@@ -161,16 +188,21 @@ async def astrocartography_scan(
     jd = _natal_jd(birth_date, birth_time, birth_timezone)
     tuples = [(c["name"], float(c["lat"]), float(c["lon"])) for c in cities]
     results = scan_cities(jd, tuples, orb_deg=orb_deg)
-    return {
-        "layer": "astronomy",
-        "methodology": (
-            "Placidus house system; Astro*Carto*Graphy (Lewis 1976); "
-            "Swiss Ephemeris MOSEPH"
-        ),
-        "orb_deg": orb_deg,
-        "city_count": len(results),
-        "results": [_result_to_dict(r) for r in results],
-    }
+    return with_menu(
+        {
+            "layer": "astronomy",
+            "methodology": (
+                "Placidus house system; Astro*Carto*Graphy (Lewis 1976); "
+                "Swiss Ephemeris MOSEPH"
+            ),
+            "orb_deg": orb_deg,
+            "city_count": len(results),
+            "results": [_result_to_dict(r) for r in results],
+        },
+        domain="astro",
+        known_inputs=_known(birth_date, birth_time, birth_timezone, CITIES),
+        completed=["astrocartography"],
+    )
 
 
 _ANGLE_THEME = {
@@ -298,26 +330,31 @@ async def solar_return_chart(
     """
     jd = _natal_jd(birth_date, birth_time, birth_timezone)
     sr = _solar_return(jd, return_year, location_lat, location_lon)
-    return {
-        "layer": "astronomy",
-        "methodology": (
-            "Swiss Ephemeris exact-return search (arc-minute precision); "
-            "Placidus houses at chosen location"
-        ),
-        "return_year": return_year,
-        "exact_moment_utc": sr.exact_moment_utc,
-        "accuracy_arcmin": sr.accuracy_arcmin,
-        "natal_sun_longitude": sr.natal_sun_longitude,
-        "location": {"lat": sr.location_lat, "lon": sr.location_lon},
-        "angles": {
-            "asc": sr.asc,
-            "mc": sr.mc,
-            "ic": sr.ic,
-            "desc": sr.desc,
+    return with_menu(
+        {
+            "layer": "astronomy",
+            "methodology": (
+                "Swiss Ephemeris exact-return search (arc-minute precision); "
+                "Placidus houses at chosen location"
+            ),
+            "return_year": return_year,
+            "exact_moment_utc": sr.exact_moment_utc,
+            "accuracy_arcmin": sr.accuracy_arcmin,
+            "natal_sun_longitude": sr.natal_sun_longitude,
+            "location": {"lat": sr.location_lat, "lon": sr.location_lon},
+            "angles": {
+                "asc": sr.asc,
+                "mc": sr.mc,
+                "ic": sr.ic,
+                "desc": sr.desc,
+            },
+            "planets": sr.planets,
+            "planet_houses": sr.planet_houses,
         },
-        "planets": sr.planets,
-        "planet_houses": sr.planet_houses,
-    }
+        domain="astro",
+        known_inputs=_known(birth_date, birth_time, birth_timezone),
+        completed=["solar-return"],
+    )
 
 
 # --- Pattern features (session retrospective) --------------------------------
@@ -346,11 +383,16 @@ async def compare_relocations(
     """
     jd = _natal_jd(birth_date, birth_time, birth_timezone)
     tuples = [(l["name"], float(l["lat"]), float(l["lon"])) for l in locations]
-    return {
-        "layer": "astronomy+symbolic",
-        "methodology": "Placidus relocation angles; classical angle orbs",
-        "locations": _compare_locations(jd, tuples, locale=locale),
-    }
+    return with_menu(
+        {
+            "layer": "astronomy+symbolic",
+            "methodology": "Placidus relocation angles; classical angle orbs",
+            "locations": _compare_locations(jd, tuples, locale=locale),
+        },
+        domain="astro",
+        known_inputs=_known(birth_date, birth_time, birth_timezone, CITIES),
+        completed=["compare-cities"], locale=locale,
+    )
 
 
 async def scan_cities_by_theme(
@@ -380,11 +422,16 @@ async def scan_cities_by_theme(
     """
     jd = _natal_jd(birth_date, birth_time, birth_timezone)
     tuples = [(c["name"], float(c["lat"]), float(c["lon"])) for c in cities]
-    return {
-        "layer": "astronomy+symbolic",
-        "theme": theme,
-        "results": _theme_scan(jd, tuples, theme, top_n=top_n),
-    }
+    return with_menu(
+        {
+            "layer": "astronomy+symbolic",
+            "theme": theme,
+            "results": _theme_scan(jd, tuples, theme, top_n=top_n),
+        },
+        domain="astro",
+        known_inputs=_known(birth_date, birth_time, birth_timezone, CITIES),
+        completed=["cities-by-theme"],
+    )
 
 
 async def transit_arc(
@@ -421,32 +468,37 @@ async def transit_arc(
         jd, birth_lat, birth_lon, theme,
         date_cls.fromisoformat(start), date_cls.fromisoformat(end),
     )
-    return {
-        "layer": "astronomy+symbolic",
-        "theme": arc.theme,
-        "significators": arc.significators,
-        "events": [
-            {
-                "date": e.exact_date,
-                "transiting": e.transiting,
-                "aspect": e.aspect,
-                "natal": e.natal,
-                "orb": e.orb_at_midnight,
-            }
-            for e in arc.events
-        ],
-        "phases": [
-            {
-                "start": p.start,
-                "end": p.end,
-                "kind": p.kind,
-                "event_count": len(p.events),
-            }
-            for p in arc.phases
-        ],
-        "turning_point": arc.turning_point,
-        "note": "phases describe transit pressure/support, not outcomes",
-    }
+    return with_menu(
+        {
+            "layer": "astronomy+symbolic",
+            "theme": arc.theme,
+            "significators": arc.significators,
+            "events": [
+                {
+                    "date": e.exact_date,
+                    "transiting": e.transiting,
+                    "aspect": e.aspect,
+                    "natal": e.natal,
+                    "orb": e.orb_at_midnight,
+                }
+                for e in arc.events
+            ],
+            "phases": [
+                {
+                    "start": p.start,
+                    "end": p.end,
+                    "kind": p.kind,
+                    "event_count": len(p.events),
+                }
+                for p in arc.phases
+            ],
+            "turning_point": arc.turning_point,
+            "note": "phases describe transit pressure/support, not outcomes",
+        },
+        domain="astro",
+        known_inputs=_known(birth_date, birth_time, birth_timezone, TARGET_DATE),
+        completed=["transit-arc"],
+    )
 
 
 async def synastry(
@@ -476,22 +528,31 @@ async def synastry(
         person_b.get("birth_timezone", "UTC"),
     )
     result = _compute_synastry(jd_a, jd_b)
-    return {
-        "layer": "astronomy+symbolic",
-        "methodology": "inter-chart aspects; classical synastry weights",
-        "aspect_count": len(result.aspects),
-        "aspects": [
-            {
-                "a": a.person_a_planet,
-                "b": a.person_b_planet,
-                "aspect": a.aspect,
-                "orb_deg": a.orb_deg,
-                "nature": a.nature,
-            }
-            for a in sorted(result.aspects, key=lambda x: x.orb_deg)
-        ],
-        "summary": _synastry_summary(result, locale=locale),
-    }
+    return with_menu(
+        {
+            "layer": "astronomy+symbolic",
+            "methodology": "inter-chart aspects; classical synastry weights",
+            "aspect_count": len(result.aspects),
+            "aspects": [
+                {
+                    "a": a.person_a_planet,
+                    "b": a.person_b_planet,
+                    "aspect": a.aspect,
+                    "orb_deg": a.orb_deg,
+                    "nature": a.nature,
+                }
+                for a in sorted(result.aspects, key=lambda x: x.orb_deg)
+            ],
+            "summary": _synastry_summary(result, locale=locale),
+        },
+        domain="astro",
+        # Person A is the one the rest of the plan would be about.
+        known_inputs=_known(
+            person_a.get("birth_date"), person_a.get("birth_time"),
+            person_a.get("birth_timezone"), PARTNER_BIRTH,
+        ),
+        completed=["synastry"], locale=locale,
+    )
 
 
 async def solar_return_suggest(
@@ -513,8 +574,13 @@ async def solar_return_suggest(
     """
     jd = _natal_jd(birth_date, birth_time, birth_timezone)
     tuples = [(c["name"], float(c["lat"]), float(c["lon"])) for c in candidates]
-    return {
-        "layer": "astronomy+symbolic",
-        "return_year": return_year,
-        "ranking": _sr_suggest(jd, return_year, tuples),
-    }
+    return with_menu(
+        {
+            "layer": "astronomy+symbolic",
+            "return_year": return_year,
+            "ranking": _sr_suggest(jd, return_year, tuples),
+        },
+        domain="astro",
+        known_inputs=_known(birth_date, birth_time, birth_timezone, CITIES),
+        completed=["solar-return-where"],
+    )

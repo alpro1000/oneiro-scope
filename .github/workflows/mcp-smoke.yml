@@ -94,4 +94,5 @@ jobs:
             backend/tests/test_rate_limit_middleware.py \
             backend/tests/test_analysis_plan.py \
             backend/tests/test_strategic_patterns.py \
+            backend/tests/test_capability_menu.py \
             -v

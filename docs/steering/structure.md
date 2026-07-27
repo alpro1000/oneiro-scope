@@ -91,3 +91,12 @@ Tools grouped by file:
 - `tools/dreams.py` — `analyze_dream`, `list_dream_symbols`, `list_archetypes`, `list_hvdc_categories`.
 - `tools/lunar.py` — `get_lunar_day`, `get_lunar_period`.
 - `tools/geo.py` — `search_city`, `validate_birth_data`.
+- `tools/_menu.py` — `with_menu()`, the one-liner every substantive tool ends
+  with. It attaches the `can_also_compute` block from
+  `services/strategic/analysis_plan.py::capability_menu()`, so a client that
+  landed on one tool discovers the other 25. Two domains: **astro** (chart +
+  face) and **dreams** (separate — no shared inputs). Dictionary lookups get no
+  menu; neither does `get_lunar_period`, which returns a bare list. Adding a
+  computation over a person means adding a `Stage` to the plan AND calling
+  `with_menu` in the tool — `backend/tests/test_capability_menu.py` fails if
+  either half is missing.

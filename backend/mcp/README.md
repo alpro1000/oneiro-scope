@@ -30,6 +30,51 @@ python -m backend.mcp.server
 python -m backend.mcp.server --http --port 8765
 ```
 
+## Every response offers the rest of the surface
+
+A client that lands on one tool used to see only that tool: nothing told it the
+same birth data also buys a money contour, a decade map, a city scan or a Solar
+Return. `analysis_plan` answered that from the start, but only when the model
+thought to ask, and it usually did not. So every substantive response now
+carries a `can_also_compute` block:
+
+```jsonc
+"can_also_compute": {
+  "domain": "astro",                 // "astro" = chart + face; "dreams" is separate
+  "hint": "…call the tool you need. Full ordered plan: analysis_plan.",
+  "ready":       [ {"name", "tool", "answers", "track", "better_after"?} ],
+  "needs_input": [ {"name", "tool", "missing"} ],            // terser: exists, and wants X
+  "questions_to_ask": ["Which cities should we compare?"],
+  "reference_lookups": ["house_meaning", "planet_dignity", …],
+  "full_plan_tool": "analysis_plan"
+}
+```
+
+Offered, not run. A decade map scans ten years at a 10-day step, a city scan
+runs a whole pool, and a Solar Return suggestion computes one return per
+candidate city — firing all of it on every call would spend minutes and quota
+answering a question nobody asked. The menu costs ~3.5 KB and lists only what
+is already runnable, so the next call is one step away.
+
+Two domains, per the product split: **astro** covers chart *and* face (both
+read one standing person from static data), **dreams** is per-episode and
+shares no inputs with them. Dictionary lookups (`house_meaning`,
+`list_dream_symbols`, …) carry no menu of their own — they are not steps in a
+reading. `get_lunar_period` also has none: it returns a bare list, and wrapping
+a documented list shape in a dict to add a hint would break callers.
+
+`depends_on` is a **soft** ordering hint, the same as in `build_plan`: each tool
+recomputes the chart geometry it needs, so a stage runs fine before its
+prerequisite — reading it first is merely confusing. Such a step stays in
+`ready` and carries `better_after: ["natal-chart"]`. A tool reports **only its
+own** stage as completed: it knows that it ran, it does not know what else the
+session ran.
+
+`backend/tests/test_capability_menu.py` holds the drift guards — every stage
+tool attaches a menu, marks only its own stage completed, names a registered
+tool, and every step offered as `ready` is verified callable with nothing
+further supplied.
+
 ## Available tools
 
 ### Astrology

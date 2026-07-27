@@ -11,6 +11,7 @@ from datetime import date as date_cls, time as time_cls
 from typing import Any, Optional
 from uuid import UUID
 
+from backend.mcp.tools._menu import TARGET_DATE, birth_inputs, with_menu
 from backend.services.astrology import (
     AstrologyService,
     EventForecastRequest,
@@ -103,7 +104,16 @@ async def calculate_natal_chart(
             "career, life purpose as fits the question."
         )
         out["disclaimer"] = DISCLAIMERS.get(locale, DISCLAIMER_RU)
-    return out
+    return with_menu(
+        out,
+        domain="astro",
+        known_inputs=birth_inputs(
+            birth_date, birth_time, birth_place,
+            has_coordinates=latitude is not None and longitude is not None,
+        ),
+        completed=["natal-chart"],
+        locale=locale,
+    )
 
 
 async def generate_horoscope(
@@ -132,7 +142,10 @@ async def generate_horoscope(
         locale=locale,
     )
     resp = await _svc().generate_horoscope(req)
-    return resp.model_dump(mode="json")
+    return with_menu(
+        resp.model_dump(mode="json"), domain="astro",
+        known_inputs=[TARGET_DATE], completed=["horoscope"], locale=locale,
+    )
 
 
 async def forecast_event(
@@ -167,7 +180,10 @@ async def forecast_event(
         locale=locale,
     )
     resp = await _svc().forecast_event(req)
-    return resp.model_dump(mode="json")
+    return with_menu(
+        resp.model_dump(mode="json"), domain="astro",
+        known_inputs=[TARGET_DATE], completed=["event-forecast"], locale=locale,
+    )
 
 
 def list_event_types() -> list[str]:
@@ -209,21 +225,25 @@ async def horoscope_report(
     resp = await _svc().generate_horoscope(req)
     html = render_horoscope_html(resp, locale=locale)
     path = write_report(html, output_path, prefix=f"horoscope_{period}")
-    return {
-        "report_path": str(path),
-        "period": period,
-        "period_start": str(resp.period_start),
-        "period_end": str(resp.period_end),
-        "summary_preview": resp.summary[:200],
-        "recommendations_count": len(resp.recommendations),
-    }
+    return with_menu(
+        {
+            "report_path": str(path),
+            "period": period,
+            "period_start": str(resp.period_start),
+            "period_end": str(resp.period_end),
+            "summary_preview": resp.summary[:200],
+            "recommendations_count": len(resp.recommendations),
+        },
+        domain="astro",
+        known_inputs=[TARGET_DATE], completed=["horoscope-report"], locale=locale,
+    )
 
 
 async def profile_report_file(
     birth_date: str,
     birth_time: Optional[str] = None,
-    birth_lat: float = 0.0,
-    birth_lon: float = 0.0,
+    birth_lat: Optional[float] = None,
+    birth_lon: Optional[float] = None,
     birth_place: Optional[str] = None,
     current_place_name: Optional[str] = None,
     current_lat: Optional[float] = None,
@@ -239,6 +259,9 @@ async def profile_report_file(
         birth_date: YYYY-MM-DD.
         birth_time: HH:MM local time; noon fallback drops houses/angles.
         birth_lat / birth_lon: Birth coordinates (drive historical tz).
+            Required — they previously defaulted to 0.0/0.0, which is a real
+            point in the Gulf of Guinea, so omitting them produced a confident
+            report for the wrong place. Use `search_city` to resolve them.
         birth_place: Display name of the birth place.
         current_place_name / current_lat / current_lon: Optional city of
             residence for the side-by-side relocation read.
@@ -248,6 +271,13 @@ async def profile_report_file(
     from backend.mcp.tools._files import write_report
     from backend.services.astrology.historic_tz import resolve_birth_moment
     from backend.services.astrology.report import build_report, render_html
+
+    if birth_lat is None or birth_lon is None:
+        raise ValueError(
+            "birth_lat and birth_lon are required — a report built on the old "
+            "0.0/0.0 default described the Gulf of Guinea, not a birth place. "
+            "Resolve the city with `search_city` first."
+        )
 
     moment = resolve_birth_moment(
         date_cls.fromisoformat(birth_date),
@@ -266,10 +296,19 @@ async def profile_report_file(
     )
     html = render_html(report, locale=locale)
     path = write_report(html, output_path, prefix="astro_profile")
-    return {
-        "report_path": str(path),
-        "timezone": report["birth"]["timezone"],
-        "utc_offset_hours": report["birth"]["utc_offset_hours"],
-        "themes": {k: len(v) for k, v in report["themes"].items()},
-        "year_transits_count": len(report["year_transits"]),
-    }
+    return with_menu(
+        {
+            "report_path": str(path),
+            "timezone": report["birth"]["timezone"],
+            "utc_offset_hours": report["birth"]["utc_offset_hours"],
+            "themes": {k: len(v) for k, v in report["themes"].items()},
+            "year_transits_count": len(report["year_transits"]),
+        },
+        domain="astro",
+        # has_coordinates is truthful here: the guard above rejected the call
+        # if either coordinate was missing.
+        known_inputs=birth_inputs(
+            birth_date, birth_time, birth_place, has_coordinates=True,
+        ),
+        completed=["profile-report"], locale=locale,
+    )
