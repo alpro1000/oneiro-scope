@@ -207,11 +207,11 @@ app.include_router(diagnostics_router)
 # Never fatal: if the mcp package or its auth config is missing, the REST API
 # still boots and only this surface is skipped (see backend/mcp/remote.py).
 from backend.mcp.remote import (  # noqa: E402  (after app creation by design)
-    PROTECTED_RESOURCE_PATH,
     MCPPathDispatcher,
     build_mcp_http_app,
     oauth_discovery_enabled,
     protected_resource_metadata,
+    protected_resource_paths,
 )
 
 
@@ -225,12 +225,6 @@ class ProtectedResourceMetadata(BaseModel):
     scopes_supported: list[str] | None = None
 
 
-@app.get(
-    PROTECTED_RESOURCE_PATH,
-    response_model=ProtectedResourceMetadata,
-    response_model_exclude_none=True,
-    include_in_schema=False,
-)
 async def oauth_protected_resource():
     """RFC 9728 metadata: which authorization server guards the MCP endpoint.
 
@@ -238,6 +232,11 @@ async def oauth_protected_resource():
     Absent an enforced authorization server there is nothing to point them at,
     and answering anyway sends them into a registration flow that cannot
     succeed — so this 404s until OAuth is both configured and required.
+
+    Registered on every path in `protected_resource_paths()`: the RFC-canonical
+    one for this resource (`/.well-known/oauth-protected-resource/mcp`, built by
+    inserting the well-known segment between host and path) plus the bare form,
+    which is what clients that ignore the path component probe.
     """
     if not oauth_discovery_enabled():
         return JSONResponse(
@@ -252,6 +251,15 @@ async def oauth_protected_resource():
             },
         )
     return protected_resource_metadata()
+
+
+for _prm_path in protected_resource_paths():
+    app.get(
+        _prm_path,
+        response_model=ProtectedResourceMetadata,
+        response_model_exclude_none=True,
+        include_in_schema=False,
+    )(oauth_protected_resource)
 
 
 # Root endpoint — the portal owns "/", so API metadata moves to /api

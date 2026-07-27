@@ -124,14 +124,21 @@ The same checks by hand:
 ```bash
 BASE=https://oneiroscope-backend.onrender.com
 
-# 1. discovery is live and names the issuer
-curl -s $BASE/.well-known/oauth-protected-resource | jq
-# → {"resource":".../mcp","authorization_servers":["https://<tenant>...auth0.com"],...}
+# 1. discovery is live and names the issuer. Use the CANONICAL path — RFC 9728
+#    §3.1 appends the resource's own path to the well-known segment, so this is
+#    what a conforming client requests. The bare path answers as a fallback.
+curl -s $BASE/.well-known/oauth-protected-resource/mcp | jq
+# → {"resource":".../mcp","authorization_servers":["https://<tenant>...auth0.com/"],...}
+#                                     note the trailing slash ↑  it must match step 2
 
 # 2. the issuer's own metadata is reachable (this is what the client reads next)
 curl -s https://<tenant>.<region>.auth0.com/.well-known/oauth-authorization-server | jq \
-  '{registration_endpoint, authorization_endpoint, token_endpoint}'
-# registration_endpoint must be present, or DCR is still off
+  '{issuer, registration_endpoint, authorization_endpoint, token_endpoint}'
+# registration_endpoint must be present, or DCR is still off.
+# `issuer` must equal step 1's authorization_servers[0] CHARACTER FOR CHARACTER.
+# Auth0 returns it with a trailing slash; RFC 8414 §3.3 lets a strict client
+# abort on a one-character difference, before any login window appears. So set
+# MCP_AUTH_ISSUER to exactly this string — it is now published unmodified.
 
 # 3. anonymous calls are refused, and say where to log in
 curl -i -X POST $BASE/mcp -H 'content-type: application/json' \
@@ -164,6 +171,8 @@ Smoke test: *"Посчитай мою карту: 1 июля 1977, 22:30, Зап
 | Connects, every tool call fails `Malformed token` | opaque access token | step 3 Default Audience |
 | `Token rejected: Invalid audience` | `MCP_AUTH_AUDIENCE` ≠ the API identifier | make them byte-identical |
 | `Token rejected: Invalid issuer` | trailing-slash mismatch | Auth0 issuer **has** a trailing slash |
+| Client aborts during metadata discovery, before any login window | the `issuer` we publish differs from the one Auth0 returns — RFC 8414 §3.3 requires them byte-identical, and a strict client stops there | set `MCP_AUTH_ISSUER` to exactly what `/.well-known/openid-configuration` reports, **including** the trailing slash. It is now published verbatim, not normalised |
+| Discovery 404s at `/.well-known/oauth-protected-resource/mcp` | pre-fix build served only the bare path | redeploy; RFC 9728 §3.1 puts the resource's path *after* the well-known segment, and both paths are served now |
 | `Could not fetch JWKS` (503) | egress blocked or wrong JWKS URL | `curl` the JWKS URL from the Render shell |
 | `421 Invalid Host header` | transport allow-list | `MCP_PUBLIC_URL` / `MCP_ALLOWED_HOSTS`, see mcp-connector.md |
 | 404 on `/mcp` | endpoint at `/mcp/mcp` (pre-fix build) | redeploy latest `main` |

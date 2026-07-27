@@ -158,8 +158,11 @@ they are all public URLs), and the deploy status.
      hostname.
    - If `discovery_published` fails → `MCP_REQUIRE_AUTH` is not `true`.
    Fix and re-check before continuing. Report the JSON either way.
-2. Open `https://oneiroscope-backend.onrender.com/.well-known/oauth-protected-resource`.
-   Expected: JSON listing your Auth0 domain under `authorization_servers`.
+2. Open `https://oneiroscope-backend.onrender.com/.well-known/oauth-protected-resource/mcp`
+   (the canonical RFC 9728 path — the bare path without `/mcp` answers too).
+   Expected: JSON listing your Auth0 domain under `authorization_servers`,
+   **with its trailing slash**, matching the `issuer` in Auth0's own
+   `/.well-known/openid-configuration` character for character.
    A 404 here means OAuth is not both configured and enforced.
 3. Open `https://oneiroscope-backend.onrender.com/connect`.
    Expected: the connect page, showing the connector URL.
@@ -214,7 +217,8 @@ Only report on these; change nothing without asking.
 ## Definition of done
 
 - `/connect/diagnostics` reports `ready: true`, `mode: "oauth"`.
-- `/.well-known/oauth-protected-resource` lists the Auth0 domain.
+- `/.well-known/oauth-protected-resource/mcp` lists the Auth0 domain, trailing
+  slash matching Auth0's own `issuer`.
 - Adding the connector in Claude triggers an Auth0 login.
 - The smoke-test question returns a computed chart.
 - `MCP_REQUIRE_AUTH` was `true` at every moment — the endpoint was never open.

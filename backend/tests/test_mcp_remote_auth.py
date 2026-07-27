@@ -51,9 +51,45 @@ def test_protected_resource_metadata_shape(monkeypatch):
     monkeypatch.setattr(settings, "MCP_REQUIRED_SCOPES", "mcp:read mcp:write")
     meta = remote.protected_resource_metadata()
     assert meta["resource"] == "https://api.example.com/mcp"
-    assert meta["authorization_servers"] == ["https://idp.example.com"]
     assert meta["scopes_supported"] == ["mcp:read", "mcp:write"]
     assert meta["bearer_methods_supported"] == ["header"]
+
+
+def test_published_issuer_is_byte_for_byte_what_was_configured(monkeypatch):
+    """RFC 8414 §3.3: the client requires the AS's `issuer` to be identical to
+    the identifier it started from. Auth0 emits the trailing slash, so stripping
+    it on the way out manufactures a mismatch a strict client aborts on — before
+    login, before registration, indistinguishable from "won't connect".
+    """
+    for configured in ("https://idp.example.com/", "https://idp.example.com"):
+        monkeypatch.setattr(settings, "MCP_AUTH_ISSUER", configured)
+        meta = remote.protected_resource_metadata()
+        assert meta["authorization_servers"] == [configured]
+
+
+def test_metadata_is_served_on_the_rfc_canonical_path(monkeypatch):
+    """RFC 9728 §3.1 inserts the well-known segment BETWEEN host and path.
+
+    A resource identified as `https://host/mcp` is described at
+    `https://host/.well-known/oauth-protected-resource/mcp`. Serving only the
+    bare path meant any client building the URL per the RFC got a 404; the ones
+    that work today follow our WWW-Authenticate header instead.
+    """
+    monkeypatch.setattr(settings, "MCP_PATH", "/mcp")
+    paths = remote.protected_resource_paths()
+    assert paths[0] == "/.well-known/oauth-protected-resource/mcp"
+    assert "/.well-known/oauth-protected-resource" in paths, "keep the fallback"
+    # The header must advertise the canonical one, not the fallback.
+    assert 'resource_metadata="https://api.example.com' \
+           '/.well-known/oauth-protected-resource/mcp"' in \
+           remote.www_authenticate_header()
+
+
+def test_a_root_mounted_server_does_not_register_the_path_twice(monkeypatch):
+    monkeypatch.setattr(settings, "MCP_PATH", "/")
+    assert remote.protected_resource_paths() == [
+        "/.well-known/oauth-protected-resource"
+    ]
 
 
 def test_discovery_is_off_until_an_issuer_exists(monkeypatch):

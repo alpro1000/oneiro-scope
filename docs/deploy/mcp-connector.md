@@ -18,7 +18,8 @@ https://<backend>/mcp          ← streamable-HTTP transport (FastMCP)
         ▼
 backend/mcp/tools/*            ← 30+ tools (natal, transits, lunar, dreams,
                                   physiognomy, strategic patterns)
-https://<backend>/.well-known/oauth-protected-resource   ← RFC 9728 discovery
+https://<backend>/.well-known/oauth-protected-resource/mcp  ← RFC 9728 discovery
+                 (also served on the bare path, without the /mcp suffix)
 ```
 
 The MCP spec requires **OAuth 2.1 with PKCE**; a plain API key is not a valid
@@ -90,7 +91,7 @@ are worth knowing by shape:
    *before* calling `/mcp`: they read it, look for `authorization_servers`, and
    when absent fall back to treating this origin as the authorization server
    and attempt Dynamic Client Registration against it — which fails. So
-   `/.well-known/oauth-protected-resource` answers **404 until OAuth is both
+   the discovery document answers **404 until OAuth is both
    configured (`MCP_AUTH_ISSUER`) and enforced (`MCP_REQUIRE_AUTH=true`)**. A
    public server must not advertise OAuth, and neither must one that advertises
    protection it does not apply.
@@ -106,8 +107,16 @@ non-technical owner can read it.
 By hand:
 
 ```bash
-# discovery document — 404 on a public server, your AS once MCP_AUTH_ISSUER is set
-curl -s https://<backend>/.well-known/oauth-protected-resource | jq
+# discovery document — 404 on a public server, your AS once MCP_AUTH_ISSUER is set.
+# Check the CANONICAL path: RFC 9728 §3.1 puts the resource's own path after the
+# well-known segment, so this is the URL a conforming client builds. The bare
+# path answers too, but verifying only that one would miss a break here.
+curl -s https://<backend>/.well-known/oauth-protected-resource/mcp | jq
+
+# `authorization_servers` must match your AS's own `issuer` byte for byte,
+# trailing slash included — a strict client compares them and stops if they differ.
+curl -s "$(curl -s https://<backend>/.well-known/oauth-protected-resource/mcp \
+  | jq -r '.authorization_servers[0]')/.well-known/openid-configuration" | jq -r .issuer
 
 # handshake — must be 200 with an mcp-session-id header (no redirect)
 curl -i -X POST https://<backend>/mcp \

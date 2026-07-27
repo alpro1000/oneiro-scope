@@ -279,6 +279,46 @@ wrong step. Only a structural check catches that class of error, so the drift
 guards exist and are mutation-tested rather than assumed. A test that has never
 been shown to fail is a comment.
 
+**Part 5 — two OAuth discovery defects, found by pointing Inspector at prod.**
+Owner ran MCP Inspector against the live deployment. Two things in one place,
+both capable of stopping a strict client *before any login window*, which from
+the outside is indistinguishable from "the connector doesn't connect":
+
+1. **The published issuer was normalised.** `protected_resource_metadata()` sent
+   `MCP_AUTH_ISSUER.rstrip("/")`. The subtlety is that `rstrip("/")` appears
+   three times in `remote.py` and is *right* twice — at `jwks_url()` it precedes
+   a well-known path, and at token validation it is applied to both sides, which
+   is precisely what keeps a real Auth0 token from being rejected over a slash.
+   The third is different in kind: an issuer **identifier** handed to a client,
+   which per RFC 8414 §3.3 builds the metadata URL from it and then requires the
+   `issuer` the AS returns to be identical to what it started with. Auth0 emits
+   the slash; we stripped it; a strict client is entitled to abort. Now verbatim.
+2. **Metadata was served only on the bare well-known path.** RFC 9728 §3.1
+   builds the URL by inserting `/.well-known/oauth-protected-resource` *between*
+   the host and the **path** of the resource identifier — so a resource at
+   `https://host/mcp` is described at `.../oauth-protected-resource/mcp`. The
+   bare path is correct only for a resource with no path. Both are served now,
+   canonical first, and `WWW-Authenticate` advertises the canonical one.
+
+**Why this hid so well.** Claude connects fine — 46 tools, `MCP_REQUIRE_AUTH`
+true throughout — because it follows the `WWW-Authenticate` header literally and
+lands on the path we happened to serve. So the working client proved the wrong
+thing: it validated the header path, never the RFC-constructed one, and never
+compared issuer strings. Two independent conformance gaps, invisible to the one
+client we tested with. Token validation deliberately untouched.
+
+**Correction I had to make to my own reporting.** I told the owner "416 passed
+vs 389 on main, 47 both ways" for part 4. Those numbers were taken after I had
+`pip install`-ed `mcp[cli]` mid-session for a registry check, which flipped
+three unrelated import tests from fail to pass — measured against a baseline
+from before the install. Re-measured with `origin/main` checked out in the same
+directory and interpreter: 392 → 424, 44 failures both ways. The conclusion was
+unaffected, but the numbers were an artifact of my environment, and this is the
+second time in two sessions that a "baseline" of mine drifted (the first was the
+`_PROJECT_ROOT` worktree artifact). **A baseline is only a baseline if the only
+thing that changed is the code** — same directory, same interpreter, same
+installed packages, measured back to back.
+
 ### 2026-07-27 (part 2) — claude/fandorin-portrait-generation-d422my — connector LIVE with OAuth; data-first pivot
 
 **The connector works.** First real natal chart computed through Claude →
