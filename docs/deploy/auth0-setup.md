@@ -164,6 +164,8 @@ Smoke test: *"Посчитай мою карту: 1 июля 1977, 22:30, Зап
 | Connects, every tool call fails `Malformed token` | opaque access token | step 3 Default Audience |
 | `Token rejected: Invalid audience` | `MCP_AUTH_AUDIENCE` ≠ the API identifier | make them byte-identical |
 | `Token rejected: Invalid issuer` | trailing-slash mismatch | Auth0 issuer **has** a trailing slash |
+| Client aborts during metadata discovery, before any login window | the `issuer` we publish differs from the one Auth0 returns — RFC 8414 §3.3 requires them byte-identical, and a strict client stops there | set `MCP_AUTH_ISSUER` to exactly what `/.well-known/openid-configuration` reports, **including** the trailing slash. It is now published verbatim, not normalised |
+| Discovery 404s at `/.well-known/oauth-protected-resource/mcp` | pre-fix build served only the bare path | redeploy; RFC 9728 §3.1 puts the resource's path *after* the well-known segment, and both paths are served now |
 | `Could not fetch JWKS` (503) | egress blocked or wrong JWKS URL | `curl` the JWKS URL from the Render shell |
 | `421 Invalid Host header` | transport allow-list | `MCP_PUBLIC_URL` / `MCP_ALLOWED_HOSTS`, see mcp-connector.md |
 | 404 on `/mcp` | endpoint at `/mcp/mcp` (pre-fix build) | redeploy latest `main` |

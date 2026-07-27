@@ -10,9 +10,12 @@ ChatGPT and Gemini can add by URL. Two pieces:
 2. **Authorization** — the MCP spec requires OAuth 2.1 with PKCE; a bare API
    key is not a valid connector flow. This module implements the *resource
    server* half only:
-   - publishes `/.well-known/oauth-protected-resource` (RFC 9728) pointing at
-     an external authorization server (Auth0 / Clerk / Stytch / WorkOS — any AS
-     with Dynamic Client Registration, which is what Claude prefers),
+   - publishes RFC 9728 protected-resource metadata pointing at an external
+     authorization server (Auth0 / Clerk / Stytch / WorkOS — any AS with
+     Dynamic Client Registration, which is what Claude prefers), served at
+     `/.well-known/oauth-protected-resource/mcp` (the canonical location for a
+     resource whose identifier carries a path) and at the bare
+     `/.well-known/oauth-protected-resource` for clients that probe there,
    - validates the incoming bearer JWT against that AS (signature via JWKS,
      `iss`, `aud`, `exp`, optional scopes),
    - answers unauthenticated calls with `401` + a `WWW-Authenticate` header
@@ -35,7 +38,9 @@ from backend.core.config import settings
 
 logger = logging.getLogger("oneiro.mcp.remote")
 
-# RFC 9728 well-known path for OAuth 2.0 Protected Resource Metadata.
+# RFC 9728 well-known path for OAuth 2.0 Protected Resource Metadata. This bare
+# form is only the correct location for a resource whose identifier has no path
+# component — see `protected_resource_paths()` for the one this deployment needs.
 PROTECTED_RESOURCE_PATH = "/.well-known/oauth-protected-resource"
 
 # JWKS cache: {jwks_url: (fetched_at_monotonic, keys)}
@@ -125,11 +130,46 @@ def protected_resource_metadata() -> dict[str, Any]:
         "resource_documentation": "https://github.com/alpro1000/oneiro-scope",
     }
     if settings.MCP_AUTH_ISSUER:
-        meta["authorization_servers"] = [settings.MCP_AUTH_ISSUER.rstrip("/")]
+        # Published VERBATIM, deliberately not normalised. Everywhere else in
+        # this module the issuer is `rstrip("/")`-ed, and rightly so: there it
+        # is either being pasted in front of a well-known path or compared
+        # against a token's `iss`, and one-sided tolerance is what stops a real
+        # Auth0 token being rejected over a trailing slash.
+        #
+        # Here it is neither. It is an issuer *identifier* handed to a client,
+        # which per RFC 8414 §3.3 will build the metadata URL from it and then
+        # require the `issuer` the AS returns to be identical to what it started
+        # with. Auth0 emits `https://<tenant>/` WITH the slash, so stripping it
+        # here manufactured a one-character mismatch that a strict client is
+        # entitled to abort on — before login, before registration, before
+        # anything, and looking exactly like "the connector won't connect".
+        meta["authorization_servers"] = [settings.MCP_AUTH_ISSUER]
     scopes = required_scopes()
     if scopes:
         meta["scopes_supported"] = scopes
     return meta
+
+
+def protected_resource_paths() -> list[str]:
+    """Every path the RFC 9728 document must answer on, canonical first.
+
+    RFC 9728 §3.1 builds the URL by inserting `/.well-known/oauth-protected-
+    resource` BETWEEN the host and the path of the resource identifier. This
+    resource is `https://host/mcp`, so its metadata belongs at
+    `https://host/.well-known/oauth-protected-resource/mcp` — the bare
+    `/.well-known/oauth-protected-resource` is only correct for a resource with
+    no path at all, and that is the only place this server used to answer.
+
+    A client that follows our `WWW-Authenticate` header found the document
+    anyway, which is why the connector works today. A client that constructs
+    the URL from the resource identifier — as the RFC says to — got a 404 and
+    no way to discover the authorization server. Both are served now, and the
+    header points at the canonical one.
+    """
+    suffix = (settings.MCP_PATH or "").rstrip("/")
+    if not suffix:
+        return [PROTECTED_RESOURCE_PATH]
+    return [f"{PROTECTED_RESOURCE_PATH}{suffix}", PROTECTED_RESOURCE_PATH]
 
 
 def www_authenticate_header() -> str:
@@ -137,7 +177,7 @@ def www_authenticate_header() -> str:
     base = resource_url().split(settings.MCP_PATH)[0].rstrip("/")
     return (
         'Bearer realm="OneiroScope MCP", '
-        f'resource_metadata="{base}{PROTECTED_RESOURCE_PATH}"'
+        f'resource_metadata="{base}{protected_resource_paths()[0]}"'
     )
 
 
