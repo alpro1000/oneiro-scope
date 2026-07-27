@@ -31,11 +31,24 @@ class NormDeviation:
     indicator: str
     user_value: float
     norm_value: float
-    deviation: float  # Percentage points difference
-    deviation_percent: float  # Relative percentage difference
+    deviation: float  # user_value - norm_value, in the indicator's own units
+    deviation_percent: float  # Relative percentage difference vs the norm
+    deviation_unit: str  # "percentage_points" | "ratio"
     significance: str  # "significant", "moderate", "normal"
     description_ru: str
     description_en: str
+
+
+@dataclass
+class InsufficientIndicator:
+    """An indicator that COULD NOT be compared on this dream.
+
+    Zero aggression over zero friendliness is indeterminate, not an A/F of
+    0.00 — presenting it as a value was the statistical bug this type
+    exists to prevent."""
+    indicator: str
+    reason_ru: str
+    reason_en: str
 
 
 @dataclass
@@ -43,6 +56,7 @@ class NormComparison:
     """Complete norm comparison result"""
     gender_used: Gender
     deviations: List[NormDeviation]
+    insufficient_data: List[InsufficientIndicator]
     overall_typicality: float  # 0-100, how typical the dream is
     notable_findings_ru: List[str]
     notable_findings_en: List[str]
@@ -99,7 +113,12 @@ class DreamBankLoader:
                 "success_failure": {"success_percent": 42}
             }
         }
-        self.thresholds = {"significant_deviation": 15, "moderate_deviation": 10}
+        self.thresholds = {
+            "significant_deviation": 15,
+            "moderate_deviation": 10,
+            "ratio_significant_deviation_percent": 50,
+            "ratio_moderate_deviation_percent": 25,
+        }
 
     def get_norm(self, gender: Gender, category: str, indicator: str) -> Optional[float]:
         """Get specific norm value for gender/category/indicator"""
@@ -130,35 +149,65 @@ class DreamBankLoader:
             gender_used = Gender.MALE  # Default, but could average
 
         deviations = []
+        insufficient: List[InsufficientIndicator] = []
         notable_findings_ru = []
         notable_findings_en = []
 
-        # Calculate derived values from content analysis
+        # Calculate derived values from content analysis. An indicator whose
+        # inputs are absent is EXCLUDED and reported as insufficient data —
+        # never coerced to zero (0 aggression / 0 friendliness is
+        # indeterminate, not A/F = 0.00).
         total_human = content_analysis.get("male_characters", 0) + content_analysis.get("female_characters", 0)
-        # Use None instead of default 50 when no human characters present
         male_percent = (content_analysis.get("male_characters", 0) / total_human * 100) if total_human > 0 else None
+        if male_percent is None:
+            insufficient.append(InsufficientIndicator(
+                indicator="male_female_percent",
+                reason_ru="В сне нет людей-персонажей — сравнение по полу персонажей неприменимо",
+                reason_en="No human characters in the dream — character gender comparison not applicable",
+            ))
 
         friendly = content_analysis.get("friendly_interactions", 0)
         aggressive = content_analysis.get("aggressive_interactions", 0)
-        # Calculate A/F ratio properly: None if friendly=0 (can't compare), 0 if both=0
         if friendly > 0:
             af_ratio = aggressive / friendly
-        elif aggressive == 0:
-            af_ratio = 0.0  # No interactions at all
         else:
-            af_ratio = None  # Can't calculate ratio (would be infinity)
+            af_ratio = None
+            if aggressive == 0:
+                insufficient.append(InsufficientIndicator(
+                    indicator="aggression_friendliness_index",
+                    reason_ru="Социальных взаимодействий не обнаружено — индекс A/F не определён (0/0 — неопределённость, а не ноль)",
+                    reason_en="No social interactions detected — A/F index is undefined (0/0 is indeterminate, not zero)",
+                ))
+            else:
+                insufficient.append(InsufficientIndicator(
+                    indicator="aggression_friendliness_index",
+                    reason_ru=f"Агрессия есть ({aggressive}), дружелюбия нет — коэффициент A/F не определён (деление на ноль)",
+                    reason_en=f"Aggression present ({aggressive}) with no friendliness — A/F ratio undefined (division by zero)",
+                ))
+                notable_findings_ru.append(f"Во сне есть агрессия ({aggressive}) при полном отсутствии дружеских взаимодействий")
+                notable_findings_en.append(f"The dream contains aggression ({aggressive}) with no friendly interactions at all")
 
         positive_emotions = content_analysis.get("positive_emotions", 0)
         negative_emotions = content_analysis.get("negative_emotions", 0)
         total_emotions = positive_emotions + negative_emotions
-        # Use None instead of 50 when no emotions present
         negative_percent = (negative_emotions / total_emotions * 100) if total_emotions > 0 else None
+        if negative_percent is None:
+            insufficient.append(InsufficientIndicator(
+                indicator="negative_emotions_percent",
+                reason_ru="Явных эмоций в тексте сна не обнаружено — сравнение эмоций неприменимо",
+                reason_en="No explicit emotions detected in the dream text — emotion comparison not applicable",
+            ))
 
         successes = content_analysis.get("successes", 0)
         failures = content_analysis.get("failures", 0)
         total_outcomes = successes + failures
-        # Use None instead of 50 when no outcomes present
         success_percent = (successes / total_outcomes * 100) if total_outcomes > 0 else None
+        if success_percent is None:
+            insufficient.append(InsufficientIndicator(
+                indicator="dreamer_success_percent",
+                reason_ru="Успехов и неудач в сне не обнаружено — показатель успешности не определён",
+                reason_en="No successes or failures detected — success rate is undefined",
+            ))
 
         # Compare male/female character ratio (skip if no human characters)
         if male_percent is not None:
@@ -245,15 +294,17 @@ class DreamBankLoader:
                     notable_findings_ru.append(f"Пониженный процент успехов, больше неудач ({success_percent:.0f}% vs норма {norm_success}%)")
                     notable_findings_en.append(f"Lower success rate, more failures ({success_percent:.0f}% vs norm {norm_success}%)")
 
-        # Calculate overall typicality score
-        total_deviation = sum(abs(d.deviation) for d in deviations)
-        avg_deviation = total_deviation / len(deviations) if deviations else 0
-        # Convert to 0-100 scale where 100 is perfectly typical
-        overall_typicality = max(0, min(100, 100 - avg_deviation * 2))
+        # Overall typicality from significance levels — unit-free, so
+        # percentage-point and ratio indicators are not summed together.
+        penalty = {"normal": 0, "moderate": 10, "significant": 20}
+        overall_typicality = max(
+            0, min(100, 100 - sum(penalty[d.significance] for d in deviations))
+        )
 
         return NormComparison(
             gender_used=gender_used,
             deviations=deviations,
+            insufficient_data=insufficient,
             overall_typicality=overall_typicality,
             notable_findings_ru=notable_findings_ru,
             notable_findings_en=notable_findings_en
@@ -267,27 +318,36 @@ class DreamBankLoader:
         descriptions: Dict[str, str],
         is_ratio: bool = False
     ) -> NormDeviation:
-        """Calculate deviation from norm with significance assessment"""
-        if is_ratio:
-            # For ratios, calculate relative difference
-            if norm_value > 0:
-                deviation_percent = ((user_value - norm_value) / norm_value) * 100
-            else:
-                deviation_percent = 0 if user_value == 0 else 100
-            deviation = deviation_percent / 5  # Normalize
-        else:
-            # For percentages, calculate absolute difference
-            deviation = user_value - norm_value
-            deviation_percent = (deviation / norm_value * 100) if norm_value > 0 else 0
+        """Calculate deviation from norm with significance assessment.
 
-        # Determine significance
-        abs_deviation = abs(deviation)
-        if abs_deviation >= self.thresholds.get("significant_deviation", 15):
-            significance = "significant"
-        elif abs_deviation >= self.thresholds.get("moderate_deviation", 10):
-            significance = "moderate"
+        `deviation` is always user_value - norm_value in the indicator's own
+        units; `deviation_unit` names those units. Significance for
+        percentage indicators uses percentage-point thresholds; for ratio
+        indicators it uses relative-percent thresholds — the old code
+        divided the relative percent by 5 to force it onto the pp scale,
+        which made the number mean nothing in either unit."""
+        deviation = user_value - norm_value
+        if norm_value > 0:
+            deviation_percent = (deviation / norm_value) * 100
         else:
-            significance = "normal"
+            deviation_percent = 0 if user_value == 0 else 100
+
+        if is_ratio:
+            abs_rel = abs(deviation_percent)
+            if abs_rel >= self.thresholds.get("ratio_significant_deviation_percent", 50):
+                significance = "significant"
+            elif abs_rel >= self.thresholds.get("ratio_moderate_deviation_percent", 25):
+                significance = "moderate"
+            else:
+                significance = "normal"
+        else:
+            abs_deviation = abs(deviation)
+            if abs_deviation >= self.thresholds.get("significant_deviation", 15):
+                significance = "significant"
+            elif abs_deviation >= self.thresholds.get("moderate_deviation", 10):
+                significance = "moderate"
+            else:
+                significance = "normal"
 
         return NormDeviation(
             indicator=indicator,
@@ -295,6 +355,7 @@ class DreamBankLoader:
             norm_value=norm_value,
             deviation=deviation,
             deviation_percent=deviation_percent,
+            deviation_unit="ratio" if is_ratio else "percentage_points",
             significance=significance,
             description_ru=descriptions.get("ru", indicator),
             description_en=descriptions.get("en", indicator)
@@ -319,6 +380,10 @@ class DreamBankLoader:
                 lines.append("Отклонения от норм:")
                 for finding in comparison.notable_findings_ru:
                     lines.append(f"• {finding}")
+            if comparison.insufficient_data:
+                lines.append("Недостаточно данных (индикаторы исключены из сравнения):")
+                for item in comparison.insufficient_data:
+                    lines.append(f"• {item.reason_ru}")
         else:
             lines = [
                 f"Hall/Van de Castle norm comparison (gender: {comparison.gender_used.value}):",
@@ -328,6 +393,10 @@ class DreamBankLoader:
                 lines.append("Deviations from norms:")
                 for finding in comparison.notable_findings_en:
                     lines.append(f"• {finding}")
+            if comparison.insufficient_data:
+                lines.append("Insufficient data (indicators excluded from comparison):")
+                for item in comparison.insufficient_data:
+                    lines.append(f"• {item.reason_en}")
 
         return "\n".join(lines)
 

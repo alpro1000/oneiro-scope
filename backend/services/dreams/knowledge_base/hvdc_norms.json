@@ -180,7 +180,9 @@
   "interpretation_thresholds": {
     "significant_deviation": 15,
     "moderate_deviation": 10,
-    "description": "Deviation from norm in percentage points to consider significant"
+    "ratio_significant_deviation_percent": 50,
+    "ratio_moderate_deviation_percent": 25,
+    "description": "Percentage-point thresholds apply to percent indicators; ratio indicators (A/F index) use relative-percent thresholds because a ratio difference has no percentage-point reading"
   },
   "categories": {
     "characters": {

@@ -86,17 +86,19 @@ def test_list_horoscope_periods():
 def test_list_archetypes():
     from backend.mcp.tools.dreams import list_archetypes
 
-    archetypes = list_archetypes()
-    assert "shadow" in archetypes
-    assert "self" in archetypes
+    result = list_archetypes()
+    assert "shadow" in result["items"]
+    assert "self" in result["items"]
+    assert result["disclaimer"]
 
 
 def test_list_hvdc_categories():
     from backend.mcp.tools.dreams import list_hvdc_categories
 
-    cats = list_hvdc_categories()
-    assert "characters" in cats
-    assert "emotions" in cats
+    result = list_hvdc_categories()
+    assert "characters" in result["items"]
+    assert "emotions" in result["items"]
+    assert result["disclaimer"]
 
 
 def test_get_lunar_day_returns_provenance():

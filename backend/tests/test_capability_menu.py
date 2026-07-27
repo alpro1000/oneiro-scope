@@ -418,7 +418,7 @@ async def test_analyze_dream_offers_only_the_dreams_domain(monkeypatch):
             return {"symbols": [], "interpretation": "x"}
 
     class _Svc:
-        async def analyze_dream(self, req):
+        async def analyze_dream(self, req, interpret=True):
             return _Resp()
 
     monkeypatch.setattr(dream_tools, "_svc", lambda: _Svc())
