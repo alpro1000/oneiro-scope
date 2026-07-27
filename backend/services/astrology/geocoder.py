@@ -5,7 +5,7 @@ from __future__ import annotations
 import hashlib
 import json
 import logging
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from typing import Optional
 
@@ -39,6 +39,11 @@ class GeoLocation:
     # suspect and callers must surface that rather than treat it as success.
     name_matched: bool = True
     requested_city: Optional[str] = None
+    # Other places GeoNames offered for the same query. Kept so callers can
+    # offer a choice ("which Barcelona?") instead of trusting our pick — no
+    # extra API call, this is the pool the request already paid for.
+    candidates: list = field(default_factory=list)
+    ambiguous: bool = False
 
 
 class Geocoder:
@@ -100,6 +105,8 @@ class Geocoder:
                 admin_area=None,  # GeoNames basic API doesn't provide admin area
                 name_matched=bool(result.get("name_matched", True)),
                 requested_city=result.get("requested_city"),
+                candidates=list(result.get("candidates") or []),
+                ambiguous=bool(result.get("ambiguous", False)),
             )
 
             if not geo_location.name_matched:

@@ -193,7 +193,7 @@ oneiro-scope/
 The `/cities/search` endpoint provides intelligent city search with:
 - GeoNames API integration (30,000 free requests/day)
 - Automatic transliteration for Russian queries (Моск → Moscow)
-- Fallback to 90+ popular cities database when API unavailable
+- Fallback to a small curated offline city list when API unavailable (55 entries — see `soul.md §5`)
 - Returns city name, country, coordinates, and formatted display string
 
 ### Lunar Service (`/api/v1/lunar`)

@@ -132,6 +132,12 @@ def test_pick_best_rejects_empty_candidates():
 # ── end-to-end through geonames_lookup ──────────────────────────────────────
 
 class _FakeResponse:
+    # status_code matters: the resolver logs it on the primary path. Omitting it
+    # made the primary call raise AttributeError and the tests silently passed
+    # through the transliteration retry instead — validating the right values
+    # via the wrong code path.
+    status_code = 200
+
     def __init__(self, payload):
         self._payload = payload
 
@@ -170,7 +176,10 @@ async def test_lookup_sends_country_param_and_returns_the_city(monkeypatch):
     result = await geonames_lookup("Запорожье, Украина")
 
     # The country went into its own parameter, not into the free-text query.
-    assert fake.calls, "GeoNames was never called"
+    assert len(fake.calls) == 1, (
+        "the primary call must succeed on its own — a transliteration retry here "
+        "would mean the first request was malformed"
+    )
     sent = fake.calls[0]
     assert sent["q"] == "Запорожье"
     assert sent["country"] == "UA"

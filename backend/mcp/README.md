@@ -50,7 +50,7 @@ python -m backend.mcp.server --http --port 8765
 - `get_lunar_period(start_date, end_date, timezone?, locale, include_content?)` — pure
 
 ### Geo
-- `search_city(query)` — GeoNames + 90-city fallback
+- `search_city(query)` — GeoNames + small curated offline fallback; returns `candidates` + `ambiguous`/`name_matched` flags
 - `validate_birth_data(birth_date, birth_place, birth_time?)` — validates before paying LLM cost
 
 ## Configuration

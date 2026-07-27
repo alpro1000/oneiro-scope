@@ -184,6 +184,44 @@ uncertainty. Uploading `.se1` would have fixed nothing that mattered. The
 cross-check found the real defect only because two independent code paths were
 compared against each other instead of one being trusted.
 
+**Part 2 — the geocoder gets smaller, not bigger.** Owner's question: if the
+service is reached through a chat, doesn't the chat already know the
+coordinates? Largely yes, and it reframed the work. The chat reads any script
+natively (北京, القاهرة — where our Cyrillic-only `transliterate_russian()` does
+literally nothing) and it can ask the user *which* Barcelona. So geocoding a
+place the caller already resolved only adds a chance of picking the wrong one.
+Most tools already take lat/lon (`money_contour`, `vocation_map`, `decade_map`);
+only the chart entry points took a string. Two things do **not** move to the
+caller, though: the timezone, because an hour of zone error moves the MC ~15°
+against ~1° per degree of longitude — historical offsets stay in tzdata; and
+provenance, because a coordinate from a model is 0.7 synthesis wearing a 1.0
+costume, with no `geonameId` to audit.
+
+Shipped instead of the planned per-request `lang` detection (which the chat makes
+unnecessary):
+- **`calculate_natal_chart` accepts `latitude`/`longitude`** (+ optional
+  `timezone_name`), validated as a pair with range checks, and skips geocoding
+  entirely. Zone is derived from the coordinates via tzdata unless explicitly
+  overridden. Proven by a test whose geocoder raises on any call.
+- **`search_city` returns `candidates` + `ambiguous`.** `geonames_lookup` always
+  fetched `maxRows=10` and discarded nine — the pool is now surfaced at zero
+  extra API cost, with `is_ambiguous()` set when ≥2 name-matching candidates sit
+  in different countries or admin areas. Barcelona ES/VE is the test case.
+  Ambiguity is a warning, never an issue: it must not block a chart, but it must
+  never be silent either.
+- Same "City, Country" split applied to `geonames_search_cities`; its rows gained
+  population + feature code so a human can actually choose.
+- Corrected the **"90-city fallback"** claim in `CLAUDE.md`, `backend/mcp/README.md`
+  and two docstrings — the list holds 55 entries. False documented numbers are
+  cheap to fix and expensive to trust.
+
+**Second lesson, from my own test double.** `_FakeResponse` lacked `status_code`,
+which the resolver logs on the primary path. The primary call therefore raised
+`AttributeError`, fell into the transliteration retry (which happens not to log
+`status_code`), and the tests passed on correct values via the *wrong code path*.
+Caught only because a new test asserted the call count. A test double that omits
+an attribute the code touches doesn't fail — it quietly tests something else.
+
 ### 2026-07-24 — claude/fandorin-portrait-generation-d422my — deploy unblocked, MCP connector, product architecture decided
 
 **Trigger:** owner drove the split-deploy rollout, Render kept failing, and the

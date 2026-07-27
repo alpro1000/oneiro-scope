@@ -1,8 +1,8 @@
 """Geo / city-search MCP tools.
 
 Wraps `backend.services.astrology.geocoder.Geocoder` (GeoNames API +
-90-city fallback). Used standalone by skills and as a validator before
-calling `calculate_natal_chart`.
+a small curated offline fallback list). Used standalone by skills and as a
+validator before calling `calculate_natal_chart`.
 """
 
 from __future__ import annotations
@@ -26,10 +26,14 @@ def _geo() -> Geocoder:
 async def search_city(query: str) -> dict[str, Any]:
     """Geocode a city/place name → coordinates + timezone + provenance.
 
-    Uses GeoNames API (30k req/day, username from env). Supports Russian
-    queries via transliteration (Москва → Moscow). Falls back to a curated
-    90-city database when the API is unavailable. Refuses to guess: raises
-    if the place can't be resolved.
+    Uses GeoNames API (username from env; free tier is quota-limited).
+    "City, Country" is split so the country goes into GeoNames' `country`
+    filter — passing it as free text used to match places named after the
+    country. Returns `candidates` (the pool the request already paid for) plus
+    `ambiguous` / `name_matched` flags: when set, ask the user which place they
+    mean instead of trusting the top hit. Falls back to a small curated offline
+    list when the API is unavailable. Refuses to guess: reports failure if the
+    place cannot be resolved.
 
     Args:
         query: City name, optionally with country ("Moscow", "Прага, Чехия").
@@ -50,6 +54,8 @@ async def search_city(query: str) -> dict[str, Any]:
         "query": loc.query,
         "requested_city": loc.requested_city,
         "name_matched": loc.name_matched,
+        "ambiguous": loc.ambiguous,
+        "candidates": loc.candidates,
         "raw_response_id": loc.raw_response_id,
     }
     if not loc.name_matched:
@@ -58,6 +64,20 @@ async def search_city(query: str) -> dict[str, Any]:
             f"'{loc.requested_city or query}'. These coordinates may belong to a "
             f"different location — confirm the place with the user before using "
             f"them for a chart."
+        )
+    elif loc.ambiguous:
+        options = ", ".join(
+            f"{c['name']} ({c['country']}"
+            + (f", {c['admin_area']}" if c.get("admin_area") else "")
+            + ")"
+            for c in loc.candidates[:5]
+            if c.get("name")
+        )
+        out["warning"] = (
+            f"More than one place matches '{loc.requested_city or query}': {options}. "
+            f"The best match by population was returned, but ask the user which one "
+            f"they mean before computing a chart — picking the wrong one shifts the "
+            f"angles by degrees."
         )
     return out
 

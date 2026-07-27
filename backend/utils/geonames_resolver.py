@@ -227,6 +227,39 @@ def _population(entry: Dict) -> int:
         return 0
 
 
+def trim_candidate(entry: Dict) -> Dict:
+    """Reduce a GeoNames row to what a human needs in order to disambiguate."""
+    return {
+        "name": entry.get("name", ""),
+        "country": entry.get("countryName", ""),
+        "admin_area": entry.get("adminName1", "") or None,
+        "lat": float(entry["lat"]) if entry.get("lat") is not None else None,
+        "lon": float(entry["lng"]) if entry.get("lng") is not None else None,
+        "population": _population(entry),
+        "feature_code": entry.get("fcode") or None,
+        "geonameId": entry.get("geonameId"),
+    }
+
+
+def is_ambiguous(candidates: list[Dict], city: str) -> bool:
+    """True when more than one plausible place answers the query.
+
+    "Barcelona" exists in Spain and in Venezuela; "Springfield" exists dozens of
+    times. Picking one silently is exactly the failure this module was fixed
+    for, so the caller is told to ask instead. Ambiguity means: at least two
+    candidates whose name matches the request and which sit in a different
+    country, or in a different admin area of the same country.
+    """
+    matching = [c for c in candidates if name_matches(city, c)]
+    if len(matching) < 2:
+        return False
+    places = {
+        (c.get("countryName", ""), c.get("adminName1", ""))
+        for c in matching
+    }
+    return len(places) > 1
+
+
 def pick_best(candidates: list[Dict], city: str) -> tuple[Dict, bool]:
     """Choose the candidate that actually answers the query.
 
@@ -437,6 +470,17 @@ async def geonames_lookup(place_name: str) -> Dict:
                 "geonameId": None,  # No GeoNames ID for built-in database
                 "timezone": city_data["timezone"],
                 "name_matched": True,  # keyed by exact city name
+                "candidates": [{
+                    "name": city_data["name"],
+                    "country": city_data["country"],
+                    "admin_area": None,
+                    "lat": city_data["lat"],
+                    "lon": city_data["lon"],
+                    "population": None,
+                    "feature_code": None,
+                    "geonameId": None,
+                }],
+                "ambiguous": False,  # exact key hit in a curated list
             }
             # Cache successful result
             _location_cache[cache_key] = result
@@ -447,7 +491,14 @@ async def geonames_lookup(place_name: str) -> Dict:
         logger.error(f"[GeoNames] ✗ Fallback also failed - city '{place_name}' not found in built-in database")
         raise ValueError(error_msg)
 
-    place, name_matched = pick_best(data["geonames"], city)
+    rows = data["geonames"]
+    place, name_matched = pick_best(rows, city)
+    ambiguous = is_ambiguous(rows, city)
+    if ambiguous:
+        logger.info(
+            f"[GeoNames] '{place_name}' is ambiguous — several plausible places "
+            f"match; returning candidates so the caller can ask."
+        )
     if not name_matched:
         logger.warning(
             f"[GeoNames] ⚠ Resolved '{place_name}' to '{place.get('name')}' "
@@ -464,6 +515,10 @@ async def geonames_lookup(place_name: str) -> Dict:
         "geonameId": place.get("geonameId"),
         "timezone": place.get("timezone", {}).get("timeZoneId") if "timezone" in place else None,
         "name_matched": name_matched,
+        # The pool we already paid for. Surfaced instead of discarded so the
+        # caller can offer a choice rather than trust our pick.
+        "candidates": [trim_candidate(row) for row in rows],
+        "ambiguous": ambiguous,
     }
 
     # Cache successful result
@@ -521,7 +576,8 @@ async def geonames_search_cities(query: str, max_results: int = 10) -> list[Dict
     if not query or len(query.strip()) < 2:
         raise ValueError("Query must be at least 2 characters")
 
-    search_query = query.strip()
+    # Same "City, Country" split as geonames_lookup — see split_place_query.
+    search_query, country_code, _country_raw = split_place_query(query.strip())
     results = []
     data = {}
 
@@ -540,6 +596,8 @@ async def geonames_search_cities(query: str, max_results: int = 10) -> list[Dict
             "orderby": "population",  # Sort by population (largest first)
             "style": "FULL",
         }
+        if country_code:
+            params["country"] = country_code
 
         logger.info(f"[GeoNames Search] Searching for cities: '{query}'")
         logger.debug(f"[GeoNames Search] API params: {params}")
@@ -556,9 +614,9 @@ async def geonames_search_cities(query: str, max_results: int = 10) -> list[Dict
 
     # If not found and query is Russian, try transliteration
     if not data.get("geonames") and GEONAMES_USER:
-        lang = detect_language(query)
+        lang = detect_language(search_query)
         if lang == "ru":
-            translit_query = transliterate_russian(query)
+            translit_query = transliterate_russian(search_query)
             logger.info(f"[GeoNames Search] Trying transliteration: '{query}' → '{translit_query}'")
             params["q"] = translit_query
             try:
@@ -614,6 +672,8 @@ async def geonames_search_cities(query: str, max_results: int = 10) -> list[Dict
             "admin_name": admin_name,
             "lat": float(place["lat"]),
             "lon": float(place["lng"]),
+            "population": _population(place),
+            "feature_code": place.get("fcode") or None,
             "display": ", ".join(display_parts),
             "geoname_id": place.get("geonameId"),
         })

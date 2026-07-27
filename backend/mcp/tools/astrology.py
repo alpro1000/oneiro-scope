@@ -35,6 +35,9 @@ async def calculate_natal_chart(
     birth_place: str,
     birth_time: Optional[str] = None,
     locale: str = "ru",  # ru | en | de | es | fr
+    latitude: Optional[float] = None,
+    longitude: Optional[float] = None,
+    timezone_name: Optional[str] = None,
 ) -> dict[str, Any]:
     """Calculate a natal (birth) chart from birth data.
 
@@ -46,15 +49,31 @@ async def calculate_natal_chart(
     Args:
         birth_date: YYYY-MM-DD.
         birth_place: City name, optionally with country ("Moscow", "Прага, Чехия").
-            Geocoded via GeoNames API with a 90-city fallback.
+            Used as the geocoding query, or as a plain label when latitude and
+            longitude are supplied.
         birth_time: HH:MM (24h). Optional — omit if unknown.
         locale: "ru" or "en". Default "ru".
+        latitude: Birth latitude. Pass together with longitude to skip geocoding
+            entirely — preferred when you already know the place (you read the
+            user's script directly and can ask them which city they mean, which
+            a name lookup cannot). Geocoding a name you already resolved only
+            adds a chance of picking the wrong place.
+        longitude: Birth longitude. Must accompany latitude.
+        timezone_name: IANA zone ("Europe/Kyiv"). Optional. Leave it out and the
+            zone is derived from the coordinates via tzdata — safer than naming
+            it from memory, because an hour of timezone error moves the MC by
+            ~15° while a degree of longitude moves it by ~1°. Historical offsets
+            (Soviet decree time, wartime DST) always come from tzdata, never
+            from the caller.
     """
     req = NatalChartRequest(
         birth_date=date_cls.fromisoformat(birth_date),
         birth_time=time_cls.fromisoformat(birth_time) if birth_time else None,
         birth_place=birth_place,
         locale=locale,
+        latitude=latitude,
+        longitude=longitude,
+        timezone_name=timezone_name,
     )
     resp = await _svc().calculate_natal_chart(req)
     return resp.model_dump(mode="json")
