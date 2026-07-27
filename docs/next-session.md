@@ -69,6 +69,25 @@ norm_comparison.
    вписать в отчёт §3 — до этого выбор слоя экстракции по осям
    персонажи-EN/эмоции не принимается.
 
+**Карта баз данных снов мира (раунд 4; проверено поиском/обходом 2026-07-27):**
+| База | Объём | Где | Как взять | Статус у нас |
+|---|---|---|---|---|
+| DreamBank.net (Domhoff/Schneider) | ~30k снов EN+DE | dreambank.net (для ботов 403) | `scripts/fetch_dreambank.py` (зеркало DreamScrape, работает даже из песочницы) | ✅ norms-m/f скачаны, прогнаны; остальные ~90 коллекций — тем же скриптом |
+| SDDb (Bulkeley) | 45k+ снов + опросы | sleepanddreamdatabase.org; полное зеркало Zenodo **11662064** (уже в `etl/sources_config.yml`!) | сайт: Library → Advanced search → пустой Search → Export CSV; либо Zenodo-архив | ⬜ качать с машины владельца (Zenodo из песочницы 403) |
+| Fogli et al. 2020, алгоритмическая разметка DreamBank | 20k+ снов с HVdC-фичами | Dryad doi:10.5061/dryad.qbzkh18fr | `curl -L -o dreams.zip "https://datadryad.org/api/v2/datasets/doi%3A10.5061%2Fdryad.qbzkh18fr/download"` | ⬜ нужна для пособытийной внешней валидации |
+| krank (remrama; экс krank-sources/dreambank) | hvdc + **zhang2019** (лабораторные пробуждения Zhang & Wamsley 2019) | Zenodo-архивы, качает сам пакет | `pip install krank; krank.load("zhang2019")` | ⬜ krank CSV-апгрейд коннектора — давний P2 |
+| DReAMy-lib datasets | DreamBank-dreams-en ~22k (+DE, +annotated) | HuggingFace | `datasets.load_dataset("DReAMy-lib/DreamBank-dreams-en")` | ⬜ HF из песочницы 403 |
+| DreamSAT (dreams.ucsc.edu = dreamresearch.net) | НЕ база: Excel с нормами и h-статистикой + правила кодирования | dreams.ucsc.edu/DreamSAT/ | браузером | справочник для адъюдикации KB (вопрос 0.59 A/F!) |
+| DREAMS polysomnography | ЭЭГ/EDF, 8 датасетов (не тексты) | Zenodo 2650142 | on-demand (файлы ~100MB+) | коннектор есть (ваш анализ 2025-12-30) |
+| dreamento | инструмент скоринга сна | github | — | отклонено вами 2025-12-30 |
+
+Следы прошлых попыток владельца в репо: `etl/sources_config.yml` (SDDb
+Zenodo-ID уже вписан, Dryad/Figshare включены с пустыми списками),
+`etl/input/` пуст, `data/dreams_curated.json` — 3 демо-записи; больших
+файлов в git-истории никогда не было. Песочница пускает только
+raw.githubusercontent (+ WebSearch); zenodo/dryad/HF/dreambank.net/ucsc —
+403 на уровне шлюза.
+
 **Раунд 3 той же сессии — база снов СКАЧАНА, калибровка выполнена:**
 - **Как скачивать сны** (вопрос владельца). Пути, по убыванию удобства:
   1) `python scripts/fetch_dreambank.py` — качает коллекции DreamBank c
