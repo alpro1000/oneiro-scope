@@ -1,7 +1,7 @@
 """Main Astrology Service orchestrator."""
 
 import logging
-from datetime import date, datetime, time, timedelta
+from datetime import date, datetime, time, timedelta, timezone as dt_timezone
 from decimal import Decimal
 from typing import Optional
 from uuid import UUID, uuid4
@@ -24,7 +24,7 @@ from .schemas import (
 from .ephemeris import SwissEphemeris
 from .natal_chart import NatalChartCalculator
 from .transits import TransitCalculator
-from .geocoder import Geocoder, GeocodingError
+from .geocoder import GeoLocation, Geocoder, GeocodingError
 from .interpreter import AstrologyInterpreter
 
 # Import lunar service for accurate lunar day calculation
@@ -97,13 +97,40 @@ class AstrologyService:
         """
         logger.info(f"Calculating natal chart for {request.birth_place}")
 
-        # Geocode birth place
-        try:
-            location = await self.geocoder.geocode(request.birth_place)
-        except GeocodingError as exc:
-            raise ValueError(f"Geocoding failed: {exc}") from exc
-        if not location:
-            raise ValueError(f"Could not geocode location: {request.birth_place}")
+        # Explicit coordinates skip geocoding entirely. A caller that already
+        # knows where the place is (a chat client reading any script, able to ask
+        # the user *which* Barcelona) does not need us to guess it back from a
+        # string. The timezone is still not taken on trust: unless explicitly
+        # overridden it comes from the coordinates via tzdata, because an hour of
+        # timezone error moves the MC ~15 deg against ~1 deg per degree of
+        # longitude.
+        if request.latitude is not None and request.longitude is not None:
+            timezone_name = request.timezone_name or self.geocoder.resolve_timezone(
+                request.latitude, request.longitude
+            )
+            location = GeoLocation(
+                name=request.birth_place,
+                latitude=request.latitude,
+                longitude=request.longitude,
+                timezone=timezone_name,
+                provider="caller-supplied",
+                query=request.birth_place,
+                raw_response_id="",
+                timestamp=datetime.now(tz=dt_timezone.utc),
+            )
+            logger.info(
+                f"Using caller-supplied coordinates {location.latitude}/"
+                f"{location.longitude}, timezone {location.timezone} "
+                f"({'explicit' if request.timezone_name else 'from tzdata'})"
+            )
+        else:
+            # Geocode birth place
+            try:
+                location = await self.geocoder.geocode(request.birth_place)
+            except GeocodingError as exc:
+                raise ValueError(f"Geocoding failed: {exc}") from exc
+            if not location:
+                raise ValueError(f"Could not geocode location: {request.birth_place}")
 
         # Use noon if time not provided
         birth_time = request.birth_time or time(12, 0)

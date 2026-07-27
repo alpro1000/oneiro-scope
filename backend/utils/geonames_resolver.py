@@ -11,6 +11,8 @@ Provides async geocoding using the official GeoNames API with:
 
 import os
 import asyncio
+import unicodedata
+from difflib import SequenceMatcher
 from functools import lru_cache
 from typing import Dict, Optional
 import logging
@@ -98,6 +100,185 @@ POPULAR_CITIES = {
     "melbourne": {"name": "Melbourne", "country": "Australia", "lat": -37.8136, "lon": 144.9631, "timezone": "Australia/Melbourne"},
     "auckland": {"name": "Auckland", "country": "New Zealand", "lat": -37.0082, "lon": 174.7850, "timezone": "Pacific/Auckland"},
 }
+
+# ── "City, Country" query parsing ───────────────────────────────────────────
+#
+# GeoNames' `q` is a free-text search. Passing the whole "Запорожье, Украина"
+# into it makes GeoNames match a populated place literally NAMED after the
+# country: there is a hamlet «Україна» in Zaporizhzhia oblast, and it outranked
+# the city of 700k, resolving ~100 km off (47.333/36.267 instead of
+# 47.85/35.12) while still reporting `resolved: true`. The country belongs in
+# the dedicated `country` parameter (ISO-3166 alpha-2) instead.
+COUNTRY_CODES: Dict[str, str] = {
+    # Russian / local names
+    "украина": "UA", "україна": "UA", "россия": "RU", "рф": "RU",
+    "беларусь": "BY", "белоруссия": "BY", "казахстан": "KZ",
+    "чехия": "CZ", "чешскаяреспублика": "CZ", "германия": "DE",
+    "испания": "ES", "италия": "IT", "франция": "FR", "польша": "PL",
+    "словакия": "SK", "австрия": "AT", "венгрия": "HU", "португалия": "PT",
+    "нидерланды": "NL", "великобритания": "GB", "англия": "GB",
+    "швейцария": "CH", "хорватия": "HR", "сербия": "RS", "греция": "GR",
+    "болгария": "BG", "румыния": "RO", "турция": "TR", "грузия": "GE",
+    "армения": "AM", "азербайджан": "AZ", "молдова": "MD", "литва": "LT",
+    "латвия": "LV", "эстония": "EE", "финляндия": "FI", "швеция": "SE",
+    "норвегия": "NO", "дания": "DK", "израиль": "IL", "сша": "US",
+    "канада": "CA", "оаэ": "AE",
+    # English / endonyms
+    "ukraine": "UA", "russia": "RU", "russianfederation": "RU",
+    "belarus": "BY", "kazakhstan": "KZ", "czechia": "CZ",
+    "czechrepublic": "CZ", "cesko": "CZ", "germany": "DE",
+    "deutschland": "DE", "spain": "ES", "espana": "ES", "italy": "IT",
+    "italia": "IT", "france": "FR", "poland": "PL", "polska": "PL",
+    "slovakia": "SK", "austria": "AT", "hungary": "HU", "portugal": "PT",
+    "netherlands": "NL", "unitedkingdom": "GB", "uk": "GB", "england": "GB",
+    "switzerland": "CH", "croatia": "HR", "hrvatska": "HR", "serbia": "RS",
+    "greece": "GR", "bulgaria": "BG", "romania": "RO", "turkey": "TR",
+    "georgia": "GE", "armenia": "AM", "azerbaijan": "AZ", "moldova": "MD",
+    "lithuania": "LT", "latvia": "LV", "estonia": "EE", "finland": "FI",
+    "sweden": "SE", "norway": "NO", "denmark": "DK", "israel": "IL",
+    "usa": "US", "unitedstates": "US", "canada": "CA",
+    "unitedarabemirates": "AE", "uae": "AE",
+}
+
+
+def _norm(text: str) -> str:
+    """Fold a place name for comparison.
+
+    Lowercase, ё→е, drop the Russian soft/hard signs, strip diacritics
+    (España → espana, Česko → cesko, Türkiye → turkiye) and remove everything
+    that is not alphanumeric. Diacritics are folded rather than enumerated as
+    extra spellings — the same folding is applied to both sides of every
+    comparison, so it stays symmetric.
+    """
+    lowered = (text or "").lower().replace("ё", "е").replace("ъ", "").replace("ь", "")
+    decomposed = unicodedata.normalize("NFKD", lowered)
+    without_marks = "".join(ch for ch in decomposed if not unicodedata.combining(ch))
+    return "".join(ch for ch in without_marks if ch.isalnum())
+
+
+def split_place_query(place_name: str) -> tuple[str, Optional[str], Optional[str]]:
+    """Split "City, Country" into (city, ISO-2 country code, raw country text).
+
+    Returns the whole trimmed string as the city with no country when there is
+    no comma, or when the text after the last comma is not a country we
+    recognise. That last case is deliberate: "Frankfurt am Main, Hessen" names
+    an admin area, not a country, so we leave it in the query rather than
+    guessing at a filter.
+    """
+    raw = (place_name or "").strip()
+    if "," not in raw:
+        return raw, None, None
+    head, _, tail = raw.rpartition(",")
+    city, country_raw = head.strip(), tail.strip()
+    code = COUNTRY_CODES.get(_norm(country_raw))
+    if not code or not city:
+        return raw, None, None
+    return city, code, country_raw
+
+
+def name_matches(requested_city: str, candidate: Dict) -> bool:
+    """Does a GeoNames candidate actually correspond to the requested city?
+
+    Compares the request against the candidate's `name`, `toponymName`,
+    `asciiName` and `alternateNames`, in both the original script and a
+    transliterated form. Deliberately tolerant — "Запорожье" must match
+    "Zaporizhzhia" — because its job is to catch a resolution that is plainly
+    a *different place* (the hamlet "Ukraina" answering a query for
+    "Запорожье, Украина"), not to police spelling.
+    """
+    want = {_norm(requested_city), _norm(transliterate_russian(requested_city))}
+    want.discard("")
+    if not want:
+        return False
+
+    names: list[str] = []
+    for key in ("name", "toponymName", "asciiName"):
+        value = candidate.get(key)
+        if value:
+            names.append(str(value))
+    alt = candidate.get("alternateNames")
+    if isinstance(alt, list):
+        for entry in alt:
+            value = entry.get("name") if isinstance(entry, dict) else entry
+            if value:
+                names.append(str(value))
+    elif isinstance(alt, str):
+        names.extend(alt.split(","))
+
+    for raw_name in names:
+        have = {_norm(raw_name), _norm(transliterate_russian(raw_name))}
+        have.discard("")
+        for w in want:
+            for h in have:
+                if w == h:
+                    return True
+                if len(w) >= 4 and len(h) >= 4 and (w.startswith(h) or h.startswith(w)):
+                    return True
+                # Transliteration variance ("zaporozhe" vs "zaporizhzhia").
+                if len(w) >= 5 and len(h) >= 5 and SequenceMatcher(None, w, h).ratio() >= 0.62:
+                    return True
+    return False
+
+
+def _population(entry: Dict) -> int:
+    try:
+        return int(entry.get("population") or 0)
+    except (TypeError, ValueError):
+        return 0
+
+
+def trim_candidate(entry: Dict) -> Dict:
+    """Reduce a GeoNames row to what a human needs in order to disambiguate."""
+    return {
+        "name": entry.get("name", ""),
+        "country": entry.get("countryName", ""),
+        "admin_area": entry.get("adminName1", "") or None,
+        "lat": float(entry["lat"]) if entry.get("lat") is not None else None,
+        "lon": float(entry["lng"]) if entry.get("lng") is not None else None,
+        "population": _population(entry),
+        "feature_code": entry.get("fcode") or None,
+        "geonameId": entry.get("geonameId"),
+    }
+
+
+def is_ambiguous(candidates: list[Dict], city: str) -> bool:
+    """True when more than one plausible place answers the query.
+
+    "Barcelona" exists in Spain and in Venezuela; "Springfield" exists dozens of
+    times. Picking one silently is exactly the failure this module was fixed
+    for, so the caller is told to ask instead. Ambiguity means: at least two
+    candidates whose name matches the request and which sit in a different
+    country, or in a different admin area of the same country.
+    """
+    matching = [c for c in candidates if name_matches(city, c)]
+    if len(matching) < 2:
+        return False
+    places = {
+        (c.get("countryName", ""), c.get("adminName1", ""))
+        for c in matching
+    }
+    return len(places) > 1
+
+
+def pick_best(candidates: list[Dict], city: str) -> tuple[Dict, bool]:
+    """Choose the candidate that actually answers the query.
+
+    `geonames_lookup` used to fetch 10 rows "to choose best match" and then
+    take `candidates[0]` — it never chose. GeoNames' default ordering is
+    relevance, not importance, so a hamlet can outrank a city of 700k.
+    Preference: candidates whose name matches the request, then population.
+
+    Returns (candidate, name_matched). `name_matched=False` means we fell back
+    to the most populous candidate because nothing looked like the requested
+    city — a signal the caller should surface, not swallow.
+    """
+    if not candidates:
+        raise ValueError("no candidates to choose from")
+    matching = [c for c in candidates if name_matches(city, c)]
+    if matching:
+        return max(matching, key=_population), True
+    return max(candidates, key=_population), False
+
 
 # HTTP client with connection pooling
 _http_client: Optional[httpx.AsyncClient] = None
@@ -198,7 +379,10 @@ async def geonames_lookup(place_name: str) -> Dict:
         logger.debug(f"GeoNames cache hit: {place_name}")
         return _location_cache[cache_key]
 
-    query = place_name.strip()
+    # "Запорожье, Украина" → q="Запорожье", country="UA". Sending the whole
+    # string as `q` used to resolve a hamlet named after the country.
+    city, country_code, country_raw = split_place_query(place_name)
+    query = city
     data = {}
 
     # Skip API call if no username configured
@@ -209,13 +393,20 @@ async def geonames_lookup(place_name: str) -> Dict:
         client = get_http_client()
         params = {
             "q": query,
-            "maxRows": 10,  # Get top 10 results to choose best match
+            "maxRows": 10,  # Candidate pool — `pick_best` chooses from it
             "lang": GEONAMES_LANG,
             "username": GEONAMES_USER,
             "featureClass": "P",  # Populated places (cities, towns, villages)
             "isNameRequired": "true",  # Only exact name matches
-            "style": "FULL",  # Include timezone info in response
+            "style": "FULL",  # Include timezone + alternateNames in response
+            "orderby": "population",  # Importance, not bare relevance
         }
+        if country_code:
+            params["country"] = country_code
+            logger.info(
+                f"[GeoNames] Parsed '{place_name}' → city='{city}', "
+                f"country='{country_raw}' ({country_code})"
+            )
 
         logger.info(f"[GeoNames] Starting lookup for: '{place_name}'")
         logger.debug(f"[GeoNames] API params: {params}")
@@ -236,12 +427,12 @@ async def geonames_lookup(place_name: str) -> Dict:
 
     # If not found and text is Russian, try transliteration
     if not data.get("geonames") and GEONAMES_USER:
-        lang = detect_language(place_name)
-        logger.info(f"[GeoNames] No results for '{place_name}', detected language: {lang}")
+        lang = detect_language(city)
+        logger.info(f"[GeoNames] No results for '{city}', detected language: {lang}")
 
         if lang == "ru":
-            translit_query = transliterate_russian(place_name)
-            logger.info(f"[GeoNames] Trying transliteration fallback: '{place_name}' → '{translit_query}'")
+            translit_query = transliterate_russian(city)
+            logger.info(f"[GeoNames] Trying transliteration fallback: '{city}' → '{translit_query}'")
             params["q"] = translit_query
             try:
                 client = get_http_client()
@@ -259,19 +450,37 @@ async def geonames_lookup(place_name: str) -> Dict:
         logger.warning(f"[GeoNames] ERROR: {error_msg}")
         logger.warning(f"[GeoNames] Total results received: {len(data.get('geonames', []))}")
 
-        # Try fallback to built-in popular cities database
+        # Try fallback to built-in popular cities database. Keyed on the split
+        # city, so "Запорожье, Украина" now hits the "запорожье" entry — before
+        # the split it missed and the whole lookup failed.
         logger.info(f"[GeoNames] Trying fallback to popular cities database...")
-        city_key = query.lower().strip()
-        if city_key in POPULAR_CITIES:
-            city_data = POPULAR_CITIES[city_key]
+        city_data = None
+        for candidate_key in (city.lower().strip(), place_name.lower().strip()):
+            if candidate_key in POPULAR_CITIES:
+                city_data = POPULAR_CITIES[candidate_key]
+                break
+        if city_data is not None:
             result = {
                 "input": place_name,
+                "requested_city": city,
                 "resolved_name": city_data["name"],
                 "country": city_data["country"],
                 "lat": city_data["lat"],
                 "lon": city_data["lon"],
                 "geonameId": None,  # No GeoNames ID for built-in database
                 "timezone": city_data["timezone"],
+                "name_matched": True,  # keyed by exact city name
+                "candidates": [{
+                    "name": city_data["name"],
+                    "country": city_data["country"],
+                    "admin_area": None,
+                    "lat": city_data["lat"],
+                    "lon": city_data["lon"],
+                    "population": None,
+                    "feature_code": None,
+                    "geonameId": None,
+                }],
+                "ambiguous": False,  # exact key hit in a curated list
             }
             # Cache successful result
             _location_cache[cache_key] = result
@@ -282,15 +491,34 @@ async def geonames_lookup(place_name: str) -> Dict:
         logger.error(f"[GeoNames] ✗ Fallback also failed - city '{place_name}' not found in built-in database")
         raise ValueError(error_msg)
 
-    place = data["geonames"][0]
+    rows = data["geonames"]
+    place, name_matched = pick_best(rows, city)
+    ambiguous = is_ambiguous(rows, city)
+    if ambiguous:
+        logger.info(
+            f"[GeoNames] '{place_name}' is ambiguous — several plausible places "
+            f"match; returning candidates so the caller can ask."
+        )
+    if not name_matched:
+        logger.warning(
+            f"[GeoNames] ⚠ Resolved '{place_name}' to '{place.get('name')}' "
+            f"({place.get('countryName')}) — the name does not look like the "
+            f"requested city '{city}'. Flagging name_matched=False."
+        )
     result = {
         "input": place_name,
+        "requested_city": city,
         "resolved_name": place.get("name", ""),
         "country": place.get("countryName", ""),
         "lat": float(place["lat"]),
         "lon": float(place["lng"]),
         "geonameId": place.get("geonameId"),
         "timezone": place.get("timezone", {}).get("timeZoneId") if "timezone" in place else None,
+        "name_matched": name_matched,
+        # The pool we already paid for. Surfaced instead of discarded so the
+        # caller can offer a choice rather than trust our pick.
+        "candidates": [trim_candidate(row) for row in rows],
+        "ambiguous": ambiguous,
     }
 
     # Cache successful result
@@ -348,7 +576,8 @@ async def geonames_search_cities(query: str, max_results: int = 10) -> list[Dict
     if not query or len(query.strip()) < 2:
         raise ValueError("Query must be at least 2 characters")
 
-    search_query = query.strip()
+    # Same "City, Country" split as geonames_lookup — see split_place_query.
+    search_query, country_code, _country_raw = split_place_query(query.strip())
     results = []
     data = {}
 
@@ -367,6 +596,8 @@ async def geonames_search_cities(query: str, max_results: int = 10) -> list[Dict
             "orderby": "population",  # Sort by population (largest first)
             "style": "FULL",
         }
+        if country_code:
+            params["country"] = country_code
 
         logger.info(f"[GeoNames Search] Searching for cities: '{query}'")
         logger.debug(f"[GeoNames Search] API params: {params}")
@@ -383,9 +614,9 @@ async def geonames_search_cities(query: str, max_results: int = 10) -> list[Dict
 
     # If not found and query is Russian, try transliteration
     if not data.get("geonames") and GEONAMES_USER:
-        lang = detect_language(query)
+        lang = detect_language(search_query)
         if lang == "ru":
-            translit_query = transliterate_russian(query)
+            translit_query = transliterate_russian(search_query)
             logger.info(f"[GeoNames Search] Trying transliteration: '{query}' → '{translit_query}'")
             params["q"] = translit_query
             try:
@@ -441,6 +672,8 @@ async def geonames_search_cities(query: str, max_results: int = 10) -> list[Dict
             "admin_name": admin_name,
             "lat": float(place["lat"]),
             "lon": float(place["lng"]),
+            "population": _population(place),
+            "feature_code": place.get("fcode") or None,
             "display": ", ".join(display_parts),
             "geoname_id": place.get("geonameId"),
         })

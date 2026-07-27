@@ -78,6 +78,17 @@ Personal/project memory file for cross-session continuity. Read by Claude Code a
 - ~~LLM cost tracking middleware structure exists but counter not wired~~. **Fixed 2026-05-26 PR #111** — `backend/core/cost_tracker.py` wired into `UniversalLLMProvider.generate()`.
 - ~~Ephemeris mode (SWIEPH vs MOSEPH) not logged in `/health`~~. **Fixed 2026-05-26 PR #111** — and now also logged on app startup (PR #113).
 - LunarWidget no retry on 502.
+- **Fallback city database is thinner than advertised** (found 2026-07-27, not
+  fixed). `POPULAR_CITIES` in `backend/utils/geonames_resolver.py` holds **55**
+  entries, while its own comment, the `search_city` docstring and CLAUDE.md all
+  claim "90+". Missing: Plzeň, Cyrillic "прага", and every Spanish city. Without
+  `GEONAMES_USERNAME` this makes `search_city("Плзень, Чехия")` return
+  `PLACE_NOT_FOUND` — honest, but unusable. Secondary: its Zaporizhzhia
+  longitude (35.1969) is ~6 km off GeoNames' 35.11714, so the fallback and API
+  paths yield slightly different charts for the same city. Fix needs a real
+  source for coordinates, not hand-picked numbers — either a proper offline
+  dataset or an explicit decision that the fallback stays minimal and the
+  "90+" claim gets corrected.
 - **`build-and-validate` CI is red on every PR** (pre-existing). Diagnostic improvements landed in PR #113 (`pip install -v`, upgraded setuptools/wheel); next iteration should see the actual error trace. Not blocking — `mergeable_state` is `unstable` not `blocked`.
 
 ## §6 Architecture decisions log
@@ -107,6 +118,109 @@ Recent decisions:
 ---
 
 ## §9 Session log
+
+### 2026-07-27 — claude/identity-direction-question-vrognh — geocoder "City, Country" bug + node definition aligned
+
+**Trigger:** a long client session (strategic reading for a real person, birth
+1977-07-01 Zaporizhzhia). The connector went live mid-session, so the chart was
+cross-checked through the deployed MCP against the same chart computed by
+importing `pattern_engine` directly. Planets and the six tight aspects agreed to
+0.01°, all twelve cusp signs agreed — but the coordinates did not.
+
+**The bug (found via `validate_birth_data`).** `birth_place="Запорожье, Украина"`
+returned `valid: true, issues: []` and coordinates **47.33333 / 36.26667** — a
+hamlet literally named «Україна», ~100 km from the city (47.85 / 35.12). The
+same query *without* the country suffix resolved correctly, which isolated it:
+the whole string went into GeoNames' free-text `q` instead of splitting the
+country into the `country` parameter. Effect on the chart: **ASC +2.43°,
+MC +1.08°, and the Moon flipped from house 12 to house 11** — all reported as a
+successful validation. A silent wrong answer with a confident success flag is
+worse than an error.
+
+Three defects grew from that one root, all fixed in `geonames_resolver.py`:
+1. the country suffix polluted `q` → `split_place_query()` + `country=` ISO-2
+   (unrecognised tails like "Frankfurt am Main, Hessen" are deliberately left
+   in the query rather than guessed at);
+2. `geonames_lookup` fetched 10 candidates "to choose best match" and then took
+   `candidates[0]` — it never chose. GeoNames orders by relevance, not
+   importance, so a hamlet outranked a city of 700k. Now `pick_best()`:
+   name-matching candidates first, then population, plus `orderby=population`;
+3. the fallback city database was keyed on the full string, so
+   "Запорожье, Украина" missed the "запорожье" entry too.
+
+**Silence is the real defect, so it is now impossible:** `name_matches()`
+(diacritic- and transliteration-tolerant, `unicodedata` folding + `difflib`
+ratio ≥0.62) flags `name_matched=False` when nothing resembles the request; it
+propagates through `GeoLocation` → `search_city().warning` →
+`validate_birth_data().warnings`. Kept a **warning, not an issue**, so a
+legitimate transliteration miss can never block a chart.
+
+**Node aligned.** `astrology/ephemeris.py` always used the TRUE node (body 11);
+`strategic/pattern_engine.py` used the MEAN node — 200.828° vs 200.257° on the
+same chart, enough to change a house and to make `calculate_natal_chart` and
+`money_contour` disagree about one person. `pattern_engine` now uses
+`swe.TRUE_NODE` under the key `north_node` (matching `Planet.NORTH_NODE`).
+Verified on the live chart: node moved 0.57° and stayed in house 8, so the
+linchpin / dignity / angular readings are unchanged.
+
+**Tests:** `test_geocoder_query_split.py` (19 cases incl. the exact regression —
+mocked payload with the hamlet first and the city second) and
+`test_node_definition_consistency.py`. Regression check done properly: failure
+signatures captured before and after via `git stash` — **28 both ways, zero new
+failures**. The 28 are pre-existing missing-dependency errors in this sandbox
+(`claude-agent-sdk`, `cryptography`), not code faults.
+
+**Found, not fixed (reported, see §5):** the fallback city database holds **55**
+entries while the docstring and CLAUDE.md both claim "90+"; it has no Plzeň, no
+Cyrillic "прага", and none of the Spanish cities. So `search_city("Плзень,
+Чехия")` honestly returns `PLACE_NOT_FOUND` without an API key. Also its
+Zaporizhzhia longitude (35.1969) differs ~6 km from GeoNames' 35.11714, so the
+fallback and API paths give slightly different charts for the same city.
+
+**Lesson.** MOSEPH vs SWIEPH was the thing we set out to worry about, and it was
+the *least* consequential item by three orders of magnitude: <1″ (<0.0003°)
+against a 1–2.4° geocoding error and ~1.2° per 5 minutes of birth-time
+uncertainty. Uploading `.se1` would have fixed nothing that mattered. The
+cross-check found the real defect only because two independent code paths were
+compared against each other instead of one being trusted.
+
+**Part 2 — the geocoder gets smaller, not bigger.** Owner's question: if the
+service is reached through a chat, doesn't the chat already know the
+coordinates? Largely yes, and it reframed the work. The chat reads any script
+natively (北京, القاهرة — where our Cyrillic-only `transliterate_russian()` does
+literally nothing) and it can ask the user *which* Barcelona. So geocoding a
+place the caller already resolved only adds a chance of picking the wrong one.
+Most tools already take lat/lon (`money_contour`, `vocation_map`, `decade_map`);
+only the chart entry points took a string. Two things do **not** move to the
+caller, though: the timezone, because an hour of zone error moves the MC ~15°
+against ~1° per degree of longitude — historical offsets stay in tzdata; and
+provenance, because a coordinate from a model is 0.7 synthesis wearing a 1.0
+costume, with no `geonameId` to audit.
+
+Shipped instead of the planned per-request `lang` detection (which the chat makes
+unnecessary):
+- **`calculate_natal_chart` accepts `latitude`/`longitude`** (+ optional
+  `timezone_name`), validated as a pair with range checks, and skips geocoding
+  entirely. Zone is derived from the coordinates via tzdata unless explicitly
+  overridden. Proven by a test whose geocoder raises on any call.
+- **`search_city` returns `candidates` + `ambiguous`.** `geonames_lookup` always
+  fetched `maxRows=10` and discarded nine — the pool is now surfaced at zero
+  extra API cost, with `is_ambiguous()` set when ≥2 name-matching candidates sit
+  in different countries or admin areas. Barcelona ES/VE is the test case.
+  Ambiguity is a warning, never an issue: it must not block a chart, but it must
+  never be silent either.
+- Same "City, Country" split applied to `geonames_search_cities`; its rows gained
+  population + feature code so a human can actually choose.
+- Corrected the **"90-city fallback"** claim in `CLAUDE.md`, `backend/mcp/README.md`
+  and two docstrings — the list holds 55 entries. False documented numbers are
+  cheap to fix and expensive to trust.
+
+**Second lesson, from my own test double.** `_FakeResponse` lacked `status_code`,
+which the resolver logs on the primary path. The primary call therefore raised
+`AttributeError`, fell into the transliteration retry (which happens not to log
+`status_code`), and the tests passed on correct values via the *wrong code path*.
+Caught only because a new test asserted the call count. A test double that omits
+an attribute the code touches doesn't fail — it quietly tests something else.
 
 ### 2026-07-27 (part 2) — claude/fandorin-portrait-generation-d422my — connector LIVE with OAuth; data-first pivot
 
@@ -238,7 +352,6 @@ rate limiter too. Auth is the only thing that would bound it.
 traps: opaque tokens without a Default Audience, DCR clients unusable until a
 connection is `is_domain_connection`, issuer trailing slash). Needs owner
 clicks in the Auth0 console.
-
 
 ### 2026-07-24 — claude/fandorin-portrait-generation-d422my — deploy unblocked, MCP connector, product architecture decided
 

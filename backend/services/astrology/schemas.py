@@ -5,8 +5,9 @@ from decimal import Decimal
 from enum import Enum
 from typing import Optional
 from uuid import UUID
+from zoneinfo import ZoneInfo
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 
 # ===== Provenance (v2.2 - Phase 2 Hardening) =====
@@ -140,9 +141,59 @@ class NatalChartRequest(BaseModel):
     birth_place: str = Field(
         min_length=2,
         max_length=255,
-        description="Birth place (city, country)"
+        description="Birth place (city, country). Used as a label when explicit "
+                    "coordinates are supplied, and as the geocoding query otherwise."
+    )
+    # Explicit coordinates bypass geocoding entirely. The point: when the caller
+    # already knows where the place is — a chat client that reads any script and
+    # can ask the user which Barcelona they mean — geocoding adds a guess where
+    # none is needed. Timezone is deliberately NOT taken on trust here: it is
+    # derived from the coordinates via tzdata, because a one-hour timezone error
+    # moves the MC by ~15 deg while one degree of longitude moves it by ~1 deg.
+    latitude: Optional[float] = Field(
+        None, ge=-90, le=90,
+        description="Birth latitude. Supply together with longitude to skip geocoding."
+    )
+    longitude: Optional[float] = Field(
+        None, ge=-180, le=180,
+        description="Birth longitude. Supply together with latitude to skip geocoding."
+    )
+    timezone_name: Optional[str] = Field(
+        None,
+        description="IANA timezone (e.g. 'Europe/Kyiv'). Optional override; when "
+                    "omitted it is resolved from the coordinates via tzdata."
     )
     locale: str = Field(default="ru", pattern="^(en|ru)$")
+
+    @model_validator(mode="after")
+    def _coordinates_come_as_a_pair(self) -> "NatalChartRequest":
+        if (self.latitude is None) != (self.longitude is None):
+            raise ValueError(
+                "latitude and longitude must be provided together — one without "
+                "the other cannot locate a birth place"
+            )
+        return self
+
+    @model_validator(mode="after")
+    def _timezone_must_be_a_real_zone(self) -> "NatalChartRequest":
+        """Reject an unknown zone at the boundary rather than mis-timing a chart.
+
+        The downstream calculator falls back to treating a naive local datetime
+        as UTC when a zone fails to parse, which silently shifts the chart by the
+        whole offset — three hours for Ukraine, i.e. ~45 deg of Midheaven. A
+        typo like "Europe/Kiyv" must be an error, never a quietly wrong chart.
+        """
+        if self.timezone_name is None:
+            return self
+        try:
+            ZoneInfo(self.timezone_name)
+        except Exception as exc:
+            raise ValueError(
+                f"timezone_name {self.timezone_name!r} is not a known IANA zone "
+                f"(expected e.g. 'Europe/Kyiv'). Omit it to resolve the zone from "
+                f"the coordinates instead."
+            ) from exc
+        return self
 
 
 class NatalChartResponse(BaseModel):

@@ -5,7 +5,7 @@ from __future__ import annotations
 import hashlib
 import json
 import logging
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from typing import Optional
 
@@ -34,6 +34,16 @@ class GeoLocation:
     timestamp: datetime
     country: Optional[str] = None
     admin_area: Optional[str] = None
+    # False when the resolver had to fall back to the most populous candidate
+    # because nothing looked like the requested city. The coordinates are then
+    # suspect and callers must surface that rather than treat it as success.
+    name_matched: bool = True
+    requested_city: Optional[str] = None
+    # Other places GeoNames offered for the same query. Kept so callers can
+    # offer a choice ("which Barcelona?") instead of trusting our pick — no
+    # extra API call, this is the pool the request already paid for.
+    candidates: list = field(default_factory=list)
+    ambiguous: bool = False
 
 
 class Geocoder:
@@ -93,7 +103,17 @@ class Geocoder:
                 timestamp=datetime.now(tz=timezone.utc),
                 country=result.get("country"),
                 admin_area=None,  # GeoNames basic API doesn't provide admin area
+                name_matched=bool(result.get("name_matched", True)),
+                requested_city=result.get("requested_city"),
+                candidates=list(result.get("candidates") or []),
+                ambiguous=bool(result.get("ambiguous", False)),
             )
+
+            if not geo_location.name_matched:
+                logger.warning(
+                    f"[Geocoder] ⚠ '{query}' resolved to '{geo_location.name}' "
+                    f"which does not match the requested city — coordinates suspect"
+                )
 
             logger.info(f"[Geocoder] ✓ SUCCESS: Geocoded '{query}' to {geo_location.name}, {geo_location.country}")
             logger.debug(f"[Geocoder] Location: {geo_location.latitude}, {geo_location.longitude}, TZ: {geo_location.timezone}")
@@ -107,6 +127,22 @@ class Geocoder:
         except Exception as exc:
             logger.error(f"[Geocoder] ✗ CRITICAL ERROR: Geocoding error for '{query}': {type(exc).__name__}: {exc}", exc_info=True)
             raise GeocodingError("GEOCODER_ERROR") from exc
+
+    def resolve_timezone(self, lat: float, lon: float) -> str:
+        """IANA zone for coordinates, as a ValueError on failure.
+
+        Public counterpart to `_timezone_for` for callers outside this class:
+        the API layer maps `ValueError` to HTTP 400 and everything else to 500,
+        so a coordinate the timezone database cannot place is a client-correctable
+        input, not an internal error.
+        """
+        try:
+            return self._timezone_for(lat, lon)
+        except GeocodingError as exc:
+            raise ValueError(
+                f"Could not resolve a timezone for coordinates {lat}, {lon} "
+                f"({exc}). Supply timezone_name explicitly."
+            ) from exc
 
     def _timezone_for(self, lat: float, lon: float) -> str:
         tz = self.tzfinder.timezone_at(lat=lat, lng=lon)

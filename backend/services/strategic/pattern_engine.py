@@ -49,7 +49,10 @@ PLANET_IDS: dict[str, int] = {
     "sun": swe.SUN, "moon": swe.MOON, "mercury": swe.MERCURY,
     "venus": swe.VENUS, "mars": swe.MARS, "jupiter": swe.JUPITER,
     "saturn": swe.SATURN, "uranus": swe.URANUS, "neptune": swe.NEPTUNE,
-    "pluto": swe.PLUTO, "mean_node": swe.MEAN_NODE,
+    "pluto": swe.PLUTO,
+    # TRUE node, matching `astrology/ephemeris.py` (code 11). These two paths
+    # used to disagree — mean vs true — by up to ~1.8 deg on the same chart.
+    "north_node": swe.TRUE_NODE,
 }
 _CLASSICAL7 = ("sun", "moon", "mercury", "venus", "mars", "jupiter", "saturn")
 _SLOW = ("jupiter", "saturn", "uranus", "neptune", "pluto")
@@ -309,7 +312,7 @@ def vocation_map(geo: dict[str, Any], conj_orb: float = 8.0) -> dict[str, Any]:
             "conjunct": [
                 {"planet": n, "orb_deg": round(_sep(p["lon"], mc_lon), 1)}
                 for n, p in planets.items()
-                if n != "mean_node" and _sep(p["lon"], mc_lon) <= conj_orb
+                if n != "north_node" and _sep(p["lon"], mc_lon) <= conj_orb
             ],
         },
         "work_houses": {
@@ -325,7 +328,7 @@ def vocation_map(geo: dict[str, Any], conj_orb: float = 8.0) -> dict[str, Any]:
         "angular": [
             {"planet": n, "house": p["house"], "sign": p["sign"]}
             for n, p in planets.items()
-            if n != "mean_node" and p["house"] in (1, 4, 7, 10)
+            if n != "north_node" and p["house"] in (1, 4, 7, 10)
         ],
         "part_of_fortune": geo["part_of_fortune"],
     }
@@ -334,7 +337,7 @@ def vocation_map(geo: dict[str, Any], conj_orb: float = 8.0) -> dict[str, Any]:
 # --- pattern: decade-map ------------------------------------------------------
 
 def _natal_points(geo: dict) -> dict[str, float]:
-    pts = {n: p["lon"] for n, p in geo["planets"].items() if n != "mean_node"}
+    pts = {n: p["lon"] for n, p in geo["planets"].items() if n != "north_node"}
     pts.update(geo["angles"])
     return pts
 
