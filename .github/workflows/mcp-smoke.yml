@@ -90,6 +90,8 @@ jobs:
             backend/tests/test_portal.py \
             backend/tests/test_portal_account.py \
             backend/tests/test_connector_diagnostics.py \
+            backend/tests/test_astrology_fallback_template.py \
+            backend/tests/test_rate_limit_middleware.py \
             backend/tests/test_analysis_plan.py \
             backend/tests/test_strategic_patterns.py \
             -v

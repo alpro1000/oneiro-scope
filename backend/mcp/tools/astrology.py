@@ -18,6 +18,7 @@ from backend.services.astrology import (
     NatalChartRequest,
 )
 from backend.services.astrology.schemas import EventType, HoroscopePeriod
+from backend.services.strategic.disclaimer import DISCLAIMERS, DISCLAIMER_RU
 
 
 _service: Optional[AstrologyService] = None
@@ -35,13 +36,25 @@ async def calculate_natal_chart(
     birth_place: str,
     birth_time: Optional[str] = None,
     locale: str = "ru",  # ru | en | de | es | fr
+    include_interpretation: bool = False,
 ) -> dict[str, Any]:
     """Calculate a natal (birth) chart from birth data.
 
-    Returns planet positions, houses (Placidus, only when birth_time is given),
-    aspects, and a structured LLM interpretation across 6 sections:
-    personality, strengths, challenges, relationships, career, life_purpose.
-    Without birth_time, 12:00 noon is used and ascendant/houses are omitted.
+    Returns DETERMINISTIC data (astronomy, confidence 1.0): planet positions in
+    sign and degree, retrograde flags, houses (Placidus, only when birth_time is
+    given) with cusps, ascendant/midheaven, and aspects with orbs. Without
+    birth_time, 12:00 noon is used and ascendant/houses are omitted.
+
+    You (the calling model) are expected to READ this chart yourself — signs,
+    dignities, houses and aspects are yours to interpret. Do so labelled: the
+    positions are astronomy (1.0), classical rules you cite are 0.9, your
+    synthesis is 0.7, and every reading carries the disclaimer. That is why
+    interpretation is OFF by default here: a second, weaker, server-side LLM
+    hop would be redundant and worse than your own reading.
+
+    Set `include_interpretation=True` only for a client with no model of its own
+    (e.g. a plain web page); it adds a server-generated prose interpretation and
+    requires a server LLM provider key, degrading to a template without one.
 
     Args:
         birth_date: YYYY-MM-DD.
@@ -49,6 +62,8 @@ async def calculate_natal_chart(
             Geocoded via GeoNames API with a 90-city fallback.
         birth_time: HH:MM (24h). Optional — omit if unknown.
         locale: "ru" or "en". Default "ru".
+        include_interpretation: Add a server-side prose interpretation. Default
+            False — interpret the returned data yourself.
     """
     req = NatalChartRequest(
         birth_date=date_cls.fromisoformat(birth_date),
@@ -56,8 +71,20 @@ async def calculate_natal_chart(
         birth_place=birth_place,
         locale=locale,
     )
-    resp = await _svc().calculate_natal_chart(req)
-    return resp.model_dump(mode="json")
+    resp = await _svc().calculate_natal_chart(req, interpret=include_interpretation)
+    out = resp.model_dump(mode="json")
+    if not include_interpretation:
+        # Drop the empty interpretation fields and tell the caller to read it.
+        out.pop("interpretation", None)
+        out.pop("structured_interpretation", None)
+        out["how_to_read"] = (
+            "Deterministic chart (astronomy 1.0). Interpret it yourself and "
+            "label: positions 1.0, cited classical rule 0.9, your synthesis "
+            "0.7. Cover personality, strengths, challenges, relationships, "
+            "career, life purpose as fits the question."
+        )
+        out["disclaimer"] = DISCLAIMERS.get(locale, DISCLAIMER_RU)
+    return out
 
 
 async def generate_horoscope(

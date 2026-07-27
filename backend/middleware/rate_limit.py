@@ -79,6 +79,27 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
             lambda: RateLimitInfo(self.per_user_limit)
         )
 
+    @staticmethod
+    def _client_ip(request: Request) -> str:
+        """Best-effort real client IP, correct behind a reverse proxy.
+
+        `request.client.host` is the socket peer — behind Render (or any proxy)
+        that is the proxy itself, so every user would collapse into one bucket
+        and rate-limit each other. Render forwards the real client in
+        `X-Forwarded-For`.
+
+        We take the RIGHTMOST entry, not the leftmost: with a single trusted
+        proxy that is the address the proxy actually observed, whereas the
+        leftmost is attacker-controllable (a client can prepend a fake XFF that
+        the proxy then appends to). Deployments behind N chained proxies would
+        need the (N+1)-th from the right; one proxy is the case here.
+        """
+        forwarded = request.headers.get("x-forwarded-for", "")
+        parts = [p.strip() for p in forwarded.split(",") if p.strip()]
+        if parts:
+            return parts[-1]
+        return request.client.host if request.client else "unknown"
+
     async def dispatch(self, request: Request, call_next):
         """Process request with rate limiting."""
         # Skip rate limiting for certain endpoints
@@ -87,8 +108,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
             # Don't rate limit lunar or health endpoints
             return await call_next(request)
 
-        # Get client IP
-        client_ip = request.client.host if request.client else "unknown"
+        client_ip = self._client_ip(request)
 
         # Get rate limit for this client
         rate_limiter = self.rate_limits[client_ip]
