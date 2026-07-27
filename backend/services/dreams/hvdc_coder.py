@@ -149,20 +149,24 @@ class HvdcCoder:
             for w in words
         }
 
-        # Character stems → gender. Multiword entries ("old man") are kept
-        # as substring patterns per gender.
+        # Character forms → gender: exact surface form first (so «жених»
+        # stays male), then stems. The stem map is built female-first —
+        # feminine а-declension stems are short and collide with masculine
+        # bases (stem(«жена») == stem(«жених») == «жен»), and the feminine
+        # reading is the frequent one for such collisions.
+        self._char_forms: Dict[str, str] = {}
         self._char_stems: Dict[str, str] = {}
         self._char_phrases: List[Tuple[str, str]] = []
-        for gender, by_lang in lex["characters"].items():
+        for gender in ("female", "male", "indefinite", "animal"):
+            by_lang = lex["characters"].get(gender, {})
             for words in by_lang.values():
                 for w in words:
                     norm = morphology.normalize(w)
                     if " " in norm:
                         self._char_phrases.append((norm, gender))
                     else:
+                        self._char_forms.setdefault(norm, gender)
                         st = morphology.stem(norm) if _is_cyrillic(norm) else norm
-                        # Первое объявление побеждает: «мать» из female не
-                        # перекрывается более поздними списками.
                         self._char_stems.setdefault(st, gender)
 
         self._male_agent_tails = ("ател", "ител")
@@ -326,6 +330,9 @@ class HvdcCoder:
     # ------------------------------------------------------------------
 
     def _character_gender(self, token: str) -> Optional[str]:
+        exact = self._char_forms.get(token)
+        if exact:
+            return exact
         if _is_cyrillic(token):
             st = morphology.stem(token)
             gender = self._char_stems.get(st)
@@ -340,6 +347,9 @@ class HvdcCoder:
                 if st.endswith(self._male_agent_tails):
                     return "male"
             return None
+        # "ex-girlfriend" carries the same character as "girlfriend".
+        if token.startswith("ex-"):
+            return self._char_stems.get(token[3:])
         return self._char_stems.get(token)
 
     def find_characters(self, clauses: List[Clause]) -> List[CharacterMention]:
@@ -363,7 +373,18 @@ class HvdcCoder:
                 )
             for phrase, gender in self._char_phrases:
                 if phrase in clause.text and phrase not in seen_stems:
+                    # «old man» — если «man» уже посчитан токеном, фраза
+                    # описывает того же персонажа, не второго.
+                    last_word = phrase.split()[-1]
+                    last_key = (
+                        morphology.stem(last_word)
+                        if _is_cyrillic(last_word)
+                        else last_word
+                    )
+                    if last_key in seen_stems:
+                        continue
                     seen_stems.add(phrase)
+                    seen_stems.add(last_key)
                     mentions.append(
                         CharacterMention(
                             noun=phrase, gender=gender, clause_index=clause.index
@@ -391,30 +412,37 @@ class HvdcCoder:
         self, clauses: List[Clause], clause: Clause, characters_by_clause: Dict[int, List[CharacterMention]]
     ) -> Optional[str]:
         """Target = a character or personal pronoun in this clause, or in
-        the previous clause of the same sentence (anaphora window)."""
-        own = characters_by_clause.get(clause.index)
-        if own:
-            return own[0].noun
-        for tok in clause.tokens:
-            if tok.text in self._target_pronouns:
-                return tok.text
+        the previous clause of the same sentence (anaphora window).
+        Character detection is token-level, NOT the deduplicated mention
+        list — «ударил змею» has a target even though the snake was first
+        introduced two sentences earlier."""
+        found = self._target_in_clause(clause)
+        if found:
+            return found
         prev_idx = clause.index - 1
         if prev_idx >= 0:
             prev = clauses[prev_idx]
             if prev.sentence_index == clause.sentence_index:
-                before = characters_by_clause.get(prev.index)
-                if before:
-                    return before[0].noun
-                for tok in prev.tokens:
-                    if tok.text in self._target_pronouns:
-                        return tok.text
+                return self._target_in_clause(prev)
+        return None
+
+    def _target_in_clause(self, clause: Clause) -> Optional[str]:
+        for tok in clause.tokens:
+            if self._character_gender(tok.text) is not None:
+                if not self.clause_negates_presence(clause, tok.index):
+                    return tok.text
+        for tok in clause.tokens:
+            if tok.text in self._target_pronouns:
+                return tok.text
         return None
 
     def _effort_nearby(self, clauses: List[Clause], clause: Clause) -> bool:
-        """Effort markers in the same sentence or the previous one recode a
-        discovery from good fortune into success."""
+        """Effort markers in the same sentence recode a discovery from good
+        fortune into success («долго искал и наконец нашёл»). Same sentence
+        only — a "finally" one sentence back usually closes a different
+        episode, not this finding."""
         for cl in clauses:
-            if cl.sentence_index in (clause.sentence_index, clause.sentence_index - 1):
+            if cl.sentence_index == clause.sentence_index:
                 if any(t.text in self._effort_markers for t in cl.tokens):
                     return True
                 if any(p in cl.text for p in self._effort_phrases):

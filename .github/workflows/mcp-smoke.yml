@@ -86,6 +86,8 @@ jobs:
             backend/tests/test_archetypes.py \
             backend/tests/test_disclaimer_and_numeric_confidence.py \
             backend/tests/test_dream_morphology.py \
+            backend/tests/test_dream_interpreter_narrative.py \
+            backend/tests/test_hvdc_golden.py \
             backend/tests/test_mcp_remote_auth.py \
             backend/tests/test_portal.py \
             backend/tests/test_portal_account.py \

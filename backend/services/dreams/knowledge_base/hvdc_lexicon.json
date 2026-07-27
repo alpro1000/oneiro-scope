@@ -36,7 +36,7 @@
     },
     "animal": {
       "ru": ["собака", "пес", "пса", "кошка", "кот", "птица", "змея", "лошадь", "конь", "рыба", "волк", "медведь", "лиса", "заяц", "мышь", "крыса", "паук", "тигр", "лев", "льва", "слон", "корова", "бык", "коза", "овца", "свинья", "курица", "петух", "ворона", "голубь", "орел", "орла", "сова", "муха", "пчела", "оса", "муравей", "бабочка", "ящерица", "лягушка", "черепаха", "дельфин", "кит", "акула", "олень", "лось", "белка", "еж", "енот", "обезьяна", "верблюд", "жираф", "зверь", "животное"],
-      "en": ["dog", "cat", "bird", "snake", "horse", "fish", "wolf", "bear", "fox", "rabbit", "mouse", "rat", "spider", "tiger", "lion", "elephant", "cow", "bull", "goat", "sheep", "pig", "chicken", "rooster", "crow", "pigeon", "eagle", "owl", "fly", "bee", "wasp", "ant", "butterfly", "lizard", "frog", "turtle", "dolphin", "whale", "shark", "deer", "moose", "squirrel", "hedgehog", "raccoon", "monkey", "camel", "giraffe", "beast", "animal"]
+      "en": ["dog", "cat", "bird", "snake", "horse", "fish", "wolf", "bear", "fox", "rabbit", "mouse", "rat", "spider", "tiger", "lion", "elephant", "cow", "bull", "goat", "sheep", "pig", "chicken", "rooster", "crow", "pigeon", "eagle", "owl", "bee", "wasp", "ant", "butterfly", "lizard", "frog", "turtle", "dolphin", "whale", "shark", "deer", "moose", "squirrel", "hedgehog", "raccoon", "monkey", "camel", "giraffe", "beast", "animal"]
     }
   },
   "male_agent_suffixes_ru": ["тель", "щик", "чик", "ник", "ец"],
@@ -77,8 +77,8 @@
       "category": "friendliness",
       "subtype": "helping",
       "requires_target": true,
-      "ru_forms": ["помог", "помогла", "помогли", "помочь", "помогаю", "помогает", "спас", "спасла", "спасли", "спасти", "выручил", "выручила", "выручили"],
-      "ru_roots": ["поддержал", "поддержив", "защитил", "защища", "утешил", "утеша", "успокоил", "успокаив", "вылечил", "лечил", "накормил", "приютил", "укрыл"],
+      "ru_forms": ["помог", "помогла", "помогли", "помочь", "помогаю", "помогает", "спас", "спасла", "спасли", "спасти", "выручил", "выручила", "выручили", "перевязал", "перевязала"],
+      "ru_roots": ["поддержал", "поддержив", "защитил", "защища", "утешил", "утеша", "успокоил", "успокаив", "вылечил", "лечил", "накормил", "приютил", "укрыл", "вытащил меня", "вытащил его", "вытащил ее", "вытащил нас", "вытащила меня", "вытащила его", "вытащили нас"],
       "en_forms": ["helped", "help", "helps", "helping", "saved", "save", "rescued", "rescue", "supported", "support", "protected", "protect", "comforted", "comfort", "fed", "healed", "sheltered"],
       "en_roots": []
     },
