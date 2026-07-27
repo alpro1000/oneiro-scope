@@ -1,116 +1,298 @@
 {
   "metadata": {
     "description": "Hand-coded Hall/Van de Castle golden set (English). Same coding rules as golden_ru.json.",
-    "fields": ["male_characters", "female_characters", "animal_characters", "friendly_interactions", "aggressive_interactions", "sexual_interactions", "successes", "failures", "misfortunes", "good_fortunes"]
+    "fields": [
+      "male_characters",
+      "female_characters",
+      "animal_characters",
+      "friendly_interactions",
+      "aggressive_interactions",
+      "sexual_interactions",
+      "successes",
+      "failures",
+      "misfortunes",
+      "good_fortunes"
+    ],
+    "emotion_note": "expected_primary_emotion is a LIGHT annotation for engine comparison only (HVdC classes: anger/apprehension/sadness/confusion/happiness; AP covers fear, anxiety, guilt, embarrassment). null = ambiguous/neutral, excluded from accuracy. Not CI-gated."
   },
   "dreams": [
     {
       "id": "g17_coins_en",
       "locale": "en",
       "text": "I lifted a floorboard and found gold coins. I filled my pockets with them. I gave a few figurines to a woman passing by. Then a second observer appeared and I pushed him away. I was told to dig near the trees, but I decided to dig somewhere else.",
-      "expected": {"male_characters": 1, "female_characters": 1, "animal_characters": 0, "friendly_interactions": 1, "aggressive_interactions": 1, "sexual_interactions": 0, "successes": 0, "failures": 0, "misfortunes": 0, "good_fortunes": 1},
-      "symbols_must_include": ["money"],
-      "symbols_must_exclude": ["forest", "stairs"],
-      "notes": "English mirror of the acceptance dream. 'Observer ... him' is male by pronoun — pronoun-based gender is a documented recall gap."
+      "expected": {
+        "male_characters": 1,
+        "female_characters": 1,
+        "animal_characters": 0,
+        "friendly_interactions": 1,
+        "aggressive_interactions": 1,
+        "sexual_interactions": 0,
+        "successes": 0,
+        "failures": 0,
+        "misfortunes": 0,
+        "good_fortunes": 1
+      },
+      "symbols_must_include": [
+        "money"
+      ],
+      "symbols_must_exclude": [
+        "forest",
+        "stairs"
+      ],
+      "notes": "English mirror of the acceptance dream. 'Observer ... him' is male by pronoun — pronoun-based gender is a documented recall gap.",
+      "expected_primary_emotion": null
     },
     {
       "id": "g18_dog_chase_en",
       "locale": "en",
       "text": "A huge dog was chasing me through empty streets. I could not scream. Finally I climbed over a fence and escaped.",
-      "expected": {"male_characters": 0, "female_characters": 0, "animal_characters": 1, "friendly_interactions": 0, "aggressive_interactions": 1, "sexual_interactions": 0, "successes": 1, "failures": 1, "misfortunes": 0, "good_fortunes": 0},
-      "symbols_must_include": ["chase"],
+      "expected": {
+        "male_characters": 0,
+        "female_characters": 0,
+        "animal_characters": 1,
+        "friendly_interactions": 0,
+        "aggressive_interactions": 1,
+        "sexual_interactions": 0,
+        "successes": 1,
+        "failures": 1,
+        "misfortunes": 0,
+        "good_fortunes": 0
+      },
+      "symbols_must_include": [
+        "chase"
+      ],
       "symbols_must_exclude": [],
-      "notes": "Chase = aggression with the dreamer as victim; 'could not scream' = failure (modal inability, known recall gap); escape = success."
+      "notes": "Chase = aggression with the dreamer as victim; 'could not scream' = failure (modal inability, known recall gap); escape = success.",
+      "expected_primary_emotion": "apprehension"
     },
     {
       "id": "g19_family_en",
       "locale": "en",
       "text": "I was in my grandmother's house. My mother set the table, and my brother helped me carry heavy bags. Then my grandmother hugged me and gave me an old watch.",
-      "expected": {"male_characters": 1, "female_characters": 2, "animal_characters": 0, "friendly_interactions": 3, "aggressive_interactions": 0, "sexual_interactions": 0, "successes": 0, "failures": 0, "misfortunes": 0, "good_fortunes": 0},
-      "symbols_must_include": ["house"],
+      "expected": {
+        "male_characters": 1,
+        "female_characters": 2,
+        "animal_characters": 0,
+        "friendly_interactions": 3,
+        "aggressive_interactions": 0,
+        "sexual_interactions": 0,
+        "successes": 0,
+        "failures": 0,
+        "misfortunes": 0,
+        "good_fortunes": 0
+      },
+      "symbols_must_include": [
+        "house"
+      ],
       "symbols_must_exclude": [],
-      "notes": "Help, hug, gift = three friendliness acts; grandmother mentioned twice = one character."
+      "notes": "Help, hug, gift = three friendliness acts; grandmother mentioned twice = one character.",
+      "expected_primary_emotion": "happiness"
     },
     {
       "id": "g20_lottery_en",
       "locale": "en",
       "text": "I dreamed I won the lottery jackpot. My wife and I jumped with joy.",
-      "expected": {"male_characters": 0, "female_characters": 1, "animal_characters": 0, "friendly_interactions": 0, "aggressive_interactions": 0, "sexual_interactions": 0, "successes": 0, "failures": 0, "misfortunes": 0, "good_fortunes": 1},
+      "expected": {
+        "male_characters": 0,
+        "female_characters": 1,
+        "animal_characters": 0,
+        "friendly_interactions": 0,
+        "aggressive_interactions": 0,
+        "sexual_interactions": 0,
+        "successes": 0,
+        "failures": 0,
+        "misfortunes": 0,
+        "good_fortunes": 1
+      },
       "symbols_must_include": [],
       "symbols_must_exclude": [],
-      "notes": "Lottery win = good fortune, not success."
+      "notes": "Lottery win = good fortune, not success.",
+      "expected_primary_emotion": "happiness"
     },
     {
       "id": "g21_chess_en",
       "locale": "en",
       "text": "I played chess with an old man and won the game. He shook my hand.",
-      "expected": {"male_characters": 1, "female_characters": 0, "animal_characters": 0, "friendly_interactions": 1, "aggressive_interactions": 0, "sexual_interactions": 0, "successes": 1, "failures": 0, "misfortunes": 0, "good_fortunes": 0},
+      "expected": {
+        "male_characters": 1,
+        "female_characters": 0,
+        "animal_characters": 0,
+        "friendly_interactions": 1,
+        "aggressive_interactions": 0,
+        "sexual_interactions": 0,
+        "successes": 1,
+        "failures": 0,
+        "misfortunes": 0,
+        "good_fortunes": 0
+      },
       "symbols_must_include": [],
       "symbols_must_exclude": [],
-      "notes": "Winning a game = success (effort); handshake = friendliness."
+      "notes": "Winning a game = success (effort); handshake = friendliness.",
+      "expected_primary_emotion": "happiness"
     },
     {
       "id": "g22_negations_en",
       "locale": "en",
       "text": "There was no water in my dream. Nobody chased me, and I did not hit anyone. I could not find the exit from the building.",
-      "expected": {"male_characters": 0, "female_characters": 0, "animal_characters": 0, "friendly_interactions": 0, "aggressive_interactions": 0, "sexual_interactions": 0, "successes": 0, "failures": 1, "misfortunes": 0, "good_fortunes": 0},
-      "symbols_must_include": ["house"],
-      "symbols_must_exclude": ["water"],
-      "notes": "All negated acts code nothing; 'could not find the exit' = failure. The building is in the scene, water is not."
+      "expected": {
+        "male_characters": 0,
+        "female_characters": 0,
+        "animal_characters": 0,
+        "friendly_interactions": 0,
+        "aggressive_interactions": 0,
+        "sexual_interactions": 0,
+        "successes": 0,
+        "failures": 1,
+        "misfortunes": 0,
+        "good_fortunes": 0
+      },
+      "symbols_must_include": [
+        "house"
+      ],
+      "symbols_must_exclude": [
+        "water"
+      ],
+      "notes": "All negated acts code nothing; 'could not find the exit' = failure. The building is in the scene, water is not.",
+      "expected_primary_emotion": null
     },
     {
       "id": "g23_exam_en",
       "locale": "en",
       "text": "I was taking an exam. I tried to solve the problem but failed the exam. The teacher yelled at me in front of the whole class.",
-      "expected": {"male_characters": 0, "female_characters": 0, "animal_characters": 0, "friendly_interactions": 0, "aggressive_interactions": 1, "sexual_interactions": 0, "successes": 0, "failures": 1, "misfortunes": 0, "good_fortunes": 0},
-      "symbols_must_include": ["exam"],
+      "expected": {
+        "male_characters": 0,
+        "female_characters": 0,
+        "animal_characters": 0,
+        "friendly_interactions": 0,
+        "aggressive_interactions": 1,
+        "sexual_interactions": 0,
+        "successes": 0,
+        "failures": 1,
+        "misfortunes": 0,
+        "good_fortunes": 0
+      },
+      "symbols_must_include": [
+        "exam"
+      ],
       "symbols_must_exclude": [],
-      "notes": "'Tried to solve' names the goal, not an achievement — no success; teacher's gender is unmarked in English → neither male nor female count."
+      "notes": "'Tried to solve' names the goal, not an achievement — no success; teacher's gender is unmarked in English → neither male nor female count.",
+      "expected_primary_emotion": "apprehension"
     },
     {
       "id": "g24_forest_wolf_en",
       "locale": "en",
       "text": "I was walking through a forest with my sister. A wolf attacked us, and I fought it off with a stick. My sister was scared, but I protected her. We finally reached the cabin and locked the door. Inside, we found warm food on the table.",
-      "expected": {"male_characters": 0, "female_characters": 1, "animal_characters": 1, "friendly_interactions": 1, "aggressive_interactions": 2, "sexual_interactions": 0, "successes": 1, "failures": 0, "misfortunes": 0, "good_fortunes": 1},
-      "symbols_must_include": ["forest", "food"],
+      "expected": {
+        "male_characters": 0,
+        "female_characters": 1,
+        "animal_characters": 1,
+        "friendly_interactions": 1,
+        "aggressive_interactions": 2,
+        "sexual_interactions": 0,
+        "successes": 1,
+        "failures": 0,
+        "misfortunes": 0,
+        "good_fortunes": 1
+      },
+      "symbols_must_include": [
+        "forest",
+        "food"
+      ],
       "symbols_must_exclude": [],
-      "notes": "Attack and fighting back = 2 aggression acts (different incidents); protecting = friendliness; reaching safety = success; finding food = good fortune (no seeking narrated in that scene)."
+      "notes": "Attack and fighting back = 2 aggression acts (different incidents); protecting = friendliness; reaching safety = success; finding food = good fortune (no seeking narrated in that scene).",
+      "expected_primary_emotion": "apprehension"
     },
     {
       "id": "g25_ex_partner_en",
       "locale": "en",
       "text": "I met my ex-girlfriend at a party. She kissed me, and we danced all night. Her new boyfriend saw us and threatened me.",
-      "expected": {"male_characters": 1, "female_characters": 1, "animal_characters": 0, "friendly_interactions": 0, "aggressive_interactions": 1, "sexual_interactions": 1, "successes": 0, "failures": 0, "misfortunes": 0, "good_fortunes": 0},
-      "symbols_must_include": ["ex_partner"],
+      "expected": {
+        "male_characters": 1,
+        "female_characters": 1,
+        "animal_characters": 0,
+        "friendly_interactions": 0,
+        "aggressive_interactions": 1,
+        "sexual_interactions": 1,
+        "successes": 0,
+        "failures": 0,
+        "misfortunes": 0,
+        "good_fortunes": 0
+      },
+      "symbols_must_include": [
+        "ex_partner"
+      ],
       "symbols_must_exclude": [],
-      "notes": "Kiss = S-scale; threat = non-physical aggression."
+      "notes": "Kiss = S-scale; threat = non-physical aggression.",
+      "expected_primary_emotion": null
     },
     {
       "id": "g26_cannot_fly_en",
       "locale": "en",
       "text": "I was trying to fly but could not lift off the ground. I failed again and again, while other people flew easily above me.",
-      "expected": {"male_characters": 0, "female_characters": 0, "animal_characters": 0, "friendly_interactions": 0, "aggressive_interactions": 0, "sexual_interactions": 0, "successes": 0, "failures": 1, "misfortunes": 0, "good_fortunes": 0},
-      "symbols_must_include": ["flying"],
+      "expected": {
+        "male_characters": 0,
+        "female_characters": 0,
+        "animal_characters": 0,
+        "friendly_interactions": 0,
+        "aggressive_interactions": 0,
+        "sexual_interactions": 0,
+        "successes": 0,
+        "failures": 1,
+        "misfortunes": 0,
+        "good_fortunes": 0
+      },
+      "symbols_must_include": [
+        "flying"
+      ],
       "symbols_must_exclude": [],
-      "notes": "One narrated failed striving; other people flying is background activity."
+      "notes": "One narrated failed striving; other people flying is background activity.",
+      "expected_primary_emotion": null
     },
     {
       "id": "g27_inheritance_en",
       "locale": "en",
       "text": "A lawyer called me and said I had inherited a big house from an unknown uncle. I walked through the huge rooms feeling lucky.",
-      "expected": {"male_characters": 1, "female_characters": 0, "animal_characters": 0, "friendly_interactions": 0, "aggressive_interactions": 0, "sexual_interactions": 0, "successes": 0, "failures": 0, "misfortunes": 0, "good_fortunes": 1},
-      "symbols_must_include": ["house"],
+      "expected": {
+        "male_characters": 1,
+        "female_characters": 0,
+        "animal_characters": 0,
+        "friendly_interactions": 0,
+        "aggressive_interactions": 0,
+        "sexual_interactions": 0,
+        "successes": 0,
+        "failures": 0,
+        "misfortunes": 0,
+        "good_fortunes": 1
+      },
+      "symbols_must_include": [
+        "house"
+      ],
       "symbols_must_exclude": [],
-      "notes": "Inheritance = good fortune once; 'feeling lucky' is an emotion echo of the same fortune, not a second event. Lawyer's gender unmarked → indefinite."
+      "notes": "Inheritance = good fortune once; 'feeling lucky' is an emotion echo of the same fortune, not a second event. Lawyer's gender unmarked → indefinite.",
+      "expected_primary_emotion": "happiness"
     },
     {
       "id": "g28_quiet_room_en",
       "locale": "en",
       "text": "I was sitting in a quiet room watching the rain outside the window. Everything was still and grey. I do not remember anything else.",
-      "expected": {"male_characters": 0, "female_characters": 0, "animal_characters": 0, "friendly_interactions": 0, "aggressive_interactions": 0, "sexual_interactions": 0, "successes": 0, "failures": 0, "misfortunes": 0, "good_fortunes": 0},
-      "symbols_must_include": ["house"],
+      "expected": {
+        "male_characters": 0,
+        "female_characters": 0,
+        "animal_characters": 0,
+        "friendly_interactions": 0,
+        "aggressive_interactions": 0,
+        "sexual_interactions": 0,
+        "successes": 0,
+        "failures": 0,
+        "misfortunes": 0,
+        "good_fortunes": 0
+      },
+      "symbols_must_include": [
+        "house"
+      ],
       "symbols_must_exclude": [],
-      "notes": "Zero-event dream: every count must be 0 and the A/F indicator must land in insufficient_data, not become 0.00."
+      "notes": "Zero-event dream: every count must be 0 and the A/F indicator must land in insufficient_data, not become 0.00.",
+      "expected_primary_emotion": null
     }
   ]
 }

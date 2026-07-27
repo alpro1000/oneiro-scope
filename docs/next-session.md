@@ -5,9 +5,55 @@
 > that's easy to lose. Updated at the end of every substantial session
 > alongside `soul.md §9`.
 
-**Дата последнего обновления:** 2026-07-27 (part 5 — OAuth discovery)
-**Последняя ветка работы:** `claude/identity-direction-question-vrognh`
-**Текущий main HEAD:** `#164` — меню возможностей на каждом ответе
+**Дата последнего обновления:** 2026-07-27 (part 6 — dream encoder rebuild)
+**Последняя ветка работы:** `claude/oneiroscope-dream-encoder-rebuild-g2iyp0` (НЕ смержена)
+**Текущий main HEAD:** `#165`
+
+**Новое в сессии 2026-07-27 part 6 (пересборка слоя снов; отчёт:
+`docs/reports/DREAM_ENCODER_REBUILD_2026-07-27.md`):**
+- **HVdC теперь кодируется структурно** (`hvdc_coder.py` v3.0.0 +
+  `hvdc_lexicon.json`): клаузы → персонажи (существительные с полом, БЕЗ
+  местоимений) → акты с целью → исходы. Отрицание со скоупом, GF≠success,
+  инцидент-дедуп, evidence-клауза на каждый счётчик. Приёмочный сон про
+  монеты даёт F=1/A=1/GF=1 с доказательствами.
+- **Никогда больше 0.00 из 0/0**: пустые индикаторы уходят в
+  `norm_comparison.insufficient_data` с причиной; `deviation_unit` явный.
+- **Golden-набор — теперь главный инструмент работы со слоем снов**:
+  28 снов RU+EN (`backend/tests/dreams/golden/`), `test_hvdc_golden.py`
+  печатает P/R-таблицу, CI-полы: precision ≥0.90 на категорию. Замер:
+  P=1.00 везде; R: failures 0.70, friendliness 0.81, male 0.92, остальное
+  1.00. Менять лексикон → прогонять golden; recall ценой precision CI не
+  пропустит.
+- **MCP data-first для снов**: `analyze_dream` больше НЕ зовёт серверный LLM
+  по умолчанию (как natal chart, #161); disclaimer на всех 5 инструментах;
+  `lunar_context` починен (импорт бил в несуществующий lunar_service).
+- **Личная серия**: `dream_entries` (первая Alembic-миграция в репо!),
+  `dream_series_stats` MCP-tool, порог N≥15 честный, GDPR в экспорте.
+  ⚠️ Миграция предполагает существующую `users` (init_db сначала).
+- **DReAMy**: `pip install dreamy` — настоящая (вендоренный
+  `external/DReAMy` — заглушка 48 строк). `scripts/compare_dreamy.py`
+  готов; в CCR-песочнице HF заблокирован сетевой политикой (403 CONNECT к
+  huggingface.co) → числовой замер не сделан. Запустить локально у owner'а:
+  `pip install dreamy torch && python scripts/compare_dreamy.py` (~3 ГБ
+  моделей). По покрытию DReAMy не кодирует A/F/striving/fortune и RU
+  (кроме эмоций) — наш кодировщик остаётся; кандидат на заимствование —
+  только эмоциональная ось (XLM-R multilingual).
+
+**P0 от part 6:**
+1. **PR из `claude/oneiroscope-dream-encoder-rebuild-g2iyp0` в main** по
+   команде owner'а; после merge — Render deploy (на сервере до сих пор код
+   до #163, живой прогон снов шёл на СТАРОМ кодировщике).
+2. Прогнать `scripts/compare_dreamy.py` в окружении с HF-доступом, вписать
+   числа в отчёт §3 (место под таблицу готово).
+3. DreamBank-корпус Dryad (doi:10.5061/dryad.qbzkh18fr) — скачать локально,
+   прогнать через golden-harness как внешнюю валидацию (микро-P/R путь тот
+   же).
+
+---
+
+**Предыдущее обновление:** 2026-07-27 (part 5 — OAuth discovery)
+**Ветка:** `claude/identity-direction-question-vrognh`
+**main HEAD на тот момент:** `#164` — меню возможностей на каждом ответе
 
 **Новое в сессии 2026-07-27 part 5 (OAuth discovery, ветка перезапущена с main):**
 - **Issuer публиковался нормализованным.** `protected_resource_metadata()`

@@ -78,7 +78,9 @@ oneiro-scope/
 ## Where things live
 
 - **Add a planet to astrology:** `backend/services/astrology/knowledge_base/planets.json` + ephemeris constant in `ephemeris.py`.
-- **Add a dream symbol:** `backend/services/dreams/knowledge_base/symbols.json` (use `/research-symbol` skill to help). **Russian keywords must be roots, not inflected forms** — the analyzer compiles `\bkeyword\w*\b`, so the keyword has to be a literal prefix of the surface form. Use `границ` (covers границ-а/-ы/-у/-ой), `вторг` (covers вторгся/вторгается), `выброс` (covers выбросил/выбросить/выбросив). Long noun keywords like `нарушение` won't match the verb `нарушил`.
+- **Add a dream symbol:** `backend/services/dreams/knowledge_base/symbols.json` (use `/research-symbol` skill to help). **Russian keywords must be roots, not inflected forms** — the analyzer compiles `\bkeyword\w*\b`, so the keyword has to be a literal prefix of the surface form. Use `границ` (covers границ-а/-ы/-у/-ой), `вторг` (covers вторгся/вторгается), `выброс` (covers выбросил/выбросить/выбросив). Long noun keywords like `нарушение` won't match the verb `нарушил`. Object symbols must not carry motion verbs as keywords (`подниматься` on `stairs` turned every picked-up coin into a staircase). Symbol hits are negation-filtered downstream — «во сне не было воды» yields no water.
+- **HVdC coding (characters, interactions, outcomes):** `backend/services/dreams/hvdc_coder.py` over `knowledge_base/hvdc_lexicon.json` — clause-level structural extraction, NOT keyword counting. Add verbs to the lexicon as exact surface forms (`ru_forms`) or collision-safe prefixes (`ru_roots`, tail ≤ 4 letters); social acts need `requires_target`. The golden set `backend/tests/dreams/golden/` + `test_hvdc_golden.py` gate precision ≥ 0.90 per category in CI — a recall-motivated lexicon addition that costs precision will not pass.
+- **Personal dream series:** `backend/services/dreams/series.py` + `dream_entries` table (first Alembic migration, `backend/alembic/versions/0001_dream_entries.py`). Stores coded features only, never texts; MIN_SERIES_N=15 before any baseline talk.
 - **Add a new MCP tool:** create function in `backend/mcp/tools/<area>.py`, decorate, register in `backend/mcp/server.py`.
 - **Add a translation:** `frontend/messages/{en,ru}.json`. Both must be updated.
 - **Add an env var:** `backend/core/config.py` (Pydantic Settings) + `render.yaml` envVars block + `.env.example` + this file (if structural).
@@ -88,7 +90,7 @@ oneiro-scope/
 Tools grouped by file:
 
 - `tools/astrology.py` — `calculate_natal_chart`, `generate_horoscope`, `forecast_event`, `get_retrograde_planets`, `list_event_types`.
-- `tools/dreams.py` — `analyze_dream`, `list_dream_symbols`, `list_archetypes`, `list_hvdc_categories`.
+- `tools/dreams.py` — `analyze_dream` (data-first: server prose OFF by default, per-event `hvdc_evidence`), `dream_series_stats` (personal baseline, N≥15), `list_dream_symbols`, `list_archetypes`, `list_hvdc_categories`. Every dreams response carries the disclaimer.
 - `tools/lunar.py` — `get_lunar_day`, `get_lunar_period`.
 - `tools/geo.py` — `search_city`, `validate_birth_data`.
 - `tools/_menu.py` — `with_menu()`, the one-liner every substantive tool ends
