@@ -124,14 +124,21 @@ The same checks by hand:
 ```bash
 BASE=https://oneiroscope-backend.onrender.com
 
-# 1. discovery is live and names the issuer
-curl -s $BASE/.well-known/oauth-protected-resource | jq
-# → {"resource":".../mcp","authorization_servers":["https://<tenant>...auth0.com"],...}
+# 1. discovery is live and names the issuer. Use the CANONICAL path — RFC 9728
+#    §3.1 appends the resource's own path to the well-known segment, so this is
+#    what a conforming client requests. The bare path answers as a fallback.
+curl -s $BASE/.well-known/oauth-protected-resource/mcp | jq
+# → {"resource":".../mcp","authorization_servers":["https://<tenant>...auth0.com/"],...}
+#                                     note the trailing slash ↑  it must match step 2
 
 # 2. the issuer's own metadata is reachable (this is what the client reads next)
 curl -s https://<tenant>.<region>.auth0.com/.well-known/oauth-authorization-server | jq \
-  '{registration_endpoint, authorization_endpoint, token_endpoint}'
-# registration_endpoint must be present, or DCR is still off
+  '{issuer, registration_endpoint, authorization_endpoint, token_endpoint}'
+# registration_endpoint must be present, or DCR is still off.
+# `issuer` must equal step 1's authorization_servers[0] CHARACTER FOR CHARACTER.
+# Auth0 returns it with a trailing slash; RFC 8414 §3.3 lets a strict client
+# abort on a one-character difference, before any login window appears. So set
+# MCP_AUTH_ISSUER to exactly this string — it is now published unmodified.
 
 # 3. anonymous calls are refused, and say where to log in
 curl -i -X POST $BASE/mcp -H 'content-type: application/json' \
