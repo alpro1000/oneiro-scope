@@ -518,8 +518,15 @@ def capability_menu(
         if st.domain != domain or st.id in done:
             continue
         missing = [k for k in st.requires if k not in have]
-        if [d for d in st.depends_on if d not in done]:
-            continue  # a prerequisite stage has not run yet
+        # `depends_on` is a SOFT ordering hint, exactly as in `build_plan`: each
+        # tool recomputes the chart geometry it needs, so a stage runs fine
+        # before its prerequisite — reading it first is merely confusing. An
+        # earlier version of this function skipped such stages outright, which
+        # forced every call site to claim `natal-chart` was complete just to
+        # unblock the rest, and that in turn hid `calculate_natal_chart` from
+        # the menu. Wrappers now report only their own stage and the ordering
+        # preference is surfaced as `better_after` instead of enforced.
+        unmet_deps = [d for d in st.depends_on if d not in done]
         name = st.name_ru if loc == "ru" else st.name_en
         if missing:
             # Deliberately terser than a ready entry: what a blocked step
@@ -533,12 +540,15 @@ def capability_menu(
                 if q and q not in questions:
                     questions.append(q)
         else:
-            ready.append({
+            entry = {
                 "name": name,
                 "tool": st.tool,
                 "answers": st.answers_ru if loc == "ru" else st.answers_en,
                 "track": TRACK_NAMES[st.track][loc],
-            })
+            }
+            if unmet_deps:
+                entry["better_after"] = unmet_deps
+            ready.append(entry)
 
     return {
         "domain": domain,

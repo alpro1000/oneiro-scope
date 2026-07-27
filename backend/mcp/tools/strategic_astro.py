@@ -136,7 +136,7 @@ async def compute_transits(
         },
         domain="astro",
         known_inputs=_known(birth_date, birth_time, birth_timezone),
-        completed=["natal-chart", "transits"],
+        completed=["transits"],
     )
 
 
@@ -201,7 +201,7 @@ async def astrocartography_scan(
         },
         domain="astro",
         known_inputs=_known(birth_date, birth_time, birth_timezone, CITIES),
-        completed=["natal-chart", "astrocartography"],
+        completed=["astrocartography"],
     )
 
 
@@ -353,7 +353,7 @@ async def solar_return_chart(
         },
         domain="astro",
         known_inputs=_known(birth_date, birth_time, birth_timezone),
-        completed=["natal-chart", "solar-return"],
+        completed=["solar-return"],
     )
 
 
@@ -391,7 +391,7 @@ async def compare_relocations(
         },
         domain="astro",
         known_inputs=_known(birth_date, birth_time, birth_timezone, CITIES),
-        completed=["natal-chart", "compare-cities"], locale=locale,
+        completed=["compare-cities"], locale=locale,
     )
 
 
@@ -430,7 +430,7 @@ async def scan_cities_by_theme(
         },
         domain="astro",
         known_inputs=_known(birth_date, birth_time, birth_timezone, CITIES),
-        completed=["natal-chart", "cities-by-theme"],
+        completed=["cities-by-theme"],
     )
 
 
@@ -497,7 +497,7 @@ async def transit_arc(
         },
         domain="astro",
         known_inputs=_known(birth_date, birth_time, birth_timezone, TARGET_DATE),
-        completed=["natal-chart", "transit-arc"],
+        completed=["transit-arc"],
     )
 
 
@@ -551,7 +551,7 @@ async def synastry(
             person_a.get("birth_date"), person_a.get("birth_time"),
             person_a.get("birth_timezone"), PARTNER_BIRTH,
         ),
-        completed=["natal-chart", "synastry"], locale=locale,
+        completed=["synastry"], locale=locale,
     )
 
 
@@ -582,5 +582,5 @@ async def solar_return_suggest(
         },
         domain="astro",
         known_inputs=_known(birth_date, birth_time, birth_timezone, CITIES),
-        completed=["natal-chart", "solar-return", "solar-return-where"],
+        completed=["solar-return-where"],
     )

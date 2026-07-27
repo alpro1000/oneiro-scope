@@ -242,8 +242,8 @@ async def horoscope_report(
 async def profile_report_file(
     birth_date: str,
     birth_time: Optional[str] = None,
-    birth_lat: float = 0.0,
-    birth_lon: float = 0.0,
+    birth_lat: Optional[float] = None,
+    birth_lon: Optional[float] = None,
     birth_place: Optional[str] = None,
     current_place_name: Optional[str] = None,
     current_lat: Optional[float] = None,
@@ -259,6 +259,9 @@ async def profile_report_file(
         birth_date: YYYY-MM-DD.
         birth_time: HH:MM local time; noon fallback drops houses/angles.
         birth_lat / birth_lon: Birth coordinates (drive historical tz).
+            Required — they previously defaulted to 0.0/0.0, which is a real
+            point in the Gulf of Guinea, so omitting them produced a confident
+            report for the wrong place. Use `search_city` to resolve them.
         birth_place: Display name of the birth place.
         current_place_name / current_lat / current_lon: Optional city of
             residence for the side-by-side relocation read.
@@ -268,6 +271,13 @@ async def profile_report_file(
     from backend.mcp.tools._files import write_report
     from backend.services.astrology.historic_tz import resolve_birth_moment
     from backend.services.astrology.report import build_report, render_html
+
+    if birth_lat is None or birth_lon is None:
+        raise ValueError(
+            "birth_lat and birth_lon are required — a report built on the old "
+            "0.0/0.0 default described the Gulf of Guinea, not a birth place. "
+            "Resolve the city with `search_city` first."
+        )
 
     moment = resolve_birth_moment(
         date_cls.fromisoformat(birth_date),
@@ -295,6 +305,8 @@ async def profile_report_file(
             "year_transits_count": len(report["year_transits"]),
         },
         domain="astro",
+        # has_coordinates is truthful here: the guard above rejected the call
+        # if either coordinate was missing.
         known_inputs=birth_inputs(
             birth_date, birth_time, birth_place, has_coordinates=True,
         ),

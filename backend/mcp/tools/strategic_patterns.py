@@ -118,7 +118,7 @@ def money_contour(
     return with_menu(
         out, domain="astro",
         known_inputs=[BIRTH_DATE, BIRTH_TIME, BIRTH_PLACE],
-        completed=["natal-chart", "money-contour"],
+        completed=["money-contour"],
     )
 
 
@@ -151,7 +151,7 @@ def vocation_map(
     return with_menu(
         out, domain="astro",
         known_inputs=[BIRTH_DATE, BIRTH_TIME, BIRTH_PLACE],
-        completed=["natal-chart", "vocation-map"],
+        completed=["vocation-map"],
     )
 
 
@@ -188,7 +188,7 @@ def decade_map(
     return with_menu(
         out, domain="astro",
         known_inputs=[BIRTH_DATE, BIRTH_TIME, BIRTH_PLACE],
-        completed=["natal-chart", "decade-map"],
+        completed=["decade-map"],
     )
 
 
@@ -227,7 +227,7 @@ def life_pivots(
     return with_menu(
         out, domain="astro",
         known_inputs=[BIRTH_DATE, BIRTH_TIME, BIRTH_PLACE],
-        completed=["natal-chart", "life-pivots"],
+        completed=["life-pivots"],
     )
 
 
@@ -281,7 +281,7 @@ def electional_day(
     return with_menu(
         out, domain="astro",
         known_inputs=[BIRTH_DATE, BIRTH_TIME, BIRTH_PLACE, TARGET_DATE],
-        completed=["natal-chart", "electional-day"],
+        completed=["electional-day"],
     )
 
 

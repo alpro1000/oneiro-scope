@@ -56,6 +56,38 @@ def test_blocked_steps_name_the_missing_input_and_ask_for_it():
     assert menu["questions_to_ask"], "a blocked step must come with a question"
 
 
+def test_a_ready_step_is_actually_callable_with_what_the_menu_knows():
+    """`ready` is a promise: nothing further is needed to make this call.
+
+    A stage that declares `requires=()` while its tool has a parameter with no
+    default breaks that promise — the model follows the menu and gets a
+    TypeError. Checked structurally so it holds for every stage, not just the
+    one that was wrong (`get_lunar_day`, which now defaults to today).
+    """
+    import importlib
+    import inspect
+
+    menu = capability_menu("astro", [], max_items=50)
+    for entry in menu["ready"]:
+        fn = None
+        for mod in ("astrology", "dreams", "lunar", "physiognomy",
+                    "strategic_astro", "strategic_patterns"):
+            module = importlib.import_module(f"backend.mcp.tools.{mod}")
+            fn = getattr(module, entry["tool"], None)
+            if fn is not None:
+                break
+        assert fn is not None, f"{entry['tool']} not found in any tool module"
+        required = [
+            p.name for p in inspect.signature(fn).parameters.values()
+            if p.default is inspect.Parameter.empty
+            and p.kind not in (p.VAR_POSITIONAL, p.VAR_KEYWORD)
+        ]
+        assert not required, (
+            f"menu offers {entry['tool']} as ready with no known inputs, but it "
+            f"requires {required} — following the menu would raise TypeError"
+        )
+
+
 def test_completed_steps_are_not_offered_again():
     menu = capability_menu(
         "astro", [BIRTH_DATE, BIRTH_TIME, BIRTH_PLACE],
@@ -65,12 +97,46 @@ def test_completed_steps_are_not_offered_again():
     assert "money_contour" not in offered
 
 
-def test_dependencies_gate_the_offer():
-    """Without the natal chart, steps that depend on it are not offered at all."""
+def test_dependencies_are_a_soft_ordering_hint_not_a_gate():
+    """`depends_on` must mean the same thing here as it does in `build_plan`.
+
+    Each tool recomputes the chart geometry it needs, so a stage runs fine
+    before its prerequisite — reading it first is merely confusing. An earlier
+    version hard-gated on this, which forced every wrapper to claim
+    `natal-chart` was complete just to unblock the rest, which in turn hid
+    `calculate_natal_chart` from the menu entirely.
+    """
     menu = capability_menu("astro", [BIRTH_DATE, BIRTH_TIME, BIRTH_PLACE])
-    offered = {r["tool"] for r in menu["ready"] + menu["needs_input"]}
-    assert "money_contour" not in offered, "depends on natal-chart, which has not run"
-    assert "calculate_natal_chart" in offered
+    ready = {r["tool"]: r for r in menu["ready"]}
+    assert "money_contour" in ready, "a soft dependency must not remove the offer"
+    assert ready["money_contour"]["better_after"] == ["natal-chart"]
+    assert "calculate_natal_chart" in ready
+    assert "better_after" not in ready["calculate_natal_chart"]
+
+
+def test_the_chart_stops_being_flagged_once_it_has_run():
+    menu = capability_menu(
+        "astro", [BIRTH_DATE, BIRTH_TIME, BIRTH_PLACE], ["natal-chart"]
+    )
+    ready = {r["tool"]: r for r in menu["ready"]}
+    assert "better_after" not in ready["money_contour"]
+
+
+def test_a_wrapper_never_claims_a_prerequisite_it_cannot_observe():
+    """A tool knows it ran. It does not know what else the session ran.
+
+    Fabricating `natal-chart` in `completed` was how the old hard gate got
+    worked around, and it suppressed the chart step from every menu that
+    followed one of these tools.
+    """
+    stage_by_tool = {st.tool: st for st in STAGES}
+    for name, wired in _menu_wiring().items():
+        own = stage_by_tool[name].id
+        extra = sorted(set(wired["completed"]) - {own})
+        assert not extra, (
+            f"{name} claims stage(s) it cannot verify ran: {extra}. "
+            f"List only its own stage, {own!r}."
+        )
 
 
 def test_dreams_is_a_separate_domain_with_no_birth_data():
@@ -318,6 +384,29 @@ def test_money_contour_response_carries_the_menu():
     assert menu["full_plan_tool"] == "analysis_plan"
     # The deterministic payload is untouched by the addition.
     assert "computed" in out and "provenance" in out
+
+
+@pytest.mark.asyncio
+async def test_profile_report_refuses_to_chart_null_island():
+    """It used to default to 0.0/0.0 and report on the Gulf of Guinea.
+
+    The menu then claimed the birth place was known, so it went on offering
+    location-dependent steps off a placeholder. An error beats a confident
+    wrong answer.
+    """
+    from backend.mcp.tools.astrology import profile_report_file
+
+    with pytest.raises(ValueError, match="birth_lat and birth_lon are required"):
+        await profile_report_file("1977-07-01", "22:30")
+
+
+def test_lunar_day_needs_no_argument():
+    """The plan has always declared this step as needing no input."""
+    from backend.mcp.tools.lunar import get_lunar_day
+
+    out = get_lunar_day(timezone="Europe/Moscow")
+    assert 1 <= out["lunar_day"] <= 30
+    assert out[MENU_KEY]["domain"] == "astro"
 
 
 @pytest.mark.asyncio

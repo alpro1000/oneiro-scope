@@ -8,8 +8,9 @@ Pure synchronous wrappers over `backend.services.lunar.engine` and
 from __future__ import annotations
 
 import os
-from datetime import date as date_cls
-from typing import Any
+from datetime import date as date_cls, datetime
+from typing import Any, Optional
+from zoneinfo import ZoneInfo
 
 from backend.mcp.tools._menu import TARGET_DATE, with_menu
 from backend.services.lunar.content import get_lunar_day_text
@@ -22,11 +23,11 @@ _DEFAULT_TZ = os.getenv("LUNAR_DEFAULT_TZ", "Europe/Moscow")
 
 
 def get_lunar_day(
-    target_date: str,
+    target_date: Optional[str] = None,
     timezone: str = "",
     locale: str = "ru",
 ) -> dict[str, Any]:
-    """Return lunar-day information for a date.
+    """Return lunar-day information for a date (default: today).
 
     Combines astronomical computation (lunar day number, Moon phase, Moon sign,
     illumination %, Julian Day UT) with the bilingual narrative text from
@@ -35,13 +36,21 @@ def get_lunar_day(
     Moshier (analytic) otherwise. Provenance is included.
 
     Args:
-        target_date: YYYY-MM-DD.
+        target_date: YYYY-MM-DD. Omit for today in `timezone` — the lunar day
+            "now" is the common question, and the analysis plan has always
+            declared this step as needing no input.
         timezone: IANA timezone (e.g., "Europe/Moscow"). Defaults to
             `LUNAR_DEFAULT_TZ` env var or "Europe/Moscow".
         locale: "ru" or "en" — language of narrative content.
     """
     tz = timezone or _DEFAULT_TZ
-    d = date_cls.fromisoformat(target_date)
+    d = (
+        date_cls.fromisoformat(target_date) if target_date
+        # Today *in the requested zone*, not the server's — a UTC server past
+        # 21:00 is already tomorrow in Europe/Moscow, which would silently
+        # return the wrong lunar day.
+        else datetime.now(ZoneInfo(tz)).date()
+    )
     info = _engine.get_lunar_day(d, tz)
     info["date"] = d.isoformat()
     info["content"] = get_lunar_day_text(info["lunar_day"], locale)

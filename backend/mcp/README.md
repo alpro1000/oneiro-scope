@@ -42,7 +42,7 @@ carries a `can_also_compute` block:
 "can_also_compute": {
   "domain": "astro",                 // "astro" = chart + face; "dreams" is separate
   "hint": "…call the tool you need. Full ordered plan: analysis_plan.",
-  "ready":       [ {"name", "tool", "answers", "track"} ],   // inputs satisfied — one call away
+  "ready":       [ {"name", "tool", "answers", "track", "better_after"?} ],
   "needs_input": [ {"name", "tool", "missing"} ],            // terser: exists, and wants X
   "questions_to_ask": ["Which cities should we compare?"],
   "reference_lookups": ["house_meaning", "planet_dignity", …],
@@ -63,9 +63,17 @@ shares no inputs with them. Dictionary lookups (`house_meaning`,
 reading. `get_lunar_period` also has none: it returns a bare list, and wrapping
 a documented list shape in a dict to add a hint would break callers.
 
+`depends_on` is a **soft** ordering hint, the same as in `build_plan`: each tool
+recomputes the chart geometry it needs, so a stage runs fine before its
+prerequisite — reading it first is merely confusing. Such a step stays in
+`ready` and carries `better_after: ["natal-chart"]`. A tool reports **only its
+own** stage as completed: it knows that it ran, it does not know what else the
+session ran.
+
 `backend/tests/test_capability_menu.py` holds the drift guards — every stage
-tool attaches a menu, marks its own stage completed, and names a registered
-tool.
+tool attaches a menu, marks only its own stage completed, names a registered
+tool, and every step offered as `ready` is verified callable with nothing
+further supplied.
 
 ## Available tools
 
