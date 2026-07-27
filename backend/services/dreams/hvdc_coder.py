@@ -546,6 +546,13 @@ class HvdcCoder:
                     continue  # «пытался решить…» — цель, не достижение
 
                 if category == "good_fortune" and act.get("effort_recodes_to_success"):
+                    if self._discovery_is_not_fortune(clause, tok.index):
+                        # "I found myself in a room", "found that…",
+                        # «наконец нашёл его.» — состояние, эпистемика или
+                        # нахождение человека, не приобретение ценности.
+                        # Калибровка на norms-корпусе: ×3.9 перебора GF шло
+                        # в основном из этих трёх идиом.
+                        continue
                     if self._effort_nearby(clauses, clause):
                         add("success", "achievement", "dreamer", None)
                         continue
@@ -576,6 +583,31 @@ class HvdcCoder:
         return any(
             t.text in self._attempt_markers for t in clause.tokens[:token_index]
         )
+
+    _REFLEXIVES = {
+        "myself", "ourselves", "himself", "herself", "themselves", "itself",
+        "yourself", "себя", "себе",
+    }
+    # «found that …» / «found out» / «нашёл, что» — эпистемика (узнал),
+    # не приобретение ценности.
+    _EPISTEMIC_AFTER = {"that", "out", "что"}
+    # «наконец нашёл его.» (клауза кончается местоимением) — нахождение
+    # ЧЕЛОВЕКА, социальный исход, не good fortune. Не срабатывает на
+    # «нашёл его кошелёк» — там за местоимением идёт объект.
+    _PERSON_OBJECT_PRONOUNS = {"him", "them", "me", "us", "его", "ее", "их", "меня", "нас"}
+
+    def _reflexive_after(self, clause: Clause, token_index: int) -> bool:
+        nxt = clause.tokens[token_index + 1 : token_index + 2]
+        return bool(nxt) and nxt[0].text in self._REFLEXIVES
+
+    def _discovery_is_not_fortune(self, clause: Clause, token_index: int) -> bool:
+        nxt = clause.tokens[token_index + 1 : token_index + 2]
+        if not nxt:
+            return False
+        if nxt[0].text in self._REFLEXIVES or nxt[0].text in self._EPISTEMIC_AFTER:
+            return True
+        is_last = nxt[0].index == len(clause.tokens) - 1
+        return is_last and nxt[0].text in self._PERSON_OBJECT_PRONOUNS
 
     def _match_win(self, token: str) -> Optional[bool]:
         if token in self._win_forms:

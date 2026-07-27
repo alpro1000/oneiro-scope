@@ -387,12 +387,24 @@ class DreamAnalyzer:
         misfortunes = coding.count_events("misfortune")
         good_fortunes = coding.count_events("good_fortune")
 
-        positive_count = self._count_emotion_words(
-            self.emotion_patterns["positive"], coder, clauses
+        # Счётчики эмоций идут по спискам by_type: там живут прилагательные
+        # и корни («afraid», «scared», «счастлив»), которыми сны и говорят.
+        # Старые списки positive/negative состояли из существительных
+        # («fear», «anxiety») — калибровка на norms-корпусе показала
+        # negative_percent 45/29 против 80 у людей-кодировщиков.
+        by_type = self.knowledge_base.get("emotions", {}).get("by_type", {})
+        positive_words = list(by_type.get("happiness", [])) + list(
+            self.emotion_patterns["positive"]
         )
-        negative_count = self._count_emotion_words(
-            self.emotion_patterns["negative"], coder, clauses
+        negative_words = (
+            list(by_type.get("sadness", []))
+            + list(by_type.get("anger", []))
+            + list(by_type.get("fear", []))
+            + list(by_type.get("confusion", []))
+            + list(self.emotion_patterns["negative"])
         )
+        positive_count = self._count_emotion_words(positive_words, coder, clauses)
+        negative_count = self._count_emotion_words(negative_words, coder, clauses)
 
         # Ratios: undefined stays None. A zero numerator over a positive
         # denominator is a real 0.0; a zero denominator is not a number.

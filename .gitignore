@@ -73,7 +73,12 @@ Thumbs.db
 # Personal data — keep local, never commit to public repo
 .claude/personal/
 .claude/skills/me/
-reports/
+# MCP file-report output (backend/mcp/tools/_files.py) — repo root only;
+# the unanchored `reports/` used to silently swallow docs/reports/ too.
+/reports/
 
 # Generated Fandorin portraits (binary output)
 docs/specs/fandorin-portrait/output/
+
+# DreamBank corpora — third-party research data, re-fetch via scripts/fetch_dreambank.py
+data/dreambank/

@@ -216,6 +216,27 @@ Recent decisions:
   индексы сравнимы между пользователями одной версии кодировщика.
   Калибровка — после каппы/внешнего корпуса.
 
+**Раунд 3 (вопрос владельца «как скачать базу снов») — скачана и прогнана:**
+- Dryad/HF/dreambank.net закрыты политикой, но raw.githubusercontent открыт →
+  JSON-зеркало DreamBank (mattbierner/DreamScrape, ~30k снов). Скачаны
+  НАСТОЯЩИЕ нормативные корпуса 1966 года: norms-m (491) + norms-f (490).
+  `scripts/fetch_dreambank.py` (в gitignored data/dreambank/) +
+  `scripts/validate_against_norms.py`.
+- **Первая внешняя калибровка** (отчёт §7.5): взаимодействия ~×0.5 от
+  человеческого уровня (прогноз ревью подтверждён), sexuality ×0.36–0.41,
+  misfortune ×0.6. Замер сам нашёл и починил три дефекта:
+  (1) эмоции 45/29→83.7/78.9 vs 80/80 — счётчики перешли на by_type-словари
+  (прилагательные afraid/scared, не существительные fear/anxiety);
+  (2) good_fortune ×3.9→×1.7–2.0 — гейты «found myself/found that/нашёл
+  его.»; (3) male_percent 47 vs 67 — асимметрия лексикона/местоимений,
+  направление задано числом.
+- ⚠️ KB-находка: `hvdc_norms.json` пишет «A/F ratio = 0.59», но по её же
+  rate'ам (0.47/0.38) это A/(A+F)=0.55, а A/F=1.24 — формула и значение
+  противоречат друг другу; адъюдикация по Domhoff.
+- Урок: **петля «внешние данные → замер → фикс → перемер» за один заход дала
+  больше, чем неделя полировки по внутренним тестам.** Golden не поймал ни
+  идиому «found myself», ни словарную асимметрию эмоций — их поймал корпус.
+
 ### 2026-07-27 — claude/identity-direction-question-vrognh — geocoder "City, Country" bug + node definition aligned
 
 **Trigger:** a long client session (strategic reading for a real person, birth
