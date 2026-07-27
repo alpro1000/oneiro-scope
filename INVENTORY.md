@@ -40,7 +40,7 @@
 | agents/prompts | 0 | 5 |
 | agents/specialists | 0 | 5 |
 | docs | 6 | 43 |
-| docs/deploy | 0 | 3 |
+| docs/deploy | 0 | 4 |
 | docs/steering | 0 | 5 |
 | docs/deployment | 0 | 1 |
 | docs/specs | 5 | 0 |
@@ -125,4 +125,4 @@
 | external/DReAMy | 1 | 1 |
 | external/DReAMy/dreamy | 0 | 3 |
 
-**ИТОГО:** папок = 121, файлов = 419
+**ИТОГО:** папок = 121, файлов = 420

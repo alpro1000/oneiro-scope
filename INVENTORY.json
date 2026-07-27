@@ -193,7 +193,7 @@
     {
       "path": "docs/deploy",
       "dirs": 0,
-      "files": 3
+      "files": 4
     },
     {
       "path": "docs/steering",
@@ -612,5 +612,5 @@
     }
   ],
   "total_dirs": 121,
-  "total_files": 419
+  "total_files": 420
 }
