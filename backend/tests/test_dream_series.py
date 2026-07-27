@@ -74,6 +74,20 @@ async def test_threshold_is_explicit_and_at_least_15():
     assert series.MIN_SERIES_N >= 15
 
 
+async def test_exact_threshold_boundary_computes_full_stats(session):
+    """n == MIN_SERIES_N ровно: baseline и тренд считаются, обе половины
+    непусты (7+8), краша нет — регрессионная броня против ложного
+    ревью-срабатывания на PR #166."""
+    user_id = uuid.uuid4()
+    await _fill(session, user_id, series.MIN_SERIES_N)
+    out = await series.series_stats(session, user_id)
+    assert out["status"] == "ok"
+    assert out["n"] == series.MIN_SERIES_N
+    trend = out["trend"]["friendly_interactions"]
+    assert trend["first_half_mean"] == 1.0 and trend["second_half_mean"] == 1.0
+    assert trend["direction"] == "flat"
+
+
 async def test_full_series_baseline_trend_and_deviation(session):
     user_id = uuid.uuid4()
     # 15 calm dreams, then one aggressive outlier.
