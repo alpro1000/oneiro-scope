@@ -8,6 +8,7 @@ and JWKS fetching is stubbed.
 from __future__ import annotations
 
 import json
+import time
 
 import pytest
 
@@ -65,6 +66,14 @@ def test_discovery_is_off_until_an_issuer_exists(monkeypatch):
     assert remote.oauth_discovery_enabled() is False
     monkeypatch.setattr(settings, "MCP_AUTH_ISSUER", "https://idp.example.com")
     assert remote.oauth_discovery_enabled() is True
+
+
+def test_discovery_is_off_when_auth_is_configured_but_not_enforced(monkeypatch):
+    """Advertising protection that isn't enforced sends clients through a login
+    flow for an endpoint that would have answered without one."""
+    monkeypatch.setattr(settings, "MCP_AUTH_ISSUER", "https://idp.example.com")
+    monkeypatch.setattr(settings, "MCP_REQUIRE_AUTH", False, raising=False)
+    assert remote.oauth_discovery_enabled() is False
 
 
 @pytest.fixture
@@ -213,18 +222,54 @@ async def test_missing_scope_is_403(monkeypatch):
 # --- transport wiring (mount path + DNS-rebinding allow-list) -----------------
 
 @pytest.mark.asyncio
-async def test_normalizer_rewrites_the_bare_mount_path():
-    """`/mcp` must reach the mounted transport, not a 307 to `/mcp/`."""
-    seen: list[str] = []
+async def test_dispatcher_sends_mcp_paths_to_the_transport():
+    """`/mcp` and `/mcp/` both reach the transport, with mount semantics."""
+    to_mcp: list[dict] = []
+    to_api: list[str] = []
 
-    async def downstream(scope, receive, send):
-        seen.append(scope["path"])
+    async def mcp_app(scope, receive, send):
+        to_mcp.append(scope)
 
-    mw = remote.MountPathNormalizer(downstream, mount_path="/mcp")
-    await mw({"type": "http", "path": "/mcp"}, _noop_receive, _Recorder())
-    await mw({"type": "http", "path": "/mcp/"}, _noop_receive, _Recorder())
-    await mw({"type": "http", "path": "/mcpx"}, _noop_receive, _Recorder())
-    assert seen == ["/mcp/", "/mcp/", "/mcpx"]
+    async def api(scope, receive, send):
+        to_api.append(scope["path"])
+
+    disp = remote.MCPPathDispatcher(api, mcp_app, "/mcp")
+    for path in ("/mcp", "/mcp/", "/mcp/extra"):
+        await disp({"type": "http", "path": path}, _noop_receive, _Recorder())
+
+    assert [s["path"] for s in to_mcp] == ["/", "/", "/extra"]
+    assert all(s["root_path"] == "/mcp" for s in to_mcp)
+    assert to_api == []
+
+
+@pytest.mark.asyncio
+async def test_dispatcher_leaves_every_other_path_to_the_api():
+    to_api: list[str] = []
+
+    async def mcp_app(scope, receive, send):  # pragma: no cover
+        raise AssertionError("API path reached the transport")
+
+    async def api(scope, receive, send):
+        to_api.append(scope.get("path", scope["type"]))
+
+    disp = remote.MCPPathDispatcher(api, mcp_app, "/mcp")
+    for path in ("/", "/api", "/mcpx", "/connect"):
+        await disp({"type": "http", "path": path}, _noop_receive, _Recorder())
+    # Lifespan belongs to the API app — it owns startup/shutdown.
+    await disp({"type": "lifespan"}, _noop_receive, _Recorder())
+
+    assert to_api == ["/", "/api", "/mcpx", "/connect", "lifespan"]
+
+
+def test_ipv6_hosts_keep_their_brackets(monkeypatch):
+    """Splitting an IPv6 literal on the first colon yields `[2001:*`."""
+    monkeypatch.setattr(
+        settings, "MCP_PUBLIC_URL", "https://[2001:db8::1]:8443/mcp", raising=False
+    )
+    hosts = remote.allowed_transport_hosts()
+    assert "[2001:db8::1]:8443" in hosts
+    assert "[2001:db8::1]:*" in hosts
+    assert not any(h.startswith("[2001:*") for h in hosts)
 
 
 def test_allowed_transport_hosts_derived_from_public_url():
@@ -260,62 +305,92 @@ def test_transport_security_opens_up_when_no_host_is_known(monkeypatch):
     assert remote._transport_security().enable_dns_rebinding_protection is False
 
 
-def test_mounted_transport_answers_on_the_bare_mount_path(monkeypatch):
-    """End-to-end over the real transport: `/mcp` initialises, no redirect."""
-    pytest.importorskip("mcp", reason="mcp package not installed")
-    pytest.importorskip("fastapi", reason="fastapi not installed")
+def test_sse_stream_is_not_swallowed_by_the_app_middleware(monkeypatch):
+    """The server→client SSE channel must deliver headers immediately.
 
-    import anyio
-    from fastapi import FastAPI
-    from fastapi.testclient import TestClient
+    This needs a real socket: `TestClient`'s transport runs the app to
+    completion before returning, so an endless stream can never "finish" and
+    every result looks like a hang. Measured over HTTP, mounting the transport
+    inside the app's middleware stack yields *zero* response bytes (GZip holds
+    output back deciding whether to compress; BaseHTTPMiddleware re-frames the
+    response), while dispatching above the stack answers at once. Guards the
+    reason `MCPPathDispatcher` exists.
+    """
+    pytest.importorskip("mcp", reason="mcp package not installed")
+    uvicorn = pytest.importorskip("uvicorn", reason="uvicorn not installed")
+    httpx = pytest.importorskip("httpx", reason="httpx not installed")
+
+    import threading
 
     monkeypatch.setattr(settings, "MCP_REQUIRE_AUTH", False, raising=False)
     monkeypatch.setattr(settings, "MCP_ENABLED", True, raising=False)
-    asgi_app, session_manager = remote.build_mcp_http_app()
-    if asgi_app is None:
-        pytest.skip("MCP server could not be built in this environment")
+    try:
+        from backend.app import main as app_main
+    except Exception as exc:
+        pytest.skip(f"backend.app.main not importable: {exc}")
 
-    host_app = FastAPI()
-    host_app.mount(settings.MCP_PATH, asgi_app)
-    host_app.add_middleware(
-        remote.MountPathNormalizer, mount_path=settings.MCP_PATH
+    # Keep the DB out of it — this test is about the ASGI stack.
+    async def _noop():
+        return None
+
+    monkeypatch.setattr(app_main, "init_db", _noop, raising=False)
+    monkeypatch.setattr(app_main, "close_db", _noop, raising=False)
+
+    config = uvicorn.Config(
+        app_main.app, host="127.0.0.1", port=0, log_level="error"
     )
+    server = uvicorn.Server(config)
+    thread = threading.Thread(target=server.run, daemon=True)
+    thread.start()
+    try:
+        for _ in range(100):
+            if server.started:
+                break
+            time.sleep(0.1)
+        if not server.started or not server.servers:
+            pytest.skip("uvicorn did not start in this environment")
+        port = server.servers[0].sockets[0].getsockname()[1]
+        base = f"http://127.0.0.1:{port}"
 
-    init = {
-        "jsonrpc": "2.0", "id": 1, "method": "initialize",
-        "params": {
-            "protocolVersion": "2025-06-18",
-            "capabilities": {},
-            "clientInfo": {"name": "regression", "version": "0"},
-        },
-    }
-    headers = {
-        "accept": "application/json, text/event-stream",
-        "content-type": "application/json",
-    }
+        headers = {
+            "accept": "application/json, text/event-stream",
+            "content-type": "application/json",
+        }
+        with httpx.Client(timeout=10.0) as client:
+            started = client.post(
+                f"{base}/mcp",
+                headers=headers,
+                json={
+                    "jsonrpc": "2.0", "id": 1, "method": "initialize",
+                    "params": {
+                        "protocolVersion": "2025-06-18", "capabilities": {},
+                        "clientInfo": {"name": "sse-test", "version": "0"},
+                    },
+                },
+            )
+            assert started.status_code == 200, started.text
+            session = started.headers["mcp-session-id"]
+            client.post(
+                f"{base}/mcp",
+                headers={**headers, "mcp-session-id": session},
+                json={"jsonrpc": "2.0", "method": "notifications/initialized"},
+            )
 
-    async def run():
-        async with session_manager.run():
-            with TestClient(
-                host_app, base_url="https://api.example.com"
-            ) as client:
-                return (
-                    client.post(
-                        settings.MCP_PATH, json=init, headers=headers,
-                        follow_redirects=False,
-                    ),
-                    client.post(
-                        settings.MCP_PATH, json=init,
-                        headers={**headers, "host": "evil.example.net"},
-                        follow_redirects=False,
-                    ),
-                )
-
-    resp, foreign_host = anyio.run(run)
-    assert resp.status_code == 200, resp.text
-    assert resp.headers.get("mcp-session-id")
-    # …and the allow-list still does its job.
-    assert foreign_host.status_code == 421
+            # Headers must arrive without waiting for the stream to end.
+            with httpx.Client(timeout=httpx.Timeout(5.0, read=2.0)) as streamer:
+                with streamer.stream(
+                    "GET",
+                    f"{base}/mcp",
+                    headers={
+                        "accept": "text/event-stream",
+                        "mcp-session-id": session,
+                    },
+                ) as stream:
+                    assert stream.status_code == 200
+                    assert "text/event-stream" in stream.headers["content-type"]
+    finally:
+        server.should_exit = True
+        thread.join(timeout=10)
 
 
 # --- ASGI middleware ----------------------------------------------------------

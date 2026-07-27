@@ -150,7 +150,8 @@ Smoke test: *"Посчитай мою карту: 1 июля 1977, 22:30, Зап
 
 | Symptom | Cause | Fix |
 |---|---|---|
-| "Couldn't register with the sign-in service" | discovery served with no `authorization_servers`, client tries DCR against this origin | set `MCP_AUTH_ISSUER`, or leave it unset so discovery 404s and the server reads as public |
+| "Couldn't register with the sign-in service" | discovery served with no `authorization_servers`, client tries DCR against this origin | set `MCP_AUTH_ISSUER` **and** `MCP_REQUIRE_AUTH=true`, or leave the issuer unset so discovery 404s and the server reads as public |
+| Discovery still 404s with the issuer set | `MCP_REQUIRE_AUTH` is still `false` — the server won't advertise protection it doesn't enforce | set `MCP_REQUIRE_AUTH=true` (the log says so at startup) |
 | Login page loads, no sign-in method | DCR client has no domain-level connection | step 4 `is_domain_connection` |
 | Connects, every tool call fails `Malformed token` | opaque access token | step 3 Default Audience |
 | `Token rejected: Invalid audience` | `MCP_AUTH_AUDIENCE` ≠ the API identifier | make them byte-identical |

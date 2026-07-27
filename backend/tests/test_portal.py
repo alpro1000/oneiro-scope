@@ -59,14 +59,16 @@ def test_connect_page_falls_back_to_request_url(client, monkeypatch):
     assert "/mcp" in body
 
 
-def test_connect_url_forced_to_https_outside_development(client, monkeypatch):
-    """Behind a TLS-terminating proxy the app sees http; an http connector URL
-    is rejected by the chat clients, so the displayed URL must be https."""
+def test_connect_url_never_derived_from_the_host_header_in_production(
+    client, monkeypatch
+):
+    """`request.base_url` is the Host header. Deriving the copy-paste connector
+    URL from it would let a forged header point visitors at another server."""
     monkeypatch.setattr(settings, "MCP_PUBLIC_URL", None, raising=False)
     monkeypatch.setattr(settings, "ENVIRONMENT", "production", raising=False)
-    body = client.get("/connect").text
-    assert "http://testserver/mcp" not in body
-    assert "https://testserver/mcp" in body
+    body = client.get("/connect", headers={"host": "evil.example.net"}).text
+    assert "evil.example.net" not in body
+    assert "testserver" not in body
 
 
 def test_connect_url_left_alone_in_development(client, monkeypatch):

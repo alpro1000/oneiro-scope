@@ -63,14 +63,22 @@ tools unauthenticated. The REST API still boots.
 Each of these produces a client-side error that names none of them, so they
 are worth knowing by shape:
 
-1. **`/mcp/mcp`.** FastMCP's transport serves itself at `/mcp` *inside* its own
-   app; mounting that under `MCP_PATH` would put the endpoint at `/mcp/mcp` and
-   404 the URL users paste. `build_mcp_http_app()` sets
-   `streamable_http_path = "/"` so the mount path is the endpoint. A
-   `MountPathNormalizer` middleware also rewrites bare `/mcp` in place instead
-   of letting the router answer `307 → /mcp/` — behind a TLS-terminating proxy
-   whose forwarded headers aren't trusted, that redirect's `Location` comes
-   back `http://` and clients refuse it.
+1. **`/mcp/mcp`, and the app middleware eating the SSE stream.** FastMCP's
+   transport serves itself at `/mcp` *inside* its own app; mounting that under
+   `MCP_PATH` would put the endpoint at `/mcp/mcp` and 404 the URL users paste.
+   Worse, a mounted sub-app sits behind the whole middleware stack, and the
+   transport keeps a long-lived SSE channel open for server→client messages —
+   `GZipMiddleware` withholds bytes deciding whether to compress and
+   `BaseHTTPMiddleware` (rate limiting, request logging) re-frames the
+   response. Measured over a real socket, `GET /mcp` returns **zero response
+   bytes in 6 s** mounted, and answers **immediately** when dispatched above
+   the stack. So `MCPPathDispatcher` routes `MCP_PATH` straight to the
+   transport, ahead of every middleware, and treats `/mcp` and `/mcp/` alike so
+   there is no `307` — behind a TLS-terminating proxy whose forwarded headers
+   aren't trusted, that redirect's `Location` comes back `http://` and clients
+   refuse it. CORS is re-applied around the transport itself (Starlette's CORS
+   layer is pure ASGI and does not buffer). Note the trade-off: `/mcp` is also
+   outside the rate limiter, so auth is what bounds it.
 2. **`421 Invalid Host header`.** The transport enables DNS-rebinding
    protection by default with a *localhost-only* allow-list, which rejects
    every request to a real deployment. The public host comes from
@@ -82,8 +90,10 @@ are worth knowing by shape:
    *before* calling `/mcp`: they read it, look for `authorization_servers`, and
    when absent fall back to treating this origin as the authorization server
    and attempt Dynamic Client Registration against it — which fails. So
-   `/.well-known/oauth-protected-resource` answers **404 until
-   `MCP_AUTH_ISSUER` is set**. A public server must not advertise OAuth.
+   `/.well-known/oauth-protected-resource` answers **404 until OAuth is both
+   configured (`MCP_AUTH_ISSUER`) and enforced (`MCP_REQUIRE_AUTH=true`)**. A
+   public server must not advertise OAuth, and neither must one that advertises
+   protection it does not apply.
 
 ## 3. Verify the deployment
 

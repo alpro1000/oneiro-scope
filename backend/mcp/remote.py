@@ -99,11 +99,18 @@ def oauth_discovery_enabled() -> bool:
     authorization server at all, and the user sees a registration error instead
     of a working connector.
 
-    So the document is served only when there is an issuer to name. A
-    deliberately public server (MCP_REQUIRE_AUTH=false, no issuer) answers 404
-    here, which is what tells a client to connect without OAuth.
+    So the document is served only when this server actually enforces OAuth —
+    an issuer to name *and* MCP_REQUIRE_AUTH on. Advertising protection that
+    isn't enforced is the same lie in the other direction: the client runs a
+    login flow for an endpoint that would have answered without one.
     """
-    return bool(settings.MCP_AUTH_ISSUER)
+    if settings.MCP_AUTH_ISSUER and not settings.MCP_REQUIRE_AUTH:
+        logger.warning(
+            "MCP_AUTH_ISSUER is set but MCP_REQUIRE_AUTH is false — /mcp is "
+            "open and OAuth discovery stays off. Set MCP_REQUIRE_AUTH=true to "
+            "enforce it."
+        )
+    return bool(settings.MCP_AUTH_ISSUER and settings.MCP_REQUIRE_AUTH)
 
 
 def required_scopes() -> list[str]:
@@ -278,30 +285,70 @@ class BearerAuthMiddleware:
         await self.app(scope, receive, send)
 
 
-class MountPathNormalizer:
-    """Serve the mount path with and without a trailing slash, no redirect.
+class MCPPathDispatcher:
+    """Route MCP_PATH to the transport, above the API's middleware stack.
 
-    A sub-app mounted at `/mcp` is only reached by `/mcp/...`; bare `/mcp`
-    falls through to the router's `redirect_slashes`, which answers
-    `307 → /mcp/`. That redirect is a bad deal here: `/mcp` is the exact URL
-    users paste into the connector dialog, and behind a TLS-terminating proxy
-    whose forwarded headers aren't trusted the `Location` comes back as
-    `http://` — which chat clients refuse. Rewriting the path before routing
-    costs nothing and makes the two forms equivalent.
+    Two problems solved at once.
 
-    Installed as outermost middleware on the host app, so it must stay pure
-    ASGI: the transport streams SSE, which a buffering middleware would break.
+    *Streaming.* The transport keeps a long-lived SSE channel open for
+    server→client messages, and every layer of the API's middleware stack sits
+    in front of it: `GZipMiddleware` withholds bytes until it has enough to
+    decide whether to compress, and `BaseHTTPMiddleware` (rate limiting,
+    request logging) re-frames responses through a memory stream. Measured
+    end-to-end, `GET /mcp` never delivers its response headers through that
+    stack — it just hangs. Dispatching above the stack is a smaller and safer
+    change than making three middlewares streaming-safe.
+
+    *Path.* `/mcp` and `/mcp/` both reach the transport, with no `307` in
+    between. That redirect matters because `/mcp` is the exact URL users paste
+    into the connector dialog, and behind a TLS-terminating proxy whose
+    forwarded headers aren't trusted its `Location` comes back `http://` —
+    which chat clients refuse.
+
+    Everything else, including the lifespan, goes to the API app untouched.
     """
 
-    def __init__(self, app: Any, mount_path: str = "/mcp") -> None:
-        self.app = app
-        self.mount_path = mount_path.rstrip("/")
+    def __init__(self, api: Any, mcp_app: Any, path: str = "/mcp") -> None:
+        self.api = api
+        self.mcp_app = mcp_app
+        self.path = "/" + path.strip("/")
 
     async def __call__(self, scope: dict, receive: Any, send: Any) -> None:
-        if scope.get("type") == "http" and scope.get("path") == self.mount_path:
-            slashed = f"{self.mount_path}/"
-            scope = {**scope, "path": slashed, "raw_path": slashed.encode()}
-        await self.app(scope, receive, send)
+        if scope.get("type") == "http":
+            path = scope.get("path", "")
+            if path == self.path or path.startswith(f"{self.path}/"):
+                # Mount semantics: the sub-app sees the path below the prefix,
+                # and the prefix moves to root_path so it can build URLs.
+                sub = path[len(self.path):] or "/"
+                scope = {
+                    **scope,
+                    "path": sub,
+                    "raw_path": sub.encode(),
+                    "root_path": scope.get("root_path", "") + self.path,
+                }
+                await self.mcp_app(scope, receive, send)
+                return
+        await self.api(scope, receive, send)
+
+
+def _split_host_port(value: str) -> tuple[str, Optional[str]]:
+    """Split `host[:port]`, keeping IPv6 literals in their brackets.
+
+    `[2001:db8::1]:8443` is full of colons that are not the port separator, so
+    naive splitting produces `[2001` and a garbage allow-list entry.
+    """
+    value = value.strip()
+    if value.startswith("["):
+        closing = value.find("]")
+        if closing != -1:
+            host = value[: closing + 1]
+            rest = value[closing + 1:]
+            port = rest[1:] if rest.startswith(":") else None
+            return host, port
+    if value.count(":") == 1:
+        host, _, port = value.partition(":")
+        return host, port
+    return value, None
 
 
 def allowed_transport_hosts() -> list[str]:
@@ -316,16 +363,15 @@ def allowed_transport_hosts() -> list[str]:
 
     hosts: list[str] = []
 
-    def _add(host: str) -> None:
-        host = host.strip()
-        if not host or host in hosts:
+    def _add(value: str) -> None:
+        value = value.strip()
+        if not value:
             return
-        hosts.append(host)
-        # Same host on a non-default port (local proxying, staging).
-        base = host.split(":", 1)[0]
-        pattern = f"{base}:*"
-        if pattern not in hosts:
-            hosts.append(pattern)
+        host, _port = _split_host_port(value)
+        for entry in (value, f"{host}:*"):
+            # Same host on a non-default port (local proxying, staging).
+            if entry not in hosts:
+                hosts.append(entry)
 
     for raw in (settings.MCP_ALLOWED_HOSTS or "").split(","):
         _add(raw)
@@ -415,9 +461,9 @@ def build_mcp_http_app() -> tuple[Optional[Any], Optional[Any]]:
         logger.warning("Remote MCP unavailable (%s: %s)", type(exc).__name__, exc)
         return None, None
 
-    # The transport's own path defaults to "/mcp"; mounting that under
+    # The transport's own path defaults to "/mcp"; serving it under
     # settings.MCP_PATH would put the endpoint at "/mcp/mcp" and 404 the URL
-    # users actually paste. Serve it at the mount root instead.
+    # users actually paste. Serve it at the dispatcher's root instead.
     mcp.settings.streamable_http_path = "/"
     mcp.settings.transport_security = _transport_security()
 
@@ -441,5 +487,19 @@ def build_mcp_http_app() -> tuple[Optional[Any], Optional[Any]]:
             "accepted (non-production only)."
         )
 
+    # Dispatching above the API app also skips its CORSMiddleware, so put a
+    # copy here. Starlette's CORS layer is pure ASGI — it rewrites headers on
+    # the way out and never buffers a body, so SSE is unaffected.
+    from starlette.middleware.cors import CORSMiddleware
+
+    guarded = CORSMiddleware(
+        BearerAuthMiddleware(asgi_app),
+        allow_origins=settings.allowed_origins_list,
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+        expose_headers=["mcp-session-id", "www-authenticate"],
+    )
+
     session_manager = getattr(mcp, "session_manager", None)
-    return BearerAuthMiddleware(asgi_app), session_manager
+    return guarded, session_manager
