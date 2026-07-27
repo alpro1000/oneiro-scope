@@ -11,6 +11,7 @@ import os
 from datetime import date as date_cls
 from typing import Any
 
+from backend.mcp.tools._menu import TARGET_DATE, with_menu
 from backend.services.lunar.content import get_lunar_day_text
 from backend.services.lunar.engine import LunarEngine
 
@@ -44,7 +45,10 @@ def get_lunar_day(
     info = _engine.get_lunar_day(d, tz)
     info["date"] = d.isoformat()
     info["content"] = get_lunar_day_text(info["lunar_day"], locale)
-    return info
+    return with_menu(
+        info, domain="astro",
+        known_inputs=[TARGET_DATE], completed=["lunar-day"], locale=locale,
+    )
 
 
 def get_lunar_period(
@@ -55,6 +59,10 @@ def get_lunar_period(
     include_content: bool = False,
 ) -> list[dict[str, Any]]:
     """Return lunar-day info for each day in a range (inclusive).
+
+    Returns a bare list, so unlike most tools it carries no `can_also_compute`
+    menu — wrapping a documented list shape in a dict to add a hint would break
+    every caller for no gain. `get_lunar_day` carries the menu instead.
 
     Args:
         start_date: YYYY-MM-DD.

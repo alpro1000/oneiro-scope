@@ -11,6 +11,7 @@ from datetime import date as date_cls
 from pathlib import Path
 from typing import Any, Optional
 
+from backend.mcp.tools._menu import DREAM_TEXT, with_menu
 from backend.services.dreams.schemas import (
     DreamAnalysisRequest,
     DreamCategory,
@@ -61,7 +62,11 @@ async def analyze_dream(
         locale=locale,
     )
     resp = await _svc().analyze_dream(req)
-    return resp.model_dump(mode="json")
+    out = resp.model_dump(mode="json")
+    return with_menu(
+        out, domain="dreams",
+        known_inputs=[DREAM_TEXT], completed=["dream"], locale=locale,
+    )
 
 
 def list_dream_symbols(locale: str = "ru") -> list[dict[str, Any]]:

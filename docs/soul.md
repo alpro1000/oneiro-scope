@@ -222,6 +222,63 @@ which the resolver logs on the primary path. The primary call therefore raised
 Caught only because a new test asserted the call count. A test double that omits
 an attribute the code touches doesn't fail — it quietly tests something else.
 
+**Part 3 — every tool response now advertises the rest of the surface.** The
+owner's ask, after comparing our natal output against a plain ChatGPT reading:
+make any tool call surface the full list of what else is computable, with
+astrology + physiognomy together and dreams separate. The diagnosis behind it is
+real — the server registers 46 tools and a chat that lands on one sees only that
+one. `analysis_plan` has answered "what can be computed, in what order" from the
+start, but nothing surfaced it unless the model thought to ask, and it usually
+did not. So the answer travels with the data: `can_also_compute` on every
+substantive response.
+
+- `analysis_plan.py`: `Stage` gained `domain`; 11 stages added for tools that
+  had none (transit-arc, event-forecast, compare-cities, cities-by-theme,
+  solar-return-where, lunar-period, face-single, face-timeline, and the three
+  report writers) → **26 stages covering 26 tools**. New `capability_menu()`
+  returns `ready` / `needs_input` / `questions_to_ask` / `reference_lookups`.
+- `mcp/tools/_menu.py`: `with_menu()` — one line at the end of 25 tools. Returns
+  non-dicts untouched (a bare list shape is a contract; wrapping it to carry a
+  hint would break callers — which is why `get_lunar_period` has no menu) and
+  never double-attaches.
+
+**Offered, not run** — the owner's "или всегда запускай" was the other option and
+it is the wrong one: a decade map scans ten years at a 10-day step, a city scan
+runs a whole pool, and a Solar Return suggestion computes one return per
+candidate. Firing that on every call spends minutes and quota answering a
+question nobody asked, and each of those tools needs an input (`cities`,
+`target_date`) that a chart call does not carry. The menu instead lists only
+steps whose inputs are *already* satisfied, so the next call is one step away.
+
+**Domains** follow the owner's split exactly: `astro` = chart **and** face (both
+read one standing person from static data), `dreams` = per-episode, no shared
+inputs. Verified: the dreams menu offers `analyze_dream` + 3 dictionaries and
+nothing chart-shaped; the astro menu never offers `analyze_dream`.
+
+**Size is a feature here.** First cut was 4569 chars on *every* astro response —
+more than the payload of a light tool like `get_lunar_day`. Blocked entries were
+carrying the full "what it answers" prose, which is dead weight until the step
+can actually run. Trimmed to `{name, tool, missing}` → 3452 chars (−24%), with
+`test_menu_stays_within_a_size_budget` pinning the ceiling at 4500 so a future
+stage can't silently balloon every response. `analysis_plan` still returns the
+full text on demand — that is the division of labour.
+
+**Tests:** `test_capability_menu.py`, 27 cases. Beyond behaviour, five AST-level
+drift guards: every stage tool attaches a menu, each marks its own stage
+completed, menu domain matches stage domain, completed ids are real stages,
+reference lookups stay menu-free. All five were **mutation-tested** — menu
+removed, stage id swapped, domain flipped — and each failure was caught by the
+intended guard. Full suite 414 passed vs 389 on `origin/main`, failure
+signatures byte-identical (47 both ways, all pre-existing sandbox dependency
+gaps).
+
+**Lesson, and it is the same one twice.** Earlier in this branch I wired the
+physiognomy menus with a regex and gave three tools each other's stage ids.
+Every runtime test still passed — the menus were *present*, just describing the
+wrong step. Only a structural check catches that class of error, so the drift
+guards exist and are mutation-tested rather than assumed. A test that has never
+been shown to fail is a comment.
+
 ### 2026-07-27 (part 2) — claude/fandorin-portrait-generation-d422my — connector LIVE with OAuth; data-first pivot
 
 **The connector works.** First real natal chart computed through Claude →

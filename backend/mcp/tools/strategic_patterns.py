@@ -15,6 +15,14 @@ from __future__ import annotations
 
 from typing import Any, Optional
 
+from backend.mcp.tools._menu import (
+    BIRTH_DATE,
+    BIRTH_PLACE,
+    BIRTH_TIME,
+    TARGET_DATE,
+    TRAITS,
+    with_menu,
+)
 from backend.services.strategic.analysis_plan import build_plan
 from backend.services.strategic.disclaimer import DISCLAIMERS, DISCLAIMER_RU
 from backend.services.strategic.pattern_engine import (
@@ -107,7 +115,11 @@ def money_contour(
     out = _base("money-contour", "astronomy", 1.0)
     out["computed"] = _money_contour(geo)
     out["provenance"] = geo["provenance"]
-    return out
+    return with_menu(
+        out, domain="astro",
+        known_inputs=[BIRTH_DATE, BIRTH_TIME, BIRTH_PLACE],
+        completed=["natal-chart", "money-contour"],
+    )
 
 
 def vocation_map(
@@ -136,7 +148,11 @@ def vocation_map(
     out = _base("vocation-map", "astronomy", 1.0)
     out["computed"] = _vocation_map(geo)
     out["provenance"] = geo["provenance"]
-    return out
+    return with_menu(
+        out, domain="astro",
+        known_inputs=[BIRTH_DATE, BIRTH_TIME, BIRTH_PLACE],
+        completed=["natal-chart", "vocation-map"],
+    )
 
 
 def decade_map(
@@ -169,7 +185,11 @@ def decade_map(
     out = _base("decade-map", "astronomy", 1.0)
     out["computed"] = _decade_map(geo, start_year, years)
     out["provenance"] = geo["provenance"]
-    return out
+    return with_menu(
+        out, domain="astro",
+        known_inputs=[BIRTH_DATE, BIRTH_TIME, BIRTH_PLACE],
+        completed=["natal-chart", "decade-map"],
+    )
 
 
 def life_pivots(
@@ -204,7 +224,11 @@ def life_pivots(
     out = _base("life-pivots", "astronomy", 1.0)
     out["computed"] = _life_pivots(geo, from_year, to_year)
     out["provenance"] = geo["provenance"]
-    return out
+    return with_menu(
+        out, domain="astro",
+        known_inputs=[BIRTH_DATE, BIRTH_TIME, BIRTH_PLACE],
+        completed=["natal-chart", "life-pivots"],
+    )
 
 
 def electional_day(
@@ -254,7 +278,11 @@ def electional_day(
         "traditional rule, confidence 0.8"
     )
     out["provenance"] = geo["provenance"]
-    return out
+    return with_menu(
+        out, domain="astro",
+        known_inputs=[BIRTH_DATE, BIRTH_TIME, BIRTH_PLACE, TARGET_DATE],
+        completed=["natal-chart", "electional-day"],
+    )
 
 
 def reverse_physiognomy_prompt(
@@ -283,4 +311,7 @@ def reverse_physiognomy_prompt(
     out = _base("reverse-physiognomy", "physiognomy_dictionary", 0.6)
     out["computed"] = _reverse_physiognomy(traits, subject_type, locale)
     out["ethics_gate"] = "fictional_or_self_only"
-    return out
+    return with_menu(
+        out, domain="astro",
+        known_inputs=[TRAITS], completed=["character-face"], locale=locale,
+    )

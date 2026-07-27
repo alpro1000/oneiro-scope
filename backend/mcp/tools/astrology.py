@@ -11,6 +11,7 @@ from datetime import date as date_cls, time as time_cls
 from typing import Any, Optional
 from uuid import UUID
 
+from backend.mcp.tools._menu import TARGET_DATE, birth_inputs, with_menu
 from backend.services.astrology import (
     AstrologyService,
     EventForecastRequest,
@@ -103,7 +104,16 @@ async def calculate_natal_chart(
             "career, life purpose as fits the question."
         )
         out["disclaimer"] = DISCLAIMERS.get(locale, DISCLAIMER_RU)
-    return out
+    return with_menu(
+        out,
+        domain="astro",
+        known_inputs=birth_inputs(
+            birth_date, birth_time, birth_place,
+            has_coordinates=latitude is not None and longitude is not None,
+        ),
+        completed=["natal-chart"],
+        locale=locale,
+    )
 
 
 async def generate_horoscope(
@@ -132,7 +142,10 @@ async def generate_horoscope(
         locale=locale,
     )
     resp = await _svc().generate_horoscope(req)
-    return resp.model_dump(mode="json")
+    return with_menu(
+        resp.model_dump(mode="json"), domain="astro",
+        known_inputs=[TARGET_DATE], completed=["horoscope"], locale=locale,
+    )
 
 
 async def forecast_event(
@@ -167,7 +180,10 @@ async def forecast_event(
         locale=locale,
     )
     resp = await _svc().forecast_event(req)
-    return resp.model_dump(mode="json")
+    return with_menu(
+        resp.model_dump(mode="json"), domain="astro",
+        known_inputs=[TARGET_DATE], completed=["event-forecast"], locale=locale,
+    )
 
 
 def list_event_types() -> list[str]:
@@ -209,14 +225,18 @@ async def horoscope_report(
     resp = await _svc().generate_horoscope(req)
     html = render_horoscope_html(resp, locale=locale)
     path = write_report(html, output_path, prefix=f"horoscope_{period}")
-    return {
-        "report_path": str(path),
-        "period": period,
-        "period_start": str(resp.period_start),
-        "period_end": str(resp.period_end),
-        "summary_preview": resp.summary[:200],
-        "recommendations_count": len(resp.recommendations),
-    }
+    return with_menu(
+        {
+            "report_path": str(path),
+            "period": period,
+            "period_start": str(resp.period_start),
+            "period_end": str(resp.period_end),
+            "summary_preview": resp.summary[:200],
+            "recommendations_count": len(resp.recommendations),
+        },
+        domain="astro",
+        known_inputs=[TARGET_DATE], completed=["horoscope-report"], locale=locale,
+    )
 
 
 async def profile_report_file(
@@ -266,10 +286,17 @@ async def profile_report_file(
     )
     html = render_html(report, locale=locale)
     path = write_report(html, output_path, prefix="astro_profile")
-    return {
-        "report_path": str(path),
-        "timezone": report["birth"]["timezone"],
-        "utc_offset_hours": report["birth"]["utc_offset_hours"],
-        "themes": {k: len(v) for k, v in report["themes"].items()},
-        "year_transits_count": len(report["year_transits"]),
-    }
+    return with_menu(
+        {
+            "report_path": str(path),
+            "timezone": report["birth"]["timezone"],
+            "utc_offset_hours": report["birth"]["utc_offset_hours"],
+            "themes": {k: len(v) for k, v in report["themes"].items()},
+            "year_transits_count": len(report["year_transits"]),
+        },
+        domain="astro",
+        known_inputs=birth_inputs(
+            birth_date, birth_time, birth_place, has_coordinates=True,
+        ),
+        completed=["profile-report"], locale=locale,
+    )

@@ -14,6 +14,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any, Optional
 
+from backend.mcp.tools._menu import FACE_PHOTOS, with_menu
 from backend.services.physiognomy.report import render_html
 from backend.services.physiognomy.schemas import (
     FaceMetrics,
@@ -167,7 +168,11 @@ async def analyze_face(
         photo_path: Local image path; requires server CV (mediapipe).
         locale: "ru" or "en".
     """
-    return _analyze(landmarks, metrics, features, photo_path, locale).model_dump()
+    return with_menu(
+        _analyze(landmarks, metrics, features, photo_path, locale).model_dump(),
+        domain="astro",
+        known_inputs=[FACE_PHOTOS], completed=["face-single"], locale=locale,
+    )
 
 
 async def physiognomy_report(
@@ -190,14 +195,18 @@ async def physiognomy_report(
 
     path = write_report(html, output_path, prefix="physiognomy_report")
 
-    return {
-        "report_path": str(path),
-        "primary_element": resp.primary_element,
-        "secondary_element": resp.secondary_element,
-        "dominant_court": resp.dominant_court,
-        "readings_count": len(resp.readings),
-        "disclaimer": resp.disclaimer,
-    }
+    return with_menu(
+        {
+            "report_path": str(path),
+            "primary_element": resp.primary_element,
+            "secondary_element": resp.secondary_element,
+            "dominant_court": resp.dominant_court,
+            "readings_count": len(resp.readings),
+            "disclaimer": resp.disclaimer,
+        },
+        domain="astro",
+        known_inputs=[FACE_PHOTOS], completed=["face-report"], locale=locale,
+    )
 
 
 async def physiognomy_methods() -> dict[str, Any]:
@@ -267,7 +276,10 @@ async def analyze_face_archive(
         life_context=life_context,
     )
     result["skipped"] = skipped
-    return result
+    return with_menu(
+        result, domain="astro",
+        known_inputs=[FACE_PHOTOS], completed=["physiognomy"], locale=locale,
+    )
 
 
 async def physiognomy_timeline(
@@ -298,4 +310,7 @@ async def physiognomy_timeline(
     later, skipped_l = _period_metrics(later_photo_paths, later_metrics, "later")
     result = compare_periods(early, later, locale)
     result["skipped"] = {"early": skipped_e, "later": skipped_l}
-    return result
+    return with_menu(
+        result, domain="astro",
+        known_inputs=[FACE_PHOTOS], completed=["face-timeline"], locale=locale,
+    )
