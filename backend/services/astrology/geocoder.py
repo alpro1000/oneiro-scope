@@ -34,6 +34,11 @@ class GeoLocation:
     timestamp: datetime
     country: Optional[str] = None
     admin_area: Optional[str] = None
+    # False when the resolver had to fall back to the most populous candidate
+    # because nothing looked like the requested city. The coordinates are then
+    # suspect and callers must surface that rather than treat it as success.
+    name_matched: bool = True
+    requested_city: Optional[str] = None
 
 
 class Geocoder:
@@ -93,7 +98,15 @@ class Geocoder:
                 timestamp=datetime.now(tz=timezone.utc),
                 country=result.get("country"),
                 admin_area=None,  # GeoNames basic API doesn't provide admin area
+                name_matched=bool(result.get("name_matched", True)),
+                requested_city=result.get("requested_city"),
             )
+
+            if not geo_location.name_matched:
+                logger.warning(
+                    f"[Geocoder] ⚠ '{query}' resolved to '{geo_location.name}' "
+                    f"which does not match the requested city — coordinates suspect"
+                )
 
             logger.info(f"[Geocoder] ✓ SUCCESS: Geocoded '{query}' to {geo_location.name}, {geo_location.country}")
             logger.debug(f"[Geocoder] Location: {geo_location.latitude}, {geo_location.longitude}, TZ: {geo_location.timezone}")

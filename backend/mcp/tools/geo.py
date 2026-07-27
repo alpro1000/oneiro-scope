@@ -38,7 +38,7 @@ async def search_city(query: str) -> dict[str, Any]:
         loc = await _geo().geocode(query)
     except GeocodingError as exc:
         return {"resolved": False, "error": str(exc), "query": query}
-    return {
+    out = {
         "resolved": True,
         "name": loc.name,
         "country": loc.country,
@@ -48,8 +48,18 @@ async def search_city(query: str) -> dict[str, Any]:
         "timezone": loc.timezone,
         "provider": loc.provider,
         "query": loc.query,
+        "requested_city": loc.requested_city,
+        "name_matched": loc.name_matched,
         "raw_response_id": loc.raw_response_id,
     }
+    if not loc.name_matched:
+        out["warning"] = (
+            f"Resolved name '{loc.name}' does not look like the requested place "
+            f"'{loc.requested_city or query}'. These coordinates may belong to a "
+            f"different location — confirm the place with the user before using "
+            f"them for a chart."
+        )
+    return out
 
 
 async def validate_birth_data(
@@ -83,12 +93,20 @@ async def validate_birth_data(
         except ValueError:
             issues.append("birth_time is not a valid HH:MM")
 
+    warnings: list[str] = []
     geo = await search_city(birth_place)
     if not geo.get("resolved"):
         issues.append(f"birth_place could not be geocoded: {geo.get('error')}")
+    elif geo.get("warning"):
+        # Resolved, but to something that does not look like the requested
+        # place. Reported as a warning rather than an issue so a legitimate
+        # transliteration miss cannot block a chart — but it must never be
+        # silent: wrong coordinates move the angles by degrees.
+        warnings.append(geo["warning"])
 
     return {
         "valid": not issues,
         "issues": issues,
+        "warnings": warnings,
         "geocoded": geo if geo.get("resolved") else None,
     }
