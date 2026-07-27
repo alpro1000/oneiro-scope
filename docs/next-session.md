@@ -5,9 +5,32 @@
 > that's easy to lose. Updated at the end of every substantial session
 > alongside `soul.md §9`.
 
-**Дата последнего обновления:** 2026-07-21
-**Последняя ветка работы:** `claude/fandorin-portrait-generation-d422my` (паттерны-каталог реализован: 6 skills + 6 MCP tools + engine; НЕ замержена — PR по запросу owner)
-**Текущий main HEAD:** physiognomy + MCP hardening + двухслойные отчёты, все CI-чеки зелёные
+**Дата последнего обновления:** 2026-07-27
+**Последняя ветка работы:** `claude/fandorin-portrait-generation-d422my`
+**Текущий main HEAD:** `#158` — remote-коннектор реально работает (path/Host/SSE/OAuth-discovery), все чеки зелёные
+
+**Новое в сессии 2026-07-27 (connector actually reachable + кабинет):**
+- **Коннектор не работал вообще с #155** — три независимые поломки, каждая
+  фатальна сама по себе: эндпоинт лежал на `/mcp/mcp`; SSE-канал
+  сервер→клиент не отдавал ни байта из-под GZip/BaseHTTPMiddleware
+  (замер на реальном сокете: 0 байт за 6 с против мгновенных заголовков);
+  `421 Invalid Host header` из-за localhost-only allow-list транспорта.
+  Ошибка, которую видел owner («Couldn't register with sign-in service»),
+  была четвёртой: RFC 9728 отдавался всегда → клиент шёл в DCR против
+  origin без authorization server.
+- `MCPPathDispatcher` — `/mcp` маршрутизируется **над** middleware-стеком.
+  Побочный эффект: `/mcp` теперь вне rate-limiter'а, границу задаёт auth.
+- **Тесты коннектора и портала никогда не запускались в CI** — их не было
+  в списке файлов `mcp-smoke.yml`. Добавлены (340 тестов в этом job).
+- **Кабинет** `/account` (`backend/portal/account.py`): тариф, свои ключи,
+  GDPR-выгрузка, удаление. Тонкий слой над существующими `auth.py` /
+  `billing.py` / `users.py`. JWT в httpOnly `SameSite=Lax` куке. БД
+  открывается лениво → страница входа живёт при недоступной БД.
+- **Ловушка для будущих сессий:** `TestClient` не видит стриминг — его
+  транспорт прогоняет приложение до конца, поэтому бесконечный SSE
+  выглядит как зависание. Проверять стриминг только реальным сервером.
+- Написан `docs/deploy/auth0-setup.md`. **P0: `MCP_REQUIRE_AUTH=false`,
+  `/mcp` открыт всем, у кого есть URL.**
 
 **Новое в сессии 2026-07-21 (fandorin-portrait-generation):**
 - **Каталог паттернов реализован целиком** — 6 пар skill+MCP tool поверх

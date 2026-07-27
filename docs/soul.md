@@ -108,6 +108,73 @@ Recent decisions:
 
 ## §9 Session log
 
+### 2026-07-27 — claude/fandorin-portrait-generation-d422my — the connector was never reachable; account page
+
+**Trigger:** owner added the deployed backend as a custom connector in Claude
+and got *"Couldn't register with OneiroScope's sign-in service"*. Reproducing
+the client handshake locally against the real transport found that the visible
+OAuth error was the least of it.
+
+**Three independent blockers (merged #158), each fatal alone:**
+
+1. **The endpoint was at `/mcp/mcp`.** FastMCP serves the transport at `/mcp`
+   *inside its own app*, which we mounted at `MCP_PATH`. The URL in the connect
+   dialog had been 404ing since #155.
+2. **The server→client SSE channel delivered nothing.** Mounted behind the app
+   middleware, GZip withholds output while deciding whether to compress and
+   BaseHTTPMiddleware re-frames the response. Measured over a real socket:
+   **0 response bytes in 6 s** mounted vs headers immediately when dispatched
+   above the stack. `MCPPathDispatcher` now routes `MCP_PATH` straight to the
+   transport, which also removes the `307 → /mcp/` (whose `Location` comes back
+   `http://` behind a proxy that isn't trusted for forwarded headers).
+3. **`421 Invalid Host header`.** The transport's DNS-rebinding allow-list
+   defaults to localhost only, so every request to a real deployment was
+   rejected. Derived from `MCP_PUBLIC_URL` now (+ new `MCP_ALLOWED_HOSTS`).
+
+Plus the reported error itself: the RFC 9728 document was served
+unconditionally, so clients read it, found no `authorization_servers`, assumed
+this origin was the AS and attempted Dynamic Client Registration against it. It
+now 404s until OAuth is both configured *and* enforced.
+
+**Method note worth keeping.** The first SSE measurement used `TestClient` and
+looked like a hang — its transport runs the app to completion, so an endless
+stream can never finish. That artifact nearly buried a real bug; the two
+configurations had to be compared over an actual socket. The regression test
+therefore runs a real uvicorn server. Related: `test_mcp_remote_auth.py` and
+`test_portal.py` **were never in CI's file list** — every test written for the
+connector had been running only on developer machines. Now in `mcp-smoke.yml`
+(340 tests there).
+
+**Review:** Qodo found the SSE issue independently, plus the discovery/
+`MCP_REQUIRE_AUTH` mismatch, an IPv6 host-split bug (`[2001:*`), and `/connect`
+building its copy-paste URL from the Host header. All fixed. One Amazon Q
+"crash risk" (`slashed.encode("utf-8")` vs `slashed.encode()`) declined —
+byte-identical.
+
+**Account page (личный кабинет):** `backend/portal/account.py` + three
+templates — plan, own model keys, GDPR export, deletion. Deliberately thin: it
+delegates to the API handlers that already exist (`auth.py`, `billing.py`,
+`users.py`) so each rule has one implementation. Session is the same JWT in an
+httpOnly `SameSite=Lax` cookie (Lax is the CSRF defence; every mutating route
+is a POST). The database is opened lazily inside handlers rather than via
+`Depends(get_db)`, so a signed-out visitor gets the page even when the DB is
+unreachable — verified on a real server: `/account` 200, sign-in 503 with an
+honest message, `/mcp` still 200 throughout.
+
+**Testing constraint, recorded honestly:** the models use the PostgreSQL `UUID`
+column type and the repo has no Postgres fixture, so account tests fake the DB
+and assert the portal's own behaviour (cookie flags, delegation, failure
+modes). The DB paths are not covered by tests.
+
+**Still open:** `MCP_REQUIRE_AUTH=false` — `/mcp` is open to anyone with the
+URL, and since the dispatcher bypasses the middleware it is now outside the
+rate limiter too. Auth is the only thing that would bound it.
+`docs/deploy/auth0-setup.md` written for that step (documents three Auth0
+traps: opaque tokens without a Default Audience, DCR clients unusable until a
+connection is `is_domain_connection`, issuer trailing slash). Needs owner
+clicks in the Auth0 console.
+
+
 ### 2026-07-24 — claude/fandorin-portrait-generation-d422my — deploy unblocked, MCP connector, product architecture decided
 
 **Trigger:** owner drove the split-deploy rollout, Render kept failing, and the

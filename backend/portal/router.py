@@ -36,6 +36,7 @@ CONTENT: dict[str, dict[str, str]] = {
     "ru": {
         "nav_connect": "Подключить", "nav_pricing": "Тарифы",
         "nav_privacy": "Приватность", "nav_terms": "Условия",
+        "nav_account": "Кабинет",
         "hero_title": "Астрология, сны и лица — прямо в вашем чате",
         "hero_lede": "Расчёты по эфемеридам, чтения с указанием источника. "
                      "Подключается как коннектор к Claude, ChatGPT и Gemini — "
@@ -117,6 +118,7 @@ CONTENT: dict[str, dict[str, str]] = {
     "en": {
         "nav_connect": "Connect", "nav_pricing": "Pricing",
         "nav_privacy": "Privacy", "nav_terms": "Terms",
+        "nav_account": "Account",
         "hero_title": "Astrology, dreams and faces — inside your chat",
         "hero_lede": "Ephemeris-grade computation, readings that cite their "
                      "source. Add it as a connector in Claude, ChatGPT or "
