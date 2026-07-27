@@ -403,7 +403,7 @@
     {
       "path": "backend/tests",
       "dirs": 0,
-      "files": 31
+      "files": 32
     },
     {
       "path": "backend/middleware",
@@ -612,5 +612,5 @@
     }
   ],
   "total_dirs": 121,
-  "total_files": 429
+  "total_files": 430
 }
