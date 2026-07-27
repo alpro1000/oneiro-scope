@@ -8,6 +8,7 @@ from fastapi import FastAPI, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import JSONResponse
+from pydantic import BaseModel
 from contextlib import asynccontextmanager
 import time
 import logging
@@ -220,16 +221,26 @@ if _mcp_app is not None:
 
 
 # Root endpoint — the portal owns "/", so API metadata moves to /api
-@app.get("/api")
-async def root():
+class ApiInfo(BaseModel):
+    """Response contract for the API metadata endpoint."""
+
+    name: str
+    version: str
+    environment: str
+    docs: str
+    status: str
+
+
+@app.get("/api", response_model=ApiInfo)
+async def root() -> ApiInfo:
     """API information (the human-facing landing page lives at /)"""
-    return {
-        "name": settings.APP_NAME,
-        "version": settings.VERSION,
-        "environment": settings.ENVIRONMENT,
-        "docs": "/docs" if settings.DEBUG else "disabled",
-        "status": "operational"
-    }
+    return ApiInfo(
+        name=settings.APP_NAME,
+        version=settings.VERSION,
+        environment=settings.ENVIRONMENT,
+        docs="/docs" if settings.DEBUG else "disabled",
+        status="operational",
+    )
 
 
 if __name__ == "__main__":

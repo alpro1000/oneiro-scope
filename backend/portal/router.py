@@ -22,7 +22,7 @@ from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 
 from backend.core.config import settings
-from backend.services.strategic.analysis_plan import STAGES, _TRACK_NAMES
+from backend.services.strategic.analysis_plan import STAGES, TRACK_NAMES
 from backend.services.strategic.disclaimer import DISCLAIMER_EN, DISCLAIMER_RU
 
 router = APIRouter(tags=["Portal"], include_in_schema=False)
@@ -228,10 +228,21 @@ def _locale(request: Request) -> str:
 
 
 def _mcp_url(request: Request) -> str:
-    """Public MCP endpoint — configured value wins, else derive from the request."""
+    """Public MCP endpoint shown for copy-paste.
+
+    A configured value always wins. The request-derived fallback exists so the
+    page is useful before a canonical URL is set, but it is forced to https
+    outside development: behind a TLS-terminating proxy (Render, any CDN) the
+    app sees plain http, and an http connector URL is silently rejected by the
+    chat clients — the user would copy something that cannot work.
+    """
     if settings.MCP_PUBLIC_URL:
-        return settings.MCP_PUBLIC_URL
-    return str(request.base_url).rstrip("/") + settings.MCP_PATH
+        return settings.MCP_PUBLIC_URL.rstrip("/")
+
+    base = str(request.base_url).rstrip("/")
+    if settings.ENVIRONMENT != "development" and base.startswith("http://"):
+        base = "https://" + base[len("http://"):]
+    return base + settings.MCP_PATH
 
 
 def _ctx(request: Request, **extra: Any) -> dict[str, Any]:
@@ -257,7 +268,7 @@ def _tracks(locale: str) -> list[dict[str, Any]]:
             "answers": stage.answers_ru if locale == "ru" else stage.answers_en,
         })
     return [
-        {"name": _TRACK_NAMES[track][locale], "stages": stages}
+        {"name": TRACK_NAMES[track][locale], "stages": stages}
         for track, stages in grouped.items()
     ]
 

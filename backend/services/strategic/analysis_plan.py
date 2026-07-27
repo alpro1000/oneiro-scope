@@ -244,7 +244,7 @@ STAGES: tuple[Stage, ...] = (
     ),
 )
 
-_TRACK_NAMES: dict[str, dict[str, str]] = {
+TRACK_NAMES: dict[str, dict[str, str]] = {
     "foundation": {"ru": "Основа", "en": "Foundation"},
     "self": {"ru": "Личность и ресурсы", "en": "Self and resources"},
     "timing": {"ru": "Время и окна", "en": "Timing and windows"},
@@ -290,7 +290,7 @@ def build_plan(
             "id": st.id,
             "order": st.order,
             "track": st.track,
-            "track_name": _TRACK_NAMES[st.track][loc],
+            "track_name": TRACK_NAMES[st.track][loc],
             "name": st.name_ru if loc == "ru" else st.name_en,
             "answers": st.answers_ru if loc == "ru" else st.answers_en,
             "tool": st.tool,
@@ -343,7 +343,7 @@ def build_plan(
         "completed": completed_out,
         "questions_to_ask": questions,
         "tracks": [
-            {"track": t, "name": names[loc]} for t, names in _TRACK_NAMES.items()
+            {"track": t, "name": names[loc]} for t, names in TRACK_NAMES.items()
         ],
         "total_stages": len(STAGES),
     }

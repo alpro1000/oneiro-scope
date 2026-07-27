@@ -16,7 +16,7 @@ from __future__ import annotations
 from typing import Any, Optional
 
 from backend.services.strategic.analysis_plan import build_plan
-from backend.services.strategic.disclaimer import DISCLAIMER_RU
+from backend.services.strategic.disclaimer import DISCLAIMERS, DISCLAIMER_RU
 from backend.services.strategic.pattern_engine import (
     decade_map as _decade_map,
     electional_day as _electional_day,
@@ -30,13 +30,18 @@ from backend.services.strategic.pattern_engine import (
 _CATALOG = "backend/services/strategic/knowledge_base/analysis_patterns.json"
 
 
-def _base(pattern_id: str, layer: str, confidence: float) -> dict[str, Any]:
+def _base(
+    pattern_id: str, layer: str, confidence: float, locale: str = "ru"
+) -> dict[str, Any]:
+    """Common envelope. `locale` picks the disclaimer language for tools that
+    return user-facing text — a Russian disclaimer under an English plan is a
+    contract violation, not a cosmetic one."""
     return {
         "pattern_id": pattern_id,
         "layer": layer,
         "confidence": confidence,
         "interpretation_rules_ref": f"{_CATALOG}#{pattern_id}",
-        "disclaimer": DISCLAIMER_RU,
+        "disclaimer": DISCLAIMERS.get(locale, DISCLAIMER_RU),
     }
 
 
@@ -65,7 +70,7 @@ def analysis_plan(
             ["natal-chart"]) so they stop being offered as the next step.
         locale: "ru" (default) or "en".
     """
-    out = _base("analysis-plan", "astronomy", 1.0)
+    out = _base("analysis-plan", "astronomy", 1.0, locale=locale)
     out.pop("interpretation_rules_ref", None)
     out["computed"] = build_plan(known_inputs, completed_stages, locale)
     out["how_to_use"] = (

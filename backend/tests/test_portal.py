@@ -59,6 +59,22 @@ def test_connect_page_falls_back_to_request_url(client, monkeypatch):
     assert "/mcp" in body
 
 
+def test_connect_url_forced_to_https_outside_development(client, monkeypatch):
+    """Behind a TLS-terminating proxy the app sees http; an http connector URL
+    is rejected by the chat clients, so the displayed URL must be https."""
+    monkeypatch.setattr(settings, "MCP_PUBLIC_URL", None, raising=False)
+    monkeypatch.setattr(settings, "ENVIRONMENT", "production", raising=False)
+    body = client.get("/connect").text
+    assert "http://testserver/mcp" not in body
+    assert "https://testserver/mcp" in body
+
+
+def test_connect_url_left_alone_in_development(client, monkeypatch):
+    monkeypatch.setattr(settings, "MCP_PUBLIC_URL", None, raising=False)
+    monkeypatch.setattr(settings, "ENVIRONMENT", "development", raising=False)
+    assert "http://testserver/mcp" in client.get("/connect").text
+
+
 def test_language_selection(client):
     ru = client.get("/", headers={"accept-language": "ru-RU,ru;q=0.9"}).text
     en = client.get("/", headers={"accept-language": "en-US,en;q=0.9"}).text
