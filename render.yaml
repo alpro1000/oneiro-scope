@@ -72,8 +72,13 @@ services:
       - key: MCP_REQUIRE_AUTH
         value: "true"
       # Canonical resource id + OAuth audience. Set to this service's public
-      # URL + /mcp once the service has a hostname.
+      # URL + /mcp once the service has a hostname. Also supplies the Host
+      # allow-list for the transport's DNS-rebinding check — without it every
+      # request would be 421 (see docs/deploy/mcp-connector.md).
       - key: MCP_PUBLIC_URL
+        sync: false
+      # Extra Host header values (custom domain), comma-separated. Optional.
+      - key: MCP_ALLOWED_HOSTS
         sync: false
       # External authorization server (any IdP with Dynamic Client
       # Registration). Without it the MCP surface refuses to mount in

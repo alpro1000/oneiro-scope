@@ -45,7 +45,8 @@ Configure there:
 |---|---|---|
 | `MCP_ENABLED` | `true` | default |
 | `MCP_PATH` | `/mcp` | default |
-| `MCP_PUBLIC_URL` | `https://<backend>/mcp` | canonical resource id + OAuth audience |
+| `MCP_PUBLIC_URL` | `https://<backend>/mcp` | canonical resource id + OAuth audience — **also the Host allow-list source**, see below |
+| `MCP_ALLOWED_HOSTS` | *(optional)* | extra Host header values (custom domain), comma-separated |
 | `MCP_REQUIRE_AUTH` | `true` | keep true for anything public |
 | `MCP_AUTH_ISSUER` | e.g. `https://you.eu.auth0.com/` | your IdP |
 | `MCP_AUTH_JWKS_URL` | *(optional)* | defaults to issuer + `/.well-known/jwks.json` |
@@ -57,16 +58,50 @@ Safety rail: in production with `MCP_REQUIRE_AUTH=true` and no
 `MCP_AUTH_ISSUER`, the MCP surface refuses to mount rather than exposing the
 tools unauthenticated. The REST API still boots.
 
+### Three things that silently break the connector
+
+Each of these produces a client-side error that names none of them, so they
+are worth knowing by shape:
+
+1. **`/mcp/mcp`.** FastMCP's transport serves itself at `/mcp` *inside* its own
+   app; mounting that under `MCP_PATH` would put the endpoint at `/mcp/mcp` and
+   404 the URL users paste. `build_mcp_http_app()` sets
+   `streamable_http_path = "/"` so the mount path is the endpoint. A
+   `MountPathNormalizer` middleware also rewrites bare `/mcp` in place instead
+   of letting the router answer `307 → /mcp/` — behind a TLS-terminating proxy
+   whose forwarded headers aren't trusted, that redirect's `Location` comes
+   back `http://` and clients refuse it.
+2. **`421 Invalid Host header`.** The transport enables DNS-rebinding
+   protection by default with a *localhost-only* allow-list, which rejects
+   every request to a real deployment. The public host comes from
+   `MCP_PUBLIC_URL` (plus `MCP_ALLOWED_HOSTS` for a custom domain). With
+   neither set, protection is switched off and a warning is logged — an
+   unconfigured server that answers beats one that 421s everything.
+3. **"Couldn't register with the sign-in service".** Publishing the RFC 9728
+   document is a claim that this resource is OAuth-protected. Clients act on it
+   *before* calling `/mcp`: they read it, look for `authorization_servers`, and
+   when absent fall back to treating this origin as the authorization server
+   and attempt Dynamic Client Registration against it — which fails. So
+   `/.well-known/oauth-protected-resource` answers **404 until
+   `MCP_AUTH_ISSUER` is set**. A public server must not advertise OAuth.
+
 ## 3. Verify the deployment
 
 ```bash
-# discovery document — must list your authorization server
+# discovery document — 404 on a public server, your AS once MCP_AUTH_ISSUER is set
 curl -s https://<backend>/.well-known/oauth-protected-resource | jq
 
-# unauthenticated call — must be 401 with a WWW-Authenticate header
-curl -i -X POST https://<backend>/mcp -H 'content-type: application/json' \
-  -d '{"jsonrpc":"2.0","id":1,"method":"tools/list"}'
+# handshake — must be 200 with an mcp-session-id header (no redirect)
+curl -i -X POST https://<backend>/mcp \
+  -H 'content-type: application/json' \
+  -H 'accept: application/json, text/event-stream' \
+  -d '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{
+       "protocolVersion":"2025-06-18","capabilities":{},
+       "clientInfo":{"name":"curl","version":"0"}}}'
 ```
+
+With `MCP_REQUIRE_AUTH=true` the same call must instead be `401` with a
+`WWW-Authenticate` header pointing at the discovery document.
 
 Local smoke test without an IdP:
 

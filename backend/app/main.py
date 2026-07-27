@@ -199,7 +199,9 @@ app.include_router(portal_router)
 # still boots and only this surface is skipped (see backend/mcp/remote.py).
 from backend.mcp.remote import (  # noqa: E402  (after app creation by design)
     PROTECTED_RESOURCE_PATH,
+    MountPathNormalizer,
     build_mcp_http_app,
+    oauth_discovery_enabled,
     protected_resource_metadata,
 )
 
@@ -209,13 +211,29 @@ async def oauth_protected_resource():
     """RFC 9728 metadata: which authorization server guards the MCP endpoint.
 
     Clients fetch this after a 401 to learn where to send the user to log in.
+    Absent an authorization server there is nothing to point them at, and
+    answering anyway sends them into a registration flow that cannot succeed —
+    so this 404s until MCP_AUTH_ISSUER is configured.
     """
+    if not oauth_discovery_enabled():
+        return JSONResponse(
+            status_code=status.HTTP_404_NOT_FOUND,
+            content={
+                "error": "not_found",
+                "message": (
+                    "This MCP server does not use OAuth. Connect without "
+                    "authorization, or configure MCP_AUTH_ISSUER."
+                ),
+            },
+        )
     return protected_resource_metadata()
 
 
 _mcp_app, _mcp_session_manager = build_mcp_http_app()
 if _mcp_app is not None:
     app.mount(settings.MCP_PATH, _mcp_app)
+    # Outermost, so bare /mcp is rewritten before the router can redirect it.
+    app.add_middleware(MountPathNormalizer, mount_path=settings.MCP_PATH)
     app.state.mcp_session_manager = _mcp_session_manager
     logger.info("Remote MCP mounted at %s", settings.MCP_PATH)
 

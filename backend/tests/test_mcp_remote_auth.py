@@ -55,6 +55,50 @@ def test_protected_resource_metadata_shape(monkeypatch):
     assert meta["bearer_methods_supported"] == ["header"]
 
 
+def test_discovery_is_off_until_an_issuer_exists(monkeypatch):
+    """Advertising OAuth without an authorization server breaks connectors.
+
+    Clients that see the document but no `authorization_servers` fall back to
+    treating this origin as the AS and try Dynamic Client Registration, which
+    fails — the user gets "couldn't register with the sign-in service".
+    """
+    assert remote.oauth_discovery_enabled() is False
+    monkeypatch.setattr(settings, "MCP_AUTH_ISSUER", "https://idp.example.com")
+    assert remote.oauth_discovery_enabled() is True
+
+
+@pytest.fixture
+def app_client():
+    """Real app, so the wiring of the discovery route is what's tested.
+
+    The app pulls in the full backend dependency set; where those are absent
+    the test is skipped rather than failed — CI installs them and runs it.
+    """
+    pytest.importorskip("fastapi", reason="fastapi not installed")
+    try:
+        from fastapi.testclient import TestClient
+
+        from backend.app.main import app
+    except Exception as exc:  # optional heavy dep absent locally
+        pytest.skip(f"backend.app.main not importable: {exc}")
+    return TestClient(app)
+
+
+def test_discovery_endpoint_404s_on_a_public_server(app_client, monkeypatch):
+    monkeypatch.setattr(settings, "MCP_REQUIRE_AUTH", False, raising=False)
+    resp = app_client.get(remote.PROTECTED_RESOURCE_PATH)
+    assert resp.status_code == 404
+
+
+def test_discovery_endpoint_serves_metadata_once_configured(
+    app_client, monkeypatch
+):
+    monkeypatch.setattr(settings, "MCP_AUTH_ISSUER", "https://idp.example.com")
+    resp = app_client.get(remote.PROTECTED_RESOURCE_PATH)
+    assert resp.status_code == 200
+    assert resp.json()["authorization_servers"] == ["https://idp.example.com"]
+
+
 def test_www_authenticate_points_at_metadata():
     header = remote.www_authenticate_header()
     assert 'resource_metadata="https://api.example.com' in header
@@ -164,6 +208,114 @@ async def test_missing_scope_is_403(monkeypatch):
         await remote.verify_bearer(token)
     assert err.value.status == 403
     assert err.value.code == "insufficient_scope"
+
+
+# --- transport wiring (mount path + DNS-rebinding allow-list) -----------------
+
+@pytest.mark.asyncio
+async def test_normalizer_rewrites_the_bare_mount_path():
+    """`/mcp` must reach the mounted transport, not a 307 to `/mcp/`."""
+    seen: list[str] = []
+
+    async def downstream(scope, receive, send):
+        seen.append(scope["path"])
+
+    mw = remote.MountPathNormalizer(downstream, mount_path="/mcp")
+    await mw({"type": "http", "path": "/mcp"}, _noop_receive, _Recorder())
+    await mw({"type": "http", "path": "/mcp/"}, _noop_receive, _Recorder())
+    await mw({"type": "http", "path": "/mcpx"}, _noop_receive, _Recorder())
+    assert seen == ["/mcp/", "/mcp/", "/mcpx"]
+
+
+def test_allowed_transport_hosts_derived_from_public_url():
+    hosts = remote.allowed_transport_hosts()
+    assert "api.example.com" in hosts
+    assert "api.example.com:*" in hosts
+
+
+def test_allowed_transport_hosts_explicit_override(monkeypatch):
+    monkeypatch.setattr(
+        settings, "MCP_ALLOWED_HOSTS", "mcp.example.org, alt.example.org",
+        raising=False,
+    )
+    hosts = remote.allowed_transport_hosts()
+    assert "mcp.example.org" in hosts and "alt.example.org" in hosts
+
+
+def test_transport_security_allows_the_public_host(monkeypatch):
+    pytest.importorskip("mcp", reason="mcp package not installed")
+    sec = remote._transport_security()
+    assert sec.enable_dns_rebinding_protection is True
+    # The deployed host must be allowed, or every request is 421.
+    assert "api.example.com" in sec.allowed_hosts
+    # Localhost stays usable for local clients.
+    assert "localhost:*" in sec.allowed_hosts
+
+
+def test_transport_security_opens_up_when_no_host_is_known(monkeypatch):
+    """Better an unconfigured server that answers than one that 421s everything."""
+    pytest.importorskip("mcp", reason="mcp package not installed")
+    monkeypatch.setattr(settings, "MCP_PUBLIC_URL", None, raising=False)
+    monkeypatch.setattr(settings, "MCP_ALLOWED_HOSTS", "", raising=False)
+    assert remote._transport_security().enable_dns_rebinding_protection is False
+
+
+def test_mounted_transport_answers_on_the_bare_mount_path(monkeypatch):
+    """End-to-end over the real transport: `/mcp` initialises, no redirect."""
+    pytest.importorskip("mcp", reason="mcp package not installed")
+    pytest.importorskip("fastapi", reason="fastapi not installed")
+
+    import anyio
+    from fastapi import FastAPI
+    from fastapi.testclient import TestClient
+
+    monkeypatch.setattr(settings, "MCP_REQUIRE_AUTH", False, raising=False)
+    monkeypatch.setattr(settings, "MCP_ENABLED", True, raising=False)
+    asgi_app, session_manager = remote.build_mcp_http_app()
+    if asgi_app is None:
+        pytest.skip("MCP server could not be built in this environment")
+
+    host_app = FastAPI()
+    host_app.mount(settings.MCP_PATH, asgi_app)
+    host_app.add_middleware(
+        remote.MountPathNormalizer, mount_path=settings.MCP_PATH
+    )
+
+    init = {
+        "jsonrpc": "2.0", "id": 1, "method": "initialize",
+        "params": {
+            "protocolVersion": "2025-06-18",
+            "capabilities": {},
+            "clientInfo": {"name": "regression", "version": "0"},
+        },
+    }
+    headers = {
+        "accept": "application/json, text/event-stream",
+        "content-type": "application/json",
+    }
+
+    async def run():
+        async with session_manager.run():
+            with TestClient(
+                host_app, base_url="https://api.example.com"
+            ) as client:
+                return (
+                    client.post(
+                        settings.MCP_PATH, json=init, headers=headers,
+                        follow_redirects=False,
+                    ),
+                    client.post(
+                        settings.MCP_PATH, json=init,
+                        headers={**headers, "host": "evil.example.net"},
+                        follow_redirects=False,
+                    ),
+                )
+
+    resp, foreign_host = anyio.run(run)
+    assert resp.status_code == 200, resp.text
+    assert resp.headers.get("mcp-session-id")
+    # …and the allow-list still does its job.
+    assert foreign_host.status_code == 421
 
 
 # --- ASGI middleware ----------------------------------------------------------

@@ -87,6 +87,25 @@ def auth_configured() -> bool:
     return bool(settings.MCP_AUTH_ISSUER and jwks_url())
 
 
+def oauth_discovery_enabled() -> bool:
+    """Whether to publish the RFC 9728 protected-resource document.
+
+    Publishing it is a claim: "this resource is OAuth-protected, here is where
+    to log in". Chat clients act on that claim before they ever call /mcp —
+    they fetch the document, look for `authorization_servers`, and when the
+    list is absent they fall back to treating this origin as the authorization
+    server, probe `/.well-known/oauth-authorization-server`, and try Dynamic
+    Client Registration against it. All of that fails on a server that has no
+    authorization server at all, and the user sees a registration error instead
+    of a working connector.
+
+    So the document is served only when there is an issuer to name. A
+    deliberately public server (MCP_REQUIRE_AUTH=false, no issuer) answers 404
+    here, which is what tells a client to connect without OAuth.
+    """
+    return bool(settings.MCP_AUTH_ISSUER)
+
+
 def required_scopes() -> list[str]:
     return [s for s in (settings.MCP_REQUIRED_SCOPES or "").split() if s]
 
@@ -259,6 +278,96 @@ class BearerAuthMiddleware:
         await self.app(scope, receive, send)
 
 
+class MountPathNormalizer:
+    """Serve the mount path with and without a trailing slash, no redirect.
+
+    A sub-app mounted at `/mcp` is only reached by `/mcp/...`; bare `/mcp`
+    falls through to the router's `redirect_slashes`, which answers
+    `307 → /mcp/`. That redirect is a bad deal here: `/mcp` is the exact URL
+    users paste into the connector dialog, and behind a TLS-terminating proxy
+    whose forwarded headers aren't trusted the `Location` comes back as
+    `http://` — which chat clients refuse. Rewriting the path before routing
+    costs nothing and makes the two forms equivalent.
+
+    Installed as outermost middleware on the host app, so it must stay pure
+    ASGI: the transport streams SSE, which a buffering middleware would break.
+    """
+
+    def __init__(self, app: Any, mount_path: str = "/mcp") -> None:
+        self.app = app
+        self.mount_path = mount_path.rstrip("/")
+
+    async def __call__(self, scope: dict, receive: Any, send: Any) -> None:
+        if scope.get("type") == "http" and scope.get("path") == self.mount_path:
+            slashed = f"{self.mount_path}/"
+            scope = {**scope, "path": slashed, "raw_path": slashed.encode()}
+        await self.app(scope, receive, send)
+
+
+def allowed_transport_hosts() -> list[str]:
+    """Host header values the MCP transport may serve.
+
+    The transport ships with DNS-rebinding protection enabled and a
+    localhost-only allow-list, which answers `421 Invalid Host header` to every
+    request that arrives at a real deployment. The public host has to be named
+    explicitly; MCP_PUBLIC_URL already carries it.
+    """
+    from urllib.parse import urlsplit
+
+    hosts: list[str] = []
+
+    def _add(host: str) -> None:
+        host = host.strip()
+        if not host or host in hosts:
+            return
+        hosts.append(host)
+        # Same host on a non-default port (local proxying, staging).
+        base = host.split(":", 1)[0]
+        pattern = f"{base}:*"
+        if pattern not in hosts:
+            hosts.append(pattern)
+
+    for raw in (settings.MCP_ALLOWED_HOSTS or "").split(","):
+        _add(raw)
+
+    if settings.MCP_PUBLIC_URL:
+        _add(urlsplit(settings.MCP_PUBLIC_URL).netloc)
+
+    return hosts
+
+
+def _transport_security() -> Any:
+    """DNS-rebinding settings for the streamable-HTTP transport."""
+    from mcp.server.transport_security import TransportSecuritySettings
+
+    hosts = allowed_transport_hosts()
+    if not hosts:
+        # Nothing to allow-list means every request would be rejected. A
+        # server that answers nothing is worse than one without this
+        # browser-oriented check, so fall back to the library's own
+        # backwards-compatible default and say so.
+        logger.warning(
+            "Remote MCP: no MCP_PUBLIC_URL / MCP_ALLOWED_HOSTS — DNS-rebinding "
+            "protection disabled. Set MCP_PUBLIC_URL to the public /mcp URL."
+        )
+        return TransportSecuritySettings(enable_dns_rebinding_protection=False)
+
+    hosts += ["localhost", "localhost:*", "127.0.0.1", "127.0.0.1:*", "[::1]:*"]
+    origins = list(settings.allowed_origins_list) + [
+        "http://localhost:*",
+        "http://127.0.0.1:*",
+        "http://[::1]:*",
+    ]
+    for host in hosts:
+        if "*" not in host:
+            origins.append(f"https://{host}")
+    return TransportSecuritySettings(
+        enable_dns_rebinding_protection=True,
+        allowed_hosts=hosts,
+        allowed_origins=origins,
+    )
+
+
 def _bearer_from_scope(scope: dict) -> Optional[str]:
     for raw_name, raw_value in scope.get("headers", []):
         if raw_name.lower() == b"authorization":
@@ -305,6 +414,12 @@ def build_mcp_http_app() -> tuple[Optional[Any], Optional[Any]]:
     except Exception as exc:  # pragma: no cover - import-time env issues
         logger.warning("Remote MCP unavailable (%s: %s)", type(exc).__name__, exc)
         return None, None
+
+    # The transport's own path defaults to "/mcp"; mounting that under
+    # settings.MCP_PATH would put the endpoint at "/mcp/mcp" and 404 the URL
+    # users actually paste. Serve it at the mount root instead.
+    mcp.settings.streamable_http_path = "/"
+    mcp.settings.transport_security = _transport_security()
 
     try:
         asgi_app = mcp.streamable_http_app()
