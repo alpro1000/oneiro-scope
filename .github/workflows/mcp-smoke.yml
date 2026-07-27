@@ -53,7 +53,19 @@ jobs:
             "pytest>=7" \
             "pytest-asyncio>=0.23" \
             cryptography \
-            "email-validator>=2"
+            "email-validator>=2" \
+            "python-jose[cryptography]>=3.3" \
+            "jinja2>=3.1" \
+            "sqlalchemy>=2" \
+            "passlib>=1.7" \
+            "python-multipart>=0.0.9" \
+            redis \
+            httpx \
+            uvicorn
+          # The block above is deliberately not requirements.txt — these are the
+          # small pure-python pieces `backend.app.main` needs to import, so the
+          # connector tests exercise the real app. The heavy ones (mediapipe,
+          # spacy, torch) stay out; the code that needs them imports lazily.
 
       - name: Run MCP + agent smoke tests
         run: |
@@ -74,4 +86,8 @@ jobs:
             backend/tests/test_archetypes.py \
             backend/tests/test_disclaimer_and_numeric_confidence.py \
             backend/tests/test_dream_morphology.py \
+            backend/tests/test_mcp_remote_auth.py \
+            backend/tests/test_portal.py \
+            backend/tests/test_analysis_plan.py \
+            backend/tests/test_strategic_patterns.py \
             -v
