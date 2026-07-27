@@ -163,7 +163,7 @@
     {
       "path": "scripts",
       "dirs": 0,
-      "files": 4
+      "files": 5
     },
     {
       "path": "config",
@@ -378,7 +378,7 @@
     {
       "path": "backend/alembic/versions",
       "dirs": 0,
-      "files": 1
+      "files": 2
     },
     {
       "path": "backend/models",
@@ -402,8 +402,18 @@
     },
     {
       "path": "backend/tests",
+      "dirs": 1,
+      "files": 38
+    },
+    {
+      "path": "backend/tests/dreams",
+      "dirs": 1,
+      "files": 0
+    },
+    {
+      "path": "backend/tests/dreams/golden",
       "dirs": 0,
-      "files": 36
+      "files": 2
     },
     {
       "path": "backend/middleware",
@@ -468,7 +478,7 @@
     {
       "path": "backend/services/dreams",
       "dirs": 3,
-      "files": 6
+      "files": 8
     },
     {
       "path": "backend/services/dreams/ai",
@@ -488,7 +498,7 @@
     {
       "path": "backend/services/dreams/knowledge_base",
       "dirs": 0,
-      "files": 2
+      "files": 3
     },
     {
       "path": "backend/services/strategic",
@@ -611,6 +621,6 @@
       "files": 3
     }
   ],
-  "total_dirs": 121,
-  "total_files": 435
+  "total_dirs": 123,
+  "total_files": 444
 }
