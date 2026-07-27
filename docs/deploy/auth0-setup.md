@@ -113,6 +113,14 @@ starts being served (it 404s while there is no issuer, on purpose — see
 
 ## 6. Verify before touching the chat client
 
+The quickest check needs no terminal — open
+**`<BASE>/connect/diagnostics`** in a browser. The server reports on its own
+configuration: `ready: true` and `mode: "oauth"` means every failure mode in
+this document is clear. Anything failing comes with the environment variable
+that fixes it. (A browser agent can read this page; it cannot run curl.)
+
+The same checks by hand:
+
 ```bash
 BASE=https://oneiroscope-backend.onrender.com
 

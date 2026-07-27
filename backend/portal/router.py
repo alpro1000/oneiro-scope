@@ -36,6 +36,7 @@ CONTENT: dict[str, dict[str, str]] = {
     "ru": {
         "nav_connect": "Подключить", "nav_pricing": "Тарифы",
         "nav_privacy": "Приватность", "nav_terms": "Условия",
+        "nav_account": "Кабинет",
         "hero_title": "Астрология, сны и лица — прямо в вашем чате",
         "hero_lede": "Расчёты по эфемеридам, чтения с указанием источника. "
                      "Подключается как коннектор к Claude, ChatGPT и Gemini — "
@@ -98,6 +99,9 @@ CONTENT: dict[str, dict[str, str]] = {
         "trouble_free_h": "Не видно кнопки в ChatGPT",
         "trouble_free_b": "включите режим разработчика; на бесплатном плане "
                           "свои коннекторы недоступны.",
+        "diagnostics_link": "Самопроверка коннектора",
+        "diagnostics_note": "страница показывает, что именно не настроено "
+                            "на этом сервере.",
         "pricing_title": "Тарифы",
         "pricing_lede": "Оплата за доступ, а не за каждый вопрос.",
         "pricing_col_plan": "План", "pricing_col_included": "Что входит",
@@ -117,6 +121,7 @@ CONTENT: dict[str, dict[str, str]] = {
     "en": {
         "nav_connect": "Connect", "nav_pricing": "Pricing",
         "nav_privacy": "Privacy", "nav_terms": "Terms",
+        "nav_account": "Account",
         "hero_title": "Astrology, dreams and faces — inside your chat",
         "hero_lede": "Ephemeris-grade computation, readings that cite their "
                      "source. Add it as a connector in Claude, ChatGPT or "
@@ -181,6 +186,9 @@ CONTENT: dict[str, dict[str, str]] = {
         "trouble_free_h": "No button in ChatGPT",
         "trouble_free_b": "enable Developer mode; custom connectors are not "
                           "available on the free plan.",
+        "diagnostics_link": "Connector self-check",
+        "diagnostics_note": "reports exactly what is misconfigured on this "
+                            "server.",
         "pricing_title": "Pricing",
         "pricing_lede": "You pay for access, not per question.",
         "pricing_col_plan": "Plan", "pricing_col_included": "Included",

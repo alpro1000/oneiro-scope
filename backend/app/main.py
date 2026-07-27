@@ -185,9 +185,18 @@ app.include_router(physiognomy.router, prefix="/api/v1", tags=["Physiognomy"])
 # Portal: server-rendered landing / connect / pricing / legal pages. Same
 # service as the API and /mcp — no second host, no build step.
 # See docs/specs/product-architecture/.
+from backend.portal.account import router as account_router  # noqa: E402
 from backend.portal.router import router as portal_router  # noqa: E402
 
 app.include_router(portal_router)
+# Account page: plan, own model keys, data export, deletion — the few things
+# a chat connector cannot do. See backend/portal/account.py.
+app.include_router(account_router)
+# Connector self-check at /connect/diagnostics — a URL that names whatever is
+# misconfigured, for whoever is clicking through a dashboard.
+from backend.portal.diagnostics import router as diagnostics_router  # noqa: E402
+
+app.include_router(diagnostics_router)
 # app.include_router(asr.router, prefix="/api/v1", tags=["ASR"])  # Coming soon
 # app.include_router(billing.router, prefix="/api/v1", tags=["Billing"])  # Coming soon
 

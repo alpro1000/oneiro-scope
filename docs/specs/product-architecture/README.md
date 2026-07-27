@@ -86,8 +86,21 @@ Four jobs, nothing more.
   ceiling. Quota infrastructure exists (`backend/tests/test_quotas.py`).
 
 ### 4. Issue and manage access
-- "Connect" page: the MCP URL, an authorise button, current plan, usage this
-  period, revoke.
+- "Connect" page: the MCP URL and the three per-client paths.
+- **Account page** (`/account`, `backend/portal/account.py`) — built. Plan and
+  subscription state, the connector URL, your own model keys (BYOK), GDPR
+  export, account deletion. It is a rendering layer over the API handlers that
+  already exist (`auth.py`, `billing.py`, `users.py`), so every rule has one
+  implementation rather than two.
+  - Session: the API's own JWT in an httpOnly `SameSite=Lax` cookie. Lax is
+    what stands in for CSRF tokens — every mutating route is a POST.
+  - The database is opened lazily inside handlers, not via `Depends(get_db)`,
+    so a signed-out visitor still gets the page when the DB is down. The
+    connector does not depend on this page at all, and the outage copy says so.
+  - Sign-in is currently email + password against the existing user table.
+    When the IdP lands (`docs/deploy/auth0-setup.md`), it replaces this login
+    while the rest of the page stays as-is — one account for portal and
+    connector, as specified above.
 
 ### Legal (required for directory listing)
 - Privacy policy and terms at stable URLs; the reflective/entertainment

@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block title %}{{ a.title }} · {{ app_name }}{% endblock %}
+
+{% block content %}
+<h1>{{ a.title }}</h1>
+<p class="lede">{{ email }}</p>
+
+<div class="card">
+  <h3 style="margin-top:0">{{ a.plan }}</h3>
+  <p>
+    <span class="pill">{{ subscription.tier | upper }}</span>
+    {% if subscription.status %}
+      {{ a.status }}: {{ subscription.status }}
+      {% if subscription.current_period_end %}
+        · {{ a.until }} {{ subscription.current_period_end }}
+      {% endif %}
+      {% if subscription.cancel_at_period_end %}· {{ a.cancels }}{% endif %}
+    {% else %}
+      {{ a.no_sub }}
+    {% endif %}
+  </p>
+  <p class="muted"><a href="/pricing">{{ a.pricing_link }}</a></p>
+</div>
+
+<div class="card">
+  <h3 style="margin-top:0">{{ a.connector_h }}</h3>
+  <p>{{ a.connector_b }}</p>
+  <pre><code>{{ mcp_url }}</code></pre>
+  <p class="muted"><a href="/connect">{{ t.nav_connect }}</a></p>
+</div>
+
+<div class="card">
+  <h3 style="margin-top:0">{{ a.keys_h }}</h3>
+  <p>{{ a.keys_b }}</p>
+  {% if keys %}
+    <ul>
+      {% for k in keys %}
+        <li>{{ k.provider }} — {{ a.keys_added }}{% if k.hint %} (<code>{{ k.hint }}</code>){% endif %}</li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p class="muted">{{ a.keys_none }}</p>
+  {% endif %}
+  <p class="muted">{{ a.keys_manage }}</p>
+</div>
+
+<div class="card">
+  <h3 style="margin-top:0">{{ a.data_h }}</h3>
+  <p><a href="/account/export">{{ a.data_export }}</a></p>
+</div>
+
+<div class="card">
+  <h3 style="margin-top:0">{{ a.delete_h }}</h3>
+  <p>{{ a.delete_b }}</p>
+  <form method="post" action="/account/delete">
+    <p>
+      <label><input type="checkbox" name="confirm" value="yes"> {{ a.delete_confirm }}</label>
+    </p>
+    <button type="submit">{{ a.delete_btn }}</button>
+  </form>
+</div>
+
+<form method="post" action="/account/signout">
+  <button type="submit">{{ a.signout }}</button>
+</form>
+{% endblock %}

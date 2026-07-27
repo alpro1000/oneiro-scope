@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}{{ a.title }} · {{ app_name }}{% endblock %}
+
+{% block content %}
+<h1>{{ a.signin_h }}</h1>
+<p class="lede">{{ a.signin_lede }}</p>
+
+{% if error %}<p class="card" role="alert"><strong>{{ error }}</strong></p>{% endif %}
+
+<form class="card" method="post" action="/account/signin">
+  <p>
+    <label for="email">{{ a.email }}</label><br>
+    <input id="email" name="email" type="email" autocomplete="email" required
+           style="width:100%;padding:8px;margin-top:4px">
+  </p>
+  <p>
+    <label for="password">{{ a.password }}</label><br>
+    <input id="password" name="password" type="password" required
+           autocomplete="current-password"
+           style="width:100%;padding:8px;margin-top:4px">
+  </p>
+  <p>
+    <button type="submit" name="action" value="signin">{{ a.signin_btn }}</button>
+    <button type="submit" name="action" value="register">{{ a.register_btn }}</button>
+  </p>
+  <p class="muted">{{ a.register_h }} — {{ a.err_weak }}</p>
+</form>
+
+<p class="muted"><a href="/pricing">{{ a.pricing_link }}</a> · <a href="/connect">{{ t.nav_connect }}</a></p>
+{% endblock %}
