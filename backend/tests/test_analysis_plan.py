@@ -124,6 +124,17 @@ def test_stage_tools_exist_in_the_mcp_registry():
     assert not missing, f"plan references unknown tools: {missing}"
 
 
+def test_plan_tool_disclaimer_follows_locale():
+    """A Russian disclaimer under an English plan breaks the tool's contract."""
+    from backend.mcp.tools.strategic_patterns import analysis_plan
+
+    ru = analysis_plan(locale="ru")["disclaimer"]
+    en = analysis_plan(locale="en")["disclaimer"]
+    assert ru != en
+    assert "рефлексивно-развлекательный" in ru
+    assert "reflective" in en.lower()
+
+
 def test_plan_tool_wrapper_shape():
     from backend.mcp.tools.strategic_patterns import analysis_plan
 

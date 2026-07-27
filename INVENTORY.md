@@ -75,14 +75,14 @@
 | .claude/skills/life-pivots | 0 | 1 |
 | .claude/skills/vocation-map | 0 | 1 |
 | .claude/skills/character-face | 0 | 1 |
-| backend | 11 | 5 |
+| backend | 12 | 5 |
 | backend/alembic | 1 | 2 |
 | backend/alembic/versions | 0 | 1 |
 | backend/models | 0 | 7 |
 | backend/utils | 0 | 2 |
 | backend/mcp | 1 | 4 |
 | backend/mcp/tools | 0 | 10 |
-| backend/tests | 0 | 27 |
+| backend/tests | 0 | 28 |
 | backend/middleware | 0 | 2 |
 | backend/services | 8 | 0 |
 | backend/services/billing | 0 | 3 |
@@ -116,6 +116,8 @@
 | backend/api/v1 | 0 | 9 |
 | backend/core | 0 | 7 |
 | backend/data | 0 | 1 |
+| backend/portal | 1 | 2 |
+| backend/portal/templates | 0 | 5 |
 | assets | 0 | 2 |
 | external | 2 | 0 |
 | external/pyswisseph | 1 | 1 |
@@ -123,4 +125,4 @@
 | external/DReAMy | 1 | 1 |
 | external/DReAMy/dreamy | 0 | 3 |
 
-**ИТОГО:** папок = 119, файлов = 411
+**ИТОГО:** папок = 121, файлов = 419

@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}{{ t.nav_pricing }} · {{ app_name }}{% endblock %}
+{% block content %}
+<h1>{{ t.pricing_title }}</h1>
+<p class="lede">{{ t.pricing_lede }}</p>
+
+<table>
+  <thead>
+    <tr><th>{{ t.pricing_col_plan }}</th><th>{{ t.pricing_col_included }}</th><th>{{ t.pricing_col_price }}</th></tr>
+  </thead>
+  <tbody>
+    {% for plan in plans %}
+    <tr>
+      <td><strong>{{ plan.name }}</strong></td>
+      <td>{{ plan.included }}</td>
+      <td style="white-space:nowrap">{{ plan.price }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<p class="muted">{{ t.pricing_note }}</p>
+
+<h2>{{ t.pricing_how_title }}</h2>
+<p>{{ t.pricing_how_body }}</p>
+{% endblock %}

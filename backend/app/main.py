@@ -8,6 +8,7 @@ from fastapi import FastAPI, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import JSONResponse
+from pydantic import BaseModel
 from contextlib import asynccontextmanager
 import time
 import logging
@@ -180,6 +181,13 @@ app.include_router(auth.router, prefix="/api/v1", tags=["Auth"])
 app.include_router(billing.router, prefix="/api/v1", tags=["Billing"])
 app.include_router(users.router, prefix="/api/v1", tags=["Users"])
 app.include_router(physiognomy.router, prefix="/api/v1", tags=["Physiognomy"])
+
+# Portal: server-rendered landing / connect / pricing / legal pages. Same
+# service as the API and /mcp — no second host, no build step.
+# See docs/specs/product-architecture/.
+from backend.portal.router import router as portal_router  # noqa: E402
+
+app.include_router(portal_router)
 # app.include_router(asr.router, prefix="/api/v1", tags=["ASR"])  # Coming soon
 # app.include_router(billing.router, prefix="/api/v1", tags=["Billing"])  # Coming soon
 
@@ -212,17 +220,27 @@ if _mcp_app is not None:
     logger.info("Remote MCP mounted at %s", settings.MCP_PATH)
 
 
-# Root endpoint
-@app.get("/")
-async def root():
-    """Root endpoint - API information"""
-    return {
-        "name": settings.APP_NAME,
-        "version": settings.VERSION,
-        "environment": settings.ENVIRONMENT,
-        "docs": "/docs" if settings.DEBUG else "disabled",
-        "status": "operational"
-    }
+# Root endpoint — the portal owns "/", so API metadata moves to /api
+class ApiInfo(BaseModel):
+    """Response contract for the API metadata endpoint."""
+
+    name: str
+    version: str
+    environment: str
+    docs: str
+    status: str
+
+
+@app.get("/api", response_model=ApiInfo)
+async def root() -> ApiInfo:
+    """API information (the human-facing landing page lives at /)"""
+    return ApiInfo(
+        name=settings.APP_NAME,
+        version=settings.VERSION,
+        environment=settings.ENVIRONMENT,
+        docs="/docs" if settings.DEBUG else "disabled",
+        status="operational",
+    )
 
 
 if __name__ == "__main__":
