@@ -86,8 +86,21 @@ Four jobs, nothing more.
   ceiling. Quota infrastructure exists (`backend/tests/test_quotas.py`).
 
 ### 4. Issue and manage access
-- "Connect" page: the MCP URL, an authorise button, current plan, usage this
-  period, revoke.
+- "Connect" page: the MCP URL and the three per-client paths.
+- **Account page** (`/account`, `backend/portal/account.py`) — built. Plan and
+  subscription state, the connector URL, your own model keys (BYOK), GDPR
+  export, account deletion. It is a rendering layer over the API handlers that
+  already exist (`auth.py`, `billing.py`, `users.py`), so every rule has one
+  implementation rather than two.
+  - Session: the API's own JWT in an httpOnly `SameSite=Lax` cookie. Lax is
+    what stands in for CSRF tokens — every mutating route is a POST.
+  - The database is opened lazily inside handlers, not via `Depends(get_db)`,
+    so a signed-out visitor still gets the page when the DB is down. The
+    connector does not depend on this page at all, and the outage copy says so.
+  - Sign-in is currently email + password against the existing user table.
+    When the IdP lands (`docs/deploy/auth0-setup.md`), it replaces this login
+    while the rest of the page stays as-is — one account for portal and
+    connector, as specified above.
 
 ### Legal (required for directory listing)
 - Privacy policy and terms at stable URLs; the reflective/entertainment
@@ -110,6 +123,20 @@ Tools (deterministic; no user data stored — birth data is passed per call)
 `MCP_REQUIRED_SCOPES` gates the whole surface; per-tool tiering rides on the
 same claims. Because the resource server was built first (#155), the paying
 user and the connected user are the same identity automatically.
+
+### Where the AI layer runs — data-first tools
+
+In an MCP-first product the client is already a frontier model, so a tool must
+return **deterministic data + provenance + the catalog rule to apply**, and let
+the *chat* do the interpretation. A second, server-side LLM hop would be
+redundant, cost the operator money, use a weaker model, and become a failure
+point (the first live connector call returned a broken template because no
+server provider key was set). The strategic pattern tools (`money_contour`,
+`vocation_map`, …) were built this way from the start; `calculate_natal_chart`
+now matches — `include_interpretation` defaults to False and server-side prose
+is opt-in, needed only by a client with no model of its own (the parked web
+frontend). Discipline is unchanged: data is astronomy 1.0, the chat labels its
+synthesis 0.7, the disclaimer travels regardless.
 
 ## Build order
 

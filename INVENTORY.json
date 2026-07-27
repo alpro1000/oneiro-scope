@@ -193,7 +193,7 @@
     {
       "path": "docs/deploy",
       "dirs": 0,
-      "files": 3
+      "files": 5
     },
     {
       "path": "docs/steering",
@@ -367,7 +367,7 @@
     },
     {
       "path": "backend",
-      "dirs": 11,
+      "dirs": 12,
       "files": 5
     },
     {
@@ -403,7 +403,7 @@
     {
       "path": "backend/tests",
       "dirs": 0,
-      "files": 30
+      "files": 32
     },
     {
       "path": "backend/middleware",
@@ -571,6 +571,16 @@
       "files": 1
     },
     {
+      "path": "backend/portal",
+      "dirs": 1,
+      "files": 4
+    },
+    {
+      "path": "backend/portal/templates",
+      "dirs": 0,
+      "files": 8
+    },
+    {
       "path": "assets",
       "dirs": 0,
       "files": 2
@@ -601,6 +611,6 @@
       "files": 3
     }
   ],
-  "total_dirs": 119,
-  "total_files": 414
+  "total_dirs": 121,
+  "total_files": 430
 }

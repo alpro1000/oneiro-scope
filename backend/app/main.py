@@ -8,6 +8,7 @@ from fastapi import FastAPI, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import JSONResponse
+from pydantic import BaseModel
 from contextlib import asynccontextmanager
 import time
 import logging
@@ -180,6 +181,22 @@ app.include_router(auth.router, prefix="/api/v1", tags=["Auth"])
 app.include_router(billing.router, prefix="/api/v1", tags=["Billing"])
 app.include_router(users.router, prefix="/api/v1", tags=["Users"])
 app.include_router(physiognomy.router, prefix="/api/v1", tags=["Physiognomy"])
+
+# Portal: server-rendered landing / connect / pricing / legal pages. Same
+# service as the API and /mcp — no second host, no build step.
+# See docs/specs/product-architecture/.
+from backend.portal.account import router as account_router  # noqa: E402
+from backend.portal.router import router as portal_router  # noqa: E402
+
+app.include_router(portal_router)
+# Account page: plan, own model keys, data export, deletion — the few things
+# a chat connector cannot do. See backend/portal/account.py.
+app.include_router(account_router)
+# Connector self-check at /connect/diagnostics — a URL that names whatever is
+# misconfigured, for whoever is clicking through a dashboard.
+from backend.portal.diagnostics import router as diagnostics_router  # noqa: E402
+
+app.include_router(diagnostics_router)
 # app.include_router(asr.router, prefix="/api/v1", tags=["ASR"])  # Coming soon
 # app.include_router(billing.router, prefix="/api/v1", tags=["Billing"])  # Coming soon
 
@@ -191,38 +208,87 @@ app.include_router(physiognomy.router, prefix="/api/v1", tags=["Physiognomy"])
 # still boots and only this surface is skipped (see backend/mcp/remote.py).
 from backend.mcp.remote import (  # noqa: E402  (after app creation by design)
     PROTECTED_RESOURCE_PATH,
+    MCPPathDispatcher,
     build_mcp_http_app,
+    oauth_discovery_enabled,
     protected_resource_metadata,
 )
 
 
-@app.get(PROTECTED_RESOURCE_PATH, include_in_schema=False)
+class ProtectedResourceMetadata(BaseModel):
+    """RFC 9728 protected-resource metadata (field names fixed by the RFC)."""
+
+    resource: str
+    authorization_servers: list[str] | None = None
+    bearer_methods_supported: list[str]
+    resource_documentation: str | None = None
+    scopes_supported: list[str] | None = None
+
+
+@app.get(
+    PROTECTED_RESOURCE_PATH,
+    response_model=ProtectedResourceMetadata,
+    response_model_exclude_none=True,
+    include_in_schema=False,
+)
 async def oauth_protected_resource():
     """RFC 9728 metadata: which authorization server guards the MCP endpoint.
 
     Clients fetch this after a 401 to learn where to send the user to log in.
+    Absent an enforced authorization server there is nothing to point them at,
+    and answering anyway sends them into a registration flow that cannot
+    succeed — so this 404s until OAuth is both configured and required.
     """
+    if not oauth_discovery_enabled():
+        return JSONResponse(
+            status_code=status.HTTP_404_NOT_FOUND,
+            content={
+                "error": "not_found",
+                "message": (
+                    "This MCP server does not use OAuth. Connect without "
+                    "authorization, or configure MCP_AUTH_ISSUER with "
+                    "MCP_REQUIRE_AUTH=true."
+                ),
+            },
+        )
     return protected_resource_metadata()
 
 
+# Root endpoint — the portal owns "/", so API metadata moves to /api
+class ApiInfo(BaseModel):
+    """Response contract for the API metadata endpoint."""
+
+    name: str
+    version: str
+    environment: str
+    docs: str
+    status: str
+
+
+@app.get("/api", response_model=ApiInfo)
+async def root() -> ApiInfo:
+    """API information (the human-facing landing page lives at /)"""
+    return ApiInfo(
+        name=settings.APP_NAME,
+        version=settings.VERSION,
+        environment=settings.ENVIRONMENT,
+        docs="/docs" if settings.DEBUG else "disabled",
+        status="operational",
+    )
+
+
+# --- MCP dispatch (must stay last: `app` stops being a FastAPI instance) ------
+# The transport streams SSE, and every middleware above would sit in front of
+# that stream — GZip withholding bytes, BaseHTTPMiddleware re-framing the
+# response — so /mcp is dispatched above the stack instead. `api_app` keeps the
+# FastAPI object reachable for anything that needs the real thing.
+api_app = app
+
 _mcp_app, _mcp_session_manager = build_mcp_http_app()
 if _mcp_app is not None:
-    app.mount(settings.MCP_PATH, _mcp_app)
-    app.state.mcp_session_manager = _mcp_session_manager
-    logger.info("Remote MCP mounted at %s", settings.MCP_PATH)
-
-
-# Root endpoint
-@app.get("/")
-async def root():
-    """Root endpoint - API information"""
-    return {
-        "name": settings.APP_NAME,
-        "version": settings.VERSION,
-        "environment": settings.ENVIRONMENT,
-        "docs": "/docs" if settings.DEBUG else "disabled",
-        "status": "operational"
-    }
+    api_app.state.mcp_session_manager = _mcp_session_manager
+    app = MCPPathDispatcher(api_app, _mcp_app, settings.MCP_PATH)
+    logger.info("Remote MCP served at %s", settings.MCP_PATH)
 
 
 if __name__ == "__main__":

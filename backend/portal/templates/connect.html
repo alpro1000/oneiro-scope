@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}{{ t.nav_connect }} · {{ app_name }}{% endblock %}
+{% block content %}
+<h1>{{ t.connect_title }}</h1>
+<p class="lede">{{ t.connect_lede }}</p>
+
+<div class="card">
+  <p class="muted" style="margin:0 0 6px">{{ t.connect_url_label }}</p>
+  <pre style="margin:0"><code>{{ mcp_url }}</code></pre>
+</div>
+
+<h2>Claude</h2>
+<ol>
+  <li>{{ t.claude_1 }}</li>
+  <li>{{ t.claude_2 }}</li>
+  <li>{{ t.claude_3 }}</li>
+</ol>
+<p class="muted">{{ t.claude_note }}</p>
+
+<h2>ChatGPT</h2>
+<ol>
+  <li>{{ t.gpt_1 }}</li>
+  <li>{{ t.gpt_2 }}</li>
+  <li>{{ t.gpt_3 }}</li>
+</ol>
+<p class="muted">{{ t.gpt_note }}</p>
+
+<h2>Gemini</h2>
+<ol>
+  <li>{{ t.gem_1 }}</li>
+  <li>{{ t.gem_2 }}</li>
+</ol>
+<p class="muted">{{ t.gem_note }}</p>
+
+<h2>{{ t.first_ask_title }}</h2>
+<p>{{ t.first_ask_body }}</p>
+<pre><code>{{ t.first_ask_example }}</code></pre>
+<p class="muted">{{ t.first_ask_note }}</p>
+
+<h2>{{ t.troubleshoot_title }}</h2>
+<ul>
+  <li><strong>401</strong> — {{ t.trouble_401 }}</li>
+  <li><strong>{{ t.trouble_slow_h }}</strong> — {{ t.trouble_slow_b }}</li>
+  <li><strong>{{ t.trouble_free_h }}</strong> — {{ t.trouble_free_b }}</li>
+</ul>
+<p class="muted">
+  <a href="/connect/diagnostics">{{ t.diagnostics_link }}</a> —
+  {{ t.diagnostics_note }}
+</p>
+{% endblock %}

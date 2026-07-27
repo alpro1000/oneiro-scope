@@ -63,6 +63,9 @@ pandas>=2.0.0
 # Vector DB
 pgvector==0.2.4
 
+# Portal (server-rendered pages: landing, connect, pricing, legal)
+jinja2>=3.1,<4
+
 # HTTP Client
 # httpx must be >=0.27 for `mcp[cli]`, but <0.28 because httpx 0.28 removed the
 # deprecated `proxies=` kwarg that openai==1.10.0 / anthropic==0.8.1 still pass.

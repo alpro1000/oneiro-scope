@@ -558,6 +558,16 @@ class AstrologyInterpreter:
             })
         return result
 
+    # Russian aspect names, so the fallback doesn't emit "Солнце opposition Луна".
+    _ASPECT_RU = {
+        AspectType.CONJUNCTION: "соединение с",
+        AspectType.SEXTILE: "секстиль к",
+        AspectType.SQUARE: "квадрат к",
+        AspectType.TRINE: "трин к",
+        AspectType.OPPOSITION: "оппозиция к",
+        AspectType.QUINCUNX: "квинконс к",
+    }
+
     def _template_interpret_natal(
         self,
         planets: list[PlanetPosition],
@@ -565,47 +575,53 @@ class AstrologyInterpreter:
         aspects: list[Aspect],
         locale: str,
     ) -> str:
-        """Template-based natal chart interpretation (fallback)."""
+        """Template-based natal chart interpretation (fallback).
+
+        Deliberately keyword-free in Russian: the source keyword lists are
+        English only, and splicing them into Russian text ("качествами Рака:
+        nurturing, emotion") reads as broken. This path is a fallback for a
+        client with no model of its own; connectors interpret the data instead.
+        """
         lines = []
 
-        # Sun sign
         sun = next((p for p in planets if p.planet == Planet.SUN), None)
         moon = next((p for p in planets if p.planet == Planet.MOON), None)
 
         if sun:
             sign_info = SIGN_DESCRIPTIONS[sun.sign]
             if locale == "ru":
-                lines.append(f"**Солнце в {sign_info['ru']}е**")
-                lines.append(f"Ваша основная энергия связана с качествами {sign_info['ru']}а: "
-                           f"{', '.join(sign_info['keywords'][:3])}.")
+                lines.append(f"**Солнце в знаке {sign_info['ru']}**")
+                lines.append(
+                    "Основная энергия и чувство «я» окрашены качествами этого знака."
+                )
             else:
+                kw = ", ".join(sign_info["keywords"][:3])
                 lines.append(f"**Sun in {sun.sign.value.title()}**")
-                lines.append(f"Your core energy relates to {sun.sign.value} qualities: "
-                           f"{', '.join(sign_info['keywords'][:3])}.")
+                lines.append(f"Your core identity relates to {sun.sign.value} qualities: {kw}.")
 
         if moon:
             sign_info = SIGN_DESCRIPTIONS[moon.sign]
             if locale == "ru":
-                lines.append(f"\n**Луна в {sign_info['ru']}е**")
-                lines.append(f"Ваши эмоциональные потребности выражаются через призму {sign_info['ru']}а.")
+                lines.append(f"\n**Луна в знаке {sign_info['ru']}**")
+                lines.append(
+                    "Эмоциональные потребности выражаются через призму этого знака."
+                )
             else:
                 lines.append(f"\n**Moon in {moon.sign.value.title()}**")
                 lines.append(f"Your emotional needs are expressed through {moon.sign.value} energy.")
 
-        # Aspects
         if aspects:
-            if locale == "ru":
-                lines.append("\n**Ключевые аспекты:**")
-            else:
-                lines.append("\n**Key Aspects:**")
-
+            lines.append("\n**Ключевые аспекты:**" if locale == "ru" else "\n**Key Aspects:**")
             for aspect in aspects[:5]:
-                p1 = PLANET_DESCRIPTIONS[aspect.planet1]["ru" if locale == "ru" else "keywords"][0]
-                p2 = PLANET_DESCRIPTIONS[aspect.planet2]["ru" if locale == "ru" else "keywords"][0]
                 if locale == "ru":
-                    lines.append(f"- {p1} {aspect.aspect_type.value} {p2}")
+                    p1 = PLANET_DESCRIPTIONS[aspect.planet1]["ru"]
+                    p2 = PLANET_DESCRIPTIONS[aspect.planet2]["ru"]
+                    rel = self._ASPECT_RU.get(aspect.aspect_type, aspect.aspect_type.value)
+                    lines.append(f"- {p1} — {rel} {p2}")
                 else:
-                    lines.append(f"- {aspect.planet1.value} {aspect.aspect_type.value} {aspect.planet2.value}")
+                    lines.append(
+                        f"- {aspect.planet1.value} {aspect.aspect_type.value} {aspect.planet2.value}"
+                    )
 
         return "\n".join(lines)
 

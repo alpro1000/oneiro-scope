@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}{{ page_title }} · {{ app_name }}{% endblock %}
+{% block content %}
+<h1>{{ page_title }}</h1>
+<p class="muted">{{ t.legal_updated }}: {{ updated }}</p>
+{% if draft %}
+<div class="card"><p class="muted" style="margin:0">{{ t.legal_draft_notice }}</p></div>
+{% endif %}
+{% for section in sections %}
+  <h2>{{ section.h }}</h2>
+  {% for para in section.p %}<p>{{ para }}</p>{% endfor %}
+  {% if section.list %}
+  <ul>{% for item in section.list %}<li>{{ item }}</li>{% endfor %}</ul>
+  {% endif %}
+{% endfor %}
+{% endblock %}

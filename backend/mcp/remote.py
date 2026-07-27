@@ -87,6 +87,32 @@ def auth_configured() -> bool:
     return bool(settings.MCP_AUTH_ISSUER and jwks_url())
 
 
+def oauth_discovery_enabled() -> bool:
+    """Whether to publish the RFC 9728 protected-resource document.
+
+    Publishing it is a claim: "this resource is OAuth-protected, here is where
+    to log in". Chat clients act on that claim before they ever call /mcp —
+    they fetch the document, look for `authorization_servers`, and when the
+    list is absent they fall back to treating this origin as the authorization
+    server, probe `/.well-known/oauth-authorization-server`, and try Dynamic
+    Client Registration against it. All of that fails on a server that has no
+    authorization server at all, and the user sees a registration error instead
+    of a working connector.
+
+    So the document is served only when this server actually enforces OAuth —
+    an issuer to name *and* MCP_REQUIRE_AUTH on. Advertising protection that
+    isn't enforced is the same lie in the other direction: the client runs a
+    login flow for an endpoint that would have answered without one.
+    """
+    if settings.MCP_AUTH_ISSUER and not settings.MCP_REQUIRE_AUTH:
+        logger.warning(
+            "MCP_AUTH_ISSUER is set but MCP_REQUIRE_AUTH is false — /mcp is "
+            "open and OAuth discovery stays off. Set MCP_REQUIRE_AUTH=true to "
+            "enforce it."
+        )
+    return bool(settings.MCP_AUTH_ISSUER and settings.MCP_REQUIRE_AUTH)
+
+
 def required_scopes() -> list[str]:
     return [s for s in (settings.MCP_REQUIRED_SCOPES or "").split() if s]
 
@@ -192,11 +218,26 @@ async def verify_bearer(token: str) -> dict[str, Any]:
             key,
             algorithms=[header.get("alg", "RS256")],
             audience=audience(),
-            issuer=settings.MCP_AUTH_ISSUER.rstrip("/") if settings.MCP_AUTH_ISSUER else None,
+            # Issuer is checked below, not here: jose does an exact-string
+            # compare, but Auth0 emits `iss` WITH a trailing slash while the
+            # configured MCP_AUTH_ISSUER may or may not carry one. Letting jose
+            # enforce it rejects every real Auth0 token as "invalid issuer".
             options={"verify_at_hash": False},
         )
     except JWTError as exc:
+        logger.warning("MCP token rejected at decode: %s", exc)
         raise AuthError("invalid_token", f"Token rejected: {exc}")
+
+    expected_iss = (settings.MCP_AUTH_ISSUER or "").rstrip("/")
+    if expected_iss:
+        token_iss = str(claims.get("iss", "")).rstrip("/")
+        if token_iss != expected_iss:
+            logger.warning(
+                "MCP token rejected: issuer %r != expected %r",
+                claims.get("iss"),
+                settings.MCP_AUTH_ISSUER,
+            )
+            raise AuthError("invalid_token", "Token rejected: issuer mismatch")
 
     needed = set(required_scopes())
     if needed:
@@ -259,6 +300,135 @@ class BearerAuthMiddleware:
         await self.app(scope, receive, send)
 
 
+class MCPPathDispatcher:
+    """Route MCP_PATH to the transport, above the API's middleware stack.
+
+    Two problems solved at once.
+
+    *Streaming.* The transport keeps a long-lived SSE channel open for
+    server→client messages, and every layer of the API's middleware stack sits
+    in front of it: `GZipMiddleware` withholds bytes until it has enough to
+    decide whether to compress, and `BaseHTTPMiddleware` (rate limiting,
+    request logging) re-frames responses through a memory stream. Measured
+    end-to-end, `GET /mcp` never delivers its response headers through that
+    stack — it just hangs. Dispatching above the stack is a smaller and safer
+    change than making three middlewares streaming-safe.
+
+    *Path.* `/mcp` and `/mcp/` both reach the transport, with no `307` in
+    between. That redirect matters because `/mcp` is the exact URL users paste
+    into the connector dialog, and behind a TLS-terminating proxy whose
+    forwarded headers aren't trusted its `Location` comes back `http://` —
+    which chat clients refuse.
+
+    Everything else, including the lifespan, goes to the API app untouched.
+    """
+
+    def __init__(self, api: Any, mcp_app: Any, path: str = "/mcp") -> None:
+        self.api = api
+        self.mcp_app = mcp_app
+        self.path = "/" + path.strip("/")
+
+    async def __call__(self, scope: dict, receive: Any, send: Any) -> None:
+        if scope.get("type") == "http":
+            path = scope.get("path", "")
+            if path == self.path or path.startswith(f"{self.path}/"):
+                # Mount semantics: the sub-app sees the path below the prefix,
+                # and the prefix moves to root_path so it can build URLs.
+                sub = path[len(self.path):] or "/"
+                scope = {
+                    **scope,
+                    "path": sub,
+                    "raw_path": sub.encode(),
+                    "root_path": scope.get("root_path", "") + self.path,
+                }
+                await self.mcp_app(scope, receive, send)
+                return
+        await self.api(scope, receive, send)
+
+
+def _split_host_port(value: str) -> tuple[str, Optional[str]]:
+    """Split `host[:port]`, keeping IPv6 literals in their brackets.
+
+    `[2001:db8::1]:8443` is full of colons that are not the port separator, so
+    naive splitting produces `[2001` and a garbage allow-list entry.
+    """
+    value = value.strip()
+    if value.startswith("["):
+        closing = value.find("]")
+        if closing != -1:
+            host = value[: closing + 1]
+            rest = value[closing + 1:]
+            port = rest[1:] if rest.startswith(":") else None
+            return host, port
+    if value.count(":") == 1:
+        host, _, port = value.partition(":")
+        return host, port
+    return value, None
+
+
+def allowed_transport_hosts() -> list[str]:
+    """Host header values the MCP transport may serve.
+
+    The transport ships with DNS-rebinding protection enabled and a
+    localhost-only allow-list, which answers `421 Invalid Host header` to every
+    request that arrives at a real deployment. The public host has to be named
+    explicitly; MCP_PUBLIC_URL already carries it.
+    """
+    from urllib.parse import urlsplit
+
+    hosts: list[str] = []
+
+    def _add(value: str) -> None:
+        value = value.strip()
+        if not value:
+            return
+        host, _port = _split_host_port(value)
+        for entry in (value, f"{host}:*"):
+            # Same host on a non-default port (local proxying, staging).
+            if entry not in hosts:
+                hosts.append(entry)
+
+    for raw in (settings.MCP_ALLOWED_HOSTS or "").split(","):
+        _add(raw)
+
+    if settings.MCP_PUBLIC_URL:
+        _add(urlsplit(settings.MCP_PUBLIC_URL).netloc)
+
+    return hosts
+
+
+def _transport_security() -> Any:
+    """DNS-rebinding settings for the streamable-HTTP transport."""
+    from mcp.server.transport_security import TransportSecuritySettings
+
+    hosts = allowed_transport_hosts()
+    if not hosts:
+        # Nothing to allow-list means every request would be rejected. A
+        # server that answers nothing is worse than one without this
+        # browser-oriented check, so fall back to the library's own
+        # backwards-compatible default and say so.
+        logger.warning(
+            "Remote MCP: no MCP_PUBLIC_URL / MCP_ALLOWED_HOSTS — DNS-rebinding "
+            "protection disabled. Set MCP_PUBLIC_URL to the public /mcp URL."
+        )
+        return TransportSecuritySettings(enable_dns_rebinding_protection=False)
+
+    hosts += ["localhost", "localhost:*", "127.0.0.1", "127.0.0.1:*", "[::1]:*"]
+    origins = list(settings.allowed_origins_list) + [
+        "http://localhost:*",
+        "http://127.0.0.1:*",
+        "http://[::1]:*",
+    ]
+    for host in hosts:
+        if "*" not in host:
+            origins.append(f"https://{host}")
+    return TransportSecuritySettings(
+        enable_dns_rebinding_protection=True,
+        allowed_hosts=hosts,
+        allowed_origins=origins,
+    )
+
+
 def _bearer_from_scope(scope: dict) -> Optional[str]:
     for raw_name, raw_value in scope.get("headers", []):
         if raw_name.lower() == b"authorization":
@@ -306,6 +476,12 @@ def build_mcp_http_app() -> tuple[Optional[Any], Optional[Any]]:
         logger.warning("Remote MCP unavailable (%s: %s)", type(exc).__name__, exc)
         return None, None
 
+    # The transport's own path defaults to "/mcp"; serving it under
+    # settings.MCP_PATH would put the endpoint at "/mcp/mcp" and 404 the URL
+    # users actually paste. Serve it at the dispatcher's root instead.
+    mcp.settings.streamable_http_path = "/"
+    mcp.settings.transport_security = _transport_security()
+
     try:
         asgi_app = mcp.streamable_http_app()
     except Exception as exc:  # pragma: no cover
@@ -326,5 +502,19 @@ def build_mcp_http_app() -> tuple[Optional[Any], Optional[Any]]:
             "accepted (non-production only)."
         )
 
+    # Dispatching above the API app also skips its CORSMiddleware, so put a
+    # copy here. Starlette's CORS layer is pure ASGI — it rewrites headers on
+    # the way out and never buffers a body, so SSE is unaffected.
+    from starlette.middleware.cors import CORSMiddleware
+
+    guarded = CORSMiddleware(
+        BearerAuthMiddleware(asgi_app),
+        allow_origins=settings.allowed_origins_list,
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+        expose_headers=["mcp-session-id", "www-authenticate"],
+    )
+
     session_manager = getattr(mcp, "session_manager", None)
-    return BearerAuthMiddleware(asgi_app), session_manager
+    return guarded, session_manager

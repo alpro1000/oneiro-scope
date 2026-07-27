@@ -76,6 +76,7 @@ class AstrologyService:
         self,
         request: NatalChartRequest,
         user_id: Optional[UUID] = None,
+        interpret: bool = True,
     ) -> NatalChartResponse:
         """
         Calculate natal chart based on birth data.
@@ -83,9 +84,16 @@ class AstrologyService:
         Args:
             request: Birth data (date, time, place)
             user_id: Optional user ID to associate chart with
+            interpret: Generate the server-side LLM interpretation. True keeps
+                the behaviour the web frontend depends on (it has no model of
+                its own). MCP/connector callers pass False: the deterministic
+                chart is returned as data and the *chat's own* model does the
+                reading — no second, weaker, paid LLM hop, and no dependence on
+                a server-side provider key. See docs/specs/product-architecture.
 
         Returns:
-            Complete natal chart with planets, houses, aspects, and interpretation
+            Complete natal chart with planets, houses, aspects, and (when
+            `interpret`) an interpretation.
         """
         logger.info(f"Calculating natal chart for {request.birth_place}")
 
@@ -158,23 +166,12 @@ class AstrologyService:
         sun_position = next(p for p in planets if p.planet == Planet.SUN)
         moon_position = next(p for p in planets if p.planet == Planet.MOON)
 
-        # Generate interpretation via LLM with enhanced prompts
-        interpretation = await self.interpreter.interpret_natal_chart(
-            planets=planets,
-            houses=houses,
-            aspects=aspects,
-            locale=request.locale,
-            birth_date=str(request.birth_date),
-            birth_time=str(birth_time) if request.birth_time else None,
-            birth_place=request.birth_place,
-            coords={"lat": location.latitude, "lon": location.longitude},
-            timezone=location.timezone,
-        )
-
-        # Generate structured interpretation
+        # Interpretation is the AI layer — optional. Skipped for connector
+        # callers, whose own chat model reads the deterministic chart directly.
+        interpretation = None
         structured_interpretation = None
-        try:
-            structured_interpretation = await self.interpreter.interpret_natal_structured(
+        if interpret:
+            interpretation = await self.interpreter.interpret_natal_chart(
                 planets=planets,
                 houses=houses,
                 aspects=aspects,
@@ -185,8 +182,22 @@ class AstrologyService:
                 coords={"lat": location.latitude, "lon": location.longitude},
                 timezone=location.timezone,
             )
-        except Exception as e:
-            logger.warning(f"Failed to generate structured interpretation: {e}")
+            try:
+                structured_interpretation = (
+                    await self.interpreter.interpret_natal_structured(
+                        planets=planets,
+                        houses=houses,
+                        aspects=aspects,
+                        locale=request.locale,
+                        birth_date=str(request.birth_date),
+                        birth_time=str(birth_time) if request.birth_time else None,
+                        birth_place=request.birth_place,
+                        coords={"lat": location.latitude, "lon": location.longitude},
+                        timezone=location.timezone,
+                    )
+                )
+            except Exception as e:
+                logger.warning(f"Failed to generate structured interpretation: {e}")
 
         return NatalChartResponse(
             id=uuid4(),
