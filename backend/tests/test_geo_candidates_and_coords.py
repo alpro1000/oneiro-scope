@@ -255,3 +255,63 @@ async def test_explicit_timezone_overrides_coordinate_lookup():
     )
     resp = await svc.calculate_natal_chart(req)
     assert resp.timezone == "UTC"
+
+
+# ── review findings (Qodo, PR #163) ─────────────────────────────────────────
+#
+# Both were introduced by the coordinate bypass: `timezone_name` became
+# caller-controlled, which made a pre-existing landmine reachable.
+
+def test_invalid_timezone_is_rejected_at_the_boundary():
+    """A typo must be an error, never a chart shifted by the whole offset."""
+    with pytest.raises(ValueError):
+        NatalChartRequest(
+            birth_date=date_cls(1977, 7, 1), birth_place="Zaporizhzhia",
+            latitude=47.85167, longitude=35.11714, timezone_name="Europe/Kiyv",
+        )
+
+
+def test_valid_timezone_still_accepted():
+    req = NatalChartRequest(
+        birth_date=date_cls(1977, 7, 1), birth_place="Zaporizhzhia",
+        latitude=47.85167, longitude=35.11714, timezone_name="Europe/Kyiv",
+    )
+    assert req.timezone_name == "Europe/Kyiv"
+
+
+def test_calculator_refuses_an_unparseable_zone_instead_of_assuming_utc():
+    """The core defect: local time silently treated as UTC.
+
+    Zaporizhzhia is UTC+3, so the old fallback moved the chart three hours —
+    roughly 45 deg of Midheaven, since sidereal time advances ~15 deg/hour.
+    """
+    from datetime import datetime
+    from backend.services.astrology.natal_chart import _to_utc_or_raise
+
+    assert _to_utc_or_raise(datetime(1977, 7, 1, 22, 30), "Europe/Kyiv") == \
+        datetime(1977, 7, 1, 19, 30), "UTC+3 must be applied, not ignored"
+
+    with pytest.raises(ValueError, match="Unknown timezone"):
+        _to_utc_or_raise(datetime(1977, 7, 1, 22, 30), "Europe/Kiyv")
+
+
+def test_unresolvable_coordinates_raise_valueerror_not_geocoding_error():
+    """The API maps ValueError to 400 and everything else to 500.
+
+    The coordinate path called the private `_timezone_for`, whose GeocodingError
+    would have surfaced as an internal error for what is really bad input.
+    """
+    from backend.services.astrology.geocoder import Geocoder, GeocodingError
+
+    class _NoZone(Geocoder):
+        def _timezone_for(self, lat, lon):
+            raise GeocodingError("TIMEZONE_NOT_FOUND")
+
+    with pytest.raises(ValueError):
+        _NoZone().resolve_timezone(0.0, 0.0)
+
+
+def test_resolve_timezone_returns_the_zone_when_found():
+    from backend.services.astrology.geocoder import Geocoder
+
+    assert Geocoder().resolve_timezone(47.85167, 35.11714) == "Europe/Kyiv"

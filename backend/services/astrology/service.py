@@ -97,7 +97,7 @@ class AstrologyService:
         # timezone error moves the MC ~15 deg against ~1 deg per degree of
         # longitude.
         if request.latitude is not None and request.longitude is not None:
-            timezone_name = request.timezone_name or self.geocoder._timezone_for(
+            timezone_name = request.timezone_name or self.geocoder.resolve_timezone(
                 request.latitude, request.longitude
             )
             location = GeoLocation(

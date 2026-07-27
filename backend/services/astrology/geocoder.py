@@ -128,6 +128,22 @@ class Geocoder:
             logger.error(f"[Geocoder] ✗ CRITICAL ERROR: Geocoding error for '{query}': {type(exc).__name__}: {exc}", exc_info=True)
             raise GeocodingError("GEOCODER_ERROR") from exc
 
+    def resolve_timezone(self, lat: float, lon: float) -> str:
+        """IANA zone for coordinates, as a ValueError on failure.
+
+        Public counterpart to `_timezone_for` for callers outside this class:
+        the API layer maps `ValueError` to HTTP 400 and everything else to 500,
+        so a coordinate the timezone database cannot place is a client-correctable
+        input, not an internal error.
+        """
+        try:
+            return self._timezone_for(lat, lon)
+        except GeocodingError as exc:
+            raise ValueError(
+                f"Could not resolve a timezone for coordinates {lat}, {lon} "
+                f"({exc}). Supply timezone_name explicitly."
+            ) from exc
+
     def _timezone_for(self, lat: float, lon: float) -> str:
         tz = self.tzfinder.timezone_at(lat=lat, lng=lon)
         if tz is None:

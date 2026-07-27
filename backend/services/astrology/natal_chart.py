@@ -37,6 +37,33 @@ ASPECT_ANGLES = {
 }
 
 
+
+def _to_utc_or_raise(birth_dt: datetime, timezone: str) -> datetime:
+    """Convert a naive local birth datetime to naive UTC, or refuse.
+
+    This used to be `except Exception: utc_dt = birth_dt` — on an unparseable
+    zone the *local* time was treated as UTC, silently shifting the chart by the
+    whole offset. Three hours for Ukraine is ~45 deg of Midheaven: not a
+    degraded chart, a different one. Since the zone reaches here either from
+    GeoNames/TimezoneFinder (always a valid IANA name) or from a
+    schema-validated caller override, a failure now means a real bug — and a
+    chart computed from the wrong instant is worse than no chart at all.
+    """
+    import pytz
+
+    try:
+        local_tz = pytz.timezone(timezone)
+    except Exception as exc:
+        raise ValueError(
+            f"Unknown timezone {timezone!r} — refusing to compute a chart, "
+            f"because treating local time as UTC would shift it by the whole "
+            f"offset (~15 deg of Midheaven per hour)."
+        ) from exc
+
+    if birth_dt.tzinfo is None:
+        birth_dt = local_tz.localize(birth_dt)
+    return birth_dt.astimezone(pytz.UTC).replace(tzinfo=None)
+
 class NatalChartCalculator:
     """
     Calculator for natal chart elements.
@@ -70,15 +97,7 @@ class NatalChartCalculator:
             List of PlanetPosition for all planets
         """
         # Convert to UTC for calculations
-        import pytz
-        try:
-            local_tz = pytz.timezone(timezone)
-            if birth_dt.tzinfo is None:
-                birth_dt = local_tz.localize(birth_dt)
-            utc_dt = birth_dt.astimezone(pytz.UTC).replace(tzinfo=None)
-        except Exception:
-            # Fallback to treating as UTC
-            utc_dt = birth_dt
+        utc_dt = _to_utc_or_raise(birth_dt, timezone)
 
         planets = []
 
@@ -145,14 +164,7 @@ class NatalChartCalculator:
         Returns:
             List of 12 Houses or None if calculation fails
         """
-        try:
-            import pytz
-            local_tz = pytz.timezone(timezone)
-            if birth_dt.tzinfo is None:
-                birth_dt = local_tz.localize(birth_dt)
-            utc_dt = birth_dt.astimezone(pytz.UTC).replace(tzinfo=None)
-        except Exception:
-            utc_dt = birth_dt
+        utc_dt = _to_utc_or_raise(birth_dt, timezone)
 
         if self.ephemeris._swe is None:
             # Fallback: use Whole Sign houses

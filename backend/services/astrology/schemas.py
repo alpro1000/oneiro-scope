@@ -5,6 +5,7 @@ from decimal import Decimal
 from enum import Enum
 from typing import Optional
 from uuid import UUID
+from zoneinfo import ZoneInfo
 
 from pydantic import BaseModel, Field, model_validator
 
@@ -171,6 +172,27 @@ class NatalChartRequest(BaseModel):
                 "latitude and longitude must be provided together — one without "
                 "the other cannot locate a birth place"
             )
+        return self
+
+    @model_validator(mode="after")
+    def _timezone_must_be_a_real_zone(self) -> "NatalChartRequest":
+        """Reject an unknown zone at the boundary rather than mis-timing a chart.
+
+        The downstream calculator falls back to treating a naive local datetime
+        as UTC when a zone fails to parse, which silently shifts the chart by the
+        whole offset — three hours for Ukraine, i.e. ~45 deg of Midheaven. A
+        typo like "Europe/Kiyv" must be an error, never a quietly wrong chart.
+        """
+        if self.timezone_name is None:
+            return self
+        try:
+            ZoneInfo(self.timezone_name)
+        except Exception as exc:
+            raise ValueError(
+                f"timezone_name {self.timezone_name!r} is not a known IANA zone "
+                f"(expected e.g. 'Europe/Kyiv'). Omit it to resolve the zone from "
+                f"the coordinates instead."
+            ) from exc
         return self
 
 
