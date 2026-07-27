@@ -43,6 +43,10 @@ class Settings(BaseSettings):
     # Public canonical URL of the MCP endpoint — also the OAuth audience.
     # e.g. https://oneiroscope-backend.onrender.com/mcp
     MCP_PUBLIC_URL: str | None = None
+    # Host header values the MCP transport accepts (DNS-rebinding protection).
+    # Comma-separated; empty means "derive from MCP_PUBLIC_URL". Localhost is
+    # always allowed so local clients keep working.
+    MCP_ALLOWED_HOSTS: str = ""
 
     # OAuth 2.1 resource-server settings. The authorization server itself is
     # external (Auth0 / Clerk / Stytch / WorkOS…); we only validate its tokens.

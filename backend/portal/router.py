@@ -230,19 +230,22 @@ def _locale(request: Request) -> str:
 def _mcp_url(request: Request) -> str:
     """Public MCP endpoint shown for copy-paste.
 
-    A configured value always wins. The request-derived fallback exists so the
-    page is useful before a canonical URL is set, but it is forced to https
-    outside development: behind a TLS-terminating proxy (Render, any CDN) the
-    app sees plain http, and an http connector URL is silently rejected by the
-    chat clients — the user would copy something that cannot work.
+    A configured value always wins, and outside development it is the *only*
+    source: `request.base_url` comes from the Host header, so deriving a
+    copy-paste connector URL from it would let a forged header decide which
+    server a visitor is told to connect to. In development the derived form is
+    kept — it makes the page useful with no config — and forced to https,
+    because behind a TLS-terminating proxy the app sees plain http and an http
+    connector URL is silently rejected by the chat clients.
     """
     if settings.MCP_PUBLIC_URL:
         return settings.MCP_PUBLIC_URL.rstrip("/")
 
-    base = str(request.base_url).rstrip("/")
-    if settings.ENVIRONMENT != "development" and base.startswith("http://"):
-        base = "https://" + base[len("http://"):]
-    return base + settings.MCP_PATH
+    if settings.ENVIRONMENT != "development":
+        # Nothing trustworthy to build an absolute URL from.
+        return settings.MCP_PATH
+
+    return str(request.base_url).rstrip("/") + settings.MCP_PATH
 
 
 def _ctx(request: Request, **extra: Any) -> dict[str, Any]:
