@@ -398,12 +398,12 @@
     {
       "path": "backend/mcp/tools",
       "dirs": 0,
-      "files": 10
+      "files": 11
     },
     {
       "path": "backend/tests",
       "dirs": 0,
-      "files": 35
+      "files": 36
     },
     {
       "path": "backend/middleware",
@@ -612,5 +612,5 @@
     }
   ],
   "total_dirs": 121,
-  "total_files": 433
+  "total_files": 435
 }
