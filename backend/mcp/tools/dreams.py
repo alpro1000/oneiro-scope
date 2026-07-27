@@ -13,17 +13,22 @@ the disclaimer.
 from __future__ import annotations
 
 import json
+import logging
+import uuid as uuid_mod
+from contextlib import asynccontextmanager
 from datetime import date as date_cls
 from pathlib import Path
 from typing import Any, Optional
 
-from backend.mcp.tools._menu import DREAM_TEXT, with_menu
+from backend.mcp.tools._menu import DREAM_TEXT, USER_ID, with_menu
 from backend.services.dreams.schemas import (
     DreamAnalysisRequest,
     DreamCategory,
 )
 from backend.services.dreams.service import DreamService
 from backend.services.strategic.disclaimer import DISCLAIMERS, DISCLAIMER_RU
+
+logger = logging.getLogger(__name__)
 
 
 _service: Optional[DreamService] = None
@@ -41,6 +46,19 @@ def _disclaimer(locale: str) -> str:
     return DISCLAIMERS.get(locale, DISCLAIMER_RU)
 
 
+@asynccontextmanager
+async def _db_session():
+    """One database session, opened only when a tool truly needs one."""
+    from backend.core.database import get_db
+
+    agen = get_db()
+    session = await agen.__anext__()
+    try:
+        yield session
+    finally:
+        await agen.aclose()
+
+
 async def analyze_dream(
     dream_text: str,
     dream_date: Optional[str] = None,
@@ -48,6 +66,7 @@ async def analyze_dream(
     dreamer_age_group: Optional[str] = None,
     locale: str = "ru",  # ru | en | de | es | fr
     include_interpretation: bool = False,
+    store_for_user_id: Optional[str] = None,
 ) -> dict[str, Any]:
     """Analyze a dream: structural Hall/Van de Castle coding + symbols +
     Jungian archetypes + DreamBank norms + lunar context.
@@ -80,6 +99,10 @@ async def analyze_dream(
             interpretation, recommendations). Default False — only for a
             client with no model of its own; requires a server LLM key and
             degrades to a template without one.
+        store_for_user_id: UUID of a registered user. When given, the coded
+            HVdC features (never the text) are appended to that user's
+            personal dream series for `dream_series_stats`. Requires the
+            user's consent — pass only when the user asked to keep a journal.
     """
     req = DreamAnalysisRequest(
         dream_text=dream_text,
@@ -95,6 +118,14 @@ async def analyze_dream(
     # non-empty on this path — drop it instead of shipping a dead [].
     out.pop("physiological_correlations", None)
 
+    if store_for_user_id:
+        out["series"] = await _store_in_series(
+            store_for_user_id,
+            resp,
+            dream_date=req.dream_date or date_cls.today(),
+            locale=locale,
+        )
+
     if not include_interpretation:
         out.pop("summary", None)
         out.pop("interpretation", None)
@@ -109,6 +140,86 @@ async def analyze_dream(
     return with_menu(
         out, domain="dreams",
         known_inputs=[DREAM_TEXT], completed=["dream"], locale=locale,
+    )
+
+
+async def _store_in_series(
+    user_id: str, resp, *, dream_date: date_cls, locale: str
+) -> dict[str, Any]:
+    """Append the coded features to the user's series; never fail the
+    analysis if the database is unreachable."""
+    from backend.services.dreams import series as series_svc
+
+    try:
+        uid = uuid_mod.UUID(user_id)
+    except ValueError:
+        return {"stored": False, "reason": f"invalid user_id: {user_id!r}"}
+    try:
+        async with _db_session() as session:
+            entry = await series_svc.store_entry(
+                session,
+                user_id=uid,
+                dream_date=dream_date,
+                locale=locale,
+                content=resp.content_analysis,
+                symbols=[s.symbol for s in resp.symbols],
+                primary_emotion=resp.primary_emotion.value if resp.primary_emotion else None,
+            )
+        return {"stored": True, "entry_id": str(entry.id)}
+    except Exception as exc:  # DB down must not kill the analysis
+        logger.warning("dream series store failed: %s", exc)
+        return {"stored": False, "reason": str(exc)}
+
+
+async def dream_series_stats(
+    user_id: str,
+    period: str = "all",
+    locale: str = "ru",
+) -> dict[str, Any]:
+    """Personal dream-series statistics: the user's own baseline instead of
+    the 1947–1950 college norms.
+
+    Returns per-indicator personal mean/std over the coded series, the
+    first-half vs second-half trend, and how far the LATEST dream deviates
+    from the user's own baseline (delta and z-score where defined). With
+    fewer than 15 coded dreams the answer is an explicit
+    `insufficient_data` status — a three-dream "baseline" is noise, and the
+    tool says so instead of pretending.
+
+    Dreams enter the series via `analyze_dream(store_for_user_id=...)`.
+    Only deterministic HVdC features are stored, never the dream text.
+    GDPR: entries are included in the account data export and erased with
+    the account.
+
+    Args:
+        user_id: UUID of the registered user whose series to read.
+        period: "30d" | "90d" | "365d" | "all" — window over dream dates.
+        locale: "ru" or "en" — language of the disclaimer.
+    """
+    from backend.services.dreams import series as series_svc
+
+    try:
+        uid = uuid_mod.UUID(user_id)
+    except ValueError:
+        return {"status": "error", "error": f"invalid user_id: {user_id!r}"}
+
+    try:
+        async with _db_session() as session:
+            out = await series_svc.series_stats(session, uid, period)
+    except ValueError as exc:
+        return {"status": "error", "error": str(exc)}
+    except Exception as exc:
+        logger.warning("dream series stats failed: %s", exc)
+        return {
+            "status": "error",
+            "error": "database unavailable",
+            "detail": str(exc),
+        }
+
+    out["disclaimer"] = _disclaimer(locale)
+    return with_menu(
+        out, domain="dreams",
+        known_inputs=[USER_ID], completed=["dream-series"], locale=locale,
     )
 
 

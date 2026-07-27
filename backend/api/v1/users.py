@@ -155,11 +155,15 @@ async def gdpr_export(
     from sqlalchemy import func as sa_func
 
     from backend.models.dream import Dream
+    from backend.services.dreams.series import export_entries
 
     dream_count_q = await db.execute(
         select(sa_func.count(Dream.id)).where(Dream.user_id == user.id)
     )
     dream_count = dream_count_q.scalar() or 0
+
+    # Coded dream series (HVdC features, no texts) — small rows, export whole.
+    dream_series = await export_entries(db, user.id)
 
     return {
         "user": {
@@ -185,6 +189,7 @@ async def gdpr_export(
         ],
         "byok_providers": [k.provider for k in (user.llm_keys or [])],
         "dream_count": dream_count,
+        "dream_series": dream_series,
     }
 
 

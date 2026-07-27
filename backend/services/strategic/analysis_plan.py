@@ -32,6 +32,7 @@ PARTNER_BIRTH = "partner_birth_data"
 DREAM_TEXT = "dream_text"
 FACE_PHOTOS = "face_photos"
 TRAITS = "character_traits"
+USER_ID = "user_id"
 
 # Human-readable prompts for the inputs a plan is missing. The connector asks
 # these verbatim rather than inventing its own phrasing.
@@ -79,6 +80,10 @@ INPUT_QUESTIONS: dict[str, dict[str, str]] = {
     TRAITS: {
         "ru": "Перечислите черты характера персонажа.",
         "en": "List the character's traits.",
+    },
+    USER_ID: {
+        "ru": "ID пользователя (UUID из аккаунта) — чья серия снов?",
+        "en": "User ID (account UUID) — whose dream series?",
     },
 }
 
@@ -311,6 +316,16 @@ STAGES: tuple[Stage, ...] = (
         name_ru="Анализ сна", name_en="Dream analysis",
         answers_ru="Hall/Van de Castle + архетипы + сравнение с нормами DreamBank.",
         answers_en="Hall/Van de Castle + archetypes + DreamBank norm comparison.",
+        domain="dreams",
+    ),
+    Stage(
+        "dream-series", 211, "dreams", "dream_series_stats",
+        (USER_ID,),
+        name_ru="Личная серия снов", name_en="Personal dream series",
+        answers_ru="Динамика показателей по вашей серии и отклонение последнего "
+                   "сна от личной базовой линии (минимум 15 снов).",
+        answers_en="Indicator trends over your own series and the latest dream's "
+                   "deviation from your personal baseline (15+ dreams).",
         domain="dreams",
     ),
     Stage(

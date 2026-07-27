@@ -55,6 +55,7 @@ mcp.tool()(a.list_horoscope_periods)
 
 # --- Dreams ------------------------------------------------------------------
 mcp.tool()(d.analyze_dream)
+mcp.tool()(d.dream_series_stats)
 mcp.tool()(d.list_dream_symbols)
 mcp.tool()(d.list_archetypes)
 mcp.tool()(d.list_hvdc_categories)
