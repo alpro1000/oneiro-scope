@@ -286,6 +286,11 @@ raw.githubusercontent (+ WebSearch); zenodo/dryad/HF/dreambank.net/ucsc —
    добавить лимит по `mcp_subject` из токена.
 2. Кабинет `/account` задеплоен, но его вход (email+password) НЕ связан с
    аккаунтом Auth0 — это два разных входа. Свести: маппинг Auth0 `sub` → User.
+   ⚠️ Тот же маппинг нужен инструментам серии снов (#166, ревью Qodo):
+   `store_for_user_id`/`dream_series_stats(user_id)` пока принимают UUID как
+   bearer-capability без привязки к принципалу токена — после маппинга
+   выводить user_id из `mcp_subject` и запретить кросс-доступ (граница
+   задокументирована в докстрингах инструментов).
 3. Auth0 тенант Development с автоименем `dev-u22itgv3h8ew1sgz` — видно
    пользователям на логине. Перед публичным запуском: Production-тег + имя.
 

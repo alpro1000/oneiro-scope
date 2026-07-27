@@ -568,14 +568,28 @@ class HvdcCoder:
 
             for act in self._acts:
                 for phrase in act["phrases"]:
-                    if phrase in clause.text:
-                        if act["requires_target"]:
-                            target = self._has_target(clauses, clause, characters_by_clause)
-                            if target is None:
-                                continue
-                            add(act["category"], act["subtype"], "dreamer", target)
+                    pos = clause.text.find(phrase)
+                    if pos == -1:
+                        continue
+                    # Фразовый путь обязан соблюдать те же инварианты, что
+                    # токенный: «он НЕ пожал мне руку» — не дружелюбие
+                    # (ревью Qodo на PR #166 поймало обход отрицания).
+                    phrase_tok = self.token_index_at(clause, clause.start + pos)
+                    if self.is_negated(clause, phrase_tok):
+                        continue
+                    if act["requires_target"]:
+                        target = self._has_target(clauses, clause, characters_by_clause)
+                        if target is None:
+                            continue
+                        if phrase_tok < len(clause.tokens):
+                            actor = self._actor_for(
+                                clause, characters_by_clause, clause.tokens[phrase_tok]
+                            )
                         else:
-                            add(act["category"], act["subtype"], "dreamer", None)
+                            actor = "dreamer"
+                        add(act["category"], act["subtype"], actor, target)
+                    else:
+                        add(act["category"], act["subtype"], "dreamer", None)
 
         return HvdcCoding(clauses=clauses, characters=characters, events=events)
 

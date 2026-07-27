@@ -103,6 +103,10 @@ async def analyze_dream(
             HVdC features (never the text) are appended to that user's
             personal dream series for `dream_series_stats`. Requires the
             user's consent — pass only when the user asked to keep a journal.
+            SECURITY BOUNDARY: until the Auth0 sub→User mapping lands (P0,
+            next-session.md), this UUID is a bearer capability — the server
+            cannot yet verify the caller owns it. Treat it as a secret;
+            never echo another person's UUID.
     """
     req = DreamAnalysisRequest(
         dream_text=dream_text,
@@ -190,6 +194,11 @@ async def dream_series_stats(
     Only deterministic HVdC features are stored, never the dream text.
     GDPR: entries are included in the account data export and erased with
     the account.
+
+    SECURITY BOUNDARY: the server cannot yet bind this user_id to the
+    authenticated MCP principal — the Auth0 sub→User mapping is a tracked
+    P0 (next-session.md); until it lands the UUID acts as a bearer
+    capability. Do not call this for a UUID the user did not give you.
 
     Args:
         user_id: UUID of the registered user whose series to read.

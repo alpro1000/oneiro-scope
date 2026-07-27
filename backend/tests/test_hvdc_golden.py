@@ -210,6 +210,18 @@ def test_genitive_of_negation_removes_character(analyzer):
     assert [c.gender for c in coding_present.characters] == ["female"]
 
 
+def test_negated_phrase_acts_code_nothing(analyzer):
+    """Фразовые акты идут через тот же скоуп отрицания, что и токенные
+    (ревью Qodo на PR #166): «не пожал руку» — не дружелюбие,
+    «не занимались любовью» — не сексуальность."""
+    *_, negated = analyzer.analyze("Старик не пожал мне руку.", "ru")
+    assert negated.count_events("friendliness") == 0
+    *_, positive = analyzer.analyze("Старик пожал мне руку.", "ru")
+    assert positive.count_events("friendliness") == 1
+    *_, negated_s = analyzer.analyze("Мы с невестой не занимались любовью.", "ru")
+    assert negated_s.count_events("sexuality") == 0
+
+
 def test_lemma_distinguishes_bride_groom_class(analyzer):
     """стем(«жених») == стем(«жена») — класс коллизий, закрытый
     pymorphy3-леммой, а не заплаткой на точную форму."""

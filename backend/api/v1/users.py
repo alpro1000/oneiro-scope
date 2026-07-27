@@ -48,6 +48,45 @@ class KeyListResponse(BaseModel):
     keys: list[KeyEntry]
 
 
+class GdprUser(BaseModel):
+    id: str
+    email: Optional[str]
+    name: Optional[str]
+    language: Optional[str]
+    timezone: Optional[str]
+    created_at: Optional[str]
+    is_verified: bool
+
+
+class GdprSubscription(BaseModel):
+    id: str
+    tier: Optional[str]
+    status: Optional[str]
+    provider: Optional[str]
+    current_period_end: Optional[str]
+
+
+class GdprDreamSeriesEntry(BaseModel):
+    id: str
+    dream_date: str
+    locale: str
+    coder_version: str
+    hvdc: dict
+    symbols: Optional[list] = None
+    primary_emotion: Optional[str] = None
+    created_at: Optional[str] = None
+
+
+class GdprExportResponse(BaseModel):
+    """GDPR Article 20 payload — the full account data contract."""
+
+    user: GdprUser
+    subscriptions: list[GdprSubscription]
+    byok_providers: list[str]
+    dream_count: int
+    dream_series: list[GdprDreamSeriesEntry]
+
+
 # ---------- Routes --------------------------------------------------------
 
 
@@ -143,7 +182,7 @@ async def delete_llm_key(
     await db.commit()
 
 
-@router.get("/me/data-export")
+@router.get("/me/data-export", response_model=GdprExportResponse)
 async def gdpr_export(
     user: User = Depends(get_current_user_db),
     db: AsyncSession = Depends(get_db),
