@@ -218,11 +218,26 @@ async def verify_bearer(token: str) -> dict[str, Any]:
             key,
             algorithms=[header.get("alg", "RS256")],
             audience=audience(),
-            issuer=settings.MCP_AUTH_ISSUER.rstrip("/") if settings.MCP_AUTH_ISSUER else None,
+            # Issuer is checked below, not here: jose does an exact-string
+            # compare, but Auth0 emits `iss` WITH a trailing slash while the
+            # configured MCP_AUTH_ISSUER may or may not carry one. Letting jose
+            # enforce it rejects every real Auth0 token as "invalid issuer".
             options={"verify_at_hash": False},
         )
     except JWTError as exc:
+        logger.warning("MCP token rejected at decode: %s", exc)
         raise AuthError("invalid_token", f"Token rejected: {exc}")
+
+    expected_iss = (settings.MCP_AUTH_ISSUER or "").rstrip("/")
+    if expected_iss:
+        token_iss = str(claims.get("iss", "")).rstrip("/")
+        if token_iss != expected_iss:
+            logger.warning(
+                "MCP token rejected: issuer %r != expected %r",
+                claims.get("iss"),
+                settings.MCP_AUTH_ISSUER,
+            )
+            raise AuthError("invalid_token", "Token rejected: issuer mismatch")
 
     needed = set(required_scopes())
     if needed:

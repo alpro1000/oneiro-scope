@@ -194,6 +194,57 @@ async def test_valid_token_with_required_scope(monkeypatch):
 
 
 @pytest.mark.asyncio
+async def test_issuer_trailing_slash_is_tolerated(monkeypatch):
+    """Auth0 emits `iss` with a trailing slash and we tell users to configure
+    MCP_AUTH_ISSUER with one too. An exact-string compare (or stripping only
+    our side) rejects every real Auth0 token as "invalid issuer" — which is
+    exactly the "Authorization with the MCP server failed" the connector shows
+    after a *successful* login."""
+    monkeypatch.setattr(settings, "MCP_AUTH_ISSUER", "https://idp.example.com/")
+    key = {"kid": "k1", "kty": "oct", "k": "c2VjcmV0LWtleS12YWx1ZQ"}
+    _stub_jwks(monkeypatch, [key])
+
+    from jose import jwt as jose_jwt
+
+    token = jose_jwt.encode(
+        {
+            "sub": "u1",
+            "aud": remote.audience(),
+            "iss": "https://idp.example.com/",  # note the trailing slash
+        },
+        key,
+        algorithm="HS256",
+        headers={"kid": "k1"},
+    )
+    claims = await remote.verify_bearer(token)
+    assert claims["sub"] == "u1"
+
+
+@pytest.mark.asyncio
+async def test_wrong_issuer_is_still_rejected(monkeypatch):
+    """Tolerating the slash must not tolerate a genuinely different issuer."""
+    monkeypatch.setattr(settings, "MCP_AUTH_ISSUER", "https://idp.example.com/")
+    key = {"kid": "k1", "kty": "oct", "k": "c2VjcmV0LWtleS12YWx1ZQ"}
+    _stub_jwks(monkeypatch, [key])
+
+    from jose import jwt as jose_jwt
+
+    token = jose_jwt.encode(
+        {
+            "sub": "u1",
+            "aud": remote.audience(),
+            "iss": "https://evil.example.net/",
+        },
+        key,
+        algorithm="HS256",
+        headers={"kid": "k1"},
+    )
+    with pytest.raises(remote.AuthError) as err:
+        await remote.verify_bearer(token)
+    assert "issuer" in str(err.value).lower()
+
+
+@pytest.mark.asyncio
 async def test_missing_scope_is_403(monkeypatch):
     monkeypatch.setattr(settings, "MCP_AUTH_ISSUER", "https://idp.example.com")
     monkeypatch.setattr(settings, "MCP_REQUIRED_SCOPES", "mcp:admin")
