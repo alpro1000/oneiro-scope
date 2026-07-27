@@ -121,6 +121,50 @@ def test_rate_limit_middleware_different_ips():
     # So this test verifies that a single client is properly rate limited
 
 
+def test_rate_limit_is_per_forwarded_client_not_per_proxy():
+    """Behind Render the socket peer is the proxy, so keying on it would put
+    every user in one bucket. Distinct X-Forwarded-For clients must not
+    rate-limit each other."""
+    app = FastAPI()
+    app.add_middleware(RateLimitMiddleware, per_user_limit=1)
+
+    @app.get("/test")
+    async def test_endpoint():
+        return {"status": "ok"}
+
+    client = TestClient(app)
+
+    # User A spends their single request.
+    a1 = client.get("/test", headers={"x-forwarded-for": "203.0.113.7"})
+    assert a1.status_code == 200
+    a2 = client.get("/test", headers={"x-forwarded-for": "203.0.113.7"})
+    assert a2.status_code == 429
+
+    # User B, same proxy, different real IP — must still be allowed.
+    b1 = client.get("/test", headers={"x-forwarded-for": "203.0.113.8"})
+    assert b1.status_code == 200
+
+
+def test_forwarded_client_is_taken_spoof_resistant():
+    """The rightmost XFF entry (what the trusted proxy observed) is used, so a
+    client prepending a fake IP cannot mint a fresh bucket each request."""
+    app = FastAPI()
+    app.add_middleware(RateLimitMiddleware, per_user_limit=1)
+
+    @app.get("/test")
+    async def test_endpoint():
+        return {"status": "ok"}
+
+    client = TestClient(app)
+
+    # Attacker varies the LEFT (client-controlled) part; the proxy-appended
+    # real IP on the right stays constant, so the second call is still limited.
+    first = client.get("/test", headers={"x-forwarded-for": "1.1.1.1, 203.0.113.9"})
+    assert first.status_code == 200
+    second = client.get("/test", headers={"x-forwarded-for": "2.2.2.2, 203.0.113.9"})
+    assert second.status_code == 429
+
+
 def test_rate_limit_headers_include_reset_time():
     """Test that rate limit headers include reset time."""
     app = FastAPI()
