@@ -34,7 +34,7 @@
 | frontend/components | 0 | 8 |
 | oneiro-scope | 0 | 0 |
 | styles | 0 | 2 |
-| scripts | 0 | 5 |
+| scripts | 0 | 6 |
 | config | 0 | 2 |
 | agents | 2 | 5 |
 | agents/prompts | 0 | 5 |
@@ -84,7 +84,7 @@
 | backend/mcp/tools | 0 | 11 |
 | backend/tests | 1 | 38 |
 | backend/tests/dreams | 1 | 0 |
-| backend/tests/dreams/golden | 0 | 2 |
+| backend/tests/dreams/golden | 0 | 3 |
 | backend/middleware | 0 | 2 |
 | backend/services | 8 | 0 |
 | backend/services/billing | 0 | 3 |
@@ -127,4 +127,4 @@
 | external/DReAMy | 1 | 1 |
 | external/DReAMy/dreamy | 0 | 3 |
 
-**ИТОГО:** папок = 123, файлов = 444
+**ИТОГО:** папок = 123, файлов = 446

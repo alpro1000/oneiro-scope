@@ -163,7 +163,7 @@
     {
       "path": "scripts",
       "dirs": 0,
-      "files": 5
+      "files": 6
     },
     {
       "path": "config",
@@ -413,7 +413,7 @@
     {
       "path": "backend/tests/dreams/golden",
       "dirs": 0,
-      "files": 2
+      "files": 3
     },
     {
       "path": "backend/middleware",
@@ -622,5 +622,5 @@
     }
   ],
   "total_dirs": 123,
-  "total_files": 444
+  "total_files": 446
 }
