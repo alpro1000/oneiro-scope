@@ -5,11 +5,46 @@
 > that's easy to lose. Updated at the end of every substantial session
 > alongside `soul.md §9`.
 
-**Дата последнего обновления:** 2026-07-27
+**Дата последнего обновления:** 2026-07-27 (part 2)
 **Последняя ветка работы:** `claude/fandorin-portrait-generation-d422my`
-**Текущий main HEAD:** `#158` — remote-коннектор реально работает (path/Host/SSE/OAuth-discovery), все чеки зелёные
+**Текущий main HEAD:** `#161` — **коннектор ЖИВОЙ, закрыт OAuth (Auth0), карта считается через чат**
 
-**Новое в сессии 2026-07-27 (connector actually reachable + кабинет):**
+**СТАТУС: коннектор работает.** Claude → Auth0 → Render → Swiss Ephemeris.
+46 инструментов. `MCP_REQUIRE_AUTH=true` всё время, открытого окна не было.
+
+**Боевые данные Auth0 (EU-2, Development):**
+- issuer: `https://dev-u22itgv3h8ew1sgz.eu.auth0.com/` (СО слэшем!)
+- audience = `https://oneiroscope-backend.onrender.com/mcp`
+- API «OneiroScope MCP», Default Audience выставлен, DCR включён,
+  Third-Party Access = User-Delegated, connection `con_dwxq9e9cIn9RG3rh`
+  помечен `is_domain_connection: true`
+
+**Новое в сессии 2026-07-27 part 2:**
+- **5 гейтов Auth0 пройдены** — порядок и симптомы записаны в `soul.md §9`.
+  Самый неочевидный: `mcp_registration_failed` был **лимитом в 10 приложений**
+  тенанта (мусорные `tpc_` от неудачных попыток съели квоту), а не форматом
+  клиента, как я сначала думал.
+- **#160 фикс:** issuer сравнивался строка-в-строку, Auth0 шлёт `iss` со
+  слэшем → отвергались ВСЕ настоящие токены. Конфигом не обходилось.
+- **#161 разворот на data-first:** `calculate_natal_chart` больше не зовёт
+  серверный LLM (`include_interpretation=False` по умолчанию). В MCP-first
+  клиент — уже сильная модель; второй хоп лишний, платный, слабее и ломается.
+  Серверная проза осталась опцией для запаркованного веб-фронта.
+- **#161 заодно:** починен fallback-шаблон (английские слова в русском тексте;
+  аспекты как ПЕРВАЯ БУКВА планеты — «- С opposition Л») и rate-limiter
+  (ключ был IP прокси Render → все юзеры в одном ведре 100/мин).
+- **`/connect/diagnostics` себя оправдал** — на каждом гейте показывал, какая
+  переменная не так. Браузерный агент не читает логи, а страницу читает.
+
+**P0 на следующую сессию:**
+1. `/mcp` вне rate-limiter'а (диспетчер обходит middleware ради SSE) —
+   добавить лимит по `mcp_subject` из токена.
+2. Кабинет `/account` задеплоен, но его вход (email+password) НЕ связан с
+   аккаунтом Auth0 — это два разных входа. Свести: маппинг Auth0 `sub` → User.
+3. Auth0 тенант Development с автоименем `dev-u22itgv3h8ew1sgz` — видно
+   пользователям на логине. Перед публичным запуском: Production-тег + имя.
+
+**Из части 1 той же сессии:**
 - **Коннектор не работал вообще с #155** — три независимые поломки, каждая
   фатальна сама по себе: эндпоинт лежал на `/mcp/mcp`; SSE-канал
   сервер→клиент не отдавал ни байта из-под GZip/BaseHTTPMiddleware
