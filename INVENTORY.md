@@ -34,14 +34,15 @@
 | frontend/components | 0 | 8 |
 | oneiro-scope | 0 | 0 |
 | styles | 0 | 2 |
-| scripts | 0 | 6 |
+| scripts | 0 | 8 |
 | config | 0 | 2 |
 | agents | 2 | 5 |
 | agents/prompts | 0 | 5 |
 | agents/specialists | 0 | 5 |
-| docs | 6 | 43 |
+| docs | 7 | 43 |
 | docs/deploy | 0 | 5 |
 | docs/steering | 0 | 5 |
+| docs/reports | 0 | 1 |
 | docs/deployment | 0 | 1 |
 | docs/specs | 5 | 0 |
 | docs/specs/product-architecture | 0 | 1 |
@@ -127,4 +128,4 @@
 | external/DReAMy | 1 | 1 |
 | external/DReAMy/dreamy | 0 | 3 |
 
-**ИТОГО:** папок = 123, файлов = 446
+**ИТОГО:** папок = 124, файлов = 449

@@ -163,7 +163,7 @@
     {
       "path": "scripts",
       "dirs": 0,
-      "files": 6
+      "files": 8
     },
     {
       "path": "config",
@@ -187,7 +187,7 @@
     },
     {
       "path": "docs",
-      "dirs": 6,
+      "dirs": 7,
       "files": 43
     },
     {
@@ -199,6 +199,11 @@
       "path": "docs/steering",
       "dirs": 0,
       "files": 5
+    },
+    {
+      "path": "docs/reports",
+      "dirs": 0,
+      "files": 1
     },
     {
       "path": "docs/deployment",
@@ -621,6 +626,6 @@
       "files": 3
     }
   ],
-  "total_dirs": 123,
-  "total_files": 446
+  "total_dirs": 124,
+  "total_files": 449
 }
