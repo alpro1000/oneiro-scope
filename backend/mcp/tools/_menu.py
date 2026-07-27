@@ -37,6 +37,7 @@ from backend.services.strategic.analysis_plan import (  # noqa: F401
     START_YEAR,
     TARGET_DATE,
     TRAITS,
+    USER_ID,
 )
 
 MENU_KEY = "can_also_compute"

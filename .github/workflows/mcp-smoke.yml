@@ -61,7 +61,10 @@ jobs:
             "python-multipart>=0.0.9" \
             redis \
             httpx \
-            uvicorn
+            uvicorn \
+            aiosqlite \
+            "pymorphy3>=2.0" \
+            pymorphy3-dicts-ru
           # The block above is deliberately not requirements.txt — these are the
           # small pure-python pieces `backend.app.main` needs to import, so the
           # connector tests exercise the real app. The heavy ones (mediapipe,
@@ -86,6 +89,9 @@ jobs:
             backend/tests/test_archetypes.py \
             backend/tests/test_disclaimer_and_numeric_confidence.py \
             backend/tests/test_dream_morphology.py \
+            backend/tests/test_dream_interpreter_narrative.py \
+            backend/tests/test_hvdc_golden.py \
+            backend/tests/test_dream_series.py \
             backend/tests/test_mcp_remote_auth.py \
             backend/tests/test_portal.py \
             backend/tests/test_portal_account.py \

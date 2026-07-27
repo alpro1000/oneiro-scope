@@ -55,9 +55,18 @@ ephem==4.1.5
 
 # NLP
 spacy==3.7.2
+# Russian lemmatization for the HVdC coder's character detection —
+# HARD dependency: stems misgender (стем «жених» == стем «жена»), and a
+# silent fallback to stems is banned on data paths (conventions.md §12).
+pymorphy3>=2.0
+pymorphy3-dicts-ru
 
 # Dream Analysis
--e ./external/DReAMy
+# NOTE: the former `-e ./external/DReAMy` line installed a 48-line local STUB
+# that squatted the `dreamy` package name on the production path (nothing in
+# backend/ imports it; the only consumer is etl/pipeline.py, which forces the
+# stubs via sys.path). Removed so `pip install dreamy` can ever install the
+# real DReAMy (github.com/lorenzoscottb/DReAMy) without being shadowed.
 pandas>=2.0.0
 
 # Vector DB

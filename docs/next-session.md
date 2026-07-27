@@ -5,9 +5,130 @@
 > that's easy to lose. Updated at the end of every substantial session
 > alongside `soul.md §9`.
 
-**Дата последнего обновления:** 2026-07-27 (part 5 — OAuth discovery)
-**Последняя ветка работы:** `claude/identity-direction-question-vrognh`
-**Текущий main HEAD:** `#164` — меню возможностей на каждом ответе
+**Дата последнего обновления:** 2026-07-27 (part 6 — dream encoder rebuild)
+**Последняя ветка работы:** `claude/oneiroscope-dream-encoder-rebuild-g2iyp0` (НЕ смержена)
+**Текущий main HEAD:** `#165`
+
+**Новое в сессии 2026-07-27 part 6 (пересборка слоя снов; отчёт:
+`docs/reports/DREAM_ENCODER_REBUILD_2026-07-27.md`):**
+- **HVdC теперь кодируется структурно** (`hvdc_coder.py` v3.0.0 +
+  `hvdc_lexicon.json`): клаузы → персонажи (существительные с полом, БЕЗ
+  местоимений) → акты с целью → исходы. Отрицание со скоупом, GF≠success,
+  инцидент-дедуп, evidence-клауза на каждый счётчик. Приёмочный сон про
+  монеты даёт F=1/A=1/GF=1 с доказательствами.
+- **Никогда больше 0.00 из 0/0**: пустые индикаторы уходят в
+  `norm_comparison.insufficient_data` с причиной; `deviation_unit` явный.
+- **Golden-набор — теперь главный инструмент работы со слоем снов**:
+  28 снов RU+EN (`backend/tests/dreams/golden/`), `test_hvdc_golden.py`
+  печатает P/R-таблицу, CI-полы: precision ≥0.90 на категорию. Замер:
+  P=1.00 везде; R: failures 0.70, friendliness 0.81, male 0.92, остальное
+  1.00. Менять лексикон → прогонять golden; recall ценой precision CI не
+  пропустит.
+- **MCP data-first для снов**: `analyze_dream` больше НЕ зовёт серверный LLM
+  по умолчанию (как natal chart, #161); disclaimer на всех 5 инструментах;
+  `lunar_context` починен (импорт бил в несуществующий lunar_service).
+- **Личная серия**: `dream_entries` (первая Alembic-миграция в репо!),
+  `dream_series_stats` MCP-tool, порог N≥15 честный, GDPR в экспорте.
+  ⚠️ Миграция предполагает существующую `users` (init_db сначала).
+- **DReAMy**: `pip install dreamy` — настоящая (вендоренный
+  `external/DReAMy` — заглушка 48 строк). `scripts/compare_dreamy.py`
+  готов; в CCR-песочнице HF заблокирован сетевой политикой (403 CONNECT к
+  huggingface.co) → числовой замер не сделан. Запустить локально у owner'а:
+  `pip install dreamy torch && python scripts/compare_dreamy.py` (~3 ГБ
+  моделей). По покрытию DReAMy не кодирует A/F/striving/fortune и RU
+  (кроме эмоций) — наш кодировщик остаётся; кандидат на заимствование —
+  только эмоциональная ось (XLM-R multilingual).
+
+**Раунд 2 той же сессии (по ревью владельца):** метрики переподаны как
+внутренняя согласованность (не точность); DReAMy-пункт помечен ❌
+невыполненным; pymorphy3 = жёсткая зависимость (лемма-детекция персонажей,
+родительный отрицания); conventions.md §12 запрещает молчаливые фолбэки
+(degraded-леджер в ответе, RuntimeError на пропавших KB); найдено ДВА стаба
+в `external/` (dreamy + pyswisseph с фальшивой астрономией) — потребитель
+только `etl/pipeline.py`, выход никем не читается, прод не задет,
+DReAMy-стаб снят с прод-пути; method_note о систематическом недоборе в
+norm_comparison.
+
+**Порядок от владельца (P0, по пунктам):**
+1. **Ревью PR → merge → Render deploy** (на сервере код до #163; живой
+   прогон снов шёл на старом кодировщике). ⚠️ Отдельно: OAuth-правки part 5
+   уже в main, но НЕ задеплоены — тот же Manual Deploy закроет и их, без
+   него коннектор недоступен.
+2. **Пост-деплойный смоук** — тот же сон про монеты через MCP; ожидаемое:
+   `friendly=1, aggressive=1, good_fortunes=1`, символы `money` (+допустимо
+   surveillance), БЕЗ `stairs`/`forest`, `lunar_context` не null,
+   `disclaimer` есть, `interpretation` отсутствует (data-first),
+   `hvdc_evidence` = 3 записи, `degraded` = [].
+3. **Слепая вторая разметка + каппа** (руками владельца, НЕ агентом):
+   заполнить `backend/tests/dreams/golden/blind_annotation_template.json`
+   по первоисточнику HVdC не глядя в golden_*.json →
+   `python scripts/kappa_golden.py <файл>` → адъюдикация расхождений;
+   до этого CI-метрики читать как регрессионный страж, не как точность.
+4. **`scripts/compare_dreamy.py` в окружении с HF-доступом** (~3 ГБ
+   моделей; локально у владельца: `pip install dreamy torch`), числа
+   вписать в отчёт §3 — до этого выбор слоя экстракции по осям
+   персонажи-EN/эмоции не принимается.
+
+**Карта баз данных снов мира (раунд 4; проверено поиском/обходом 2026-07-27):**
+| База | Объём | Где | Как взять | Статус у нас |
+|---|---|---|---|---|
+| DreamBank.net (Domhoff/Schneider) | ~30k снов EN+DE | dreambank.net (для ботов 403) | `scripts/fetch_dreambank.py` (зеркало DreamScrape, работает даже из песочницы) | ✅ norms-m/f скачаны, прогнаны; остальные ~90 коллекций — тем же скриптом |
+| SDDb (Bulkeley) | 45k+ снов + опросы | sleepanddreamdatabase.org; полное зеркало Zenodo **11662064** (уже в `etl/sources_config.yml`!) | сайт: Library → Advanced search → пустой Search → Export CSV; либо Zenodo-архив | ⬜ качать с машины владельца (Zenodo из песочницы 403) |
+| Fogli et al. 2020, алгоритмическая разметка DreamBank | 20k+ снов с HVdC-фичами | Dryad doi:10.5061/dryad.qbzkh18fr | `curl -L -o dreams.zip "https://datadryad.org/api/v2/datasets/doi%3A10.5061%2Fdryad.qbzkh18fr/download"` | ⬜ нужна для пособытийной внешней валидации |
+| krank (remrama; экс krank-sources/dreambank) | hvdc + **zhang2019** (лабораторные пробуждения Zhang & Wamsley 2019) | Zenodo-архивы, качает сам пакет | `pip install krank; krank.load("zhang2019")` | ⬜ krank CSV-апгрейд коннектора — давний P2 |
+| DReAMy-lib datasets | DreamBank-dreams-en ~22k (+DE, +annotated) | HuggingFace | `datasets.load_dataset("DReAMy-lib/DreamBank-dreams-en")` | ⬜ HF из песочницы 403 |
+| DreamSAT (dreams.ucsc.edu = dreamresearch.net) | НЕ база: Excel с нормами и h-статистикой + правила кодирования | dreams.ucsc.edu/DreamSAT/ | браузером | справочник для адъюдикации KB (вопрос 0.59 A/F!) |
+| DREAMS polysomnography | ЭЭГ/EDF, 8 датасетов (не тексты) | Zenodo 2650142 | on-demand (файлы ~100MB+) | коннектор есть (ваш анализ 2025-12-30) |
+| dreamento | инструмент скоринга сна | github | — | отклонено вами 2025-12-30 |
+
+Следы прошлых попыток владельца в репо: `etl/sources_config.yml` (SDDb
+Zenodo-ID уже вписан, Dryad/Figshare включены с пустыми списками),
+`etl/input/` пуст, `data/dreams_curated.json` — 3 демо-записи; больших
+файлов в git-истории никогда не было. Песочница пускает только
+raw.githubusercontent (+ WebSearch); zenodo/dryad/HF/dreambank.net/ucsc —
+403 на уровне шлюза.
+
+**Раунд 3 той же сессии — база снов СКАЧАНА, калибровка выполнена:**
+- **Как скачивать сны** (вопрос владельца). Пути, по убыванию удобства:
+  1) `python scripts/fetch_dreambank.py` — качает коллекции DreamBank c
+     JSON-зеркала (github.com/mattbierner/DreamScrape, ~30k снов; работает
+     даже из CCR-песочницы — raw.githubusercontent не заблокирован) в
+     gitignored `data/dreambank/`. По умолчанию — norms-m/norms-f.
+  2) Разметка Fogli et al. (Dryad, только с машины владельца):
+     `curl -L -o dreams.zip "https://datadryad.org/api/v2/datasets/doi%3A10.5061%2Fdryad.qbzkh18fr/download"`
+  3) HuggingFace (тоже только вне песочницы):
+     `datasets.load_dataset("DReAMy-lib/DreamBank-dreams-en")`.
+- **Калибровка на настоящем нормативном корпусе 1966 года** (norms-m 491 +
+  norms-f 490 снов) выполнена: `scripts/validate_against_norms.py`, таблица
+  в отчёте §7.5. Итог: взаимодействия ~×0.5 от человеческого уровня
+  (прогноз ревью подтверждён числом), эмоции ОТКАЛИБРОВАНЫ (83.7/78.9 vs
+  80/80) после перевода счётчиков на by_type-словари, good_fortune снят с
+  ×3.9 до ×1.7–2.0 тремя гейтами (found myself / found that / нашёл его).
+- ⚠️ **Находка в KB:** `hvdc_norms.json` называет 0.59 «A/F ratio», но по
+  собственным rate'ам KB это A/(A+F). Адъюдикация по таблицам Domhoff +
+  правка формулы или значения.
+
+**P1 (обновлено после раунда 3):**
+- Чистка семейства заглушек: удалить `external/` (оба стаба), строки
+  `-e ./external/*` из корневого и `etl/requirements.txt`, решить судьбу
+  `etl/pipeline.py` + ежедневного `dreams-etl.yml` (перевести на реальные
+  зависимости или выключить cron — его parquet никем не читается);
+  `build.yml` после этого перестанет тестировать на фальшивой астрономии
+  (вероятная причина его pre-existing red).
+- Аннотации Fogli с Dryad (с машины владельца) — пособытийная внешняя
+  валидация вместо агрегатной (§7.5-оговорка).
+- Мужской EN-лексикон персонажей: male_percent 47 vs 67 на мужском корпусе —
+  расширить существительные + рассмотреть местоимённых персонажей.
+- Калибровочные коэффициенты (первые оценки в §7.5: A≈×2.0, F≈×1.9–2.0,
+  M≈×1.5–1.7, S≈×2.5) — вносить только после каппы и адъюдикации KB.
+- Символьный матчинг ещё на стемах — перевод на pymorphy3-леммы как
+  отдельное измеримое изменение (golden покажет).
+
+---
+
+**Предыдущее обновление:** 2026-07-27 (part 5 — OAuth discovery)
+**Ветка:** `claude/identity-direction-question-vrognh`
+**main HEAD на тот момент:** `#164` — меню возможностей на каждом ответе
 
 **Новое в сессии 2026-07-27 part 5 (OAuth discovery, ветка перезапущена с main):**
 - **Issuer публиковался нормализованным.** `protected_resource_metadata()`
@@ -165,6 +286,11 @@
    добавить лимит по `mcp_subject` из токена.
 2. Кабинет `/account` задеплоен, но его вход (email+password) НЕ связан с
    аккаунтом Auth0 — это два разных входа. Свести: маппинг Auth0 `sub` → User.
+   ⚠️ Тот же маппинг нужен инструментам серии снов (#166, ревью Qodo):
+   `store_for_user_id`/`dream_series_stats(user_id)` пока принимают UUID как
+   bearer-capability без привязки к принципалу токена — после маппинга
+   выводить user_id из `mcp_subject` и запретить кросс-доступ (граница
+   задокументирована в докстрингах инструментов).
 3. Auth0 тенант Development с автоименем `dev-u22itgv3h8ew1sgz` — видно
    пользователям на логине. Перед публичным запуском: Production-тег + имя.
 

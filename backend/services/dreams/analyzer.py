@@ -12,6 +12,12 @@ from typing import List, Dict, Optional, Tuple
 from collections import Counter
 
 from backend.services.dreams import morphology
+from backend.services.dreams.hvdc_coder import (
+    Clause,
+    HvdcCoding,
+    HvdcCoder,
+    get_hvdc_coder,
+)
 from backend.services.dreams.schemas import (
     ContentAnalysis,
     DreamCategory,
@@ -21,6 +27,13 @@ from backend.services.dreams.schemas import (
     PhysiologicalCorrelation,
     PhysiologicalEvent,
 )
+
+# Существительное считается отсутствующим в сцене, когда отрицание стоит
+# вплотную («без денег») или в связке с бытийным глаголом («не было воды»).
+_EXISTENTIAL_VERBS = {
+    "было", "были", "был", "была", "есть", "оказалось", "стало", "будет",
+    "was", "were", "is", "are", "be", "been", "had", "have", "has",
+}
 
 
 class DreamAnalyzer:
@@ -42,13 +55,21 @@ class DreamAnalyzer:
         self._compile_patterns()
 
     def _load_knowledge_base(self) -> Dict:
-        """Load symbol knowledge base from JSON"""
+        """Load symbol knowledge base from JSON.
+
+        A missing KB is a broken deployment, not an empty dictionary: the
+        old `except FileNotFoundError: return {}` made the analyzer
+        silently find zero symbols forever — the exact silent-fallback
+        class banned by conventions.md §12."""
         kb_path = Path(__file__).parent / "knowledge_base" / "symbols.json"
-        try:
-            with open(kb_path, "r", encoding="utf-8") as f:
-                return json.load(f)
-        except FileNotFoundError:
-            return {"symbols": [], "emotions": {}, "archetypes": {}}
+        if not kb_path.exists():
+            raise RuntimeError(
+                f"Dream symbol knowledge base missing: {kb_path}. "
+                "The file ships with the repository — a missing KB means a "
+                "broken checkout or build, not an empty symbol set."
+            )
+        with open(kb_path, "r", encoding="utf-8") as f:
+            return json.load(f)
 
     def _compile_patterns(self):
         """Compile regex patterns for efficient matching"""
@@ -87,59 +108,10 @@ class DreamAnalyzer:
             "neutral": self.knowledge_base.get("emotions", {}).get("neutral", []),
         }
 
-        # Character patterns
-        self.character_patterns = {
-            "male": re.compile(
-                r'\b(man|men|boy|father|brother|he|him|his|'
-                r'мужчина|мужчины|парень|отец|брат|он|его)\b',
-                re.IGNORECASE
-            ),
-            "female": re.compile(
-                r'\b(woman|women|girl|mother|sister|she|her|'
-                r'женщина|женщины|девушка|мать|сестра|она|её)\b',
-                re.IGNORECASE
-            ),
-            "animal": re.compile(
-                r'\b(animal|dog|cat|bird|snake|horse|fish|'
-                r'животное|собака|кошка|птица|змея|лошадь|рыба)\b',
-                re.IGNORECASE
-            ),
-        }
-
-        # Interaction patterns
-        self.interaction_patterns = {
-            "friendly": re.compile(
-                r'\b(help|friend|together|support|kindness|'
-                r'помочь|друг|вместе|поддержка|доброта)\b',
-                re.IGNORECASE
-            ),
-            "aggressive": re.compile(
-                r'\b(fight|attack|hit|kill|angry|chase|'
-                r'драка|атака|ударить|убить|злой|погоня)\b',
-                re.IGNORECASE
-            ),
-            "sexual": re.compile(
-                r'\b(kiss|hug|embrace|love|romance|intimacy|intimate|caress|passion|'
-                r'flirt|seduce|lover|romantic|attraction|desire|'
-                r'поцелуй|целовать|обнимать|объятия|любовь|романтика|интимность|'
-                r'ласка|страсть|флирт|соблазн|возлюбленн|романтичн|влечение|желание)\b',
-                re.IGNORECASE
-            ),
-        }
-
-        # Success/failure patterns
-        self.outcome_patterns = {
-            "success": re.compile(
-                r'\b(succeed|win|achieve|accomplish|find|'
-                r'успех|победить|достичь|найти|получить)\b',
-                re.IGNORECASE
-            ),
-            "failure": re.compile(
-                r'\b(fail|lose|miss|unable|can\'t|cannot|'
-                r'провал|проиграть|потерять|не могу|не получается)\b',
-                re.IGNORECASE
-            ),
-        }
+        # Персонажи, взаимодействия и исходы теперь считает структурный
+        # кодировщик (hvdc_coder.py) — словарные regex-паттерны для них
+        # удалены: подсчёт по ключевым словам давал события без участников
+        # и участников без событий.
 
     def analyze(
         self,
@@ -154,6 +126,7 @@ class DreamAnalyzer:
         List[str],
         List[str],
         List[PhysiologicalCorrelation],
+        HvdcCoding,
     ]:
         """
         Perform full content analysis on dream text.
@@ -165,17 +138,21 @@ class DreamAnalyzer:
             - Emotion intensity
             - Themes
             - Archetypes
+            - Physiological correlations
+            - Structural HVdC coding (characters, events, evidence)
         """
-        text_lower = dream_text.lower()
+        coder = get_hvdc_coder()
+        clauses = coder.segment(dream_text)
+        coding = coder.code(dream_text, clauses)
 
-        # Find symbols
-        symbols = self._find_symbols(dream_text, locale)
+        # Find symbols (negation- and context-aware)
+        symbols = self._find_symbols(dream_text, locale, coder, clauses)
 
-        # Content analysis
-        content = self._analyze_content(dream_text)
+        # Emotion analysis (negation-aware)
+        emotion, intensity = self._analyze_emotions(dream_text, coder, clauses)
 
-        # Emotion analysis
-        emotion, intensity = self._analyze_emotions(dream_text)
+        # Content analysis: structural events + emotion word counts
+        content = self._analyze_content(dream_text, coding, coder, clauses)
 
         # Extract themes
         themes = self._extract_themes(symbols, content, locale)
@@ -188,38 +165,61 @@ class DreamAnalyzer:
             physiological_events,
         )
 
-        return symbols, content, emotion, intensity, themes, archetypes, physiological_correlations
+        return (
+            symbols, content, emotion, intensity, themes, archetypes,
+            physiological_correlations, coding,
+        )
 
-    def _find_symbols(self, text: str, locale: str) -> List[DreamSymbol]:
+    def _find_symbols(
+        self,
+        text: str,
+        locale: str,
+        coder: Optional[HvdcCoder] = None,
+        clauses: Optional[List[Clause]] = None,
+    ) -> List[DreamSymbol]:
         """
         Find and interpret symbols in dream text with contextual validation.
 
-        Uses narrative-first approach: symbols are only included if they
-        appear in appropriate semantic context (v2.1).
+        A symbol counts only when it is PRESENT IN THE SCENE (v3): matches
+        inside a negation («во сне не было воды», «без денег») are dropped,
+        and a setting mentioned only to be rejected («копать в деревьях, а я
+        решил копать не там») does not count either.
         """
         found_symbols = []
         text_lower = morphology.normalize(text)
-        token_stems = morphology.text_stems(text_lower)
+        if coder is None:
+            coder = get_hvdc_coder()
+        if clauses is None:
+            clauses = coder.segment(text)
 
+        # Позиции стемовых совпадений считаем по токенам клауз — так у
+        # каждого попадания есть клауза и индекс токена для проверки отрицания.
         for symbol_id, symbol_data in self.symbol_patterns.items():
-            matches = symbol_data["pattern"].findall(text_lower)
-            if not matches:
+            hits = [
+                (m.start(), m.group(0))
+                for m in symbol_data["pattern"].finditer(text_lower)
+            ]
+            if not hits:
                 # Morphology pass: inflected Russian forms («воду»,
                 # «змею», «матери») match by shared Snowball stem.
-                stem_hits = sum(
-                    n for st, n in token_stems.items()
-                    if st in symbol_data["stems"]
-                )
-                if stem_hits:
-                    matches = [symbol_id] * stem_hits
-            if matches:
+                for clause in clauses:
+                    for tok in clause.tokens:
+                        if morphology.stem(tok.text) in symbol_data["stems"]:
+                            hits.append((tok.start, tok.text))
+
+            valid = [
+                (pos, surface) for pos, surface in hits
+                if self._present_in_scene(symbol_id, symbol_data, pos, coder, clauses)
+            ]
+            if valid:
                 # Contextual validation (v2.1 feature)
-                if self._validate_symbol_context(symbol_id, text_lower, matches):
+                surfaces = [surface for _, surface in valid]
+                if self._validate_symbol_context(symbol_id, text_lower, surfaces):
                     data = symbol_data["data"]
                     found_symbols.append(DreamSymbol(
                         symbol=symbol_id,
                         category=DreamCategory(data["category"]),
-                        frequency=len(matches),
+                        frequency=len(valid),
                         significance=data["significance"],
                         interpretation_ru=data["interpretation_ru"],
                         interpretation_en=data["interpretation_en"],
@@ -229,6 +229,37 @@ class DreamAnalyzer:
         # Sort by significance
         found_symbols.sort(key=lambda s: s.significance, reverse=True)
         return found_symbols
+
+    def _present_in_scene(
+        self,
+        symbol_id: str,
+        symbol_data: Dict,
+        char_pos: int,
+        coder: HvdcCoder,
+        clauses: List[Clause],
+    ) -> bool:
+        """Negation and rejected-location filters for a single match."""
+        clause = coder.clause_at(clauses, char_pos)
+        if clause is None:
+            return True
+        tok_idx = coder.token_index_at(clause, char_pos)
+
+        # «без денег», «нет воды», «не было лестницы» — прилегающее отрицание
+        # или отрицание с бытийным глаголом в окне перед существительным.
+        window = clause.tokens[max(0, tok_idx - 3):tok_idx]
+        if window:
+            if window[-1].text in coder._negators:
+                return False
+            has_negator = any(t.text in coder._negators for t in window)
+            has_existential = any(t.text in _EXISTENTIAL_VERBS for t in window)
+            if has_negator and has_existential:
+                return False
+
+        # Локация, упомянутая лишь как отвергнутая альтернатива.
+        category = symbol_data["data"].get("category")
+        if category == "settings" and coder.location_rejected_after(clauses, clause.index):
+            return False
+        return True
 
     def _validate_symbol_context(self, symbol_id: str, text: str, matches: List[str]) -> bool:
         """
@@ -280,8 +311,9 @@ class DreamAnalyzer:
                 pattern = re.compile(pattern_str, re.IGNORECASE)
                 if pattern.search(text):
                     # Check if the matched keyword is one that should be excluded
+                    # (prefix check so inflected forms «дверью» match «дверь»)
                     for match in matches:
-                        if match.lower() in [k.lower() for k in excluded_keywords]:
+                        if any(match.lower().startswith(k.lower()) for k in excluded_keywords):
                             return False  # Found in exclusion context
 
         # Context reinforcement rules (boost confidence for good contexts)
@@ -328,51 +360,57 @@ class DreamAnalyzer:
         # Default: symbol is valid (conservative approach)
         return True
 
-    def _analyze_content(self, text: str) -> ContentAnalysis:
-        """Perform Hall/Van de Castle content analysis"""
+    def _analyze_content(
+        self,
+        text: str,
+        coding: HvdcCoding,
+        coder: HvdcCoder,
+        clauses: List[Clause],
+    ) -> ContentAnalysis:
+        """Hall/Van de Castle content analysis from the structural coding.
 
-        # Character counts
-        male_chars = len(self.character_patterns["male"].findall(text))
-        female_chars = len(self.character_patterns["female"].findall(text))
-        animal_chars = len(self.character_patterns["animal"].findall(text))
+        Characters are distinct nouns (a pronoun is not a character), an
+        interaction is an act WITH a target, misfortune/good fortune are
+        their own categories rather than aliases of failure/success, and a
+        ratio with an empty denominator is None — undefined, not zero."""
 
-        # Interaction types
-        friendly = len(self.interaction_patterns["friendly"].findall(text))
-        aggressive = len(self.interaction_patterns["aggressive"].findall(text))
-        sexual = len(self.interaction_patterns["sexual"].findall(text))
+        male_chars = coding.count_characters("male")
+        female_chars = coding.count_characters("female")
+        animal_chars = coding.count_characters("animal")
 
-        # Outcomes
-        successes = len(self.outcome_patterns["success"].findall(text))
-        failures = len(self.outcome_patterns["failure"].findall(text))
+        friendly = coding.count_events("friendliness")
+        aggressive = coding.count_events("aggression")
+        sexual = coding.count_events("sexuality")
 
-        # Emotions
-        positive_count = sum(
-            1 for word in self.emotion_patterns["positive"]
-            if word.lower() in text.lower()
+        successes = coding.count_events("success")
+        failures = coding.count_events("failure")
+        misfortunes = coding.count_events("misfortune")
+        good_fortunes = coding.count_events("good_fortune")
+
+        # Счётчики эмоций идут по спискам by_type: там живут прилагательные
+        # и корни («afraid», «scared», «счастлив»), которыми сны и говорят.
+        # Старые списки positive/negative состояли из существительных
+        # («fear», «anxiety») — калибровка на norms-корпусе показала
+        # negative_percent 45/29 против 80 у людей-кодировщиков.
+        by_type = self.knowledge_base.get("emotions", {}).get("by_type", {})
+        positive_words = list(by_type.get("happiness", [])) + list(
+            self.emotion_patterns["positive"]
         )
-        negative_count = sum(
-            1 for word in self.emotion_patterns["negative"]
-            if word.lower() in text.lower()
+        negative_words = (
+            list(by_type.get("sadness", []))
+            + list(by_type.get("anger", []))
+            + list(by_type.get("fear", []))
+            + list(by_type.get("confusion", []))
+            + list(self.emotion_patterns["negative"])
         )
+        positive_count = self._count_emotion_words(positive_words, coder, clauses)
+        negative_count = self._count_emotion_words(negative_words, coder, clauses)
 
-        # Calculate ratios
-        male_female_ratio = None
-        if female_chars > 0:
-            male_female_ratio = male_chars / female_chars
-        elif male_chars > 0:
-            male_female_ratio = float(male_chars)
-
-        agg_friend_ratio = None
-        if friendly > 0:
-            agg_friend_ratio = aggressive / friendly
-        elif aggressive > 0:
-            agg_friend_ratio = float(aggressive)
-
-        success_fail_ratio = None
-        if failures > 0:
-            success_fail_ratio = successes / failures
-        elif successes > 0:
-            success_fail_ratio = float(successes)
+        # Ratios: undefined stays None. A zero numerator over a positive
+        # denominator is a real 0.0; a zero denominator is not a number.
+        male_female_ratio = male_chars / female_chars if female_chars > 0 else None
+        agg_friend_ratio = aggressive / friendly if friendly > 0 else None
+        success_fail_ratio = successes / failures if failures > 0 else None
 
         return ContentAnalysis(
             male_characters=male_chars,
@@ -380,11 +418,11 @@ class DreamAnalyzer:
             animal_characters=animal_chars,
             friendly_interactions=friendly,
             aggressive_interactions=aggressive,
-            sexual_interactions=sexual,  # Keyword-based detection (H/VdC methodology)
+            sexual_interactions=sexual,
             successes=successes,
             failures=failures,
-            misfortunes=failures,  # Simplified
-            good_fortunes=successes,  # Simplified
+            misfortunes=misfortunes,
+            good_fortunes=good_fortunes,
             positive_emotions=positive_count,
             negative_emotions=negative_count,
             male_female_ratio=male_female_ratio,
@@ -392,47 +430,46 @@ class DreamAnalyzer:
             success_failure_ratio=success_fail_ratio,
         )
 
-    def _analyze_emotions(self, text: str) -> Tuple[EmotionType, float]:
-        """Determine primary emotion and intensity using knowledge base"""
-        text_lower = text.lower()
+    def _count_emotion_words(
+        self,
+        words: List[str],
+        coder: HvdcCoder,
+        clauses: List[Clause],
+    ) -> int:
+        """Count emotion-word occurrences outside negation («не боялся»
+        is not fear). Russian entries match as prefixes to cover case and
+        tense endings; English entries match as whole words."""
+        count = 0
+        norm_words = [morphology.normalize(w) for w in words]
+        for clause in clauses:
+            for tok in clause.tokens:
+                if any(tok.text.startswith(w) for w in norm_words):
+                    if not coder.is_negated(clause, tok.index):
+                        count += 1
+        return count
 
-        emotion_counts = {
-            EmotionType.HAPPINESS: 0,
-            EmotionType.SADNESS: 0,
-            EmotionType.ANGER: 0,
-            EmotionType.APPREHENSION: 0,
-            EmotionType.CONFUSION: 0,
-        }
-
-        # Load emotion words from knowledge base
+    def _analyze_emotions(
+        self,
+        text: str,
+        coder: HvdcCoder,
+        clauses: List[Clause],
+    ) -> Tuple[EmotionType, float]:
+        """Determine primary emotion and intensity using the knowledge
+        base, skipping negated mentions («не боялся» is not fear)."""
         emotion_types = self.knowledge_base.get("emotions", {}).get("by_type", {})
 
-        # Count emotion indicators from knowledge base
-        happiness_words = emotion_types.get("happiness", [])
-        for word in happiness_words:
-            if word in text_lower:
-                emotion_counts[EmotionType.HAPPINESS] += 1
-
-        sadness_words = emotion_types.get("sadness", [])
-        for word in sadness_words:
-            if word in text_lower:
-                emotion_counts[EmotionType.SADNESS] += 1
-
-        anger_words = emotion_types.get("anger", [])
-        for word in anger_words:
-            if word in text_lower:
-                emotion_counts[EmotionType.ANGER] += 1
-
-        # Fear/apprehension indicators
-        fear_words = emotion_types.get("fear", [])
-        for word in fear_words:
-            if word in text_lower:
-                emotion_counts[EmotionType.APPREHENSION] += 1
-
-        confusion_words = emotion_types.get("confusion", [])
-        for word in confusion_words:
-            if word in text_lower:
-                emotion_counts[EmotionType.CONFUSION] += 1
+        type_map = {
+            "happiness": EmotionType.HAPPINESS,
+            "sadness": EmotionType.SADNESS,
+            "anger": EmotionType.ANGER,
+            "fear": EmotionType.APPREHENSION,
+            "confusion": EmotionType.CONFUSION,
+        }
+        emotion_counts = {e: 0 for e in type_map.values()}
+        for key, emotion in type_map.items():
+            emotion_counts[emotion] = self._count_emotion_words(
+                emotion_types.get(key, []), coder, clauses
+            )
 
         # Find primary emotion
         max_count = max(emotion_counts.values())

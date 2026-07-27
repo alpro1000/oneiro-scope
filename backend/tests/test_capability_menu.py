@@ -142,10 +142,11 @@ def test_a_wrapper_never_claims_a_prerequisite_it_cannot_observe():
 def test_dreams_is_a_separate_domain_with_no_birth_data():
     dreams = capability_menu("dreams", ["dream_text"])
     tools = {r["tool"] for r in dreams["ready"] + dreams["needs_input"]}
-    assert tools == {"analyze_dream"}
+    assert tools == {"analyze_dream", "dream_series_stats"}
     astro = capability_menu("astro", [BIRTH_DATE, BIRTH_TIME, BIRTH_PLACE])
     astro_tools = {r["tool"] for r in astro["ready"] + astro["needs_input"]}
     assert "analyze_dream" not in astro_tools
+    assert "dream_series_stats" not in astro_tools
     assert dreams["reference_lookups"] != astro["reference_lookups"]
 
 
@@ -418,7 +419,7 @@ async def test_analyze_dream_offers_only_the_dreams_domain(monkeypatch):
             return {"symbols": [], "interpretation": "x"}
 
     class _Svc:
-        async def analyze_dream(self, req):
+        async def analyze_dream(self, req, interpret=True):
             return _Resp()
 
     monkeypatch.setattr(dream_tools, "_svc", lambda: _Svc())

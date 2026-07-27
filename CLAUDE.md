@@ -592,50 +592,64 @@ POST /api/v1/astrology/natal-chart
      structured_interpretation, provenance)
 ```
 
-## Dream Analysis Architecture (Updated 2025-12-23)
+## Dream Analysis Architecture (Updated 2026-07-27 — structural HVdC coder v3)
 
 ```
-POST /api/v1/dreams/analyze
+POST /api/v1/dreams/analyze  |  MCP analyze_dream (data-first)
          │
          ▼
 ┌─────────────────────────────────────────┐
-│        _preprocess_dream_text()         │
-│   • Remove repeated chars (ссс→сс)      │
-│   • Normalize whitespace                │
-│   • _detect_language() → ru/en          │
+│   HvdcCoder.code()  (hvdc_coder.py)     │
+│   • clause segmentation RU/EN           │
+│   • characters: distinct nouns + gender │
+│     (pronouns never create characters)  │
+│   • acts need a TARGET: aggression /    │
+│     friendliness / sexuality            │
+│   • success/failure vs misfortune/GF    │
+│   • negation scoping («не смог»→failure)│
+│   • evidence clause + rule citation     │
+│     per event (confidence 1.0)          │
 └─────────────────────────────────────────┘
          │
          ▼
 ┌─────────────────────────────────────────┐
 │         DreamAnalyzer.analyze()         │
-│   • 50 symbols (symbols.json)           │
-│   • Content analysis (H/VdC)            │
-│   • Emotion + themes + archetypes       │
+│   • 56 symbols, negation-aware          │
+│     («не было воды» ≠ water; отвергнутая│
+│     локация «не там» ≠ forest)          │
+│   • emotions per clause, negation-aware │
+│   • themes + archetypes                 │
 └─────────────────────────────────────────┘
          │
          ▼
 ┌─────────────────────────────────────────┐
 │    DreamBankLoader.compare_to_norms()   │
 │   • hvdc_norms.json (1966 study)        │
-│   • Male/Female character ratio         │
-│   • Aggression/Friendliness index       │
-│   • Typicality score 0-100%             │
+│   • 0/0 → insufficient_data, НЕ 0.00    │
+│   • deviation_unit: pp | ratio          │
+│   • Typicality (significance-based)     │
 └─────────────────────────────────────────┘
          │
+         ├────────────── MCP path (default): NO server prose.
+         │               how_to_read + disclaimer; the calling model
+         │               interprets the deterministic coding itself.
+         │               Optional: store_for_user_id → dream_entries
+         │               (personal series; dream_series_stats, N≥15).
          ▼
 ┌─────────────────────────────────────────┐
-│       DreamInterpreter (LLM) v2.1       │
-│   • JSON prompt (auto-locale)           │
-│   • dream_interpreter_system.json       │
-│   • 4-step validation (meaningful?)     │
-│   • Prohibited: эзотерика, гадание      │
-│   • Confidence indicators               │
-│   • REM/NREM + DreamBase methodology    │
-│   • Fallback to inline prompts          │
+│  DreamInterpreter (LLM) — web path only │
+│  (include_interpretation=True), v2.1    │
+│  JSON prompts, prohibited list,         │
+│  4-step validation, fallback templates  │
 └─────────────────────────────────────────┘
          │
          ▼
     DreamAnalysisResponse
-    (symbols, content, norm_comparison,
-     interpretation, recommendations)
+    (symbols, content_analysis, hvdc_evidence,
+     norm_comparison + insufficient_data,
+     lunar_context, disclaimer, [interpretation])
 ```
+
+Golden-set gates: `backend/tests/dreams/golden/` (28 hand-coded dreams RU+EN),
+`test_hvdc_golden.py` prints per-category precision/recall and fails CI when a
+category drops below its floor (precision 0.90 everywhere).

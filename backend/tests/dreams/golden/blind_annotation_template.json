@@ -1,0 +1,483 @@
+{
+  "instructions": "СЛЕПАЯ разметка второго аннотатора. Кодируйте по первичным правилам Hall & Van de Castle (Hall & Van de Castle 1966; практические таблицы: Domhoff, dreamresearch.net -> Coding Rules), НЕ глядя в golden_*.json и не обсуждая с кем-либо уже существующую разметку. Заполните каждое поле целым числом >= 0. Сновидец в счёт персонажей не входит. Затем: python scripts/kappa_golden.py <этот файл>",
+  "annotator": "FILL: имя/инициалы",
+  "annotated_at": "FILL: YYYY-MM-DD",
+  "dreams": [
+    {
+      "id": "g01_coins",
+      "locale": "ru",
+      "text": "Мне приснилось, что я поднял половицу и нашёл золотые монеты. Я собрал их в карманы. Несколько фигурок я отдал проходящей женщине. Потом появился второй наблюдатель, я оттеснил его и закрыл находку спиной. Мне сказали копать в деревьях, а я решил копать не там.",
+      "counts": {
+        "male_characters": null,
+        "female_characters": null,
+        "animal_characters": null,
+        "friendly_interactions": null,
+        "aggressive_interactions": null,
+        "sexual_interactions": null,
+        "successes": null,
+        "failures": null,
+        "misfortunes": null,
+        "good_fortunes": null
+      }
+    },
+    {
+      "id": "g02_wolf_chase",
+      "locale": "ru",
+      "text": "Мне снилось, что за мной гнался огромный волк. Я бежал через тёмный лес и не мог кричать. В последний момент я забрался на дерево и спасся.",
+      "counts": {
+        "male_characters": null,
+        "female_characters": null,
+        "animal_characters": null,
+        "friendly_interactions": null,
+        "aggressive_interactions": null,
+        "sexual_interactions": null,
+        "successes": null,
+        "failures": null,
+        "misfortunes": null,
+        "good_fortunes": null
+      }
+    },
+    {
+      "id": "g03_family_kindness",
+      "locale": "ru",
+      "text": "Я был в доме бабушки. Мама накрывала на стол, а брат помог мне донести тяжёлые сумки. Потом бабушка обняла меня и подарила старинные часы.",
+      "counts": {
+        "male_characters": null,
+        "female_characters": null,
+        "animal_characters": null,
+        "friendly_interactions": null,
+        "aggressive_interactions": null,
+        "sexual_interactions": null,
+        "successes": null,
+        "failures": null,
+        "misfortunes": null,
+        "good_fortunes": null
+      }
+    },
+    {
+      "id": "g04_negations",
+      "locale": "ru",
+      "text": "Во сне не было воды. Никто меня не преследовал, и я никого не ударил. Я не нашёл выход из здания.",
+      "counts": {
+        "male_characters": null,
+        "female_characters": null,
+        "animal_characters": null,
+        "friendly_interactions": null,
+        "aggressive_interactions": null,
+        "sexual_interactions": null,
+        "successes": null,
+        "failures": null,
+        "misfortunes": null,
+        "good_fortunes": null
+      }
+    },
+    {
+      "id": "g05_exam_failed",
+      "locale": "ru",
+      "text": "Мне снился экзамен. Я пытался решить задачу, но провалил экзамен. Учитель кричал на меня перед всем классом.",
+      "counts": {
+        "male_characters": null,
+        "female_characters": null,
+        "animal_characters": null,
+        "friendly_interactions": null,
+        "aggressive_interactions": null,
+        "sexual_interactions": null,
+        "successes": null,
+        "failures": null,
+        "misfortunes": null,
+        "good_fortunes": null
+      }
+    },
+    {
+      "id": "g06_flying_waving",
+      "locale": "ru",
+      "text": "Я летал над городом и чувствовал невероятную свободу и радость. Внизу люди махали мне руками.",
+      "counts": {
+        "male_characters": null,
+        "female_characters": null,
+        "animal_characters": null,
+        "friendly_interactions": null,
+        "aggressive_interactions": null,
+        "sexual_interactions": null,
+        "successes": null,
+        "failures": null,
+        "misfortunes": null,
+        "good_fortunes": null
+      }
+    },
+    {
+      "id": "g07_lottery",
+      "locale": "ru",
+      "text": "Мне приснилось, что я выиграл в лотерею огромную сумму. Мы с женой прыгали от счастья.",
+      "counts": {
+        "male_characters": null,
+        "female_characters": null,
+        "animal_characters": null,
+        "friendly_interactions": null,
+        "aggressive_interactions": null,
+        "sexual_interactions": null,
+        "successes": null,
+        "failures": null,
+        "misfortunes": null,
+        "good_fortunes": null
+      }
+    },
+    {
+      "id": "g08_chess_win",
+      "locale": "ru",
+      "text": "Я играл в шахматы со стариком и победил его. Он пожал мне руку.",
+      "counts": {
+        "male_characters": null,
+        "female_characters": null,
+        "animal_characters": null,
+        "friendly_interactions": null,
+        "aggressive_interactions": null,
+        "sexual_interactions": null,
+        "successes": null,
+        "failures": null,
+        "misfortunes": null,
+        "good_fortunes": null
+      }
+    },
+    {
+      "id": "g09_mountain_fall",
+      "locale": "ru",
+      "text": "Я шёл по горной тропе, споткнулся и упал в пропасть. Я сломал ногу и не мог встать. Мимо прошла женщина, но не помогла мне.",
+      "counts": {
+        "male_characters": null,
+        "female_characters": null,
+        "animal_characters": null,
+        "friendly_interactions": null,
+        "aggressive_interactions": null,
+        "sexual_interactions": null,
+        "successes": null,
+        "failures": null,
+        "misfortunes": null,
+        "good_fortunes": null
+      }
+    },
+    {
+      "id": "g10_snake",
+      "locale": "ru",
+      "text": "Мне снилась огромная змея. Она ползла ко мне, и я испугался, но не убежал. Я схватил палку и ударил змею.",
+      "counts": {
+        "male_characters": null,
+        "female_characters": null,
+        "animal_characters": null,
+        "friendly_interactions": null,
+        "aggressive_interactions": null,
+        "sexual_interactions": null,
+        "successes": null,
+        "failures": null,
+        "misfortunes": null,
+        "good_fortunes": null
+      }
+    },
+    {
+      "id": "g11_wedding",
+      "locale": "ru",
+      "text": "Мне снилась наша свадьба. Невеста поцеловала меня, и гости аплодировали. Мой отец обнял меня и заплакал от радости.",
+      "counts": {
+        "male_characters": null,
+        "female_characters": null,
+        "animal_characters": null,
+        "friendly_interactions": null,
+        "aggressive_interactions": null,
+        "sexual_interactions": null,
+        "successes": null,
+        "failures": null,
+        "misfortunes": null,
+        "good_fortunes": null
+      }
+    },
+    {
+      "id": "g12_late_train",
+      "locale": "ru",
+      "text": "Я опаздывал на поезд. Я бежал по вокзалу изо всех сил. Я опоздал и заплакал.",
+      "counts": {
+        "male_characters": null,
+        "female_characters": null,
+        "animal_characters": null,
+        "friendly_interactions": null,
+        "aggressive_interactions": null,
+        "sexual_interactions": null,
+        "successes": null,
+        "failures": null,
+        "misfortunes": null,
+        "good_fortunes": null
+      }
+    },
+    {
+      "id": "g13_war",
+      "locale": "ru",
+      "text": "Шла война. Солдаты стреляли в нас, и мой друг был ранен. Я перевязал ему рану и вытащил его из-под огня. Мы спаслись, но я потерял свой рюкзак со всеми вещами.",
+      "counts": {
+        "male_characters": null,
+        "female_characters": null,
+        "animal_characters": null,
+        "friendly_interactions": null,
+        "aggressive_interactions": null,
+        "sexual_interactions": null,
+        "successes": null,
+        "failures": null,
+        "misfortunes": null,
+        "good_fortunes": null
+      }
+    },
+    {
+      "id": "g14_childhood_house_flood",
+      "locale": "ru",
+      "text": "Я вернулся в свой детский дом. В подвале была вода, она поднималась всё выше. Я испугался, что утону, но сумел выбраться на крышу.",
+      "counts": {
+        "male_characters": null,
+        "female_characters": null,
+        "animal_characters": null,
+        "friendly_interactions": null,
+        "aggressive_interactions": null,
+        "sexual_interactions": null,
+        "successes": null,
+        "failures": null,
+        "misfortunes": null,
+        "good_fortunes": null
+      }
+    },
+    {
+      "id": "g15_mother_call",
+      "locale": "ru",
+      "text": "Мне позвонила мама. Она плакала и просила о помощи. Я не смог ей помочь и почувствовал вину.",
+      "counts": {
+        "male_characters": null,
+        "female_characters": null,
+        "animal_characters": null,
+        "friendly_interactions": null,
+        "aggressive_interactions": null,
+        "sexual_interactions": null,
+        "successes": null,
+        "failures": null,
+        "misfortunes": null,
+        "good_fortunes": null
+      }
+    },
+    {
+      "id": "g16_alley_threat",
+      "locale": "ru",
+      "text": "Я шёл по тёмному переулку. Незнакомец схватил меня за руку и угрожал ножом. Я вырвался и убежал. Дома я запер дверь и долго не мог успокоиться.",
+      "counts": {
+        "male_characters": null,
+        "female_characters": null,
+        "animal_characters": null,
+        "friendly_interactions": null,
+        "aggressive_interactions": null,
+        "sexual_interactions": null,
+        "successes": null,
+        "failures": null,
+        "misfortunes": null,
+        "good_fortunes": null
+      }
+    },
+    {
+      "id": "g17_coins_en",
+      "locale": "en",
+      "text": "I lifted a floorboard and found gold coins. I filled my pockets with them. I gave a few figurines to a woman passing by. Then a second observer appeared and I pushed him away. I was told to dig near the trees, but I decided to dig somewhere else.",
+      "counts": {
+        "male_characters": null,
+        "female_characters": null,
+        "animal_characters": null,
+        "friendly_interactions": null,
+        "aggressive_interactions": null,
+        "sexual_interactions": null,
+        "successes": null,
+        "failures": null,
+        "misfortunes": null,
+        "good_fortunes": null
+      }
+    },
+    {
+      "id": "g18_dog_chase_en",
+      "locale": "en",
+      "text": "A huge dog was chasing me through empty streets. I could not scream. Finally I climbed over a fence and escaped.",
+      "counts": {
+        "male_characters": null,
+        "female_characters": null,
+        "animal_characters": null,
+        "friendly_interactions": null,
+        "aggressive_interactions": null,
+        "sexual_interactions": null,
+        "successes": null,
+        "failures": null,
+        "misfortunes": null,
+        "good_fortunes": null
+      }
+    },
+    {
+      "id": "g19_family_en",
+      "locale": "en",
+      "text": "I was in my grandmother's house. My mother set the table, and my brother helped me carry heavy bags. Then my grandmother hugged me and gave me an old watch.",
+      "counts": {
+        "male_characters": null,
+        "female_characters": null,
+        "animal_characters": null,
+        "friendly_interactions": null,
+        "aggressive_interactions": null,
+        "sexual_interactions": null,
+        "successes": null,
+        "failures": null,
+        "misfortunes": null,
+        "good_fortunes": null
+      }
+    },
+    {
+      "id": "g20_lottery_en",
+      "locale": "en",
+      "text": "I dreamed I won the lottery jackpot. My wife and I jumped with joy.",
+      "counts": {
+        "male_characters": null,
+        "female_characters": null,
+        "animal_characters": null,
+        "friendly_interactions": null,
+        "aggressive_interactions": null,
+        "sexual_interactions": null,
+        "successes": null,
+        "failures": null,
+        "misfortunes": null,
+        "good_fortunes": null
+      }
+    },
+    {
+      "id": "g21_chess_en",
+      "locale": "en",
+      "text": "I played chess with an old man and won the game. He shook my hand.",
+      "counts": {
+        "male_characters": null,
+        "female_characters": null,
+        "animal_characters": null,
+        "friendly_interactions": null,
+        "aggressive_interactions": null,
+        "sexual_interactions": null,
+        "successes": null,
+        "failures": null,
+        "misfortunes": null,
+        "good_fortunes": null
+      }
+    },
+    {
+      "id": "g22_negations_en",
+      "locale": "en",
+      "text": "There was no water in my dream. Nobody chased me, and I did not hit anyone. I could not find the exit from the building.",
+      "counts": {
+        "male_characters": null,
+        "female_characters": null,
+        "animal_characters": null,
+        "friendly_interactions": null,
+        "aggressive_interactions": null,
+        "sexual_interactions": null,
+        "successes": null,
+        "failures": null,
+        "misfortunes": null,
+        "good_fortunes": null
+      }
+    },
+    {
+      "id": "g23_exam_en",
+      "locale": "en",
+      "text": "I was taking an exam. I tried to solve the problem but failed the exam. The teacher yelled at me in front of the whole class.",
+      "counts": {
+        "male_characters": null,
+        "female_characters": null,
+        "animal_characters": null,
+        "friendly_interactions": null,
+        "aggressive_interactions": null,
+        "sexual_interactions": null,
+        "successes": null,
+        "failures": null,
+        "misfortunes": null,
+        "good_fortunes": null
+      }
+    },
+    {
+      "id": "g24_forest_wolf_en",
+      "locale": "en",
+      "text": "I was walking through a forest with my sister. A wolf attacked us, and I fought it off with a stick. My sister was scared, but I protected her. We finally reached the cabin and locked the door. Inside, we found warm food on the table.",
+      "counts": {
+        "male_characters": null,
+        "female_characters": null,
+        "animal_characters": null,
+        "friendly_interactions": null,
+        "aggressive_interactions": null,
+        "sexual_interactions": null,
+        "successes": null,
+        "failures": null,
+        "misfortunes": null,
+        "good_fortunes": null
+      }
+    },
+    {
+      "id": "g25_ex_partner_en",
+      "locale": "en",
+      "text": "I met my ex-girlfriend at a party. She kissed me, and we danced all night. Her new boyfriend saw us and threatened me.",
+      "counts": {
+        "male_characters": null,
+        "female_characters": null,
+        "animal_characters": null,
+        "friendly_interactions": null,
+        "aggressive_interactions": null,
+        "sexual_interactions": null,
+        "successes": null,
+        "failures": null,
+        "misfortunes": null,
+        "good_fortunes": null
+      }
+    },
+    {
+      "id": "g26_cannot_fly_en",
+      "locale": "en",
+      "text": "I was trying to fly but could not lift off the ground. I failed again and again, while other people flew easily above me.",
+      "counts": {
+        "male_characters": null,
+        "female_characters": null,
+        "animal_characters": null,
+        "friendly_interactions": null,
+        "aggressive_interactions": null,
+        "sexual_interactions": null,
+        "successes": null,
+        "failures": null,
+        "misfortunes": null,
+        "good_fortunes": null
+      }
+    },
+    {
+      "id": "g27_inheritance_en",
+      "locale": "en",
+      "text": "A lawyer called me and said I had inherited a big house from an unknown uncle. I walked through the huge rooms feeling lucky.",
+      "counts": {
+        "male_characters": null,
+        "female_characters": null,
+        "animal_characters": null,
+        "friendly_interactions": null,
+        "aggressive_interactions": null,
+        "sexual_interactions": null,
+        "successes": null,
+        "failures": null,
+        "misfortunes": null,
+        "good_fortunes": null
+      }
+    },
+    {
+      "id": "g28_quiet_room_en",
+      "locale": "en",
+      "text": "I was sitting in a quiet room watching the rain outside the window. Everything was still and grey. I do not remember anything else.",
+      "counts": {
+        "male_characters": null,
+        "female_characters": null,
+        "animal_characters": null,
+        "friendly_interactions": null,
+        "aggressive_interactions": null,
+        "sexual_interactions": null,
+        "successes": null,
+        "failures": null,
+        "misfortunes": null,
+        "good_fortunes": null
+      }
+    }
+  ]
+}

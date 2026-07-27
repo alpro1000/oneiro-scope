@@ -164,15 +164,38 @@ class NormDeviation(BaseModel):
     indicator: str = Field(..., description="Norm indicator name")
     user_value: float = Field(..., description="User's dream value")
     norm_value: float = Field(..., description="Expected norm value")
-    deviation: float = Field(..., description="Deviation in percentage points")
+    deviation: float = Field(
+        ..., description="user_value - norm_value, in the indicator's own units"
+    )
+    deviation_unit: str = Field(
+        "percentage_points",
+        description="Units of `deviation`: percentage_points | ratio",
+    )
     significance: str = Field(..., description="significant/moderate/normal")
     description_ru: str = Field(..., description="Russian description")
     description_en: str = Field(..., description="English description")
 
 
+class InsufficientIndicator(BaseModel):
+    """Indicator excluded from norm comparison for lack of data.
+
+    0/0 is indeterminate — it must surface here, never as a 0.00 value."""
+    indicator: str
+    reason_ru: str
+    reason_en: str
+
+
 class NormComparisonResult(BaseModel):
     """Comparison of dream content to Hall/Van de Castle norms"""
     gender_used: str = Field(..., description="Gender norms used (male/female)")
+    method_note_ru: Optional[str] = Field(
+        None,
+        description="Honest scope note: coder is precision-first vs human-coded norms",
+    )
+    method_note_en: Optional[str] = Field(
+        None,
+        description="Honest scope note: coder is precision-first vs human-coded norms",
+    )
     overall_typicality: float = Field(
         ...,
         ge=0,
@@ -183,6 +206,10 @@ class NormComparisonResult(BaseModel):
         default_factory=list,
         description="List of deviations from norms"
     )
+    insufficient_data: List[InsufficientIndicator] = Field(
+        default_factory=list,
+        description="Indicators excluded from the comparison, with reasons"
+    )
     notable_findings_ru: List[str] = Field(
         default_factory=list,
         description="Notable findings in Russian"
@@ -191,6 +218,21 @@ class NormComparisonResult(BaseModel):
         default_factory=list,
         description="Notable findings in English"
     )
+
+
+class HvdcEvent(BaseModel):
+    """One structurally coded HVdC event with its evidence clause.
+
+    Provenance per item: every count in ContentAnalysis is backed by one
+    of these, so a non-zero `aggressive_interactions` can be traced to the
+    exact clause and coding rule that produced it."""
+
+    category: str = Field(..., description="aggression|friendliness|sexuality|good_fortune|misfortune|success|failure")
+    subtype: str = Field(..., description="Category-specific subtype, e.g. physical/giving/discovery")
+    actor: str = Field(..., description="Who acted ('dreamer' or a character noun)")
+    target: Optional[str] = Field(None, description="Target character/pronoun for social interactions")
+    evidence: str = Field(..., description="The clause the event was coded from")
+    source: str = Field(..., description="Coding rule citation (Hall & Van de Castle 1966)")
 
 
 class DreamAnalysisResponse(BaseModel):
@@ -204,6 +246,13 @@ class DreamAnalysisResponse(BaseModel):
     emotion_intensity: float = 0.0
     symbols: List[DreamSymbol] = Field(default_factory=list)
     content_analysis: Optional[ContentAnalysis] = None
+    hvdc_evidence: List[HvdcEvent] = Field(
+        default_factory=list,
+        description="Per-event evidence behind content_analysis counts",
+    )
+    hvdc_coder_version: Optional[str] = Field(
+        None, description="Version of the deterministic HVdC coder"
+    )
     lunar_context: Optional[LunarContext] = None
 
     # Norm comparison (Hall/Van de Castle)
@@ -222,6 +271,18 @@ class DreamAnalysisResponse(BaseModel):
         default="Hall/Van de Castle content analysis with Jungian archetypes and lunar context",
         description="Short description of the analysis pipeline",
     )
+    disclaimer: Optional[str] = Field(
+        None,
+        description="Reflective/entertainment framing — required on every dreams response",
+    )
+    degraded: List[str] = Field(
+        default_factory=list,
+        description=(
+            "Explicit degradation ledger: supplementary computations that "
+            "were requested but failed ('field: reason'). Empty = full data. "
+            "Silent nulls on data paths are banned (conventions.md §12)."
+        ),
+    )
 
 
 __all__ = [
@@ -230,6 +291,7 @@ __all__ = [
     "DreamSymbol",
     "EmotionType",
     "ContentAnalysis",
+    "HvdcEvent",
     "LunarContext",
     "PhysiologicalEvent",
     "PhysiologicalCorrelation",
@@ -238,4 +300,7 @@ __all__ = [
     "DreamSourceRecord",
     "DreamAnalysisRequest",
     "DreamAnalysisResponse",
+    "NormDeviation",
+    "InsufficientIndicator",
+    "NormComparisonResult",
 ]

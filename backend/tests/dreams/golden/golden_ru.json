@@ -1,0 +1,391 @@
+{
+  "metadata": {
+    "description": "Hand-coded Hall/Van de Castle golden set (Russian). Expected counts follow HVdC coding rules (Hall & Van de Castle 1966; Domhoff 1996), coded by a human reading of the text — NOT by what the engine happens to output. Recall below 1.0 against these golds is an honest measurement, not an annotation error.",
+    "coding_rules": "characters = distinct person/animal nouns, dreamer excluded, pronoun-only references count toward gender when unambiguous; aggression/friendliness/sexuality = acts with a target; success/failure = striving outcomes; misfortune/good fortune = non-agentive harm/benefit; one event per incident (stumbled-and-fell is one misfortune).",
+    "fields": [
+      "male_characters",
+      "female_characters",
+      "animal_characters",
+      "friendly_interactions",
+      "aggressive_interactions",
+      "sexual_interactions",
+      "successes",
+      "failures",
+      "misfortunes",
+      "good_fortunes"
+    ],
+    "emotion_note": "expected_primary_emotion is a LIGHT annotation for engine comparison only (HVdC classes: anger/apprehension/sadness/confusion/happiness; AP covers fear, anxiety, guilt, embarrassment). null = ambiguous/neutral, excluded from accuracy. Not CI-gated."
+  },
+  "dreams": [
+    {
+      "id": "g01_coins",
+      "locale": "ru",
+      "text": "Мне приснилось, что я поднял половицу и нашёл золотые монеты. Я собрал их в карманы. Несколько фигурок я отдал проходящей женщине. Потом появился второй наблюдатель, я оттеснил его и закрыл находку спиной. Мне сказали копать в деревьях, а я решил копать не там.",
+      "expected": {
+        "male_characters": 1,
+        "female_characters": 1,
+        "animal_characters": 0,
+        "friendly_interactions": 1,
+        "aggressive_interactions": 1,
+        "sexual_interactions": 0,
+        "successes": 0,
+        "failures": 0,
+        "misfortunes": 0,
+        "good_fortunes": 1
+      },
+      "symbols_must_include": [
+        "money"
+      ],
+      "symbols_must_exclude": [
+        "forest",
+        "stairs"
+      ],
+      "notes": "Приёмочный сон задания: находка без усилий = GF; передача предмета = F; оттеснение = A без вреда; деревья отвергнуты сюжетом («не там»).",
+      "expected_primary_emotion": null
+    },
+    {
+      "id": "g02_wolf_chase",
+      "locale": "ru",
+      "text": "Мне снилось, что за мной гнался огромный волк. Я бежал через тёмный лес и не мог кричать. В последний момент я забрался на дерево и спасся.",
+      "expected": {
+        "male_characters": 0,
+        "female_characters": 0,
+        "animal_characters": 1,
+        "friendly_interactions": 0,
+        "aggressive_interactions": 1,
+        "sexual_interactions": 0,
+        "successes": 1,
+        "failures": 1,
+        "misfortunes": 0,
+        "good_fortunes": 0
+      },
+      "symbols_must_include": [
+        "chase",
+        "forest"
+      ],
+      "symbols_must_exclude": [],
+      "notes": "Погоня = агрессия (сновидец — жертва); «не мог кричать» = неудача стремления; «спасся» = успех.",
+      "expected_primary_emotion": "apprehension"
+    },
+    {
+      "id": "g03_family_kindness",
+      "locale": "ru",
+      "text": "Я был в доме бабушки. Мама накрывала на стол, а брат помог мне донести тяжёлые сумки. Потом бабушка обняла меня и подарила старинные часы.",
+      "expected": {
+        "male_characters": 1,
+        "female_characters": 2,
+        "animal_characters": 0,
+        "friendly_interactions": 3,
+        "aggressive_interactions": 0,
+        "sexual_interactions": 0,
+        "successes": 0,
+        "failures": 0,
+        "misfortunes": 0,
+        "good_fortunes": 0
+      },
+      "symbols_must_include": [
+        "house"
+      ],
+      "symbols_must_exclude": [],
+      "notes": "Три дружественных акта: помощь, объятие, подарок. Бабушка упомянута дважды — один персонаж.",
+      "expected_primary_emotion": "happiness"
+    },
+    {
+      "id": "g04_negations",
+      "locale": "ru",
+      "text": "Во сне не было воды. Никто меня не преследовал, и я никого не ударил. Я не нашёл выход из здания.",
+      "expected": {
+        "male_characters": 0,
+        "female_characters": 0,
+        "animal_characters": 0,
+        "friendly_interactions": 0,
+        "aggressive_interactions": 0,
+        "sexual_interactions": 0,
+        "successes": 0,
+        "failures": 1,
+        "misfortunes": 0,
+        "good_fortunes": 0
+      },
+      "symbols_must_include": [
+        "house"
+      ],
+      "symbols_must_exclude": [
+        "water"
+      ],
+      "notes": "Всё отрицаемое не кодируется; «не нашёл выход» = неудача (искал и не нашёл). Здание в сцене есть, воды нет.",
+      "expected_primary_emotion": null
+    },
+    {
+      "id": "g05_exam_failed",
+      "locale": "ru",
+      "text": "Мне снился экзамен. Я пытался решить задачу, но провалил экзамен. Учитель кричал на меня перед всем классом.",
+      "expected": {
+        "male_characters": 1,
+        "female_characters": 0,
+        "animal_characters": 0,
+        "friendly_interactions": 0,
+        "aggressive_interactions": 1,
+        "sexual_interactions": 0,
+        "successes": 0,
+        "failures": 1,
+        "misfortunes": 0,
+        "good_fortunes": 0
+      },
+      "symbols_must_include": [
+        "exam"
+      ],
+      "symbols_must_exclude": [],
+      "notes": "Провал экзамена = failure; крик учителя = невербальная... вербальная агрессия с целью-сновидцем.",
+      "expected_primary_emotion": "apprehension"
+    },
+    {
+      "id": "g06_flying_waving",
+      "locale": "ru",
+      "text": "Я летал над городом и чувствовал невероятную свободу и радость. Внизу люди махали мне руками.",
+      "expected": {
+        "male_characters": 0,
+        "female_characters": 0,
+        "animal_characters": 0,
+        "friendly_interactions": 1,
+        "aggressive_interactions": 0,
+        "sexual_interactions": 0,
+        "successes": 0,
+        "failures": 0,
+        "misfortunes": 0,
+        "good_fortunes": 0
+      },
+      "symbols_must_include": [
+        "flying"
+      ],
+      "symbols_must_exclude": [],
+      "notes": "Махание руками = дружеский жест (F): известная зона недобора лексикона — жестовые глаголы.",
+      "expected_primary_emotion": "happiness"
+    },
+    {
+      "id": "g07_lottery",
+      "locale": "ru",
+      "text": "Мне приснилось, что я выиграл в лотерею огромную сумму. Мы с женой прыгали от счастья.",
+      "expected": {
+        "male_characters": 0,
+        "female_characters": 1,
+        "animal_characters": 0,
+        "friendly_interactions": 0,
+        "aggressive_interactions": 0,
+        "sexual_interactions": 0,
+        "successes": 0,
+        "failures": 0,
+        "misfortunes": 0,
+        "good_fortunes": 1
+      },
+      "symbols_must_include": [],
+      "symbols_must_exclude": [],
+      "notes": "Выигрыш в лотерею = good fortune (шанс), НЕ success — различение по контексту «лотерея».",
+      "expected_primary_emotion": "happiness"
+    },
+    {
+      "id": "g08_chess_win",
+      "locale": "ru",
+      "text": "Я играл в шахматы со стариком и победил его. Он пожал мне руку.",
+      "expected": {
+        "male_characters": 1,
+        "female_characters": 0,
+        "animal_characters": 0,
+        "friendly_interactions": 1,
+        "aggressive_interactions": 0,
+        "sexual_interactions": 0,
+        "successes": 1,
+        "failures": 0,
+        "misfortunes": 0,
+        "good_fortunes": 0
+      },
+      "symbols_must_include": [],
+      "symbols_must_exclude": [],
+      "notes": "Победа в игре = success (усилие), не GF и не агрессия; рукопожатие = F.",
+      "expected_primary_emotion": "happiness"
+    },
+    {
+      "id": "g09_mountain_fall",
+      "locale": "ru",
+      "text": "Я шёл по горной тропе, споткнулся и упал в пропасть. Я сломал ногу и не мог встать. Мимо прошла женщина, но не помогла мне.",
+      "expected": {
+        "male_characters": 0,
+        "female_characters": 1,
+        "animal_characters": 0,
+        "friendly_interactions": 0,
+        "aggressive_interactions": 0,
+        "sexual_interactions": 0,
+        "successes": 0,
+        "failures": 1,
+        "misfortunes": 2,
+        "good_fortunes": 0
+      },
+      "symbols_must_include": [],
+      "symbols_must_exclude": [],
+      "notes": "Падение (споткнулся+упал = один инцидент) и перелом = 2 misfortune; «не мог встать» = failure (зона недобора: модальная неспособность); «не помогла» отрицена — F нет. «Горной» — прилагательное, символ mountain лексикон не покрывает (задокументированный недобор).",
+      "expected_primary_emotion": null
+    },
+    {
+      "id": "g10_snake",
+      "locale": "ru",
+      "text": "Мне снилась огромная змея. Она ползла ко мне, и я испугался, но не убежал. Я схватил палку и ударил змею.",
+      "expected": {
+        "male_characters": 0,
+        "female_characters": 0,
+        "animal_characters": 1,
+        "friendly_interactions": 0,
+        "aggressive_interactions": 1,
+        "sexual_interactions": 0,
+        "successes": 0,
+        "failures": 0,
+        "misfortunes": 0,
+        "good_fortunes": 0
+      },
+      "symbols_must_include": [
+        "snake"
+      ],
+      "symbols_must_exclude": [],
+      "notes": "«Схватил палку и ударил» = один агрессивный акт (дедупликация по инциденту); «не убежал» — решение, не неудача стремления.",
+      "expected_primary_emotion": "apprehension"
+    },
+    {
+      "id": "g11_wedding",
+      "locale": "ru",
+      "text": "Мне снилась наша свадьба. Невеста поцеловала меня, и гости аплодировали. Мой отец обнял меня и заплакал от радости.",
+      "expected": {
+        "male_characters": 1,
+        "female_characters": 1,
+        "animal_characters": 0,
+        "friendly_interactions": 2,
+        "aggressive_interactions": 0,
+        "sexual_interactions": 1,
+        "successes": 0,
+        "failures": 0,
+        "misfortunes": 0,
+        "good_fortunes": 0
+      },
+      "symbols_must_include": [
+        "wedding"
+      ],
+      "symbols_must_exclude": [],
+      "notes": "Поцелуй = S-шкала; объятие отца и аплодисменты гостей = F (аплодисменты — зона недобора жестовых глаголов).",
+      "expected_primary_emotion": "happiness"
+    },
+    {
+      "id": "g12_late_train",
+      "locale": "ru",
+      "text": "Я опаздывал на поезд. Я бежал по вокзалу изо всех сил. Я опоздал и заплакал.",
+      "expected": {
+        "male_characters": 0,
+        "female_characters": 0,
+        "animal_characters": 0,
+        "friendly_interactions": 0,
+        "aggressive_interactions": 0,
+        "sexual_interactions": 0,
+        "successes": 0,
+        "failures": 1,
+        "misfortunes": 0,
+        "good_fortunes": 0
+      },
+      "symbols_must_include": [
+        "late",
+        "vehicle"
+      ],
+      "symbols_must_exclude": [],
+      "notes": "Опоздание на поезд = failure (стремление успеть не реализовано), не misfortune.",
+      "expected_primary_emotion": "sadness"
+    },
+    {
+      "id": "g13_war",
+      "locale": "ru",
+      "text": "Шла война. Солдаты стреляли в нас, и мой друг был ранен. Я перевязал ему рану и вытащил его из-под огня. Мы спаслись, но я потерял свой рюкзак со всеми вещами.",
+      "expected": {
+        "male_characters": 2,
+        "female_characters": 0,
+        "animal_characters": 0,
+        "friendly_interactions": 2,
+        "aggressive_interactions": 1,
+        "sexual_interactions": 0,
+        "successes": 1,
+        "failures": 0,
+        "misfortunes": 1,
+        "good_fortunes": 0
+      },
+      "symbols_must_include": [
+        "war"
+      ],
+      "symbols_must_exclude": [],
+      "notes": "Обстрел = 1 агрессивный инцидент; перевязка и вытаскивание = 2 F (перевязал/вытащил — зона недобора лексикона); спасение = success; потеря рюкзака = misfortune.",
+      "expected_primary_emotion": "apprehension"
+    },
+    {
+      "id": "g14_childhood_house_flood",
+      "locale": "ru",
+      "text": "Я вернулся в свой детский дом. В подвале была вода, она поднималась всё выше. Я испугался, что утону, но сумел выбраться на крышу.",
+      "expected": {
+        "male_characters": 0,
+        "female_characters": 0,
+        "animal_characters": 0,
+        "friendly_interactions": 0,
+        "aggressive_interactions": 0,
+        "sexual_interactions": 0,
+        "successes": 1,
+        "failures": 0,
+        "misfortunes": 0,
+        "good_fortunes": 0
+      },
+      "symbols_must_include": [
+        "house",
+        "water"
+      ],
+      "symbols_must_exclude": [],
+      "notes": "Страх утонуть — эмоция, не событие (misfortune нет); «сумел выбраться» = success. Вода в сцене реальна.",
+      "expected_primary_emotion": "apprehension"
+    },
+    {
+      "id": "g15_mother_call",
+      "locale": "ru",
+      "text": "Мне позвонила мама. Она плакала и просила о помощи. Я не смог ей помочь и почувствовал вину.",
+      "expected": {
+        "male_characters": 0,
+        "female_characters": 1,
+        "animal_characters": 0,
+        "friendly_interactions": 0,
+        "aggressive_interactions": 0,
+        "sexual_interactions": 0,
+        "successes": 0,
+        "failures": 1,
+        "misfortunes": 0,
+        "good_fortunes": 0
+      },
+      "symbols_must_include": [
+        "mother"
+      ],
+      "symbols_must_exclude": [],
+      "notes": "«Не смог помочь» = failure, и помощь при этом НЕ кодируется как F.",
+      "expected_primary_emotion": "apprehension"
+    },
+    {
+      "id": "g16_alley_threat",
+      "locale": "ru",
+      "text": "Я шёл по тёмному переулку. Незнакомец схватил меня за руку и угрожал ножом. Я вырвался и убежал. Дома я запер дверь и долго не мог успокоиться.",
+      "expected": {
+        "male_characters": 1,
+        "female_characters": 0,
+        "animal_characters": 0,
+        "friendly_interactions": 0,
+        "aggressive_interactions": 2,
+        "sexual_interactions": 0,
+        "successes": 1,
+        "failures": 0,
+        "misfortunes": 0,
+        "good_fortunes": 0
+      },
+      "symbols_must_include": [
+        "house"
+      ],
+      "symbols_must_exclude": [],
+      "notes": "Захват (физическая) и угроза (вербальная) = 2 разных подтипа агрессии; побег = success; «не мог успокоиться» — идиома состояния, не failure.",
+      "expected_primary_emotion": "apprehension"
+    }
+  ]
+}

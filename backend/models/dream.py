@@ -1,6 +1,6 @@
 """Dream and Dream Analysis models"""
 
-from sqlalchemy import Column, String, Text, DateTime, Integer, Float, ForeignKey, JSON, Boolean
+from sqlalchemy import Column, Date, String, Text, DateTime, Integer, Float, ForeignKey, JSON, Boolean, Uuid
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
@@ -75,6 +75,40 @@ class DreamAnalysis(Base):
 
     def __repr__(self):
         return f"<DreamAnalysis(id={self.id}, dream_id={self.dream_id}, confidence={self.confidence})>"
+
+
+class DreamEntry(Base):
+    """One coded dream in a user's personal series.
+
+    Stores ONLY the deterministic HVdC features — never the dream text
+    (the text stays with the `dreams` table if the user opts to keep it).
+    The series exists so a user is compared against their OWN baseline
+    (Domhoff's individual-series approach) instead of only the 1947–1950
+    college norms. Personal data: exported via GDPR export, erased with
+    the user through the FK cascade.
+
+    Uses the dialect-agnostic `Uuid` type (native UUID on Postgres,
+    CHAR(32) elsewhere) so the series service is testable on SQLite.
+    """
+
+    __tablename__ = "dream_entries"
+
+    id = Column(Uuid, primary_key=True, default=uuid.uuid4)
+    user_id = Column(Uuid, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+
+    dream_date = Column(Date, nullable=False, index=True)  # the night of the dream
+    locale = Column(String(5), nullable=False, default="ru")
+
+    # Deterministic coding output
+    coder_version = Column(String(16), nullable=False)
+    hvdc = Column(JSON, nullable=False)          # ContentAnalysis counts
+    symbols = Column(JSON, nullable=True)        # list of symbol ids
+    primary_emotion = Column(String(20), nullable=True)
+
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+
+    def __repr__(self):
+        return f"<DreamEntry(id={self.id}, user_id={self.user_id}, dream_date={self.dream_date})>"
 
 
 class DreamEmbedding(Base):

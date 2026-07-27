@@ -34,14 +34,15 @@
 | frontend/components | 0 | 8 |
 | oneiro-scope | 0 | 0 |
 | styles | 0 | 2 |
-| scripts | 0 | 4 |
+| scripts | 0 | 8 |
 | config | 0 | 2 |
 | agents | 2 | 5 |
 | agents/prompts | 0 | 5 |
 | agents/specialists | 0 | 5 |
-| docs | 6 | 43 |
+| docs | 7 | 43 |
 | docs/deploy | 0 | 5 |
 | docs/steering | 0 | 5 |
+| docs/reports | 0 | 1 |
 | docs/deployment | 0 | 1 |
 | docs/specs | 5 | 0 |
 | docs/specs/product-architecture | 0 | 1 |
@@ -77,12 +78,14 @@
 | .claude/skills/character-face | 0 | 1 |
 | backend | 12 | 5 |
 | backend/alembic | 1 | 2 |
-| backend/alembic/versions | 0 | 1 |
+| backend/alembic/versions | 0 | 2 |
 | backend/models | 0 | 7 |
 | backend/utils | 0 | 2 |
 | backend/mcp | 1 | 4 |
 | backend/mcp/tools | 0 | 11 |
-| backend/tests | 0 | 36 |
+| backend/tests | 1 | 38 |
+| backend/tests/dreams | 1 | 0 |
+| backend/tests/dreams/golden | 0 | 3 |
 | backend/middleware | 0 | 2 |
 | backend/services | 8 | 0 |
 | backend/services/billing | 0 | 3 |
@@ -95,11 +98,11 @@
 | backend/services/email/templates/es | 0 | 2 |
 | backend/services/byok | 0 | 2 |
 | backend/services/lunar | 0 | 3 |
-| backend/services/dreams | 3 | 6 |
+| backend/services/dreams | 3 | 8 |
 | backend/services/dreams/ai | 1 | 2 |
 | backend/services/dreams/ai/prompts | 0 | 1 |
 | backend/services/dreams/data_sources | 0 | 3 |
-| backend/services/dreams/knowledge_base | 0 | 2 |
+| backend/services/dreams/knowledge_base | 0 | 3 |
 | backend/services/strategic | 1 | 6 |
 | backend/services/strategic/knowledge_base | 0 | 1 |
 | backend/services/astrology | 6 | 23 |
@@ -125,4 +128,4 @@
 | external/DReAMy | 1 | 1 |
 | external/DReAMy/dreamy | 0 | 3 |
 
-**ИТОГО:** папок = 121, файлов = 435
+**ИТОГО:** папок = 124, файлов = 449
