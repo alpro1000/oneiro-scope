@@ -16,14 +16,9 @@ quota answering a question nobody asked.
 from __future__ import annotations
 
 import ast
-import sys
-import types
 from pathlib import Path
 
 import pytest
-
-# mediapipe is an optional server-CV dependency; the tools import without it.
-sys.modules.setdefault("mediapipe", types.ModuleType("mediapipe"))
 
 from backend.mcp.tools._menu import MENU_KEY, birth_inputs, with_menu
 from backend.services.strategic.analysis_plan import (
