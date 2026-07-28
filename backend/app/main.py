@@ -23,6 +23,7 @@ from backend.api.v1 import (
     lunar,
     health,
     astrology,
+    chart,
     dreams,
     auth,
     billing,
@@ -170,6 +171,7 @@ async def internal_error_handler(request: Request, exc):
 app.include_router(health.router, tags=["Health"])
 app.include_router(lunar.router, prefix="/api/v1", tags=["Lunar"])
 app.include_router(astrology.router, prefix="/api/v1", tags=["Astrology"])
+app.include_router(chart.router, prefix="/api/v1", tags=["Chart"])
 app.include_router(dreams.router, prefix="/api/v1", tags=["Dreams"])
 app.include_router(auth.router, prefix="/api/v1", tags=["Auth"])
 app.include_router(billing.router, prefix="/api/v1", tags=["Billing"])
