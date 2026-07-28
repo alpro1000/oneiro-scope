@@ -22,7 +22,12 @@ jobs:
           python-version: '3.11'
 
       - name: Install backend deps needed to produce the fixture
-        run: pip install pyswisseph pytz timezonefinder
+        # The full requirements file rather than a hand-picked subset:
+        # importing chart_core pulls in the astrology package __init__,
+        # whose chain reaches pydantic and beyond. A curated list here
+        # silently rots the next time that chain grows — this job already
+        # failed once for exactly that reason.
+        run: pip install -r backend/requirements.txt
 
       - name: Regenerate the golden fixture from the server
         # Regenerating rather than trusting the committed file: a drift

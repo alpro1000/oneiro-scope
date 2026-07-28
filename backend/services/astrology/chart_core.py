@@ -133,14 +133,29 @@ def resolve_house_system(
     requested = requested.lower()
     code = HOUSE_SYSTEM_CODES.get(requested)
     if code is None:
+        # Checked here rather than left to the library: an unknown letter
+        # makes swe.houses_ex fall back to Porphyry SILENTLY and return a
+        # normal-looking tuple, so a typo would produce a wrong-system
+        # chart with nothing to show for it.
         raise ValueError(
             f"Unknown house system {requested!r}; known: "
             f"{', '.join(sorted(HOUSE_SYSTEM_CODES))}"
         )
+    # Coordinate sanity is checked BEFORE calling, because swe.Error is
+    # raised both for a polar Placidus and for an out-of-range latitude.
+    # Narrowing the except clause alone would not tell those apart — a
+    # caller passing lat=500 would be answered with a polar-circle
+    # explanation. Validating first is what makes the except meaningful.
+    if not -90.0 <= lat <= 90.0:
+        raise ValueError(f"latitude {lat} is outside [-90, 90]")
+    if not -180.0 <= lon <= 360.0:
+        raise ValueError(f"longitude {lon} is outside [-180, 360]")
     try:
         swe.houses_ex(jd_ut, lat, lon, code)
         return requested, None
-    except Exception:
+    except swe.Error:
+        # At a valid coordinate this genuinely is the undefined-quadrant
+        # case; anything else propagates.
         fallback = POLAR_FALLBACK_SYSTEM
         swe.houses_ex(jd_ut, lat, lon, HOUSE_SYSTEM_CODES[fallback])
         return fallback, (

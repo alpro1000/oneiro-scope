@@ -80,7 +80,24 @@ self.addEventListener('fetch', (event) => {
           }
           return response;
         })
-        .catch(() => cached);
+        .catch(
+          () =>
+            // A rejected respondWith shows the browser's own network error,
+            // which tells the user nothing about why. First offline visit —
+            // nothing cached, no network — is exactly when that happens, so
+            // answer with a real Response that says what is going on.
+            cached ||
+            new Response(
+              'Офлайн, и эта страница ещё не сохранена. ' +
+                'Откройте приложение один раз с сетью — после этого ' +
+                'сохранённая карта работает без неё.',
+              {
+                status: 503,
+                statusText: 'Offline and not cached',
+                headers: { 'Content-Type': 'text/plain; charset=utf-8' },
+              },
+            ),
+        );
       return cached || network;
     }),
   );

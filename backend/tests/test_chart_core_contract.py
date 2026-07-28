@@ -150,6 +150,27 @@ def test_temperate_charts_keep_placidus_and_say_nothing():
     assert system == "placidus" and note is None
 
 
+def test_bad_coordinates_are_not_mistaken_for_polar_latitudes():
+    """Swiss Ephemeris raises the SAME swe.Error for a polar Placidus and
+    for an out-of-range latitude, so narrowing the except clause alone
+    would answer `lat=500` with a polar-circle explanation. Validating
+    the input first is what keeps the two apart."""
+    jd = build_chart_core(**REF).core["jd_ut"]
+    with pytest.raises(ValueError, match=r"latitude"):
+        resolve_house_system(jd, 500.0, 10.0, "placidus")
+    with pytest.raises(ValueError, match=r"longitude"):
+        resolve_house_system(jd, 40.0, -500.0, "placidus")
+
+
+def test_unknown_house_system_is_refused_not_silently_substituted():
+    """swe.houses_ex answers an unknown letter by quietly using Porphyry
+    and returning a normal tuple — a typo would otherwise produce a
+    wrong-system chart with nothing to show for it."""
+    jd = build_chart_core(**REF).core["jd_ut"]
+    with pytest.raises(ValueError, match="Unknown house system"):
+        resolve_house_system(jd, 47.8, 35.1, "plasidus")
+
+
 def test_polar_birth_still_produces_a_chart():
     """The regression this fixes: a Tromsø birth used to raise RuntimeError
     and return no chart at all."""
