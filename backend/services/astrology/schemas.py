@@ -260,6 +260,11 @@ class NatalChartResponse(BaseModel):
         description="Houses (requires birth time)"
     )
     aspects: list[Aspect]
+    orb_policy_deg: Optional[dict[str, float]] = Field(
+        None,
+        description="Max orb per aspect type used by this calculation "
+                    "(WP-18: the policy travels with the data it shaped)"
+    )
 
     # LLM interpretation
     interpretation: Optional[str] = None

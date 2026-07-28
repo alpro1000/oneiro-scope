@@ -112,10 +112,11 @@ def house_meaning(house_number: int, locale: str = "ru") -> dict[str, Any]:
 
 
 def aspect_meaning(aspect_name: str) -> dict[str, Any]:
-    """Return the qualitative archetype for a major aspect.
+    """Return the qualitative archetype for an aspect.
 
     Args:
-        aspect_name: one of conjunction / opposition / trine / square / sextile.
+        aspect_name: one of conjunction / opposition / trine / square /
+            sextile / quincunx.
     """
     a = aspect_archetype(aspect_name)
     return {

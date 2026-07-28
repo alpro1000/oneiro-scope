@@ -134,11 +134,13 @@ def test_house_lookup_invalid_raises():
 # ---------- Aspects --------------------------------------------------------
 
 
-def test_all_five_aspects_present():
+def test_all_six_aspects_present():
     from backend.services.astrology.archetypes import ASPECTS
 
+    # quincunx joined in WP-18: the natal calculator had always emitted it,
+    # but the KB refused to explain the angle.
     assert set(ASPECTS) == {
-        "conjunction", "opposition", "trine", "square", "sextile"
+        "conjunction", "opposition", "trine", "square", "sextile", "quincunx"
     }
 
 
@@ -260,7 +262,7 @@ def test_list_archetype_topics_includes_all_categories():
     assert len(topics["mc_in_sign"]) == 12
     assert len(topics["sun_in_sign"]) == 12
     assert len(topics["houses"]) == 12
-    assert len(topics["aspects"]) == 5
+    assert len(topics["aspects"]) == 6  # incl. quincunx (WP-18)
     assert len(topics["planet_in_house"]) == 10
     assert len(topics["transit_meaning"]) == 6
 

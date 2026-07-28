@@ -55,6 +55,11 @@ class Settings(BaseSettings):
     MCP_AUTH_JWKS_URL: str | None = None  # defaults to issuer + /.well-known/jwks.json
     MCP_AUTH_AUDIENCE: str | None = None  # defaults to MCP_PUBLIC_URL
     MCP_REQUIRED_SCOPES: str = ""  # space-separated, empty = none required
+    # Scopes advertised in RFC 9728 metadata when none are required (WP-15).
+    # Clients (Claude connector, Auth0 dynamic registration) read
+    # `scopes_supported` to decide what to request; publishing nothing made
+    # them guess. Standard OIDC scopes are always safe to request.
+    MCP_ADVERTISED_SCOPES: str = "openid profile email"
     # Local-only shortcut: a static bearer token. Refused in production.
     MCP_DEV_TOKEN: str | None = None
 

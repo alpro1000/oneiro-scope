@@ -144,7 +144,13 @@ def protected_resource_metadata() -> dict[str, Any]:
         # entitled to abort on — before login, before registration, before
         # anything, and looking exactly like "the connector won't connect".
         meta["authorization_servers"] = [settings.MCP_AUTH_ISSUER]
-    scopes = required_scopes()
+    # WP-15: always publish scopes_supported. Clients build their
+    # authorization request from this field; omitting it (the old
+    # behaviour when no scopes were REQUIRED) left the connector to
+    # guess. Required scopes win; otherwise the advertised OIDC set.
+    scopes = required_scopes() or [
+        s for s in (settings.MCP_ADVERTISED_SCOPES or "").split() if s
+    ]
     if scopes:
         meta["scopes_supported"] = scopes
     return meta

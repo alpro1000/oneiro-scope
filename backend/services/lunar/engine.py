@@ -132,7 +132,11 @@ def compute_lunar(date_iso: str, tz: str) -> LunarResult:
     moon_lon = swe.calc_ut(jd_ut, MOON, flags)[0][0]
 
     phase_angle = (moon_lon - sun_lon) % 360.0
-    illumination = (1 - math.cos(math.radians(phase_angle))) / 2
+    # WP-16: illuminated fraction from swe_pheno_ut, not the flat
+    # (1-cos)/2 approximation — the latter ignores the Moon's actual
+    # phase geometry and was off by up to ~4 pp (74.08% vs 77.85% on
+    # 2026-08-03 10:00 UTC).
+    illumination = swe.pheno_ut(jd_ut, MOON, flags)[1]
     moon_age_days = (phase_angle / 360.0) * SYNODIC_MONTH
     lunar_day = max(1, min(30, math.floor(moon_age_days) + 1))
     lunar_day_start_time = _calculate_lunar_day_start(moon_age_days, target_date, tz)
@@ -144,6 +148,7 @@ def compute_lunar(date_iso: str, tz: str) -> LunarResult:
         "swisseph_version": ephe_config.SWE_VERSION,
         "ephemeris_files": [dict(item) for item in ephe_config.ephemeris_files()],
         "flags": ephe_config.FLAGS_TEXT,
+        "illumination_method": "swe_pheno_ut",
         "jd_ut": jd_ut,
         "timezone": tz,
         "local_noon_utc": noon_utc.isoformat(),

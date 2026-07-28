@@ -22,7 +22,7 @@ from .schemas import (
     ZodiacSign,
 )
 from .ephemeris import SwissEphemeris
-from .natal_chart import NatalChartCalculator
+from .natal_chart import ASPECT_ORBS, NatalChartCalculator
 from .transits import TransitCalculator
 from .geocoder import GeoLocation, Geocoder, GeocodingError
 from .interpreter import AstrologyInterpreter
@@ -219,6 +219,10 @@ class AstrologyService:
             planets=planets,
             houses=houses,
             aspects=aspects,
+            orb_policy_deg={
+                aspect_type.value: float(orb)
+                for aspect_type, orb in ASPECT_ORBS.items()
+            },
             interpretation=interpretation,
             structured_interpretation=structured_interpretation,
             created_at=datetime.now(dt_timezone.utc),
@@ -252,16 +256,20 @@ class AstrologyService:
 
         # Calculate transits
         transits = []
-        retrograde_planets = []
+
+        # Retrograde status is a property of the sky on the date, not of the
+        # user's chart — computing it only when a natal chart was supplied
+        # made the horoscope and forecast_event disagree about the same day
+        # (WP-18: retro-list sync).
+        retrograde_planets = self.transit_calculator.get_retrograde_planets(
+            target_date
+        )
 
         if natal_chart:
             transits = self.transit_calculator.calculate_transits(
                 natal_chart.planets,
                 period_start,
                 period_end,
-            )
-            retrograde_planets = self.transit_calculator.get_retrograde_planets(
-                target_date
             )
 
         # Get lunar info with proper timezone handling
