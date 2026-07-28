@@ -62,7 +62,9 @@ class NormComparison:
     gender_used: Gender
     deviations: List[NormDeviation]
     insufficient_data: List[InsufficientIndicator]
-    overall_typicality: float  # 0-100, how typical the dream is
+    # 0-100, or None when NO indicator passed the data threshold — an
+    # uncomputed score must not masquerade as a perfect 100.
+    overall_typicality: Optional[float]
     notable_findings_ru: List[str]
     notable_findings_en: List[str]
     typicality_warning_ru: Optional[str] = None  # set when the basis is thin
@@ -361,6 +363,10 @@ class DreamBankLoader:
         typicality_warning_ru = typicality_warning_en = None
         compared_basis = sum(d.events_observed for d in deviations)
         if not deviations:
+            # The empty penalty sum is the identity 100 — a number that
+            # would read as "perfectly typical" for a dream nothing was
+            # measured on. No indicators → no score.
+            overall_typicality = None
             typicality_warning_ru = (
                 "Ни один индикатор не прошёл порог данных — типичность не "
                 "рассчитывалась по этому сну и не должна интерпретироваться."
@@ -451,10 +457,18 @@ class DreamBankLoader:
 
         This text can be added to the LLM prompt for more accurate interpretations.
         """
+        typicality_ru = (
+            f"{comparison.overall_typicality:.0f}%"
+            if comparison.overall_typicality is not None else "не рассчитана"
+        )
+        typicality_en = (
+            f"{comparison.overall_typicality:.0f}%"
+            if comparison.overall_typicality is not None else "not computed"
+        )
         if locale == "ru":
             lines = [
                 f"Сравнение с нормами Hall/Van de Castle (пол: {comparison.gender_used.value}):",
-                f"Типичность сна: {comparison.overall_typicality:.0f}%",
+                f"Типичность сна: {typicality_ru}",
             ]
             if comparison.notable_findings_ru:
                 lines.append("Отклонения от норм:")
@@ -467,7 +481,7 @@ class DreamBankLoader:
         else:
             lines = [
                 f"Hall/Van de Castle norm comparison (gender: {comparison.gender_used.value}):",
-                f"Dream typicality: {comparison.overall_typicality:.0f}%",
+                f"Dream typicality: {typicality_en}",
             ]
             if comparison.notable_findings_en:
                 lines.append("Deviations from norms:")

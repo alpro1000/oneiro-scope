@@ -123,20 +123,22 @@ def _local_noon_utc(target_date: date, tz: str) -> datetime:
 
 def compute_lunar(date_iso: str, tz: str) -> LunarResult:
     target_date = date.fromisoformat(date_iso)
+    ephe_config.require_in_range(target_date, "lunar calculation")
     noon_utc = _local_noon_utc(target_date, tz)
     ut = noon_utc.hour + noon_utc.minute / 60 + noon_utc.second / 3600 + noon_utc.microsecond / 3_600_000_000
 
     jd_ut = swe.julday(noon_utc.year, noon_utc.month, noon_utc.day, ut)
-    flags = ephe_config.FLAGS
-    sun_lon = swe.calc_ut(jd_ut, SUN, flags)[0][0]
-    moon_lon = swe.calc_ut(jd_ut, MOON, flags)[0][0]
+    # Same fail-closed rule as the astrology wrapper: the returned flags
+    # are the only witness that SWIEPH actually served the result.
+    sun_lon = ephe_config.calc_ut_swieph(jd_ut, SUN)[0]
+    moon_lon = ephe_config.calc_ut_swieph(jd_ut, MOON)[0]
 
     phase_angle = (moon_lon - sun_lon) % 360.0
     # WP-16: illuminated fraction from swe_pheno_ut, not the flat
     # (1-cos)/2 approximation — the latter ignores the Moon's actual
     # phase geometry and was off by up to ~4 pp (74.08% vs 77.85% on
     # 2026-08-03 10:00 UTC).
-    illumination = swe.pheno_ut(jd_ut, MOON, flags)[1]
+    illumination = swe.pheno_ut(jd_ut, MOON, ephe_config.FLAGS)[1]
     moon_age_days = (phase_angle / 360.0) * SYNODIC_MONTH
     lunar_day = max(1, min(30, math.floor(moon_age_days) + 1))
     lunar_day_start_time = _calculate_lunar_day_start(moon_age_days, target_date, tz)

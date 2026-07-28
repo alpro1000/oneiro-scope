@@ -179,3 +179,5 @@ def test_typicality_warning_when_nothing_compared(loader):
     cmp = loader.compare_to_norms(_base(), gender="male")
     assert not cmp.deviations
     assert "не рассчитывалась" in cmp.typicality_warning_ru
+    # An uncomputed score must not masquerade as a perfect 100 (Qodo #7).
+    assert cmp.overall_typicality is None

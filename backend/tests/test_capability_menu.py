@@ -237,8 +237,10 @@ def test_dependencies_point_at_real_stages():
 # registry in WP-10 keep their legacy with_menu calls but are no longer part
 # of the product surface.
 
-# `get_lunar_period` returns a bare list; see the note in its docstring.
-_NO_MENU_BY_DESIGN = {"get_lunar_period"}
+# Every stage tool carries the menu since the Qodo round: get_lunar_period
+# moved from a bare list to {"days": [...]} so the WP-6 meta block (and the
+# menu) can attach — a list response was the one hole in both contracts.
+_NO_MENU_BY_DESIGN: set = set()
 
 
 def _menu_wiring() -> dict[str, dict]:

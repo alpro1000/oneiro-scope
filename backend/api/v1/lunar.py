@@ -164,6 +164,10 @@ async def get_lunar_day(
         "recommendation": content.get("type", ""),
         "locale": locale,
         "timezone": tz,
+        # Contract: ephemeris_engine, jd_ut and timezone are required at
+        # the response top level; the full detail stays under provenance.
+        "ephemeris_engine": lunar.provenance["ephemeris_engine"],
+        "jd_ut": lunar.jd_ut,
         "provenance": lunar.provenance,
         "source": "backend",
     }

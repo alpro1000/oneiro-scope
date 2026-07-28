@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import hashlib
 import os
+from datetime import date
 from functools import lru_cache
 from pathlib import Path
 
@@ -66,6 +67,55 @@ ACCURACY_STATEMENT = (
     "(scripts/verify_ephemeris.py); no analytic fallback — missing data "
     "files fail startup"
 )
+
+# Declared coverage of the shipped *_18.se1 set. Dates outside get a clean
+# validation error at the input boundary instead of a deep swisseph error.
+EPHE_MIN_DATE = date(1800, 1, 1)
+EPHE_MAX_DATE = date(2399, 12, 31)
+
+
+def require_in_range(when: date, context: str) -> None:
+    """Reject dates outside the shipped ephemeris coverage, loudly."""
+    if not (EPHE_MIN_DATE <= when <= EPHE_MAX_DATE):
+        raise ValueError(
+            f"{context}: {when.isoformat()} is outside the shipped Swiss "
+            f"Ephemeris coverage {EPHE_MIN_DATE.isoformat()}"
+            f"–{EPHE_MAX_DATE.isoformat()} (*_18.se1). Install files for "
+            "that range and point SWISSEPH_EPHE_PATH at them."
+        )
+
+
+def calc_ut_swieph(jd_ut: float, body: int) -> tuple:
+    """swe.calc_ut that REFUSES a silently substituted source.
+
+    The C library can swap in another ephemeris when a body's file is
+    unreadable and still return a result; the returned flags are the only
+    witness. Every caller that labels its output SWIEPH must go through
+    here (or perform the same check).
+    """
+    result, ret_flags = swe.calc_ut(jd_ut, body, FLAGS)
+    if not ret_flags & swe.FLG_SWIEPH:
+        raise RuntimeError(
+            f"Swiss Ephemeris did not use SWIEPH for body {body} "
+            f"(returned flags {ret_flags}) — check {EPHE_DIR}"
+        )
+    return result
+
+
+def _startup_probe() -> None:
+    """Prove the ACTIVE directory actually computes, at import.
+
+    Filename presence alone admits truncated or tampered files; this runs
+    one real calculation per data file (Sun→sepl, Moon→semo, Chiron→seas)
+    and verifies the returned flags, so a broken set fails the process
+    at startup instead of at the first user request.
+    """
+    j2000 = 2451545.0
+    for body in (swe.SUN, swe.MOON, swe.CHIRON):
+        calc_ut_swieph(j2000, body)
+
+
+_startup_probe()
 
 
 @lru_cache(maxsize=1)

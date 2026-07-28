@@ -99,6 +99,7 @@ class CodedEvent:
     target: Optional[str]
     evidence: str      # the clause the event was read from
     source: str        # citation of the coding rule
+    confidence: float = 1.0  # deterministic coding — always the top tier
 
 
 @dataclass

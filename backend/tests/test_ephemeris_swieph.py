@@ -40,12 +40,46 @@ def test_resolve_rejects_incomplete_dir(tmp_path):
 
 
 def test_resolve_honours_env_alias(tmp_path, monkeypatch):
+    """resolve_ephe_dir checks presence and precedence only; content
+    integrity of the ACTIVE directory is the startup probe's job (below)."""
     for name in ephe_config.REQUIRED_FILES:
         (tmp_path / name).write_bytes(b"x")
     for var in ("SWISSEPH_EPHE_PATH", "SE_EPHE_PATH"):
         monkeypatch.delenv(var, raising=False)
     monkeypatch.setenv("SWISSEPH_PATH", str(tmp_path))
     assert ephe_config.resolve_ephe_dir() == tmp_path
+
+
+def test_startup_probe_rejects_truncated_files(tmp_path):
+    """Filename presence alone admits truncated files; the import-time
+    probe must catch them by running a real calculation (Qodo finding)."""
+    for name in ephe_config.REQUIRED_FILES:
+        (tmp_path / name).write_bytes(b"not an ephemeris")
+    swe.set_ephe_path(str(tmp_path))
+    try:
+        with pytest.raises((RuntimeError, swe.Error)):
+            ephe_config._startup_probe()
+    finally:
+        swe.set_ephe_path(str(ephe_config.EPHE_DIR))
+        ephe_config._startup_probe()  # the real set must still verify
+
+
+def test_calc_ut_swieph_returns_verified_positions():
+    result = ephe_config.calc_ut_swieph(2451545.0, swe.SUN)
+    assert 0.0 <= result[0] < 360.0
+
+
+def test_dates_outside_coverage_are_rejected_cleanly():
+    from datetime import date as date_cls
+
+    from backend.services.lunar.engine import compute_lunar
+
+    with pytest.raises(ValueError, match="coverage"):
+        compute_lunar("1750-06-01", "UTC")
+    with pytest.raises(ValueError, match="coverage"):
+        ephe_config.require_in_range(date_cls(2500, 1, 1), "test")
+    # In-range dates pass silently.
+    ephe_config.require_in_range(date_cls(1977, 7, 1), "test")
 
 
 def test_calc_ut_actually_uses_swieph():

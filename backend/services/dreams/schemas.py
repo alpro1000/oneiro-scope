@@ -206,11 +206,13 @@ class NormComparisonResult(BaseModel):
         None,
         description="Honest scope note: coder is precision-first vs human-coded norms",
     )
-    overall_typicality: float = Field(
-        ...,
+    overall_typicality: Optional[float] = Field(
+        None,
         ge=0,
         le=100,
-        description="How typical the dream is (0-100%)"
+        description="How typical the dream is (0-100%), or null when no "
+                    "indicator passed the data threshold — an uncomputed "
+                    "score is not a perfect 100"
     )
     typicality_warning_ru: Optional[str] = Field(
         None,
@@ -251,6 +253,9 @@ class HvdcEvent(BaseModel):
     target: Optional[str] = Field(None, description="Target character/pronoun for social interactions")
     evidence: str = Field(..., description="The clause the event was coded from")
     source: str = Field(..., description="Coding rule citation (Hall & Van de Castle 1966)")
+    confidence: float = Field(
+        1.0, description="Always 1.0: deterministic structural coding, top of the confidence ladder"
+    )
 
 
 class DreamAnalysisResponse(BaseModel):

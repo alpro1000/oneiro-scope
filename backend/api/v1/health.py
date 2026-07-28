@@ -1,6 +1,7 @@
 """Health check endpoints"""
 
 from fastapi import APIRouter, Depends, status
+from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import text
 import redis.asyncio as redis
@@ -10,6 +11,24 @@ from backend.core.config import settings
 from backend.core.ephemeris import startup_summary
 
 router = APIRouter()
+
+
+class EphemerisInfo(BaseModel):
+    """Live Swiss Ephemeris configuration surfaced by /health."""
+
+    engine: str
+    swisseph_version: str
+    ephe_path: str
+    files: list[str]
+
+
+class HealthResponse(BaseModel):
+    """Contract of the basic /health check (keepalive.yml greps it)."""
+
+    status: str
+    service: str
+    version: str
+    ephemeris: EphemerisInfo
 
 
 def _ephemeris_mode() -> dict:
@@ -23,7 +42,7 @@ def _ephemeris_mode() -> dict:
     return startup_summary()
 
 
-@router.get("/health")
+@router.get("/health", response_model=HealthResponse)
 async def health_check():
     """Basic health check + ephemeris mode."""
     return {

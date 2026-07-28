@@ -237,6 +237,7 @@ class DreamService:
                     target=e.target,
                     evidence=e.evidence,
                     source=e.source,
+                    confidence=e.confidence,
                 )
                 for e in coding.events
             ],

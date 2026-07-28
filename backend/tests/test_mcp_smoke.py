@@ -119,8 +119,12 @@ def test_get_lunar_period_caps_length():
 def test_get_lunar_period_short_range():
     from backend.mcp.tools.lunar import get_lunar_period
 
-    rows = get_lunar_period(
+    out = get_lunar_period(
         "2026-05-26", "2026-05-28", timezone="UTC", include_content=False
     )
+    # Dict envelope since the Qodo round: a bare list could not carry the
+    # WP-6 meta block or the capability menu.
+    rows = out["days"]
+    assert out["count"] == 3
     assert len(rows) == 3
     assert all("lunar_day" in r and "date" in r for r in rows)

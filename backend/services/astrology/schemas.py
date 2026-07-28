@@ -210,6 +210,18 @@ class NatalChartRequest(BaseModel):
         return self
 
     @model_validator(mode="after")
+    def _birth_date_within_ephemeris_coverage(self) -> "NatalChartRequest":
+        """Reject dates the shipped .se1 files do not cover (1800–2399).
+
+        Out-of-range requests would otherwise reach the calculation layer
+        and die on a raw swisseph error; the boundary owes the caller a
+        clear validation message instead."""
+        from backend.core.ephemeris import require_in_range
+
+        require_in_range(self.birth_date, "birth_date")
+        return self
+
+    @model_validator(mode="after")
     def _timezone_must_be_a_real_zone(self) -> "NatalChartRequest":
         """Reject an unknown zone at the boundary rather than mis-timing a chart.
 
