@@ -109,33 +109,34 @@ def _calculate_lunar_day_start(moon_age_days: float, target_date: date, tz: str)
     Lunar day changes approximately every 24.8 hours.
     We calculate backwards from moon age to find when this day began.
     """
-    try:
-        # Get fractional part of lunar day (e.g., 5.3 days -> 0.3)
-        current_lunar_day = max(1, min(30, math.floor(moon_age_days) + 1))
-        fraction_into_day = moon_age_days - (current_lunar_day - 1)
+    # Никакого try/except: единственный реальный сбой здесь — неизвестная
+    # таймзона, и это ошибка входа, которая обязана падать громко
+    # (conventions.md §12), а не превращаться в null, неотличимый от
+    # «время начала неизвестно».
+    # Get fractional part of lunar day (e.g., 5.3 days -> 0.3)
+    current_lunar_day = max(1, min(30, math.floor(moon_age_days) + 1))
+    fraction_into_day = moon_age_days - (current_lunar_day - 1)
 
-        # Average lunar day is ~24.8 hours
-        # Calculate how many hours ago this day started
-        hours_into_day = fraction_into_day * 24.8
+    # Average lunar day is ~24.8 hours
+    # Calculate how many hours ago this day started
+    hours_into_day = fraction_into_day * 24.8
 
-        # Calculate start time by going back from midnight
-        tzinfo = pytz.timezone(tz)
-        midnight_local = tzinfo.localize(
-            datetime(target_date.year, target_date.month, target_date.day, 0, 0)
-        )
+    # Calculate start time by going back from midnight
+    tzinfo = pytz.timezone(tz)
+    midnight_local = tzinfo.localize(
+        datetime(target_date.year, target_date.month, target_date.day, 0, 0)
+    )
 
-        # Lunar day start time
-        day_start = midnight_local + timedelta(hours=hours_into_day)
+    # Lunar day start time
+    day_start = midnight_local + timedelta(hours=hours_into_day)
 
-        # If calculated time is in the future (>24h ahead), go back one day
-        now_local = datetime.now(tzinfo)
-        if day_start > now_local + timedelta(hours=12):
-            day_start -= timedelta(days=1)
+    # If calculated time is in the future (>24h ahead), go back one day
+    now_local = datetime.now(tzinfo)
+    if day_start > now_local + timedelta(hours=12):
+        day_start -= timedelta(days=1)
 
-        # Format as HH:MM
-        return day_start.strftime("%H:%M")
-    except Exception:
-        return None
+    # Format as HH:MM
+    return day_start.strftime("%H:%M")
 
 
 def _local_noon_utc(target_date: date, tz: str) -> datetime:
