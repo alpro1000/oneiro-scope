@@ -29,7 +29,7 @@ from backend.services.astrology.astrocartography import (
 from backend.services.astrology.historic_tz import BirthMoment
 from backend.services.astrology.transits_engine import find_transits
 
-_FLAGS = swe.FLG_MOSEPH | swe.FLG_SPEED
+from backend.core.ephemeris import FLAGS as _FLAGS
 
 _BODIES = {
     "Sun": swe.SUN, "Moon": swe.MOON, "Mercury": swe.MERCURY,
@@ -167,7 +167,7 @@ def build_report(
         "themes": themes,
         "year_transits": events,
         "provenance": {
-            "astronomy": "Swiss Ephemeris (MOSEPH)",
+            "astronomy": "Swiss Ephemeris (SWIEPH)",
             "method": "Astro*Carto*Graphy (Lewis 1976); Placidus houses",
             "confidence": {"astronomy": 1.0, "labels": 0.8},
         },

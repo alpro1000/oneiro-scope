@@ -110,7 +110,7 @@ async def astrocartography_chart(req: AstrocartographyBirth) -> dict:
         return {
             "layer": "astronomy",
             "methodology": (
-                "Astro*Carto*Graphy (Lewis 1976); Swiss Ephemeris MOSEPH"
+                "Astro*Carto*Graphy (Lewis 1976); Swiss Ephemeris SWIEPH"
             ),
             "chart": chart_geometry(
                 jd, req.birth_lat, req.birth_lon, req.birth_place or "birth"
@@ -604,7 +604,6 @@ async def list_event_types() -> dict:
                     "wedding": "Свадьба",
                     "business": "Бизнес-сделка",
                     "interview": "Собеседование",
-                    "surgery": "Операция",
                     "moving": "Переезд",
                     "contract": "Подписание контракта",
                     "exam": "Экзамен",

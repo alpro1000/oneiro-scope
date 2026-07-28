@@ -43,7 +43,7 @@ from typing import Dict, List, Optional, Tuple
 
 from backend.services.dreams import morphology
 
-HVDC_CODER_VERSION = "3.0.0"
+HVDC_CODER_VERSION = "3.1.0"
 
 _LEXICON_PATH = Path(__file__).parent / "knowledge_base" / "hvdc_lexicon.json"
 
@@ -99,6 +99,7 @@ class CodedEvent:
     target: Optional[str]
     evidence: str      # the clause the event was read from
     source: str        # citation of the coding rule
+    confidence: float = 1.0  # deterministic coding — always the top tier
 
 
 @dataclass
@@ -180,6 +181,35 @@ class HvdcCoder:
         # неодушевлённостью, «лисица» — не-агентивным суффиксом.
         self._male_agent_tails = ("тель", "щик", "чик", "ник")
         self._female_agent_tails = ("тельница", "льница", "щица", "чица")
+
+        # WP-4: субстантивированные прилагательные («знакомый», «старший»,
+        # «прохожий», «дежурный»). У многих в OpenCorpora вообще нет
+        # NOUN-разбора, поэтому членство — курируемый список лемм, а род
+        # даёт морфология конкретной ФОРМЫ (знакомая → female).
+        self._subst_lemmas = frozenset(
+            morphology.normalize(w)
+            for w in lex.get("substantivized_adjectives", {}).get("ru", ())
+        )
+
+        # WP-4: находка ценностей без глагола «нашёл» — good fortune.
+        vd = lex.get("valuable_discovery", {})
+        self._presence_forms = {
+            morphology.normalize(w)
+            for key in ("presence_ru_forms", "presence_en_forms")
+            for w in vd.get(key, ())
+        }
+        self._presence_phrases = [
+            morphology.normalize(p) for p in vd.get("presence_en_phrases", ())
+        ]
+        self._valuables_ru_roots = [
+            morphology.normalize(w) for w in vd.get("valuables_ru_roots", ())
+        ]
+        self._valuables_ru_excl = tuple(
+            morphology.normalize(w) for w in vd.get("valuables_ru_exclusions", ())
+        )
+        self._valuables_en = {
+            morphology.normalize(w) for w in vd.get("valuables_en", ())
+        }
 
         # Acts: exact forms, prefix roots, and multiword substring patterns.
         self._acts = []
@@ -358,13 +388,21 @@ class HvdcCoder:
 
     def _character_gender(self, token: str) -> Optional[str]:
         exact = self._char_forms.get(token)
-        if exact:
+        if exact in ("male", "female", "animal"):
             return exact
         if _is_cyrillic(token):
             info = morphology.lemma_info(token)
-            gender = self._char_forms.get(info.normal_form)
-            if gender:
-                return gender
+            lemma_gender = self._char_forms.get(info.normal_form)
+            if lemma_gender in ("male", "female", "animal"):
+                return lemma_gender
+            # WP-4: субстантивированные прилагательные — род из морфологии
+            # формы, не из словарного indefinite: «знакомый» → male,
+            # «знакомая» → female, «знакомых» (мн.) → indefinite.
+            subst = morphology.form_gender_for_lemmas(token, self._subst_lemmas)
+            if subst is not None:
+                return subst
+            if exact or lemma_gender:
+                return exact or lemma_gender  # словарный indefinite
             # Агентивные суффиксы по лемме, только для одушевлённых
             # существительных: «водителя» → водитель → male.
             if info.pos == "NOUN" and info.animate and len(info.normal_form) >= 6:
@@ -376,7 +414,7 @@ class HvdcCoder:
         # "ex-girlfriend" carries the same character as "girlfriend".
         if token.startswith("ex-"):
             return self._char_forms.get(token[3:])
-        return None
+        return exact
 
     def _character_key(self, token: str) -> str:
         """Dedup key: lemma for Russian («отца … отец» — один персонаж),
@@ -384,6 +422,19 @@ class HvdcCoder:
         if _is_cyrillic(token):
             return morphology.lemma_info(token).normal_form
         return token[3:] if token.startswith("ex-") else token
+
+    def _is_attribute_before_character(self, clause: Clause, tok: Token) -> bool:
+        """«Старший знакомый» — «старший» здесь прилагательное при персонаже,
+        а не второй персонаж. Кандидат из субстантивированного класса
+        пропускается, когда сразу за ним стоит другой персонаж-токен."""
+        if not _is_cyrillic(tok.text):
+            return False
+        if morphology.form_gender_for_lemmas(tok.text, self._subst_lemmas) is None:
+            return False
+        nxt = tok.index + 1
+        if nxt >= len(clause.tokens):
+            return False
+        return self._character_gender(clause.tokens[nxt].text) is not None
 
     def find_characters(self, clauses: List[Clause]) -> List[CharacterMention]:
         mentions: List[CharacterMention] = []
@@ -393,6 +444,8 @@ class HvdcCoder:
                 gender = self._character_gender(tok.text)
                 if gender is None:
                     continue
+                if self._is_attribute_before_character(clause, tok):
+                    continue  # «старший знакомый» — один персонаж, не два
                 if self.clause_negates_presence(clause, tok.index):
                     continue  # «никого не было», «без людей»
                 key = self._character_key(tok.text)
@@ -496,6 +549,7 @@ class HvdcCoder:
             characters_by_clause.setdefault(c.clause_index, []).append(c)
 
         events: List[CodedEvent] = []
+        gf_valuable_sentences: set = set()
 
         for clause in clauses:
             # HVdC кодирует событие, а не глагол: «споткнулся и упал» — одно
@@ -591,7 +645,82 @@ class HvdcCoder:
                     else:
                         add(act["category"], act["subtype"], "dreamer", None)
 
+            # WP-4: находка ценностей без глагола «нашёл» — «под кустом
+            # лежат золотые монеты», «оказывается клад». Одно событие на
+            # предложение: перечисление «клад, старинные монеты» — одна
+            # удача, не две; «нашёл клад» (глагольный путь выше) тоже
+            # закрывает предложение от повторного GF по ценности.
+            if any(cat == "good_fortune" for cat, _ in seen_in_clause):
+                gf_valuable_sentences.add(clause.sentence_index)
+            self._code_valuable_discovery(clauses, clause, add, gf_valuable_sentences)
+
         return HvdcCoding(clauses=clauses, characters=characters, events=events)
+
+    def _valuable_token(self, clause: Clause) -> Optional[Token]:
+        for tok in clause.tokens:
+            text = tok.text
+            if text in self._valuables_en:
+                return tok
+            if _is_cyrillic(text):
+                if any(text.startswith(x) for x in self._valuables_ru_excl):
+                    continue  # «кладбище», «кладка» — не сокровища
+                for root in self._valuables_ru_roots:
+                    if text.startswith(root) and len(text) - len(root) <= 3:
+                        return tok
+        return None
+
+    def _presence_token(self, clause: Clause) -> Optional[Token]:
+        """Non-negated presence/perception verb in the clause, or None."""
+        if not clause.tokens:
+            return None
+        for tok in clause.tokens:
+            if tok.text in self._presence_forms:
+                if not self.is_negated(clause, tok.index):
+                    return tok
+        for phrase in self._presence_phrases:
+            pos = clause.text.find(phrase)
+            if pos != -1:
+                idx = self.token_index_at(clause, clause.start + pos)
+                if not self.is_negated(clause, idx):
+                    return clause.tokens[min(idx, len(clause.tokens) - 1)]
+        return None
+
+    def _code_valuable_discovery(
+        self,
+        clauses: List[Clause],
+        clause: Clause,
+        add,
+        coded_sentences: set,
+    ) -> None:
+        """Good fortune из ценности + глагола наличия/восприятия (WP-4).
+
+        Живой прогон аудита: «копаю землю … вижу: под кустом лежат золотые
+        монеты» кодировался GF=0, потому что все правила GF висели на
+        глаголах находки. Ценность («золото», «клад», «монеты»…) вместе с
+        «лежат»/«вижу»/«оказывается» в том же предложении — приобретение
+        по стечению обстоятельств, GF по Hall & Van de Castle. Отрицание
+        любой из частей («не было золота», «не вижу монет») гасит событие.
+        """
+        if clause.sentence_index in coded_sentences:
+            return
+        valuable = self._valuable_token(clause)
+        if valuable is None:
+            return
+        if self.clause_negates_presence(clause, valuable.index):
+            return
+        presence = self._presence_token(clause)
+        if presence is None:
+            # «вижу: под кустом монеты» — глагол в соседней клаузе того же
+            # предложения.
+            for other in clauses:
+                if other.sentence_index == clause.sentence_index and other is not clause:
+                    presence = self._presence_token(other)
+                    if presence is not None:
+                        break
+        if presence is None:
+            return
+        coded_sentences.add(clause.sentence_index)
+        add("good_fortune", "discovery", "dreamer", None, _clause=clause)
 
     def _attempt_before(self, clause: Clause, token_index: int) -> bool:
         return any(

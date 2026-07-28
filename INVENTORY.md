@@ -4,7 +4,7 @@
 |---|---:|---:|
 | . | 15 | 20 |
 | .github | 1 | 0 |
-| .github/workflows | 0 | 7 |
+| .github/workflows | 0 | 8 |
 | tests | 0 | 4 |
 | frontend | 12 | 14 |
 | frontend/types | 0 | 2 |
@@ -34,7 +34,7 @@
 | frontend/components | 0 | 8 |
 | oneiro-scope | 0 | 0 |
 | styles | 0 | 2 |
-| scripts | 0 | 8 |
+| scripts | 0 | 9 |
 | config | 0 | 2 |
 | agents | 2 | 5 |
 | agents/prompts | 0 | 5 |
@@ -42,7 +42,7 @@
 | docs | 7 | 43 |
 | docs/deploy | 0 | 5 |
 | docs/steering | 0 | 5 |
-| docs/reports | 0 | 1 |
+| docs/reports | 0 | 2 |
 | docs/deployment | 0 | 1 |
 | docs/specs | 5 | 0 |
 | docs/specs/product-architecture | 0 | 1 |
@@ -82,8 +82,8 @@
 | backend/models | 0 | 7 |
 | backend/utils | 0 | 2 |
 | backend/mcp | 1 | 4 |
-| backend/mcp/tools | 0 | 11 |
-| backend/tests | 1 | 38 |
+| backend/mcp/tools | 0 | 13 |
+| backend/tests | 1 | 44 |
 | backend/tests/dreams | 1 | 0 |
 | backend/tests/dreams/golden | 0 | 3 |
 | backend/middleware | 0 | 2 |
@@ -117,8 +117,9 @@
 | backend/app | 0 | 2 |
 | backend/api | 1 | 1 |
 | backend/api/v1 | 0 | 9 |
-| backend/core | 0 | 7 |
-| backend/data | 0 | 1 |
+| backend/core | 0 | 8 |
+| backend/data | 1 | 1 |
+| backend/data/ephemeris | 0 | 3 |
 | backend/portal | 1 | 4 |
 | backend/portal/templates | 0 | 8 |
 | assets | 0 | 2 |
@@ -128,4 +129,4 @@
 | external/DReAMy | 1 | 1 |
 | external/DReAMy/dreamy | 0 | 3 |
 
-**ИТОГО:** папок = 124, файлов = 449
+**ИТОГО:** папок = 125, файлов = 464

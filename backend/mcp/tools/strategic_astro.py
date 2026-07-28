@@ -50,6 +50,7 @@ from backend.services.astrology.synastry import (
 from backend.mcp.tools._menu import (
     CITIES,
     PARTNER_BIRTH,
+    POINT,
     TARGET_DATE,
     birth_inputs,
     with_menu,
@@ -120,7 +121,7 @@ async def compute_transits(
     return with_menu(
         {
             "layer": "astronomy",
-            "methodology": "Swiss Ephemeris (MOSEPH analytic); orb at midnight UT",
+            "methodology": "Swiss Ephemeris (SWIEPH); orb at midnight UT",
             "window": {"start": start, "end": end, "orb_deg": orb_deg},
             "transit_count": len(events),
             "transits": [
@@ -193,7 +194,7 @@ async def astrocartography_scan(
             "layer": "astronomy",
             "methodology": (
                 "Placidus house system; Astro*Carto*Graphy (Lewis 1976); "
-                "Swiss Ephemeris MOSEPH"
+                "Swiss Ephemeris SWIEPH"
             ),
             "orb_deg": orb_deg,
             "city_count": len(results),
@@ -238,15 +239,20 @@ async def astrocartography_lines(
         birth_name: Label for the birth place.
     """
     jd = _natal_jd(birth_date, birth_time, birth_timezone)
-    return {
-        "layer": "astronomy",
-        "methodology": (
-            "Astro*Carto*Graphy (Lewis 1976); Swiss Ephemeris MOSEPH; "
-            "MC/IC = meridian loci, Asc/Desc = horizon curves"
-        ),
-        "chart": chart_geometry(jd, birth_lat, birth_lon, birth_name),
-        "lines": acg_lines(jd),
-    }
+    return with_menu(
+        {
+            "layer": "astronomy",
+            "methodology": (
+                "Astro*Carto*Graphy (Lewis 1976); Swiss Ephemeris SWIEPH; "
+                "MC/IC = meridian loci, Asc/Desc = horizon curves"
+            ),
+            "chart": chart_geometry(jd, birth_lat, birth_lon, birth_name),
+            "lines": acg_lines(jd),
+        },
+        domain="astro",
+        known_inputs=_known(birth_date, birth_time, birth_timezone),
+        completed=["astrocartography-lines"],
+    )
 
 
 async def astrocartography_point(
@@ -286,24 +292,30 @@ async def astrocartography_point(
     """
     jd = _natal_jd(birth_date, birth_time, birth_timezone)
     result = relocate(jd, lat, lon, orb_deg=orb_deg)
-    return {
-        "layer": "astronomy+symbolic",
-        "methodology": "Placidus angles; classical angle orbs; reflective summary",
-        "location": {"lat": lat, "lon": lon},
-        "angles": {
-            "asc": result.asc,
-            "mc": result.mc,
-            "ic": result.ic,
-            "desc": result.desc,
+    return with_menu(
+        {
+            "layer": "astronomy+symbolic",
+            "methodology": "Placidus angles; classical angle orbs; reflective summary",
+            "location": {"lat": lat, "lon": lon},
+            "angles": {
+                "asc": result.asc,
+                "mc": result.mc,
+                "ic": result.ic,
+                "desc": result.desc,
+            },
+            "angle_themes": _ANGLE_THEME,
+            "contacts": [_hit_to_dict(h) for h in result.angle_hits],
+            "full_breakdown": full_angle_breakdown(result, orb_deg=orb_deg),
+            "score": result.score,
+            "score_explanation": score_explanation(result, locale=locale),
+            "axis_focus": home_vs_work_focus(result, orb_deg=orb_deg, locale=locale),
+            "summary": relocation_summary(result, locale=locale),
         },
-        "angle_themes": _ANGLE_THEME,
-        "contacts": [_hit_to_dict(h) for h in result.angle_hits],
-        "full_breakdown": full_angle_breakdown(result, orb_deg=orb_deg),
-        "score": result.score,
-        "score_explanation": score_explanation(result, locale=locale),
-        "axis_focus": home_vs_work_focus(result, orb_deg=orb_deg, locale=locale),
-        "summary": relocation_summary(result, locale=locale),
-    }
+        domain="astro",
+        known_inputs=_known(birth_date, birth_time, birth_timezone, POINT),
+        completed=["astrocartography-point"],
+        locale=locale,
+    )
 
 
 async def solar_return_chart(

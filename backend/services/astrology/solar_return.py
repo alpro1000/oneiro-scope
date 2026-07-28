@@ -20,7 +20,7 @@ try:
 except ImportError as exc:  # pragma: no cover
     raise ImportError("pyswisseph is required for solar return") from exc
 
-_FLAGS = swe.FLG_MOSEPH | swe.FLG_SPEED
+from backend.core.ephemeris import FLAGS as _FLAGS
 
 
 @dataclass(frozen=True)
@@ -107,6 +107,17 @@ def find_exact_return_jd(
             best_orb = diff
             best_jd = jd
 
+    # Stage 3 (WP-18): second-step refinement — the return moment is
+    # reported to the second. The Sun moves ~0.04″/s, so this pins the
+    # orb to sub-arcsecond territory.
+    for s in range(-90, 91):
+        jd = best_jd + s / 86400.0
+        sun = _sun_longitude(jd)
+        diff = abs(_angle_diff_signed(natal_sun_longitude, sun))
+        if diff < best_orb:
+            best_orb = diff
+            best_jd = jd
+
     return best_jd, best_orb * 60.0  # convert orb to arc-min
 
 
@@ -162,11 +173,16 @@ def solar_return(
         planets[name] = round(plon, 4)
         houses[name] = _planet_house(plon, list(cusps))
 
-    # Convert JD back to ISO.
+    # Convert JD back to ISO, to the second (WP-18).
     y, m, d, h = swe.revjul(exact_jd)
     hh = int(h)
     mm_ = int((h - hh) * 60)
-    iso = datetime(int(y), int(m), int(d), hh, mm_, tzinfo=timezone.utc).isoformat()
+    ss = int(round(((h - hh) * 60 - mm_) * 60))
+    if ss == 60:
+        ss = 59  # clamp rounding at the minute edge rather than carrying
+    iso = datetime(
+        int(y), int(m), int(d), hh, mm_, ss, tzinfo=timezone.utc
+    ).isoformat()
 
     return SolarReturnChart(
         exact_moment_utc=iso,

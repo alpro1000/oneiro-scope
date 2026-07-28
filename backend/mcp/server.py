@@ -20,16 +20,23 @@ import sys
 
 from mcp.server.fastmcp import FastMCP
 
-from backend.mcp.tools import archetypes as ar
+from backend.mcp.tools._meta import with_meta
+
 from backend.mcp.tools import astrology as a
 from backend.mcp.tools import dreams as d
 from backend.mcp.tools import geo as g
+from backend.mcp.tools import lookup as lk
 from backend.mcp.tools import lunar as l
-from backend.mcp.tools import physiognomy as ph
 from backend.mcp.tools import strategic_astro as sa
 from backend.mcp.tools import strategic_patterns as sp
 
 logger = logging.getLogger("oneiro.mcp")
+
+# WP-1 startup verification: importing the config verifies the .se1 files
+# (or raises, refusing to start the server) and pins SWIEPH globally.
+from backend.core.ephemeris import startup_summary as _ephemeris_summary
+
+logger.info("Ephemeris: %s", _ephemeris_summary())
 
 mcp = FastMCP(
     "oneiro-scope",
@@ -40,89 +47,54 @@ mcp = FastMCP(
         "DreamBank norms), and lunar calendar. Geocoding via GeoNames. All "
         "interpretations are bilingual (ru/en) and traced to data — never "
         "invented. Use `validate_birth_data` before `calculate_natal_chart` "
-        "to save LLM cost. Use `search_city` for autocomplete-style lookups."
+        "to save LLM cost. Use `search_city` for autocomplete-style lookups. "
+        "Knowledge-base reads (sign/house/aspect/dignity meanings, symbol "
+        "and category lists) live behind the single `lookup` tool."
     ),
 )
 
+# WP-10: the surface is deliberately small. 47 tools drowned the ones that
+# compute something over a person; the registry now carries the working set
+# and ONE folded reference lookup. Removed families (physiognomy, file
+# reports, generate_horoscope, per-key archetype lookups, decade/electional
+# extras) keep their module code for the web API — they are just no longer
+# MCP tools. Every stage in analysis_plan.STAGES must name a tool from this
+# registry; tests enforce the sync in both directions.
+
 # --- Astrology ---------------------------------------------------------------
-mcp.tool()(a.calculate_natal_chart)
-mcp.tool()(a.generate_horoscope)
-mcp.tool()(a.forecast_event)
-mcp.tool()(a.horoscope_report)
-mcp.tool()(a.profile_report_file)
-mcp.tool()(a.list_event_types)
-mcp.tool()(a.list_horoscope_periods)
+mcp.tool()(with_meta(a.calculate_natal_chart))
+mcp.tool()(with_meta(a.forecast_event))
 
 # --- Dreams ------------------------------------------------------------------
-mcp.tool()(d.analyze_dream)
-mcp.tool()(d.dream_series_stats)
-mcp.tool()(d.list_dream_symbols)
-mcp.tool()(d.list_archetypes)
-mcp.tool()(d.list_hvdc_categories)
+mcp.tool()(with_meta(d.analyze_dream))
+mcp.tool()(with_meta(d.dream_series_stats))
 
 # --- Lunar -------------------------------------------------------------------
-mcp.tool()(l.get_lunar_day)
-mcp.tool()(l.get_lunar_period)
+mcp.tool()(with_meta(l.get_lunar_day))
+mcp.tool()(with_meta(l.get_lunar_period))
 
-# --- Geo ---------------------------------------------------------------------
-mcp.tool()(g.search_city)
-mcp.tool()(g.validate_birth_data)
+# --- Geo (the natal chain's input control) -----------------------------------
+mcp.tool()(with_meta(g.search_city))
+mcp.tool()(with_meta(g.validate_birth_data))
 
-# --- Strategic astronomy (Phase 7) -------------------------------------------
-# Deterministic chart geometry that the Strategic Life Cycle Analyst agent
-# cites as ASTRONOMY-layer evidence. Output is data, not interpretation.
-mcp.tool()(sa.compute_transits)
-mcp.tool()(sa.astrocartography_scan)
-mcp.tool()(sa.astrocartography_lines)
-mcp.tool()(sa.astrocartography_point)
-mcp.tool()(sa.solar_return_chart)
+# --- Strategic astronomy: timing and place -----------------------------------
+# Deterministic chart geometry cited as ASTRONOMY-layer evidence.
+mcp.tool()(with_meta(sa.compute_transits))
+mcp.tool()(with_meta(sa.astrocartography_scan))
+mcp.tool()(with_meta(sa.astrocartography_lines))
+mcp.tool()(with_meta(sa.astrocartography_point))
+mcp.tool()(with_meta(sa.compare_relocations))
+mcp.tool()(with_meta(sa.solar_return_chart))
+mcp.tool()(with_meta(sa.solar_return_suggest))
 
-# --- Pattern features (Phase 9: session-retrospective) -----------------------
-# Side-by-side relocation, thematic city ranking with clean-luck flags,
-# thematic transit arcs (pressure/support phases), synastry, and Solar
-# Return location suggestions.
-mcp.tool()(sa.compare_relocations)
-mcp.tool()(sa.scan_cities_by_theme)
-mcp.tool()(sa.transit_arc)
-mcp.tool()(sa.synastry)
-mcp.tool()(sa.solar_return_suggest)
+# --- Analysis patterns -------------------------------------------------------
+# analysis_plan is the entry point: what can be computed, in which order.
+mcp.tool()(with_meta(sp.analysis_plan))
+mcp.tool()(with_meta(sp.money_contour))
+mcp.tool()(with_meta(sp.vocation_map))
 
-# --- Archetypes (Phase 8) ----------------------------------------------------
-# Hard-table interpretations (MC/Sun/Houses/Aspects/Dignities) with cited
-# classical/modern sources. Layer = astrology_symbolic; confidence 0.9 —
-# above LLM narrative (0.7), below astronomy (1.0).
-mcp.tool()(ar.mc_in_sign)
-mcp.tool()(ar.sun_in_sign)
-mcp.tool()(ar.house_meaning)
-mcp.tool()(ar.planet_in_house)
-mcp.tool()(ar.transit_meaning)
-mcp.tool()(ar.aspect_meaning)
-mcp.tool()(ar.planet_dignity)
-mcp.tool()(ar.zodiac_sign)
-mcp.tool()(ar.list_archetype_topics)
-
-# --- Analysis patterns (Phase 10: patterns catalog) ---------------------------
-# One tool per pattern in strategic/knowledge_base/analysis_patterns.json.
-# Deterministic data + catalog ref; the paired skill interprets, labelled.
-# analysis_plan is the entry point: it tells the model what can be computed
-# and in which order, so nothing gets forgotten in a reading.
-mcp.tool()(sp.analysis_plan)
-mcp.tool()(sp.money_contour)
-mcp.tool()(sp.vocation_map)
-mcp.tool()(sp.decade_map)
-mcp.tool()(sp.life_pivots)
-mcp.tool()(sp.electional_day)
-mcp.tool()(sp.reverse_physiognomy_prompt)
-
-# --- Physiognomy (reflective face reading) -----------------------------------
-# Deterministic FaceMesh geometry (1.0) + cited tradition dictionary (0.6 —
-# own tier BELOW symbol dictionaries: physiognomy is not scientifically
-# validated). Self-reflection only; disclaimer in every response/report.
-mcp.tool()(ph.analyze_face)
-mcp.tool()(ph.analyze_face_archive)
-mcp.tool()(ph.physiognomy_report)
-mcp.tool()(ph.physiognomy_methods)
-mcp.tool()(ph.physiognomy_timeline)
+# --- Reference lookups, folded into one tool (WP-10) --------------------------
+mcp.tool()(with_meta(lk.lookup))
 
 
 def main(argv: list[str] | None = None) -> int:

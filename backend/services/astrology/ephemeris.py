@@ -1,15 +1,18 @@
-"""Swiss Ephemeris wrapper for astronomical calculations."""
+"""Swiss Ephemeris wrapper for astronomical calculations (SWIEPH only)."""
 
 import logging
 from dataclasses import dataclass
-from datetime import date, datetime, timezone
-from typing import Optional
+from datetime import date, datetime
+
+import swisseph as swe
+
+from backend.core import ephemeris as ephe_config
 
 from .schemas import Planet, ZodiacSign
 
 logger = logging.getLogger(__name__)
 
-# Swiss Ephemeris planet constants (when library is available)
+# Swiss Ephemeris planet constants
 # SE_SUN = 0, SE_MOON = 1, SE_MERCURY = 2, etc.
 PLANET_CODES = {
     Planet.SUN: 0,
@@ -62,46 +65,19 @@ class Location:
 
 class SwissEphemeris:
     """
-    Wrapper for Swiss Ephemeris calculations.
+    Wrapper for Swiss Ephemeris calculations, SWIEPH mode only.
 
-    Swiss Ephemeris provides high-precision astronomical calculations.
-    Accuracy: < 1 arc second for modern dates.
-
-    Note: Requires pyswisseph package and ephemeris data files.
-    Falls back to simplified calculations if unavailable.
+    The ephemeris path and flags come from backend.core.ephemeris, which
+    verifies the .se1 files at import — by the time this class exists the
+    engine is configured or the process is already dead. Calculation
+    errors propagate: no Keplerian approximation, no Moshier retry
+    (conventions.md §12).
     """
 
-    def __init__(self, ephemeris_path: Optional[str] = None):
-        """
-        Initialize Swiss Ephemeris.
-
-        Args:
-            ephemeris_path: Path to ephemeris data files.
-                           If None, uses default path or falls back to Moshier.
-        """
-        self._swe = None
-        self._initialized = False
-        self._ephemeris_path = ephemeris_path
-        self._flags = None
-        self._engine_mode = "moseph"
-
-        try:
-            import swisseph as swe
-            self._swe = swe
-            if ephemeris_path:
-                swe.set_ephe_path(ephemeris_path)
-                self._engine_mode = "swieph"
-                speed_flags = getattr(swe, "FLG_SWIEPH", 0)
-            else:
-                speed_flags = getattr(swe, "FLG_MOSEPH", getattr(swe, "FLG_SWIEPH", 0))
-            self._flags = speed_flags | getattr(swe, "FLG_SPEED", 0)
-            self._initialized = True
-            logger.info("Swiss Ephemeris initialized successfully")
-        except ImportError:
-            logger.warning(
-                "pyswisseph not installed. Using fallback calculations. "
-                "Install with: pip install pyswisseph"
-            )
+    def __init__(self):
+        self._swe = swe
+        self._flags = ephe_config.FLAGS
+        self._engine_mode = "swieph"
 
     def calculate_planet_position(
         self,
@@ -122,121 +98,28 @@ class SwissEphemeris:
         Returns:
             PlanetData with longitude, latitude, distance, speed
         """
-        if self._swe and planet in PLANET_CODES:
-            try:
-                return self._calculate_with_swe(planet, dt)
-            except Exception as exc:  # pragma: no cover - defensive fallback
-                logger.warning(
-                    "Swiss Ephemeris failed (%s). Falling back to approximate calculations.",
-                    exc,
-                )
-
-        return self._calculate_fallback(planet, dt)
-
-    def _calculate_with_swe(self, planet: Planet, dt: datetime) -> PlanetData:
-        """Calculate using Swiss Ephemeris."""
-        # Convert to Julian Day
-        try:
-            jd = self._swe.julday(
-                dt.year, dt.month, dt.day,
-                dt.hour + dt.minute / 60.0 + dt.second / 3600.0
-            )
-        except TypeError:
-            jd = self._swe.julday(dt.year, dt.month, dt.day)
-        except Exception:
-            jd = self._swe.julday(dt.year, dt.month, dt.day)
-
-        if jd < 2_000_000:
-            # Fall back to simplified Julian date if the stub returns an ordinal
-            jd = (dt.replace(tzinfo=datetime.timezone.utc).timestamp() / 86400.0) + 2440587.5
-
-        # Get planet position
         planet_code = PLANET_CODES.get(planet)
         if planet_code is None:
-            return self._calculate_fallback(planet, dt)
+            raise ValueError(f"No Swiss Ephemeris body code for {planet}")
 
-        # SEFLG_SPEED includes speed in result
-        flags = self._flags or (
-            getattr(self._swe, "FLG_SWIEPH", 0) | getattr(self._swe, "FLG_SPEED", 0)
+        jd = swe.julday(
+            dt.year, dt.month, dt.day,
+            dt.hour + dt.minute / 60.0 + dt.second / 3600.0,
         )
-
-        try:
-            calc_ut = getattr(self._swe, "calc_ut", None)
-            if calc_ut is None:
-                raise AttributeError("calc_ut not available")
-            result, ret_flags = calc_ut(jd, planet_code, flags)
-        except Exception as exc:
-            fallback_flags = (
-                getattr(self._swe, "FLG_MOSEPH", getattr(self._swe, "FLG_SWIEPH", 0))
-                | getattr(self._swe, "FLG_SPEED", 0)
+        result, ret_flags = swe.calc_ut(jd, planet_code, self._flags)
+        if not ret_flags & swe.FLG_SWIEPH:
+            # The C library substitutes another source when a body's file
+            # is unreadable — that substitution must never pass as SWIEPH.
+            raise RuntimeError(
+                f"Swiss Ephemeris did not use SWIEPH for {planet} "
+                f"(returned flags {ret_flags}) — check backend/data/ephemeris"
             )
-            fallback_calc = getattr(self._swe, "calc_ut", None)
-            if fallback_calc is None:
-                return self._calculate_fallback(planet, dt)
-            try:
-                result, ret_flags = fallback_calc(jd, planet_code, fallback_flags)
-            except Exception as swe_exc:
-                raise RuntimeError(
-                    f"Swiss Ephemeris calc_ut failed with flags {fallback_flags}: {swe_exc}"
-                ) from swe_exc
 
         return PlanetData(
             longitude=result[0],  # Ecliptic longitude
             latitude=result[1],   # Ecliptic latitude
             distance=result[2],   # Distance in AU
             speed=result[3],      # Speed in degrees/day
-        )
-
-    def _calculate_fallback(self, planet: Planet, dt: datetime) -> PlanetData:
-        """
-        Fallback calculation when Swiss Ephemeris is unavailable.
-        Uses simplified Keplerian elements.
-        """
-        # Simplified mean longitude calculation
-        # This is approximate and should only be used as fallback
-        import math
-
-        # Days since J2000.0 (2000-01-01 12:00 UTC)
-        j2000 = datetime(2000, 1, 1, 12, 0, 0)
-        days = (dt - j2000).total_seconds() / 86400.0
-
-        # Approximate mean longitudes (very simplified)
-        mean_motions = {
-            Planet.SUN: 0.9856474,     # degrees per day
-            Planet.MOON: 13.1763965,
-            Planet.MERCURY: 4.0923344,
-            Planet.VENUS: 1.6021302,
-            Planet.MARS: 0.5240208,
-            Planet.JUPITER: 0.0830853,
-            Planet.SATURN: 0.0334979,
-            Planet.URANUS: 0.0117725,
-            Planet.NEPTUNE: 0.0060195,
-            Planet.PLUTO: 0.0039795,
-        }
-
-        base_longitudes = {
-            Planet.SUN: 280.46,
-            Planet.MOON: 218.32,
-            Planet.MERCURY: 252.25,
-            Planet.VENUS: 181.98,
-            Planet.MARS: 355.45,
-            Planet.JUPITER: 34.40,
-            Planet.SATURN: 50.08,
-            Planet.URANUS: 314.06,
-            Planet.NEPTUNE: 304.35,
-            Planet.PLUTO: 238.96,
-        }
-
-        motion = mean_motions.get(planet, 0.01)
-        base_lon = base_longitudes.get(planet, 0.0)
-
-        longitude = (base_lon + motion * days) % 360
-
-        return PlanetData(
-            longitude=longitude,
-            latitude=0.0,  # Simplified - assume ecliptic
-            distance=1.0,  # Placeholder
-            speed=motion,  # Mean motion as speed approximation
         )
 
     def get_zodiac_sign(self, longitude: float) -> tuple[ZodiacSign, float]:

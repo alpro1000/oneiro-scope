@@ -41,15 +41,14 @@ def test_natal_chart_unlocks_first_with_date_and_place():
 def test_full_birth_data_unlocks_the_core_reading_in_order():
     plan = build_plan([BIRTH_DATE, BIRTH_TIME, BIRTH_PLACE])
     ready = _ids(plan["ready"])
-    # Canonical order: foundation → self → timing → validation → place.
+    # Canonical order: foundation → self → timing → place.
     assert ready.index("natal-chart") < ready.index("money-contour")
-    assert ready.index("money-contour") < ready.index("decade-map")
-    assert ready.index("decade-map") < ready.index("life-pivots")
-    assert ready.index("life-pivots") < ready.index("astrocartography")
+    assert ready.index("money-contour") < ready.index("transits")
+    assert ready.index("transits") < ready.index("astrocartography")
     assert plan["next_step"]["id"] == "natal-chart"
-    # Date-specific and two-person stages still need their extra input.
+    # Stages needing extra input stay blocked until it arrives.
     blocked = _ids(plan["blocked"])
-    assert "electional-day" in blocked and "synastry" in blocked
+    assert "event-forecast" in blocked and "compare-cities" in blocked
 
 
 def test_stage_dependencies_are_surfaced_not_enforced():
@@ -74,9 +73,9 @@ def test_completed_stages_stop_being_offered():
     assert plan["next_step"]["id"] != "natal-chart"
 
 
-def test_target_date_unlocks_electional():
+def test_target_date_unlocks_event_forecast():
     plan = build_plan([BIRTH_DATE, BIRTH_TIME, BIRTH_PLACE, TARGET_DATE])
-    assert "electional-day" in _ids(plan["ready"])
+    assert "event-forecast" in _ids(plan["ready"])
 
 
 def test_locale_switches_language_of_names_and_questions():
@@ -109,7 +108,7 @@ def test_stage_tools_exist_in_the_mcp_registry():
     import pytest
 
     module_names = (
-        "astrology", "dreams", "lunar", "physiognomy", "strategic_astro",
+        "astrology", "dreams", "lunar", "strategic_astro",
         "strategic_patterns",
     )
     available: set[str] = set()

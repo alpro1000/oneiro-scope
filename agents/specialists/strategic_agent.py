@@ -21,22 +21,21 @@ STRATEGIC_TOOLS: list[str] = [
     # Deterministic astronomy (confidence 1.0)
     "compute_transits",
     "solar_return_chart",
+    "solar_return_suggest",
     "astrocartography_scan",
+    "astrocartography_lines",
+    "astrocartography_point",
+    "compare_relocations",
+    "money_contour",
+    "vocation_map",
+    "analysis_plan",
     "get_lunar_day",
     "get_lunar_period",
-    # Hard archetype tables (confidence 0.9 — cited tradition, NOT LLM)
-    "mc_in_sign",
-    "sun_in_sign",
-    "house_meaning",
-    "aspect_meaning",
-    "planet_dignity",
-    "zodiac_sign",
-    "list_archetype_topics",
-    # Symbolic / LLM-narrative (confidence 0.7 — last resort)
-    "generate_horoscope",
+    # Hard archetype tables + reference lists, folded into one (WP-10);
+    # confidence 0.9 — cited tradition, NOT LLM.
+    "lookup",
+    # Symbolic layer (confidence 0.7 — last resort)
     "forecast_event",
-    "list_event_types",
-    "list_horoscope_periods",
 ]
 
 

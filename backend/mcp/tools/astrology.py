@@ -163,7 +163,7 @@ async def forecast_event(
     and — if unfavorable — alternative dates within ±14 days.
 
     Args:
-        event_type: One of: travel, wedding, business, interview, surgery,
+        event_type: One of: travel, wedding, business, interview,
             moving, contract, exam, date, other.
         event_date: YYYY-MM-DD.
         event_location: Optional city/place of the event.

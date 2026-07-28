@@ -25,22 +25,20 @@ def test_strategic_agent_has_all_decision_support_tools():
         # Deterministic astronomy (confidence 1.0)
         "mcp__oneiro__compute_transits",
         "mcp__oneiro__solar_return_chart",
+        "mcp__oneiro__solar_return_suggest",
         "mcp__oneiro__astrocartography_scan",
+        "mcp__oneiro__astrocartography_lines",
+        "mcp__oneiro__astrocartography_point",
+        "mcp__oneiro__compare_relocations",
+        "mcp__oneiro__money_contour",
+        "mcp__oneiro__vocation_map",
+        "mcp__oneiro__analysis_plan",
         "mcp__oneiro__get_lunar_day",
         "mcp__oneiro__get_lunar_period",
-        # Hard archetype tables (Phase 8 — confidence 0.9, cited tradition)
-        "mcp__oneiro__mc_in_sign",
-        "mcp__oneiro__sun_in_sign",
-        "mcp__oneiro__house_meaning",
-        "mcp__oneiro__aspect_meaning",
-        "mcp__oneiro__planet_dignity",
-        "mcp__oneiro__zodiac_sign",
-        "mcp__oneiro__list_archetype_topics",
+        # Archetype tables + reference lists, folded (WP-10)
+        "mcp__oneiro__lookup",
         # LLM narrative (confidence 0.7)
-        "mcp__oneiro__generate_horoscope",
         "mcp__oneiro__forecast_event",
-        "mcp__oneiro__list_event_types",
-        "mcp__oneiro__list_horoscope_periods",
     }
     assert allowed == expected
 

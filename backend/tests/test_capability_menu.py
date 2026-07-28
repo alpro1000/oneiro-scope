@@ -1,21 +1,21 @@
-"""Every substantive tool response offers what else can be computed.
+"""Every substantive tool response offers what else can be computed — compactly.
 
-The problem this guards. The server registers 46 tools; a chat that lands on
-one of them sees only that one and cannot discover that the same birth data
-also buys a money contour, a decade map, astrocartography over a city pool or
-a Solar Return. `analysis_plan` answered this from the start, but only if the
-model thought to ask — and it usually did not. So the menu now travels with
-the data.
+History. The first menu carried the full ready/blocked/questions structure on
+every response; a live audit measured ~90k chars of menu across one
+conversation — the menu had become the payload (WP-11). The block is now
+`{"next": [≤3 ready tools], "full_plan_tool": "analysis_plan"}` with a hard
+≤200-char budget; the ordered plan and its questions live one call away in
+`analysis_plan`.
 
-Offered, not run, on purpose: a decade map scans ten years at a 10-day step, a
-city scan runs a whole pool, and a Solar Return suggestion computes one return
-per candidate city. Running all of that on every call would spend minutes and
-quota answering a question nobody asked.
+The structural guards remain: the plan must not drift from the registry
+(WP-10 cut it 47 → 19), and every stage tool must attach the menu for its own
+stage and domain.
 """
 
 from __future__ import annotations
 
 import ast
+import json
 from pathlib import Path
 
 import pytest
@@ -33,59 +33,18 @@ from backend.services.strategic.analysis_plan import (
 REPO = Path(__file__).resolve().parents[2]
 
 
-# ── the menu itself ─────────────────────────────────────────────────────────
+# ── the compact menu itself ──────────────────────────────────────────────────
 
-def test_ready_lists_only_steps_whose_inputs_are_satisfied():
+def test_next_lists_only_ready_tools_in_stage_order():
     menu = capability_menu(
         "astro", [BIRTH_DATE, BIRTH_TIME, BIRTH_PLACE], ["natal-chart"]
     )
-    ready_tools = {r["tool"] for r in menu["ready"]}
-    assert "money_contour" in ready_tools
-    assert "vocation_map" in ready_tools
-    # Blocked on an input nobody supplied yet.
-    blocked_tools = {r["tool"] for r in menu["needs_input"]}
-    assert "synastry" in blocked_tools
-    assert "compare_relocations" in blocked_tools
-    assert ready_tools.isdisjoint(blocked_tools)
-
-
-def test_blocked_steps_name_the_missing_input_and_ask_for_it():
-    menu = capability_menu("astro", [BIRTH_DATE, BIRTH_TIME, BIRTH_PLACE])
-    synastry = next(r for r in menu["needs_input"] if r["tool"] == "synastry")
-    assert synastry["missing"] == ["partner_birth_data"]
-    assert menu["questions_to_ask"], "a blocked step must come with a question"
-
-
-def test_a_ready_step_is_actually_callable_with_what_the_menu_knows():
-    """`ready` is a promise: nothing further is needed to make this call.
-
-    A stage that declares `requires=()` while its tool has a parameter with no
-    default breaks that promise — the model follows the menu and gets a
-    TypeError. Checked structurally so it holds for every stage, not just the
-    one that was wrong (`get_lunar_day`, which now defaults to today).
-    """
-    import importlib
-    import inspect
-
-    menu = capability_menu("astro", [], max_items=50)
-    for entry in menu["ready"]:
-        fn = None
-        for mod in ("astrology", "dreams", "lunar", "physiognomy",
-                    "strategic_astro", "strategic_patterns"):
-            module = importlib.import_module(f"backend.mcp.tools.{mod}")
-            fn = getattr(module, entry["tool"], None)
-            if fn is not None:
-                break
-        assert fn is not None, f"{entry['tool']} not found in any tool module"
-        required = [
-            p.name for p in inspect.signature(fn).parameters.values()
-            if p.default is inspect.Parameter.empty
-            and p.kind not in (p.VAR_POSITIONAL, p.VAR_KEYWORD)
-        ]
-        assert not required, (
-            f"menu offers {entry['tool']} as ready with no known inputs, but it "
-            f"requires {required} — following the menu would raise TypeError"
-        )
+    assert menu["full_plan_tool"] == "analysis_plan"
+    assert menu["next"][0] == "money_contour", "canonical order: self after foundation"
+    assert len(menu["next"]) <= 3
+    # Steps whose inputs are missing are not offered at all — compare_cities
+    # needs a city list nobody supplied.
+    assert "compare_relocations" not in menu["next"]
 
 
 def test_completed_steps_are_not_offered_again():
@@ -93,108 +52,67 @@ def test_completed_steps_are_not_offered_again():
         "astro", [BIRTH_DATE, BIRTH_TIME, BIRTH_PLACE],
         ["natal-chart", "money-contour"],
     )
-    offered = {r["tool"] for r in menu["ready"] + menu["needs_input"]}
-    assert "money_contour" not in offered
+    assert "money_contour" not in menu["next"]
+    assert "calculate_natal_chart" not in menu["next"]
 
 
-def test_dependencies_are_a_soft_ordering_hint_not_a_gate():
-    """`depends_on` must mean the same thing here as it does in `build_plan`.
-
-    Each tool recomputes the chart geometry it needs, so a stage runs fine
-    before its prerequisite — reading it first is merely confusing. An earlier
-    version hard-gated on this, which forced every wrapper to claim
-    `natal-chart` was complete just to unblock the rest, which in turn hid
-    `calculate_natal_chart` from the menu entirely.
-    """
+def test_chart_is_the_first_offer_when_nothing_ran_yet():
     menu = capability_menu("astro", [BIRTH_DATE, BIRTH_TIME, BIRTH_PLACE])
-    ready = {r["tool"]: r for r in menu["ready"]}
-    assert "money_contour" in ready, "a soft dependency must not remove the offer"
-    assert ready["money_contour"]["better_after"] == ["natal-chart"]
-    assert "calculate_natal_chart" in ready
-    assert "better_after" not in ready["calculate_natal_chart"]
-
-
-def test_the_chart_stops_being_flagged_once_it_has_run():
-    menu = capability_menu(
-        "astro", [BIRTH_DATE, BIRTH_TIME, BIRTH_PLACE], ["natal-chart"]
-    )
-    ready = {r["tool"]: r for r in menu["ready"]}
-    assert "better_after" not in ready["money_contour"]
-
-
-def test_a_wrapper_never_claims_a_prerequisite_it_cannot_observe():
-    """A tool knows it ran. It does not know what else the session ran.
-
-    Fabricating `natal-chart` in `completed` was how the old hard gate got
-    worked around, and it suppressed the chart step from every menu that
-    followed one of these tools.
-    """
-    stage_by_tool = {st.tool: st for st in STAGES}
-    for name, wired in _menu_wiring().items():
-        own = stage_by_tool[name].id
-        extra = sorted(set(wired["completed"]) - {own})
-        assert not extra, (
-            f"{name} claims stage(s) it cannot verify ran: {extra}. "
-            f"List only its own stage, {own!r}."
-        )
+    assert menu["next"][0] == "calculate_natal_chart"
 
 
 def test_dreams_is_a_separate_domain_with_no_birth_data():
     dreams = capability_menu("dreams", ["dream_text"])
-    tools = {r["tool"] for r in dreams["ready"] + dreams["needs_input"]}
-    assert tools == {"analyze_dream", "dream_series_stats"}
+    assert set(dreams["next"]) <= {"analyze_dream", "dream_series_stats"}
     astro = capability_menu("astro", [BIRTH_DATE, BIRTH_TIME, BIRTH_PLACE])
-    astro_tools = {r["tool"] for r in astro["ready"] + astro["needs_input"]}
-    assert "analyze_dream" not in astro_tools
-    assert "dream_series_stats" not in astro_tools
-    assert dreams["reference_lookups"] != astro["reference_lookups"]
+    assert "analyze_dream" not in astro["next"]
+    assert "dream_series_stats" not in astro["next"]
 
 
-def test_face_lives_in_the_astro_domain():
-    """The owner's split: chart and face both read one standing person."""
-    menu = capability_menu("astro", [BIRTH_DATE, BIRTH_TIME, BIRTH_PLACE])
-    offered = {r["tool"] for r in menu["ready"] + menu["needs_input"]}
-    assert "analyze_face_archive" in offered
+def test_a_ready_step_is_actually_callable_with_what_the_menu_knows():
+    """`next` is a promise: nothing further is needed to make this call.
 
-
-def test_menu_is_capped_so_it_cannot_bloat_a_response():
-    menu = capability_menu("astro", [BIRTH_DATE], max_items=3)
-    assert len(menu["ready"]) <= 3
-    assert len(menu["needs_input"]) <= 3
-
-
-def test_menu_stays_within_a_size_budget():
-    """This block rides on every response, so its cost is everyone's cost.
-
-    ~3.5 KB buys discovery of 26 tools, which beats a round trip to
-    `analysis_plan`. Ten times that would make the menu the response. If a new
-    stage pushes past the ceiling, shorten the entries rather than raise it.
+    A stage that declares `requires=()` while its tool has a parameter with no
+    default breaks that promise — the model follows the menu and gets a
+    TypeError. Checked structurally so it holds for every stage.
     """
-    import json
+    import importlib
+    import inspect
 
+    menu = capability_menu("astro", [])
+    for tool_name in menu["next"]:
+        fn = None
+        for mod in ("astrology", "dreams", "lunar", "strategic_astro",
+                    "strategic_patterns"):
+            module = importlib.import_module(f"backend.mcp.tools.{mod}")
+            fn = getattr(module, tool_name, None)
+            if fn is not None:
+                break
+        assert fn is not None, f"{tool_name} not found in any tool module"
+        required = [
+            p.name for p in inspect.signature(fn).parameters.values()
+            if p.default is inspect.Parameter.empty
+            and p.kind not in (p.VAR_POSITIONAL, p.VAR_KEYWORD)
+        ]
+        assert not required, (
+            f"menu offers {tool_name} as ready with no known inputs, but it "
+            f"requires {required} — following the menu would raise TypeError"
+        )
+
+
+def test_menu_stays_within_the_wp11_size_budget():
+    """The audit measured ~90k chars of menu across one live conversation.
+
+    The compact block must stay under 200 chars in every state — if a new
+    stage pushes past the ceiling, shorten the block, never raise the bar.
+    """
     worst = max(
-        len(json.dumps(capability_menu("astro", known, locale=loc), ensure_ascii=False))
+        len(json.dumps(capability_menu(domain, known, locale=loc), ensure_ascii=False))
         for loc in ("ru", "en")
+        for domain in ("astro", "dreams")
         for known in ([], [BIRTH_DATE, BIRTH_TIME, BIRTH_PLACE])
     )
-    assert worst < 4500, f"menu grew to {worst} chars per response"
-
-
-def test_blocked_entries_are_terser_than_ready_ones():
-    """Prose about what a step answers is dead weight until it can run."""
-    menu = capability_menu("astro", [BIRTH_DATE, BIRTH_TIME, BIRTH_PLACE], ["natal-chart"])
-    assert menu["needs_input"], "expected some blocked steps in this fixture"
-    for entry in menu["needs_input"]:
-        assert set(entry) == {"name", "tool", "missing"}
-    for entry in menu["ready"]:
-        assert "answers" in entry and "track" in entry
-
-
-def test_locale_switches_the_offered_text():
-    ru = capability_menu("astro", [BIRTH_DATE, BIRTH_PLACE], locale="ru")
-    en = capability_menu("astro", [BIRTH_DATE, BIRTH_PLACE], locale="en")
-    assert ru["hint"] != en["hint"]
-    assert ru["ready"][0]["name"] != en["ready"][0]["name"]
+    assert worst <= 200, f"menu grew to {worst} chars per response"
 
 
 # ── the attachment helper ───────────────────────────────────────────────────
@@ -203,6 +121,7 @@ def test_with_menu_attaches_to_a_dict():
     out = with_menu({"data": 1}, domain="astro", known_inputs=[BIRTH_DATE])
     assert MENU_KEY in out
     assert out["data"] == 1
+    assert set(out[MENU_KEY]) == {"next", "full_plan_tool"}
 
 
 def test_with_menu_leaves_non_dicts_alone():
@@ -227,31 +146,53 @@ def test_birth_inputs_counts_coordinates_as_a_known_place():
     assert birth_inputs() == []
 
 
-# ── the menu must not drift from the registry ───────────────────────────────
+# ── the plan must not drift from the registry ───────────────────────────────
 
 def _registered_tool_names() -> set[str]:
-    """Tool names as `backend/mcp/server.py` actually registers them."""
+    """Tool names as `backend/mcp/server.py` actually registers them.
+
+    Understands the WP-6 form `mcp.tool()(with_meta(module.function))` —
+    the attribute is unwrapped from however many call layers wrap it."""
     src = (REPO / "backend" / "mcp" / "server.py").read_text()
     names: set[str] = set()
     for node in ast.walk(ast.parse(src)):
-        # mcp.tool()(module.function)
         if isinstance(node, ast.Call) and isinstance(node.func, ast.Call):
             for arg in node.args:
-                if isinstance(arg, ast.Attribute):
-                    names.add(arg.attr)
+                for inner in ast.walk(arg):
+                    if isinstance(inner, ast.Attribute):
+                        names.add(inner.attr)
     return names
 
 
-def test_every_stage_points_at_a_registered_tool():
-    """The plan file asks for this by hand; a test enforces it.
-
-    A stage naming a tool that does not exist would be offered to a model and
-    then fail on call — the worst kind of menu entry.
-    """
+def test_registry_matches_the_wp10_surface():
+    """47 tools drowned the working set; the cut is enforced, not aspirational."""
     registered = _registered_tool_names()
     assert registered, "could not parse the registry — the check would be vacuous"
+    assert len(registered) == 19, (
+        f"registry has {len(registered)} tools — WP-10 fixed the surface at 19; "
+        f"a new tool needs an explicit owner decision, not a drive-by add"
+    )
+    for gone in ("generate_horoscope", "horoscope_report", "profile_report_file",
+                 "analyze_face", "physiognomy_report", "mc_in_sign",
+                 "list_event_types", "decade_map", "synastry"):
+        assert gone not in registered, f"{gone} came back after WP-8/WP-10"
+
+
+def test_every_stage_points_at_a_registered_tool():
+    """A stage naming an unregistered tool would be offered and then fail."""
+    registered = _registered_tool_names()
     unknown = sorted({st.tool for st in STAGES} - registered)
     assert not unknown, f"stages reference unregistered tools: {unknown}"
+
+
+def test_every_registered_computation_is_a_stage_or_reference():
+    """The other direction: nothing registered may be undiscoverable."""
+    registered = _registered_tool_names()
+    stage_tools = {st.tool for st in STAGES}
+    reference = {t for tools in REFERENCE_TOOLS.values() for t in tools}
+    # analysis_plan is the plan itself — the one tool that needs no menu entry.
+    orphans = registered - stage_tools - reference - {"analysis_plan"}
+    assert not orphans, f"registered but undiscoverable: {sorted(orphans)}"
 
 
 def test_reference_lookups_are_registered_too():
@@ -289,13 +230,17 @@ def test_dependencies_point_at_real_stages():
 # ── the wiring must not drift from the plan ─────────────────────────────────
 #
 # These parse the tool modules instead of calling the tools, because calling
-# them needs ephemeris work, photos or an LLM. An earlier pass wired three
-# physiognomy tools to each other's stage ids and every runtime test still
-# passed — the menus were present, just describing the wrong step. Only a
-# structural check catches that, so here it is.
+# them needs ephemeris work or an LLM. An earlier pass wired three tools to
+# each other's stage ids and every runtime test still passed — the menus were
+# present, just describing the wrong step. Only a structural check catches
+# that. The guards apply to REGISTERED tools: module functions that left the
+# registry in WP-10 keep their legacy with_menu calls but are no longer part
+# of the product surface.
 
-# `get_lunar_period` returns a bare list; see the note in its docstring.
-_NO_MENU_BY_DESIGN = {"get_lunar_period"}
+# Every stage tool carries the menu since the Qodo round: get_lunar_period
+# moved from a bare list to {"days": [...]} so the WP-6 meta block (and the
+# menu) can attach — a list response was the one hole in both contracts.
+_NO_MENU_BY_DESIGN: set = set()
 
 
 def _menu_wiring() -> dict[str, dict]:
@@ -326,6 +271,11 @@ def _menu_wiring() -> dict[str, dict]:
     return found
 
 
+def _registered_wiring() -> dict[str, dict]:
+    registered = _registered_tool_names()
+    return {k: v for k, v in _menu_wiring().items() if k in registered}
+
+
 def test_every_stage_tool_attaches_the_menu():
     """The owner's ask: calling any tool should reveal the rest."""
     wiring = _menu_wiring()
@@ -336,30 +286,38 @@ def test_every_stage_tool_attaches_the_menu():
     assert not missing, f"stage tools with no capability menu: {missing}"
 
 
-def test_each_tool_marks_its_own_stage_completed():
+def test_each_registered_tool_marks_its_own_stage_completed():
     """Otherwise a tool offers itself back as the obvious next step."""
     stage_by_tool = {st.tool: st for st in STAGES}
-    for name, wired in _menu_wiring().items():
+    for name, wired in _registered_wiring().items():
         stage = stage_by_tool.get(name)
-        assert stage is not None, f"{name} carries a menu but is not a plan stage"
+        if stage is None:
+            continue  # analysis_plan itself, or a non-stage registered tool
         assert stage.id in wired["completed"], (
             f"{name} does not list its own stage {stage.id!r} as completed "
             f"(got {wired['completed']}) — it would offer itself back"
+        )
+        extra = sorted(set(wired["completed"]) - {stage.id})
+        assert not extra, (
+            f"{name} claims stage(s) it cannot verify ran: {extra}. "
+            f"List only its own stage, {stage.id!r}."
         )
 
 
 def test_menu_domain_matches_the_stage_domain():
     stage_by_tool = {st.tool: st for st in STAGES}
-    for name, wired in _menu_wiring().items():
+    for name, wired in _registered_wiring().items():
+        if name not in stage_by_tool:
+            continue
         assert stage_by_tool[name].domain == wired["domain"], (
             f"{name} attaches the {wired['domain']!r} menu but its stage is "
             f"{stage_by_tool[name].domain!r}"
         )
 
 
-def test_completed_ids_are_real_stages():
+def test_registered_completed_ids_are_real_stages():
     ids = {st.id for st in STAGES}
-    for name, wired in _menu_wiring().items():
+    for name, wired in _registered_wiring().items():
         unknown = sorted(set(wired["completed"]) - ids)
         assert not unknown, f"{name} marks unknown stage(s) completed: {unknown}"
 
@@ -371,34 +329,19 @@ def test_reference_lookups_do_not_attach_a_menu():
     assert wired.isdisjoint(listed)
 
 
-# ── end to end through a real tool ─────────────────────────────────────────
+# ── end to end through real tools ───────────────────────────────────────────
 
-def test_money_contour_response_carries_the_menu():
+def test_money_contour_response_carries_the_compact_menu():
     from backend.mcp.tools.strategic_patterns import money_contour
 
     out = money_contour("1977-07-01", "22:30", "Europe/Kyiv", 47.85167, 35.11714)
     menu = out[MENU_KEY]
-    assert menu["domain"] == "astro"
-    ready = {r["tool"] for r in menu["ready"]}
-    assert "vocation_map" in ready
-    assert "money_contour" not in ready, "a tool must not offer itself back"
-    assert menu["full_plan_tool"] == "analysis_plan"
+    assert set(menu) == {"next", "full_plan_tool"}
+    assert "money_contour" not in menu["next"], "a tool must not offer itself back"
+    assert "vocation_map" in menu["next"]
+    assert len(json.dumps(menu, ensure_ascii=False)) <= 200
     # The deterministic payload is untouched by the addition.
     assert "computed" in out and "provenance" in out
-
-
-@pytest.mark.asyncio
-async def test_profile_report_refuses_to_chart_null_island():
-    """It used to default to 0.0/0.0 and report on the Gulf of Guinea.
-
-    The menu then claimed the birth place was known, so it went on offering
-    location-dependent steps off a placeholder. An error beats a confident
-    wrong answer.
-    """
-    from backend.mcp.tools.astrology import profile_report_file
-
-    with pytest.raises(ValueError, match="birth_lat and birth_lon are required"):
-        await profile_report_file("1977-07-01", "22:30")
 
 
 def test_lunar_day_needs_no_argument():
@@ -407,7 +350,7 @@ def test_lunar_day_needs_no_argument():
 
     out = get_lunar_day(timezone="Europe/Moscow")
     assert 1 <= out["lunar_day"] <= 30
-    assert out[MENU_KEY]["domain"] == "astro"
+    assert set(out[MENU_KEY]) == {"next", "full_plan_tool"}
 
 
 @pytest.mark.asyncio
@@ -425,6 +368,16 @@ async def test_analyze_dream_offers_only_the_dreams_domain(monkeypatch):
     monkeypatch.setattr(dream_tools, "_svc", lambda: _Svc())
     out = await dream_tools.analyze_dream("Мне снилось, что я лечу над городом.")
     menu = out[MENU_KEY]
-    assert menu["domain"] == "dreams"
-    offered = {r["tool"] for r in menu["ready"] + menu["needs_input"]}
-    assert "money_contour" not in offered, "dreams must not offer chart steps"
+    assert "money_contour" not in menu["next"], "dreams must not offer chart steps"
+    assert set(menu["next"]) <= {"analyze_dream", "dream_series_stats"}
+
+
+@pytest.mark.asyncio
+async def test_profile_report_refuses_to_chart_null_island():
+    """Regression kept at module level: the function left the MCP registry in
+    WP-10 but still backs the web report path. It used to default to 0.0/0.0
+    and report on the Gulf of Guinea."""
+    from backend.mcp.tools.astrology import profile_report_file
+
+    with pytest.raises(ValueError, match="birth_lat and birth_lon are required"):
+        await profile_report_file("1977-07-01", "22:30")

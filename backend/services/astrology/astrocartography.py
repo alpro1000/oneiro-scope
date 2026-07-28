@@ -28,10 +28,7 @@ except ImportError as exc:  # pragma: no cover
         "pyswisseph is required for astrocartography"
     ) from exc
 
-# Outer-planet calc flags use MOSEPH (analytic Moshier) so the code runs
-# without binary ephemeris files. Swap to FLG_SWIEPH at deploy if .se1
-# files are present at SE_EPHE_PATH.
-_FLAGS = swe.FLG_MOSEPH | swe.FLG_SPEED
+from backend.core.ephemeris import FLAGS as _FLAGS
 
 _PLANET_NAMES = {
     swe.SUN: "Sun",
@@ -93,7 +90,7 @@ def natal_equatorial(jd_ut: float) -> dict[str, tuple[float, float]]:
     Asc/Desc horizon curves are loci in right ascension / declination, not
     ecliptic longitude.
     """
-    eq_flags = swe.FLG_MOSEPH | swe.FLG_EQUATORIAL
+    eq_flags = swe.FLG_SWIEPH | swe.FLG_EQUATORIAL
     out: dict[str, tuple[float, float]] = {}
     for p, name in _PLANET_NAMES.items():
         res, _ = swe.calc_ut(jd_ut, p, eq_flags)
@@ -103,7 +100,7 @@ def natal_equatorial(jd_ut: float) -> dict[str, tuple[float, float]]:
 
 def _obliquity(jd_ut: float) -> float:
     """True obliquity of the ecliptic (degrees) at the moment."""
-    return swe.calc_ut(jd_ut, swe.ECL_NUT, swe.FLG_MOSEPH)[0][0]
+    return swe.calc_ut(jd_ut, swe.ECL_NUT, swe.FLG_SWIEPH)[0][0]
 
 
 def chart_geometry(

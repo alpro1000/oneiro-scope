@@ -1148,6 +1148,125 @@
       "significance": 0.7,
       "interpretation_en": "Technology devices in dreams often represent communication, connection, or control mechanisms. Malfunctioning devices may indicate communication breakdown. Tracking devices suggest surveillance or lack of privacy.",
       "interpretation_ru": "Технологические устройства во снах часто представляют общение, связь или механизмы контроля. Неисправные устройства могут указывать на нарушение связи. Устройства слежения указывают на наблюдение или отсутствие приватности."
+    },
+    {
+      "id": "gold",
+      "keywords": [
+        "gold",
+        "golden",
+        "ingot",
+        "nugget",
+        "золото",
+        "золотой",
+        "золотые",
+        "золотая",
+        "слиток",
+        "самородок",
+        "позолота"
+      ],
+      "category": "objects",
+      "archetype": "inner_value",
+      "significance": 0.75,
+      "interpretation_en": "Gold in dreams is classically associated with essential value — what is genuinely precious in the dreamer's life: talents, integrity, the incorruptible core. Finding gold tends to be read as discovering one's own undervalued resources; in the alchemical tradition it stands for the completed work of inner transformation.",
+      "interpretation_ru": "Золото во сне классически связывается с подлинной ценностью — тем, что действительно дорого: талантами, целостностью, «неразменным» ядром личности. Находка золота традиционно трактуется как обнаружение собственных недооценённых ресурсов; в алхимической традиции золото — символ завершённой внутренней трансформации."
+    },
+    {
+      "id": "treasure",
+      "keywords": [
+        "treasure",
+        "hoard",
+        "chest",
+        "клад",
+        "сокровище",
+        "сокровища",
+        "шкатулка",
+        "сундук"
+      ],
+      "category": "objects",
+      "archetype": "hidden_potential",
+      "significance": 0.8,
+      "interpretation_en": "A treasure or hoard tends to represent latent potential — abilities or opportunities buried out of sight. Digging it up is traditionally associated with the effort of making the unconscious conscious: the value was always there, the work is reaching it.",
+      "interpretation_ru": "Клад традиционно связывается со скрытым потенциалом — способностями и возможностями, «зарытыми» вне поля зрения. Выкапывание клада классически трактуется как труд осознания: ценность была всегда, работа — до неё добраться."
+    },
+    {
+      "id": "earth_soil",
+      "keywords": [
+        "soil",
+        "dirt",
+        "digging",
+        "dig",
+        "ground",
+        "земля",
+        "почва",
+        "грунт",
+        "копать",
+        "копаю",
+        "копал",
+        "копала",
+        "раскопки",
+        "вскопать"
+      ],
+      "category": "settings",
+      "archetype": "grounding",
+      "significance": 0.65,
+      "interpretation_en": "Earth and digging into it are classically associated with grounding, practical foundations and the material side of life; digging tends to be read as working through layers — of memory, habit or family ground — toward something underneath.",
+      "interpretation_ru": "Земля и копание классически связываются с опорой, практическим фундаментом и материальной стороной жизни; копать — традиционно образ послойной работы (с памятью, привычками, «родной почвой») ради того, что лежит глубже."
+    },
+    {
+      "id": "hiding_place",
+      "keywords": [
+        "cache",
+        "stash",
+        "hiding place",
+        "hidden compartment",
+        "тайник",
+        "тайники",
+        "схрон",
+        "потайной",
+        "потайная"
+      ],
+      "category": "settings",
+      "archetype": "secret_self",
+      "significance": 0.7,
+      "interpretation_en": "A hiding place tends to represent what the dreamer keeps from others — or from themselves: private feelings, unshown work, guarded plans. Finding someone else's cache is traditionally associated with discovering a side of a person or situation that was deliberately kept out of view.",
+      "interpretation_ru": "Тайник традиционно связывается с тем, что скрывают от других — или от себя: приватные чувства, непоказанная работа, оберегаемые планы. Найти чужой тайник — классический образ обнаружения намеренно спрятанной стороны человека или ситуации."
+    },
+    {
+      "id": "pockets",
+      "keywords": [
+        "pocket",
+        "pockets",
+        "карман",
+        "карманы",
+        "кармане",
+        "карманах",
+        "за пазухой"
+      ],
+      "category": "objects",
+      "archetype": "personal_resources",
+      "significance": 0.6,
+      "interpretation_en": "Pockets tend to stand for personal, portable resources — what one carries close and can reach without asking anyone. Empty pockets are classically associated with a felt lack of means or confidence; full or heavy pockets with carried obligations as much as riches.",
+      "interpretation_ru": "Карманы традиционно означают личные, «носимые с собой» ресурсы — то, что под рукой и не требует чужого разрешения. Пустые карманы классически связываются с ощущением нехватки средств или уверенности; полные и тяжёлые — не только с достатком, но и с грузом взятых обязательств."
+    },
+    {
+      "id": "mentor",
+      "keywords": [
+        "mentor",
+        "guide",
+        "teacher figure",
+        "wise man",
+        "wise woman",
+        "наставник",
+        "наставница",
+        "учитель",
+        "мудрец",
+        "проводник"
+      ],
+      "category": "characters",
+      "archetype": "wise_elder",
+      "significance": 0.85,
+      "interpretation_en": "A mentor figure is the classic Wise Elder archetype (Jung's senex): the dream's voice of accumulated experience. Advice from a mentor — where to dig, which road to take — tends to be read as the dreamer's own deeper knowing, staged as an authoritative other.",
+      "interpretation_ru": "Наставник — классический архетип Мудрого старца (сенекс у Юнга): голос накопленного опыта внутри сна. Совет наставника — где копать, куда идти — традиционно трактуется как собственное глубинное знание сновидца, оформленное в фигуру авторитетного другого."
     }
   ],
   "archetypes": {

@@ -9,7 +9,7 @@ import os
 import uuid
 import json
 import logging
-from datetime import datetime, date
+from datetime import datetime, date, timezone
 from typing import Optional, Dict
 from pathlib import Path
 
@@ -188,6 +188,8 @@ class DreamService:
                     "a below-norm deviation can be an instrument artifact."
                 ),
                 overall_typicality=norm_comparison.overall_typicality,
+                typicality_warning_ru=norm_comparison.typicality_warning_ru,
+                typicality_warning_en=norm_comparison.typicality_warning_en,
                 deviations=[
                     NormDeviation(
                         indicator=d.indicator,
@@ -198,6 +200,8 @@ class DreamService:
                         significance=d.significance,
                         description_ru=d.description_ru,
                         description_en=d.description_en,
+                        events_observed=d.events_observed,
+                        min_events_required=d.min_events_required,
                     )
                     for d in norm_comparison.deviations
                 ],
@@ -206,6 +210,8 @@ class DreamService:
                         indicator=i.indicator,
                         reason_ru=i.reason_ru,
                         reason_en=i.reason_en,
+                        events_observed=i.events_observed,
+                        min_events_required=i.min_events_required,
                     )
                     for i in norm_comparison.insufficient_data
                 ],
@@ -217,7 +223,7 @@ class DreamService:
         return DreamAnalysisResponse(
             status="success",
             dream_id=f"dream_{uuid.uuid4().hex[:12]}",
-            analyzed_at=datetime.utcnow(),
+            analyzed_at=datetime.now(timezone.utc),
             word_count=self.analyzer.get_word_count(dream_text),
             primary_emotion=emotion,
             emotion_intensity=intensity,
@@ -231,6 +237,7 @@ class DreamService:
                     target=e.target,
                     evidence=e.evidence,
                     source=e.source,
+                    confidence=e.confidence,
                 )
                 for e in coding.events
             ],

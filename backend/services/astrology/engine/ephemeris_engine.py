@@ -1,29 +1,12 @@
-"""Ephemeris engine with deterministic Swiss Ephemeris configuration."""
+"""Ephemeris engine — SWIEPH-only Swiss Ephemeris with provenance capture."""
 
 from __future__ import annotations
 
-import glob
-import hashlib
-import os
-from datetime import datetime, timedelta, timezone
 from dataclasses import dataclass, field
-from typing import Iterable, Optional
 
 import swisseph as swe
 
-EPHE_PATTERNS = (
-    "sepl*.se*",
-    "sem*.se*",
-    "seas*.se*",
-    "semo*.se*",
-)
-
-
-def _fallback_julday(year: int, month: int, day: int, ut: float) -> float:
-    """Compute Julian day without Swiss Ephemeris dependencies."""
-
-    dt = datetime(year, month, day, tzinfo=timezone.utc) + timedelta(hours=ut)
-    return dt.timestamp() / 86400.0 + 2440587.5
+from backend.core import ephemeris as ephe_config
 
 
 @dataclass
@@ -42,62 +25,34 @@ class EphemerisConfig:
 
 
 class EphemerisEngine:
-    """Configure Swiss Ephemeris with swieph/moseph modes and capture provenance."""
+    """Swiss Ephemeris in SWIEPH mode.
 
-    def __init__(self, ephe_path: Optional[str] = None):
-        self.ephe_path = (
-            ephe_path
-            or os.getenv("SWISSEPH_EPHE_PATH")
-            or os.getenv("SWISSEPH_PATH")
-            or os.getenv("SE_EPHE_PATH")
+    Configuration (path, flags, file hashes) comes from
+    backend.core.ephemeris, which verifies the .se1 files at import —
+    there are no mode branches and no analytic fallback here
+    (conventions.md §12).
+    """
+
+    def __init__(self):
+        self.ephe_path = str(ephe_config.EPHE_DIR)
+        self.config = EphemerisConfig(
+            ephemeris_engine=ephe_config.ENGINE_MODE,
+            flags=ephe_config.FLAGS,
+            flags_text=ephe_config.FLAGS_TEXT,
+            ephemeris_files=[
+                EphemerisFileInfo(**item) for item in ephe_config.ephemeris_files()
+            ],
         )
-        self.config = self._configure()
-
-    def _configure(self) -> EphemerisConfig:
-        engine_mode = "swisseph_moseph"
-        ephe_files: list[EphemerisFileInfo] = []
-        flags = getattr(swe, "FLG_SPEED", 0)
-        flags_text_parts = ["SPEED"]
-        if self.ephe_path and os.path.isdir(self.ephe_path):
-            swe.set_ephe_path(self.ephe_path)
-            engine_mode = "swisseph_swieph"
-            ephe_files = list(self._hash_ephemeris_files(self.ephe_path))
-            flags |= getattr(swe, "FLG_SWIEPH", 0)
-            flags_text_parts.insert(0, "SWIEPH")
-        else:
-            flags |= getattr(swe, "FLG_MOSEPH", getattr(swe, "FLG_SWIEPH", 0))
-            flags_text_parts.insert(0, "MOSEPH")
-        flags_text = "|".join(flags_text_parts)
-        return EphemerisConfig(engine_mode, flags, flags_text, ephe_files)
-
-    @staticmethod
-    def _hash_ephemeris_files(path: str) -> Iterable[EphemerisFileInfo]:
-        for pattern in EPHE_PATTERNS:
-            for filename in glob.glob(os.path.join(path, pattern)):
-                size = os.path.getsize(filename)
-                with open(filename, "rb") as handle:
-                    sha = hashlib.sha256(handle.read()).hexdigest()
-                yield EphemerisFileInfo(path=filename, sha256=sha, size=size)
 
     @property
     def engine_mode(self) -> str:
         return self.config.ephemeris_engine
 
     def julday(self, year: int, month: int, day: int, ut: float) -> float:
-        try:
-            jd = swe.julday(year, month, day, ut)
-        except TypeError:
-            jd = swe.julday(year, month, day)
-        except Exception:
-            return _fallback_julday(year, month, day, ut)
+        return swe.julday(year, month, day, ut)
 
-        if jd < 2_000_000:
-            return _fallback_julday(year, month, day, ut)
-        return jd
-
-    def calc_body(self, jd_ut: float, body: int, flags: Optional[int] = None):
+    def calc_body(self, jd_ut: float, body: int, flags: int | None = None):
         return swe.calc_ut(jd_ut, body, flags or self.config.flags)
 
     def houses(self, jd_ut: float, lat: float, lon: float, house_system: str = "P"):
         return swe.houses_ex(jd_ut, lat, lon, b"P" if house_system == "P" else house_system.encode())
-

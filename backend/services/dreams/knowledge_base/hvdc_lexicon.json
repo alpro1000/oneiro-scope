@@ -132,7 +132,10 @@
         "племянник",
         "господин",
         "хозяин",
-        "незнакомец"
+        "незнакомец",
+        "наставник",
+        "мудрец",
+        "проводник"
       ],
       "en": [
         "man",
@@ -189,7 +192,8 @@
         "хозяйка",
         "незнакомка",
         "продавщица",
-        "наблюдательница"
+        "наблюдательница",
+        "наставница"
       ],
       "en": [
         "woman",
@@ -224,7 +228,6 @@
         "люди",
         "народ",
         "толпа",
-        "прохожий",
         "ребенок",
         "дети",
         "малыш",
@@ -242,8 +245,6 @@
         "пассажиры",
         "соседи",
         "друзья",
-        "знакомый",
-        "знакомая",
         "кассир",
         "продавец",
         "водитель",
@@ -1160,6 +1161,122 @@
     "en_forms": [
       "won",
       "win"
+    ]
+  },
+  "substantivized_adjectives": {
+    "comment": "WP-4: substantivized adjectives — OpenCorpora has no NOUN parse for many («знакомый», «дежурный»), so membership is curated here and gender comes from the form (знакомая→female, знакомых→indefinite). A candidate immediately followed by another character token is an attribute («старший знакомый» = one male), handled in the coder.",
+    "ru": [
+      "знакомый",
+      "незнакомый",
+      "старший",
+      "младший",
+      "прохожий",
+      "дежурный",
+      "больной",
+      "военный",
+      "ученый",
+      "взрослый",
+      "пожилой",
+      "молодой",
+      "покойный",
+      "любимый",
+      "родной",
+      "родный"
+    ]
+  },
+  "valuable_discovery": {
+    "comment": "WP-4: good fortune from valuables WITHOUT a find-verb — «под кустом лежат золотые монеты», «оказывается клад», 'sees gold coins lying'. Valuable token + presence/perception verb in the same sentence; negation of either part cancels. Plain money/деньги excluded deliberately (transaction noise). ru_root exclusions guard «кладбищ*» from «клад».",
+    "presence_ru_forms": [
+      "вижу",
+      "видим",
+      "увидел",
+      "увидела",
+      "увидели",
+      "замечаю",
+      "заметил",
+      "заметила",
+      "лежит",
+      "лежат",
+      "лежал",
+      "лежала",
+      "лежали",
+      "лежало",
+      "оказывается",
+      "оказался",
+      "оказалась",
+      "оказались",
+      "оказалось",
+      "блестит",
+      "блестят",
+      "сверкает",
+      "сверкают",
+      "полны",
+      "полон",
+      "полная",
+      "полные"
+    ],
+    "presence_en_forms": [
+      "see",
+      "sees",
+      "saw",
+      "notice",
+      "noticed",
+      "lying",
+      "lies",
+      "lay",
+      "glitter",
+      "glitters",
+      "glittering",
+      "shining",
+      "shines",
+      "full"
+    ],
+    "presence_en_phrases": [
+      "turns out",
+      "turned out",
+      "there are",
+      "there is",
+      "there was",
+      "there were"
+    ],
+    "valuables_ru_roots": [
+      "золот",
+      "монет",
+      "сокровищ",
+      "драгоценност",
+      "драгоценн",
+      "бриллиант",
+      "изумруд",
+      "жемчуг",
+      "жемчужин",
+      "слиток",
+      "слитк",
+      "самородок",
+      "самородк",
+      "клад"
+    ],
+    "valuables_ru_exclusions": [
+      "кладб",
+      "кладк"
+    ],
+    "valuables_en": [
+      "gold",
+      "golden",
+      "treasure",
+      "treasures",
+      "coin",
+      "coins",
+      "jewel",
+      "jewels",
+      "jewelry",
+      "gem",
+      "gems",
+      "diamond",
+      "diamonds",
+      "pearl",
+      "pearls",
+      "ingot",
+      "nugget"
     ]
   }
 }

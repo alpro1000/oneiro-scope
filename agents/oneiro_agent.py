@@ -20,23 +20,20 @@ from agents.base import BaseOneiroAgent
 # the generalist mirrors the full surface; specialists import their own
 # narrower subsets.
 ALL_ONEIRO_TOOLS: list[str] = [
-    # astrology
+    # Astrology
     "calculate_natal_chart",
-    "generate_horoscope",
     "forecast_event",
-    "list_event_types",
-    "list_horoscope_periods",
-    # dreams
+    # Dreams
     "analyze_dream",
-    "list_dream_symbols",
-    "list_archetypes",
-    "list_hvdc_categories",
-    # lunar
+    # Lunar
     "get_lunar_day",
     "get_lunar_period",
-    # geo
+    # Geo helpers
     "search_city",
     "validate_birth_data",
+    # Folded knowledge-base lookups (WP-10): event types, horoscope
+    # periods, dream symbols/archetypes/HVdC categories, archetype tables.
+    "lookup",
 ]
 
 

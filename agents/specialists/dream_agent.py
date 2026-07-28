@@ -8,9 +8,9 @@ from agents.base import BaseOneiroAgent
 
 DREAM_TOOLS: list[str] = [
     "analyze_dream",
-    "list_dream_symbols",
-    "list_archetypes",
-    "list_hvdc_categories",
+    "dream_series_stats",
+    # Folded KB lookups: dream_symbols / dream_archetypes / hvdc_categories.
+    "lookup",
 ]
 
 

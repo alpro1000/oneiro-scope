@@ -186,56 +186,198 @@
   },
   "categories": {
     "characters": {
-      "human": ["male", "female", "indefinite"],
-      "animal": ["domestic", "wild", "mythical"],
-      "creature": ["monster", "ghost", "fictional"]
+      "human": [
+        "male",
+        "female",
+        "indefinite"
+      ],
+      "animal": [
+        "domestic",
+        "wild",
+        "mythical"
+      ],
+      "creature": [
+        "monster",
+        "ghost",
+        "fictional"
+      ]
     },
     "social_interactions": {
       "aggressive": {
-        "levels": ["covert", "verbal", "physical"],
-        "roles": ["aggressor", "victim", "witness", "mutual"]
+        "levels": [
+          "covert",
+          "verbal",
+          "physical"
+        ],
+        "roles": [
+          "aggressor",
+          "victim",
+          "witness",
+          "mutual"
+        ]
       },
       "friendly": {
-        "types": ["helping", "gift_giving", "socialize", "protect"],
-        "roles": ["befriender", "recipient", "witness", "mutual"]
+        "types": [
+          "helping",
+          "gift_giving",
+          "socialize",
+          "protect"
+        ],
+        "roles": [
+          "befriender",
+          "recipient",
+          "witness",
+          "mutual"
+        ]
       },
       "sexual": {
-        "types": ["implicit", "explicit"],
-        "roles": ["initiator", "recipient", "mutual"]
+        "types": [
+          "implicit",
+          "explicit"
+        ],
+        "roles": [
+          "initiator",
+          "recipient",
+          "mutual"
+        ]
       }
     },
     "activities": {
-      "physical": ["walking", "running", "sports", "manual_work"],
-      "movement": ["flying", "falling", "driving", "swimming"],
-      "verbal": ["talking", "singing", "arguing", "calling"],
-      "expressive": ["crying", "laughing", "dancing"],
-      "visual": ["watching", "looking", "seeing"],
-      "cognitive": ["thinking", "deciding", "remembering"]
+      "physical": [
+        "walking",
+        "running",
+        "sports",
+        "manual_work"
+      ],
+      "movement": [
+        "flying",
+        "falling",
+        "driving",
+        "swimming"
+      ],
+      "verbal": [
+        "talking",
+        "singing",
+        "arguing",
+        "calling"
+      ],
+      "expressive": [
+        "crying",
+        "laughing",
+        "dancing"
+      ],
+      "visual": [
+        "watching",
+        "looking",
+        "seeing"
+      ],
+      "cognitive": [
+        "thinking",
+        "deciding",
+        "remembering"
+      ]
     },
     "emotions": {
-      "negative": ["anger", "apprehension", "sadness", "confusion"],
-      "positive": ["happiness", "excitement", "relief"]
+      "negative": [
+        "anger",
+        "apprehension",
+        "sadness",
+        "confusion"
+      ],
+      "positive": [
+        "happiness",
+        "excitement",
+        "relief"
+      ]
     },
     "settings": {
-      "indoor": ["home", "building", "vehicle"],
-      "outdoor": ["nature", "urban", "water"],
-      "ambiguous": ["unknown", "transitional"]
+      "indoor": [
+        "home",
+        "building",
+        "vehicle"
+      ],
+      "outdoor": [
+        "nature",
+        "urban",
+        "water"
+      ],
+      "ambiguous": [
+        "unknown",
+        "transitional"
+      ]
     },
     "objects": {
-      "household": ["furniture", "appliances", "tools"],
-      "nature": ["plants", "weather", "celestial"],
-      "body": ["head", "torso", "limbs", "extremities"],
-      "clothing": ["everyday", "special", "accessories"],
-      "vehicles": ["car", "plane", "boat", "train"],
-      "money": ["cash", "valuables", "transactions"]
+      "household": [
+        "furniture",
+        "appliances",
+        "tools"
+      ],
+      "nature": [
+        "plants",
+        "weather",
+        "celestial"
+      ],
+      "body": [
+        "head",
+        "torso",
+        "limbs",
+        "extremities"
+      ],
+      "clothing": [
+        "everyday",
+        "special",
+        "accessories"
+      ],
+      "vehicles": [
+        "car",
+        "plane",
+        "boat",
+        "train"
+      ],
+      "money": [
+        "cash",
+        "valuables",
+        "transactions"
+      ]
     },
     "modifiers": {
-      "intensity": ["extreme", "moderate", "slight"],
-      "size": ["large", "small", "normal"],
-      "age": ["old", "young", "same_age"],
-      "density": ["crowded", "sparse", "normal"],
-      "velocity": ["fast", "slow", "normal"],
-      "linearity": ["straight", "curved", "chaotic"]
+      "intensity": [
+        "extreme",
+        "moderate",
+        "slight"
+      ],
+      "size": [
+        "large",
+        "small",
+        "normal"
+      ],
+      "age": [
+        "old",
+        "young",
+        "same_age"
+      ],
+      "density": [
+        "crowded",
+        "sparse",
+        "normal"
+      ],
+      "velocity": [
+        "fast",
+        "slow",
+        "normal"
+      ],
+      "linearity": [
+        "straight",
+        "curved",
+        "chaotic"
+      ]
     }
+  },
+  "min_events_required": {
+    "comment": "WP-5: an indicator computed from fewer base events than this is reported as insufficient_data, not as a confident value. A/F from 1 aggression + 1 friendliness is an anecdote, not an index.",
+    "male_female_percent": 2,
+    "aggression_friendliness_index": 3,
+    "negative_emotions_percent": 2,
+    "dreamer_success_percent": 2
   }
 }

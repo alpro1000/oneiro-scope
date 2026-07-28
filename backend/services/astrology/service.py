@@ -22,10 +22,12 @@ from .schemas import (
     ZodiacSign,
 )
 from .ephemeris import SwissEphemeris
-from .natal_chart import NatalChartCalculator
+from .natal_chart import ASPECT_ORBS, NatalChartCalculator
 from .transits import TransitCalculator
 from .geocoder import GeoLocation, Geocoder, GeocodingError
 from .interpreter import AstrologyInterpreter
+
+from backend.core import ephemeris as ephe_config
 
 # Import lunar service for accurate lunar day calculation
 from backend.services.lunar.engine import LunarEngine
@@ -61,15 +63,12 @@ class AstrologyService:
 
     def _get_provenance(self) -> ProvenanceInfo:
         """Get provenance information about the calculation."""
-        engine_mode = getattr(self.ephemeris, '_engine_mode', 'unknown')
-        engine_label = "Swiss Ephemeris (SWIEPH)" if engine_mode == "swieph" else "Moshier Algorithm (MOSEPH)"
-
         return ProvenanceInfo(
-            ephemeris_engine=engine_label,
-            ephemeris_version="Swiss Ephemeris 2.10+ / Moshier Algorithm",
-            calculation_timestamp=datetime.utcnow(),
+            ephemeris_engine=ephe_config.ENGINE_LABEL,
+            ephemeris_version=ephe_config.EPHEMERIS_VERSION,
+            calculation_timestamp=datetime.now(dt_timezone.utc),
             methodology="Placidus houses (natal chart) | Tropical zodiac | Geocentric coordinates",
-            accuracy_statement="<1 arc second for modern dates (1900-2100) | Fallback approximate calculations if ephemeris unavailable"
+            accuracy_statement=ephe_config.ACCURACY_STATEMENT,
         )
 
     async def calculate_natal_chart(
@@ -158,6 +157,11 @@ class AstrologyService:
             if houses:
                 ascendant = houses[0].sign  # 1st house cusp
                 midheaven = houses[9].sign  # 10th house cusp (MC)
+                # Both directions of the planet↔house relation (WP-2):
+                # planet.house + houses[i].planets + cusp-proximity flags.
+                planets = self.natal_calculator.assign_planets_to_houses(
+                    planets, houses
+                )
 
         # Calculate aspects
         aspects = self.natal_calculator.calculate_aspects(planets)
@@ -215,9 +219,13 @@ class AstrologyService:
             planets=planets,
             houses=houses,
             aspects=aspects,
+            orb_policy_deg={
+                aspect_type.value: float(orb)
+                for aspect_type, orb in ASPECT_ORBS.items()
+            },
             interpretation=interpretation,
             structured_interpretation=structured_interpretation,
-            created_at=datetime.utcnow(),
+            created_at=datetime.now(dt_timezone.utc),
             provenance=self._get_provenance(),
         )
 
@@ -248,16 +256,20 @@ class AstrologyService:
 
         # Calculate transits
         transits = []
-        retrograde_planets = []
+
+        # Retrograde status is a property of the sky on the date, not of the
+        # user's chart — computing it only when a natal chart was supplied
+        # made the horoscope and forecast_event disagree about the same day
+        # (WP-18: retro-list sync).
+        retrograde_planets = self.transit_calculator.get_retrograde_planets(
+            target_date
+        )
 
         if natal_chart:
             transits = self.transit_calculator.calculate_transits(
                 natal_chart.planets,
                 period_start,
                 period_end,
-            )
-            retrograde_planets = self.transit_calculator.get_retrograde_planets(
-                target_date
             )
 
         # Get lunar info with proper timezone handling
@@ -330,7 +342,7 @@ class AstrologyService:
             career_and_finance=sections.get("career"),
             health_and_wellness=sections.get("health"),
             recommendations=recommendations,
-            created_at=datetime.utcnow(),
+            created_at=datetime.now(dt_timezone.utc),
             provenance=self._get_provenance(),
         )
 
@@ -431,7 +443,7 @@ class AstrologyService:
             risk_factors=risk_factors,
             recommendations=recommendations,
             alternative_dates=alternative_dates,
-            created_at=datetime.utcnow(),
+            created_at=datetime.now(dt_timezone.utc),
             provenance=self._get_provenance(),
         )
 
@@ -496,7 +508,7 @@ class AstrologyService:
         retrograde_penalties = {
             Planet.MERCURY: ["contract", "interview", "exam"],
             Planet.VENUS: ["wedding", "date"],
-            Planet.MARS: ["surgery", "business"],
+            Planet.MARS: ["business"],
         }
 
         for planet in retrograde_planets:
@@ -515,9 +527,7 @@ class AstrologyService:
             "first_quarter": ["business", "moving"],
             "waxing_gibbous": ["wedding", "date"],
             "full_moon": ["travel"],
-            "waning_gibbous": ["surgery"],
             "last_quarter": ["moving"],
-            "waning_crescent": ["surgery"],
         }
 
         if event_type.value in favorable_phases.get(lunar_phase, []):

@@ -2,7 +2,7 @@
 
 Pure synchronous wrappers over `backend.services.lunar.engine` and
 `backend.services.lunar.content`. No LLM calls — fully deterministic
-(Swiss Ephemeris or Moshier fallback).
+(Swiss Ephemeris, SWIEPH with repo-shipped .se1 files).
 """
 
 from __future__ import annotations
@@ -32,8 +32,8 @@ def get_lunar_day(
     Combines astronomical computation (lunar day number, Moon phase, Moon sign,
     illumination %, Julian Day UT) with the bilingual narrative text from
     `lunar_tables.json` (themes, recommendations, do-not list). The astronomy
-    is deterministic — uses Swiss Ephemeris when binary files are available,
-    Moshier (analytic) otherwise. Provenance is included.
+    is deterministic — Swiss Ephemeris in SWIEPH mode with the repo-shipped
+    .se1 files. Provenance is included.
 
     Args:
         target_date: YYYY-MM-DD. Omit for today in `timezone` — the lunar day
@@ -66,12 +66,13 @@ def get_lunar_period(
     timezone: str = "",
     locale: str = "ru",
     include_content: bool = False,
-) -> list[dict[str, Any]]:
+) -> dict[str, Any]:
     """Return lunar-day info for each day in a range (inclusive).
 
-    Returns a bare list, so unlike most tools it carries no `can_also_compute`
-    menu — wrapping a documented list shape in a dict to add a hint would break
-    every caller for no gain. `get_lunar_day` carries the menu instead.
+    Returns `{"days": [...], "count": N, "timezone": tz}`. This used to be
+    a bare list, which silently escaped the WP-6 contract — a list cannot
+    carry the mandatory `meta` block, so lunar-period responses were the
+    one tool without request/version provenance.
 
     Args:
         start_date: YYYY-MM-DD.
@@ -90,4 +91,10 @@ def get_lunar_period(
     if include_content:
         for row in rows:
             row["content"] = get_lunar_day_text(row["lunar_day"], locale)
-    return rows
+    return with_menu(
+        {"days": rows, "count": len(rows), "timezone": tz},
+        domain="astro",
+        known_inputs=[TARGET_DATE],
+        completed=["lunar-period"],
+        locale=locale,
+    )

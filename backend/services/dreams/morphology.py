@@ -50,6 +50,36 @@ def lemma_info(word: str) -> LemmaInfo:
         case=str(parse.tag.case) if parse.tag.case else None,
     )
 
+
+@lru_cache(maxsize=16384)
+def form_gender_for_lemmas(word: str, lemmas: frozenset) -> str | None:
+    """Gender of a substantivized-adjective FORM whose lemma is listed.
+
+    «Знакомый говорит…» — the noun reading of «знакомый» does not exist
+    in OpenCorpora at all (only ADJF parses), so no tag-based rule can
+    recognize it as a person. Membership therefore comes from a curated
+    lemma list (hvdc_lexicon.json → substantivized_adjectives) and the
+    GENDER comes from the form's own morphology: знакомый → male,
+    знакомая → female, знакомых (plural, no gender tag) → indefinite.
+
+    Returns None when no parse of the word lemmatizes into the list.
+    """
+    fallback = None
+    for parse in _MORPH.parse(word):
+        if str(parse.tag.POS) not in ("ADJF", "NOUN"):
+            continue
+        if normalize(parse.normal_form) not in lemmas:
+            continue
+        gender = str(parse.tag.gender) if parse.tag.gender else None
+        if gender == "masc":
+            return "male"
+        if gender == "femn":
+            return "female"
+        # plural/genderless parse — keep looking for a gendered one
+        # («со старшим знакомым»: first parse is plural-dative ADJF).
+        fallback = "indefinite"
+    return fallback
+
 _VOWELS = "аеиоуыэюя"
 
 _PERFECTIVE_GERUND_1 = ("вшись", "вши", "в")           # after а/я

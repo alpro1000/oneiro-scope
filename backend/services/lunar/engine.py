@@ -1,28 +1,27 @@
-"""Lunar calculations powered by Swiss Ephemeris."""
+"""Lunar calculations powered by Swiss Ephemeris (SWIEPH only).
+
+Ephemeris configuration — path, flags, file hashes — is owned by
+backend.core.ephemeris, which verifies the repo-shipped .se1 files at
+import. There is no Moshier branch and no analytic fallback here
+(conventions.md §12): a broken ephemeris setup fails the process at
+startup instead of silently degrading the numbers.
+"""
 
 from __future__ import annotations
 
-import glob
-import hashlib
 import math
-import os
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta
-from typing import Iterable, Optional
+from typing import Optional
 
 import pytz
 import swisseph as swe
 
-EPHE_PATTERNS = (
-    "sepl*.se*",
-    "sem*.se*",
-    "seas*.se*",
-    "semo*.se*",
-)
+from backend.core import ephemeris as ephe_config
 
 SYNODIC_MONTH = 29.53058867
-SUN = getattr(swe, "SUN", 0)
-MOON = getattr(swe, "MOON", 1)
+SUN = swe.SUN
+MOON = swe.MOON
 SIGNS = [
     "Aries",
     "Taurus",
@@ -40,12 +39,6 @@ SIGNS = [
 
 
 @dataclass
-class EphemerisFile:
-    path: str
-    sha256: str
-
-
-@dataclass
 class LunarResult:
     date: str
     timezone: str
@@ -60,23 +53,6 @@ class LunarResult:
     moon_sign: str
     phase_key: str
     provenance: dict
-
-
-def _resolve_ephe_path(explicit: Optional[str] = None) -> Optional[str]:
-    return (
-        explicit
-        or os.getenv("SWISSEPH_EPHE_PATH")
-        or os.getenv("SWISSEPH_PATH")
-        or os.getenv("SE_EPHE_PATH")
-    )
-
-
-def _hash_ephemeris_files(path: str) -> Iterable[EphemerisFile]:
-    for pattern in EPHE_PATTERNS:
-        for filename in glob.glob(os.path.join(path, pattern)):
-            with open(filename, "rb") as handle:
-                sha = hashlib.sha256(handle.read()).hexdigest()
-            yield EphemerisFile(path=filename, sha256=sha)
 
 
 def _phase_key(angle: float) -> str:
@@ -109,33 +85,34 @@ def _calculate_lunar_day_start(moon_age_days: float, target_date: date, tz: str)
     Lunar day changes approximately every 24.8 hours.
     We calculate backwards from moon age to find when this day began.
     """
-    try:
-        # Get fractional part of lunar day (e.g., 5.3 days -> 0.3)
-        current_lunar_day = max(1, min(30, math.floor(moon_age_days) + 1))
-        fraction_into_day = moon_age_days - (current_lunar_day - 1)
+    # Никакого try/except: единственный реальный сбой здесь — неизвестная
+    # таймзона, и это ошибка входа, которая обязана падать громко
+    # (conventions.md §12), а не превращаться в null, неотличимый от
+    # «время начала неизвестно».
+    # Get fractional part of lunar day (e.g., 5.3 days -> 0.3)
+    current_lunar_day = max(1, min(30, math.floor(moon_age_days) + 1))
+    fraction_into_day = moon_age_days - (current_lunar_day - 1)
 
-        # Average lunar day is ~24.8 hours
-        # Calculate how many hours ago this day started
-        hours_into_day = fraction_into_day * 24.8
+    # Average lunar day is ~24.8 hours
+    # Calculate how many hours ago this day started
+    hours_into_day = fraction_into_day * 24.8
 
-        # Calculate start time by going back from midnight
-        tzinfo = pytz.timezone(tz)
-        midnight_local = tzinfo.localize(
-            datetime(target_date.year, target_date.month, target_date.day, 0, 0)
-        )
+    # Calculate start time by going back from midnight
+    tzinfo = pytz.timezone(tz)
+    midnight_local = tzinfo.localize(
+        datetime(target_date.year, target_date.month, target_date.day, 0, 0)
+    )
 
-        # Lunar day start time
-        day_start = midnight_local + timedelta(hours=hours_into_day)
+    # Lunar day start time
+    day_start = midnight_local + timedelta(hours=hours_into_day)
 
-        # If calculated time is in the future (>24h ahead), go back one day
-        now_local = datetime.now(tzinfo)
-        if day_start > now_local + timedelta(hours=12):
-            day_start -= timedelta(days=1)
+    # If calculated time is in the future (>24h ahead), go back one day
+    now_local = datetime.now(tzinfo)
+    if day_start > now_local + timedelta(hours=12):
+        day_start -= timedelta(days=1)
 
-        # Format as HH:MM
-        return day_start.strftime("%H:%M")
-    except Exception:
-        return None
+    # Format as HH:MM
+    return day_start.strftime("%H:%M")
 
 
 def _local_noon_utc(target_date: date, tz: str) -> datetime:
@@ -144,58 +121,24 @@ def _local_noon_utc(target_date: date, tz: str) -> datetime:
     return local_noon.astimezone(pytz.UTC)
 
 
-def _fallback_julday(year: int, month: int, day: int, ut: float) -> float:
-    dt = datetime(year, month, day, tzinfo=pytz.UTC) + timedelta(hours=ut)
-    return dt.timestamp() / 86400.0 + 2440587.5
-
-
-def _fallback_longitude(days_since_j2000: float, base_longitude: float, mean_motion: float) -> float:
-    return (base_longitude + mean_motion * days_since_j2000) % 360.0
-
-
 def compute_lunar(date_iso: str, tz: str) -> LunarResult:
     target_date = date.fromisoformat(date_iso)
+    ephe_config.require_in_range(target_date, "lunar calculation")
     noon_utc = _local_noon_utc(target_date, tz)
     ut = noon_utc.hour + noon_utc.minute / 60 + noon_utc.second / 3600 + noon_utc.microsecond / 3_600_000_000
 
-    ephe_path = _resolve_ephe_path()
-    engine_mode = "swisseph_moseph"
-    ephemeris_files: list[EphemerisFile] = []
-    flags = getattr(swe, "FLG_SPEED", 0)
-    if ephe_path and os.path.isdir(ephe_path):
-        swe.set_ephe_path(ephe_path)
-        engine_mode = "swisseph_swieph"
-        ephemeris_files = list(_hash_ephemeris_files(ephe_path))
-        flags |= getattr(swe, "FLG_SWIEPH", 0)
-        flags_text = "SWIEPH|SPEED"
-    else:
-        flags |= getattr(swe, "FLG_MOSEPH", getattr(swe, "FLG_SWIEPH", 0))
-        flags_text = "MOSEPH|SPEED"
-    try:
-        jd_ut = swe.julday(noon_utc.year, noon_utc.month, noon_utc.day, ut)
-    except TypeError:
-        jd_ut = swe.julday(noon_utc.year, noon_utc.month, noon_utc.day)
-    except Exception:
-        jd_ut = _fallback_julday(noon_utc.year, noon_utc.month, noon_utc.day, ut)
-
-    if jd_ut < 2_000_000:
-        jd_ut = _fallback_julday(noon_utc.year, noon_utc.month, noon_utc.day, ut)
-
-    calc_ut = getattr(swe, "calc_ut", None)
-    if calc_ut:
-        try:
-            sun_lon, _, _, _ = calc_ut(jd_ut, SUN, flags)[0]
-            moon_lon, _, _, _ = calc_ut(jd_ut, MOON, flags)[0]
-        except Exception:
-            calc_ut = None
-
-    if not calc_ut:
-        days_since_j2000 = jd_ut - 2451545.0
-        sun_lon = _fallback_longitude(days_since_j2000, 280.46, 0.9856474)
-        moon_lon = _fallback_longitude(days_since_j2000, 218.32, 13.1763965)
+    jd_ut = swe.julday(noon_utc.year, noon_utc.month, noon_utc.day, ut)
+    # Same fail-closed rule as the astrology wrapper: the returned flags
+    # are the only witness that SWIEPH actually served the result.
+    sun_lon = ephe_config.calc_ut_swieph(jd_ut, SUN)[0]
+    moon_lon = ephe_config.calc_ut_swieph(jd_ut, MOON)[0]
 
     phase_angle = (moon_lon - sun_lon) % 360.0
-    illumination = (1 - math.cos(math.radians(phase_angle))) / 2
+    # WP-16: illuminated fraction from swe_pheno_ut, not the flat
+    # (1-cos)/2 approximation — the latter ignores the Moon's actual
+    # phase geometry and was off by up to ~4 pp (74.08% vs 77.85% on
+    # 2026-08-03 10:00 UTC).
+    illumination = swe.pheno_ut(jd_ut, MOON, ephe_config.FLAGS)[1]
     moon_age_days = (phase_angle / 360.0) * SYNODIC_MONTH
     lunar_day = max(1, min(30, math.floor(moon_age_days) + 1))
     lunar_day_start_time = _calculate_lunar_day_start(moon_age_days, target_date, tz)
@@ -203,9 +146,11 @@ def compute_lunar(date_iso: str, tz: str) -> LunarResult:
     moon_sign = _moon_sign(moon_lon)
 
     provenance = {
-        "ephemeris_engine": engine_mode,
-        "ephemeris_files": [file.__dict__ for file in ephemeris_files],
-        "flags": flags_text,
+        "ephemeris_engine": ephe_config.ENGINE_MODE,
+        "swisseph_version": ephe_config.SWE_VERSION,
+        "ephemeris_files": [dict(item) for item in ephe_config.ephemeris_files()],
+        "flags": ephe_config.FLAGS_TEXT,
+        "illumination_method": "swe_pheno_ut",
         "jd_ut": jd_ut,
         "timezone": tz,
         "local_noon_utc": noon_utc.isoformat(),
@@ -282,4 +227,3 @@ class LunarEngine:
             current += timedelta(days=1)
 
         return results
-

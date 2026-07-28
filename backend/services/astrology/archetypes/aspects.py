@@ -81,6 +81,23 @@ ASPECTS: dict[str, dict] = {
         ),
         "source": "Bil Tierney, Dynamics of Aspect Analysis (1980)",
     },
+    # WP-18: the natal calculator has always emitted quincunxes (150°, orb
+    # 3°), but this table did not know the aspect — a reading could cite an
+    # angle the KB refused to explain.
+    "quincunx": {
+        "angle_deg": 150,
+        "default_orb": 3.0,
+        "nature": "tense / adjusting",
+        "archetype": "Adjustment",
+        "description": (
+            "Квинконс (150°, инконъюнкт) — планеты в знаках, не связанных "
+            "ни стихией, ни крестом: принципы не конфликтуют открыто, но и "
+            "не совпадают. Классическая тема — постоянная подстройка и "
+            "перенастройка; в традиции аспект связывался с темами здоровья, "
+            "службы и «неудобных» компромиссов."
+        ),
+        "source": "Sue Tompkins, Aspects in Astrology (1989), ch. on minor aspects",
+    },
 }
 
 
