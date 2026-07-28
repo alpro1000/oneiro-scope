@@ -13,7 +13,7 @@
     {
       "path": ".github/workflows",
       "dirs": 0,
-      "files": 7
+      "files": 8
     },
     {
       "path": "tests",
@@ -163,7 +163,7 @@
     {
       "path": "scripts",
       "dirs": 0,
-      "files": 8
+      "files": 9
     },
     {
       "path": "config",
@@ -203,7 +203,7 @@
     {
       "path": "docs/reports",
       "dirs": 0,
-      "files": 1
+      "files": 2
     },
     {
       "path": "docs/deployment",
@@ -403,12 +403,12 @@
     {
       "path": "backend/mcp/tools",
       "dirs": 0,
-      "files": 11
+      "files": 13
     },
     {
       "path": "backend/tests",
       "dirs": 1,
-      "files": 38
+      "files": 44
     },
     {
       "path": "backend/tests/dreams",
@@ -578,12 +578,17 @@
     {
       "path": "backend/core",
       "dirs": 0,
-      "files": 7
+      "files": 8
     },
     {
       "path": "backend/data",
-      "dirs": 0,
+      "dirs": 1,
       "files": 1
+    },
+    {
+      "path": "backend/data/ephemeris",
+      "dirs": 0,
+      "files": 3
     },
     {
       "path": "backend/portal",
@@ -626,6 +631,6 @@
       "files": 3
     }
   ],
-  "total_dirs": 124,
-  "total_files": 449
+  "total_dirs": 125,
+  "total_files": 464
 }
