@@ -18,7 +18,7 @@ try:
 except ImportError as exc:  # pragma: no cover
     raise ImportError("pyswisseph is required for transit search") from exc
 
-_FLAGS = swe.FLG_MOSEPH | swe.FLG_SPEED
+from backend.core.ephemeris import FLAGS as _FLAGS
 
 # Transiting planets we scan. Slow planets dominate — fast planets like
 # Moon are too noisy to be useful here.
@@ -29,9 +29,9 @@ _TRANSITING = [
     (swe.URANUS, "Uranus"),
     (swe.NEPTUNE, "Neptune"),
     (swe.PLUTO, "Pluto"),
-    # Chiron intentionally excluded — requires .se1 asteroid files
-    # (seas_18.se1). MOSEPH doesn't ship asteroids. Add back when
-    # SE_EPHE_PATH binaries are bundled in deploy.
+    # Chiron intentionally excluded from the transit scan for now; the
+    # asteroid file (seas_18.se1) ships in backend/data/ephemeris since
+    # WP-1, so adding it is a product decision, not a data limitation.
 ]
 
 _NATAL_BODIES = [

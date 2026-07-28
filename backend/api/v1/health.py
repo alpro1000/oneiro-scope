@@ -1,8 +1,5 @@
 """Health check endpoints"""
 
-import os
-from pathlib import Path
-
 from fastapi import APIRouter, Depends, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import text
@@ -10,23 +7,20 @@ import redis.asyncio as redis
 
 from backend.core.database import get_db
 from backend.core.config import settings
+from backend.core.ephemeris import startup_summary
 
 router = APIRouter()
 
 
 def _ephemeris_mode() -> dict:
-    """Report which Swiss Ephemeris mode the backend is configured to use.
+    """Report the live Swiss Ephemeris configuration.
 
-    SWIEPH (binary files) is preferred for arc-second precision; MOSEPH
-    (analytic) is the fallback when binaries are absent. Surfacing this in
-    /health lets validate-prod skill and operators tell which mode is live.
+    Always SWIEPH since WP-1: the .se1 files ship in the repo and their
+    absence fails startup, so there is no fallback mode to report. The
+    block still surfaces path/files/version so validate-prod and
+    operators can confirm which data the process actually loaded.
     """
-    path = os.getenv("SE_EPHE_PATH")
-    if path and Path(path).is_dir():
-        files = sorted(p.name for p in Path(path).glob("*.se1"))
-        if files:
-            return {"engine": "SWIEPH", "ephe_path": path, "files": files[:5]}
-    return {"engine": "MOSEPH", "ephe_path": path or None, "files": []}
+    return startup_summary()
 
 
 @router.get("/health")

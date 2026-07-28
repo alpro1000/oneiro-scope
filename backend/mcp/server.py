@@ -33,6 +33,12 @@ from backend.mcp.tools import strategic_patterns as sp
 
 logger = logging.getLogger("oneiro.mcp")
 
+# WP-1 startup verification: importing the config verifies the .se1 files
+# (or raises, refusing to start the server) and pins SWIEPH globally.
+from backend.core.ephemeris import startup_summary as _ephemeris_summary
+
+logger.info("Ephemeris: %s", _ephemeris_summary())
+
 mcp = FastMCP(
     "oneiro-scope",
     instructions=(

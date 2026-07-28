@@ -15,7 +15,7 @@ from pydantic import BaseModel, Field, model_validator
 class ProvenanceInfo(BaseModel):
     """Information about calculation sources and methodology."""
     ephemeris_engine: str = Field(
-        description="Engine used: swieph (Swiss Ephemeris files) or moseph (Moshier algorithm)"
+        description="Engine used: Swiss Ephemeris SWIEPH (.se1 files, verified at startup — no fallback modes)"
     )
     ephemeris_version: str = Field(
         description="Version of ephemeris data or algorithm"

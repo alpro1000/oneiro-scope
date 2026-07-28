@@ -120,7 +120,7 @@ async def compute_transits(
     return with_menu(
         {
             "layer": "astronomy",
-            "methodology": "Swiss Ephemeris (MOSEPH analytic); orb at midnight UT",
+            "methodology": "Swiss Ephemeris (SWIEPH); orb at midnight UT",
             "window": {"start": start, "end": end, "orb_deg": orb_deg},
             "transit_count": len(events),
             "transits": [
@@ -193,7 +193,7 @@ async def astrocartography_scan(
             "layer": "astronomy",
             "methodology": (
                 "Placidus house system; Astro*Carto*Graphy (Lewis 1976); "
-                "Swiss Ephemeris MOSEPH"
+                "Swiss Ephemeris SWIEPH"
             ),
             "orb_deg": orb_deg,
             "city_count": len(results),
@@ -241,7 +241,7 @@ async def astrocartography_lines(
     return {
         "layer": "astronomy",
         "methodology": (
-            "Astro*Carto*Graphy (Lewis 1976); Swiss Ephemeris MOSEPH; "
+            "Astro*Carto*Graphy (Lewis 1976); Swiss Ephemeris SWIEPH; "
             "MC/IC = meridian loci, Asc/Desc = horizon curves"
         ),
         "chart": chart_geometry(jd, birth_lat, birth_lon, birth_name),

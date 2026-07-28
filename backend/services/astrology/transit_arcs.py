@@ -25,7 +25,7 @@ except ImportError as exc:  # pragma: no cover
 
 from backend.services.astrology.transits_engine import TransitEvent, find_transits
 
-_FLAGS = swe.FLG_MOSEPH | swe.FLG_SPEED
+from backend.core.ephemeris import FLAGS as _FLAGS
 
 _BODIES = {
     "Sun": swe.SUN,

@@ -102,7 +102,7 @@ def test_list_hvdc_categories():
 
 
 def test_get_lunar_day_returns_provenance():
-    """Lunar tools must work fully offline (Moshier fallback) and include provenance."""
+    """Lunar tools must work fully offline (repo-shipped SWIEPH files) and include provenance."""
     from backend.mcp.tools.lunar import get_lunar_day
 
     info = get_lunar_day("2026-05-26", timezone="UTC", locale="en")

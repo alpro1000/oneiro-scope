@@ -82,3 +82,6 @@ docs/specs/fandorin-portrait/output/
 
 # DreamBank corpora — third-party research data, re-fetch via scripts/fetch_dreambank.py
 data/dreambank/
+
+# JPL DE421 kernel (~17 MB) — auto-downloaded by scripts/verify_ephemeris.py
+/data/ephemeris_ref/

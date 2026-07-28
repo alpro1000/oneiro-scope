@@ -27,6 +27,8 @@ from .transits import TransitCalculator
 from .geocoder import GeoLocation, Geocoder, GeocodingError
 from .interpreter import AstrologyInterpreter
 
+from backend.core import ephemeris as ephe_config
+
 # Import lunar service for accurate lunar day calculation
 from backend.services.lunar.engine import LunarEngine
 
@@ -61,15 +63,12 @@ class AstrologyService:
 
     def _get_provenance(self) -> ProvenanceInfo:
         """Get provenance information about the calculation."""
-        engine_mode = getattr(self.ephemeris, '_engine_mode', 'unknown')
-        engine_label = "Swiss Ephemeris (SWIEPH)" if engine_mode == "swieph" else "Moshier Algorithm (MOSEPH)"
-
         return ProvenanceInfo(
-            ephemeris_engine=engine_label,
-            ephemeris_version="Swiss Ephemeris 2.10+ / Moshier Algorithm",
+            ephemeris_engine=ephe_config.ENGINE_LABEL,
+            ephemeris_version=ephe_config.EPHEMERIS_VERSION,
             calculation_timestamp=datetime.now(dt_timezone.utc),
             methodology="Placidus houses (natal chart) | Tropical zodiac | Geocentric coordinates",
-            accuracy_statement="<1 arc second for modern dates (1900-2100) | Fallback approximate calculations if ephemeris unavailable"
+            accuracy_statement=ephe_config.ACCURACY_STATEMENT,
         )
 
     async def calculate_natal_chart(

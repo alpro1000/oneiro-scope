@@ -18,20 +18,17 @@ def test_lunar_engine_changes_between_dates():
     ), "Lunar output must vary between dates"
 
     assert "jd_ut" in day_one.provenance
-    assert day_one.provenance["ephemeris_engine"] in {"swisseph_swieph", "swisseph_moseph"}
-    assert day_one.provenance["flags"] in {"SWIEPH|SPEED", "MOSEPH|SPEED"}
+    assert day_one.provenance["ephemeris_engine"] == "swisseph_swieph"
+    assert day_one.provenance["flags"] == "SWIEPH|SPEED"
 
 
-def test_ephemeris_alias(monkeypatch, tmp_path: Path):
-    ephe_dir = tmp_path / "ephe"
-    ephe_dir.mkdir()
-    (ephe_dir / "sepl_18.se1").write_bytes(b"dummy data")
-
-    monkeypatch.setenv("SWISSEPH_PATH", str(ephe_dir))
-    monkeypatch.delenv("SWISSEPH_EPHE_PATH", raising=False)
-
+def test_provenance_carries_file_hashes_and_version():
+    """WP-1: SWIEPH is the only mode — provenance must name the actual
+    .se1 files (with hashes) and the real swisseph version."""
     result = compute_lunar("2024-02-01", "UTC")
     assert result.provenance["ephemeris_engine"] == "swisseph_swieph"
-    assert result.provenance["ephemeris_files"], "Expected ephemeris hashes when path is present"
+    assert result.provenance["ephemeris_files"], "Expected ephemeris file hashes"
+    assert all(f["sha256"] for f in result.provenance["ephemeris_files"])
+    assert result.provenance["swisseph_version"]
     assert result.provenance["flags"] == "SWIEPH|SPEED"
 

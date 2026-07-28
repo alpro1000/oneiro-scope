@@ -107,8 +107,9 @@ Reads the same env vars as the backend service:
   horoscope, dream analyze). Falls back to template interpretations if none.
 - `GEONAMES_USERNAME` — for `search_city` and birth-place geocoding.
 - `LUNAR_DEFAULT_TZ` — default timezone for lunar tools (e.g. `Europe/Moscow`).
-- `SE_EPHE_PATH` — optional path to Swiss Ephemeris binaries (falls back to
-  Moshier analytic).
+- `SE_EPHE_PATH` — optional override for the Swiss Ephemeris binaries; the
+  repo ships them in `backend/data/ephemeris/` and the server refuses to
+  start when the required `.se1` files are missing (no analytic fallback).
 
 ## Wiring into Claude Desktop
 

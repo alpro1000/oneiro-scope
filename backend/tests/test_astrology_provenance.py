@@ -1,93 +1,75 @@
-"""Tests for astrology provenance tracking (Phase 2)."""
+"""Tests for astrology provenance tracking (SWIEPH-only since WP-1)."""
+
+import json
+from datetime import datetime
+from unittest.mock import Mock
 
 import pytest
-from datetime import date, time
-from unittest.mock import Mock, AsyncMock, patch
 
-from backend.services.astrology import AstrologyService, NatalChartRequest, ProvenanceInfo
+from backend.core import ephemeris as ephe_config
+from backend.services.astrology import AstrologyService, ProvenanceInfo
 from backend.services.astrology.ephemeris import SwissEphemeris
 
 
 @pytest.fixture
-def mock_ephemeris():
-    """Mock Swiss Ephemeris."""
-    ephemeris = Mock(spec=SwissEphemeris)
-    ephemeris._engine_mode = "moseph"
-    return ephemeris
+def astrology_service():
+    """Service with a mocked ephemeris instance.
 
-
-@pytest.fixture
-def astrology_service(mock_ephemeris):
-    """Astrology service with mocked ephemeris."""
-    service = AstrologyService(ephemeris=mock_ephemeris)
-    return service
+    Provenance is process-level configuration (backend.core.ephemeris),
+    so it must not depend on any state of the ephemeris object.
+    """
+    return AstrologyService(ephemeris=Mock(spec=SwissEphemeris))
 
 
 def test_provenance_info_creation():
-    """Test ProvenanceInfo model creation."""
-    from datetime import datetime
-
     provenance = ProvenanceInfo(
-        ephemeris_engine="Moshier Algorithm (MOSEPH)",
-        ephemeris_version="Swiss Ephemeris 2.10+",
-        calculation_timestamp=datetime.utcnow(),
+        ephemeris_engine=ephe_config.ENGINE_LABEL,
+        ephemeris_version=ephe_config.EPHEMERIS_VERSION,
+        calculation_timestamp=datetime(2026, 1, 1, 12, 0, 0),
         methodology="Placidus houses",
-        accuracy_statement="<1 arc second for modern dates"
+        accuracy_statement="≤0.2 arcsec vs JPL DE421",
     )
 
-    assert provenance.ephemeris_engine == "Moshier Algorithm (MOSEPH)"
-    assert provenance.ephemeris_version == "Swiss Ephemeris 2.10+"
+    assert "SWIEPH" in provenance.ephemeris_engine
     assert provenance.methodology == "Placidus houses"
-    assert provenance.accuracy_statement == "<1 arc second for modern dates"
 
 
-def test_get_provenance_moseph(astrology_service):
-    """Test provenance generation for MOSEPH engine."""
+def test_get_provenance_is_swieph(astrology_service):
     provenance = astrology_service._get_provenance()
 
     assert provenance is not None
-    assert "MOSEPH" in provenance.ephemeris_engine
-    assert "Swiss Ephemeris" in provenance.ephemeris_version
-    assert "Placidus" in provenance.methodology
-    assert "arc second" in provenance.accuracy_statement
-
-
-def test_get_provenance_swieph():
-    """Test provenance generation for SWIEPH engine."""
-    mock_ephemeris = Mock(spec=SwissEphemeris)
-    mock_ephemeris._engine_mode = "swieph"
-
-    service = AstrologyService(ephemeris=mock_ephemeris)
-    provenance = service._get_provenance()
-
     assert "SWIEPH" in provenance.ephemeris_engine
     assert "Swiss Ephemeris" in provenance.ephemeris_version
+    assert "Placidus" in provenance.methodology
+    assert "arcsec" in provenance.accuracy_statement
 
 
-# Note: Integration test for natal_chart_includes_provenance would require
-# mocking complex ephemeris calculations. The provenance functionality is
-# tested indirectly through the service's _get_provenance() method tests above.
+def test_get_provenance_never_mentions_moshier(astrology_service):
+    """WP-1 acceptance: provenance reflects the actual source — the word
+    Moshier must not appear anywhere in it."""
+    blob = astrology_service._get_provenance().model_dump_json().lower()
+    assert "moshier" not in blob
+    assert "moseph" not in blob
+
+
+def test_provenance_reports_real_swisseph_version(astrology_service):
+    """The version string comes from swe.version, not a hardcoded guess."""
+    provenance = astrology_service._get_provenance()
+    assert ephe_config.SWE_VERSION in provenance.ephemeris_engine
+    assert ephe_config.SWE_VERSION in provenance.ephemeris_version
 
 
 def test_provenance_info_json_serialization():
-    """Test that ProvenanceInfo can be serialized to JSON."""
-    from datetime import datetime
-
     provenance = ProvenanceInfo(
-        ephemeris_engine="Moshier Algorithm (MOSEPH)",
-        ephemeris_version="Swiss Ephemeris 2.10+",
+        ephemeris_engine="Swiss Ephemeris 2.10.03 (SWIEPH)",
+        ephemeris_version="Swiss Ephemeris 2.10.03 / JPL DE431 .se1 files (SWIEPH)",
         calculation_timestamp=datetime(2025, 1, 1, 12, 0, 0),
         methodology="Placidus houses",
-        accuracy_statement="<1 arc second"
+        accuracy_statement="≤0.2 arcsec",
     )
 
-    # Test model_dump (Pydantic v2)
     data = provenance.model_dump()
-    assert data["ephemeris_engine"] == "Moshier Algorithm (MOSEPH)"
-    assert data["ephemeris_version"] == "Swiss Ephemeris 2.10+"
+    assert data["ephemeris_engine"] == "Swiss Ephemeris 2.10.03 (SWIEPH)"
 
-    # Test JSON serialization
-    import json
-    json_str = provenance.model_dump_json()
-    parsed = json.loads(json_str)
-    assert parsed["ephemeris_engine"] == "Moshier Algorithm (MOSEPH)"
+    parsed = json.loads(provenance.model_dump_json())
+    assert parsed["ephemeris_version"].endswith("(SWIEPH)")

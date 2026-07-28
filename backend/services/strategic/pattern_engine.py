@@ -11,8 +11,8 @@ Everything here is sky math or KB lookup — NO interpretation and NO
 LLM. Symbolic reading happens in the skills layer, guided by the
 `interprets.rules` of each pattern in the catalog.
 
-Engine: Swiss Ephemeris in Moshier mode (no data files needed),
-mirroring `backend/services/lunar/engine.py` fallback behaviour.
+Engine: Swiss Ephemeris in SWIEPH mode — flags and the verified .se1
+path come from `backend.core.ephemeris` (WP-1: no Moshier fallback).
 """
 
 from __future__ import annotations
@@ -28,7 +28,7 @@ try:
 except ImportError as exc:  # pragma: no cover
     raise ImportError("pyswisseph required for pattern_engine") from exc
 
-_FLG = swe.FLG_MOSEPH | swe.FLG_SPEED
+from backend.core.ephemeris import FLAGS as _FLG
 
 SIGNS = [
     "aries", "taurus", "gemini", "cancer", "leo", "virgo",
@@ -66,7 +66,7 @@ ASPECT_NATURE: dict[str, str] = {
 }
 
 _PROVENANCE = {
-    "ephemeris_engine": "SwissEph/MOSEPH",
+    "ephemeris_engine": "SwissEph/SWIEPH",
     "house_system": "Placidus",
     "zodiac": "tropical",
 }

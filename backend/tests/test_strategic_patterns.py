@@ -44,7 +44,7 @@ def test_natal_geometry_basics(geo):
     for p in geo["planets"].values():
         assert 1 <= p["house"] <= 12
         assert p["sign"] in SIGNS
-    assert geo["provenance"]["ephemeris_engine"] == "SwissEph/MOSEPH"
+    assert geo["provenance"]["ephemeris_engine"] == "SwissEph/SWIEPH"
 
 
 def test_legacy_timezone_alias():

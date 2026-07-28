@@ -19,7 +19,7 @@ try:
 except ImportError as exc:  # pragma: no cover
     raise ImportError("pyswisseph is required for synastry") from exc
 
-_FLAGS = swe.FLG_MOSEPH | swe.FLG_SPEED
+from backend.core.ephemeris import FLAGS as _FLAGS
 
 _BODIES = {
     "Sun": swe.SUN,

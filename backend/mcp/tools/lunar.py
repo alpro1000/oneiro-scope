@@ -2,7 +2,7 @@
 
 Pure synchronous wrappers over `backend.services.lunar.engine` and
 `backend.services.lunar.content`. No LLM calls — fully deterministic
-(Swiss Ephemeris or Moshier fallback).
+(Swiss Ephemeris, SWIEPH with repo-shipped .se1 files).
 """
 
 from __future__ import annotations
@@ -32,8 +32,8 @@ def get_lunar_day(
     Combines astronomical computation (lunar day number, Moon phase, Moon sign,
     illumination %, Julian Day UT) with the bilingual narrative text from
     `lunar_tables.json` (themes, recommendations, do-not list). The astronomy
-    is deterministic — uses Swiss Ephemeris when binary files are available,
-    Moshier (analytic) otherwise. Provenance is included.
+    is deterministic — Swiss Ephemeris in SWIEPH mode with the repo-shipped
+    .se1 files. Provenance is included.
 
     Args:
         target_date: YYYY-MM-DD. Omit for today in `timezone` — the lunar day

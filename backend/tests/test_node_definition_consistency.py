@@ -32,7 +32,7 @@ def test_both_engines_request_the_same_body():
 def test_true_and_mean_node_actually_differ_enough_to_matter():
     """Guards the premise: if they were equivalent this alignment would be moot."""
     jd = swe.julday(1977, 7, 1, 19.5)  # 1977-07-01 19:30 UT
-    flags = swe.FLG_MOSEPH | swe.FLG_SPEED
+    from backend.core.ephemeris import FLAGS as flags
     true_lon = swe.calc_ut(jd, swe.TRUE_NODE, flags)[0][0]
     mean_lon = swe.calc_ut(jd, swe.MEAN_NODE, flags)[0][0]
     assert abs(true_lon - mean_lon) > 0.1
