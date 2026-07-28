@@ -2,7 +2,7 @@
   "tree": [
     {
       "path": ".",
-      "dirs": 15,
+      "dirs": 16,
       "files": 20
     },
     {
@@ -13,7 +13,7 @@
     {
       "path": ".github/workflows",
       "dirs": 0,
-      "files": 8
+      "files": 9
     },
     {
       "path": "tests",
@@ -137,8 +137,23 @@
     },
     {
       "path": "frontend/public",
-      "dirs": 0,
+      "dirs": 1,
+      "files": 4
+    },
+    {
+      "path": "frontend/public/vendor",
+      "dirs": 1,
+      "files": 1
+    },
+    {
+      "path": "frontend/public/vendor/leaflet",
+      "dirs": 1,
       "files": 2
+    },
+    {
+      "path": "frontend/public/vendor/leaflet/images",
+      "dirs": 0,
+      "files": 5
     },
     {
       "path": "frontend/.storybook",
@@ -156,6 +171,26 @@
       "files": 0
     },
     {
+      "path": "packages",
+      "dirs": 1,
+      "files": 0
+    },
+    {
+      "path": "packages/chart-kit",
+      "dirs": 2,
+      "files": 2
+    },
+    {
+      "path": "packages/chart-kit/src",
+      "dirs": 0,
+      "files": 5
+    },
+    {
+      "path": "packages/chart-kit/test",
+      "dirs": 0,
+      "files": 2
+    },
+    {
       "path": "styles",
       "dirs": 0,
       "files": 2
@@ -163,7 +198,7 @@
     {
       "path": "scripts",
       "dirs": 0,
-      "files": 9
+      "files": 10
     },
     {
       "path": "config",
@@ -408,7 +443,7 @@
     {
       "path": "backend/tests",
       "dirs": 1,
-      "files": 44
+      "files": 45
     },
     {
       "path": "backend/tests/dreams",
@@ -518,7 +553,7 @@
     {
       "path": "backend/services/astrology",
       "dirs": 6,
-      "files": 23
+      "files": 24
     },
     {
       "path": "backend/services/astrology/archetypes",
@@ -573,7 +608,7 @@
     {
       "path": "backend/api/v1",
       "dirs": 0,
-      "files": 9
+      "files": 10
     },
     {
       "path": "backend/core",
@@ -631,6 +666,6 @@
       "files": 3
     }
   ],
-  "total_dirs": 125,
-  "total_files": 464
+  "total_dirs": 132,
+  "total_files": 488
 }

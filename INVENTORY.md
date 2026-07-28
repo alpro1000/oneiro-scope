@@ -2,9 +2,9 @@
 
 | Путь | Папок | Файлов |
 |---|---:|---:|
-| . | 15 | 20 |
+| . | 16 | 20 |
 | .github | 1 | 0 |
-| .github/workflows | 0 | 8 |
+| .github/workflows | 0 | 9 |
 | tests | 0 | 4 |
 | frontend | 12 | 14 |
 | frontend/types | 0 | 2 |
@@ -29,12 +29,19 @@
 | frontend/app/api/lunar | 0 | 1 |
 | frontend/app/api/timezones | 0 | 1 |
 | frontend/stories | 0 | 1 |
-| frontend/public | 0 | 2 |
+| frontend/public | 1 | 4 |
+| frontend/public/vendor | 1 | 1 |
+| frontend/public/vendor/leaflet | 1 | 2 |
+| frontend/public/vendor/leaflet/images | 0 | 5 |
 | frontend/.storybook | 0 | 2 |
 | frontend/components | 0 | 8 |
 | oneiro-scope | 0 | 0 |
+| packages | 1 | 0 |
+| packages/chart-kit | 2 | 2 |
+| packages/chart-kit/src | 0 | 5 |
+| packages/chart-kit/test | 0 | 2 |
 | styles | 0 | 2 |
-| scripts | 0 | 9 |
+| scripts | 0 | 10 |
 | config | 0 | 2 |
 | agents | 2 | 5 |
 | agents/prompts | 0 | 5 |
@@ -83,7 +90,7 @@
 | backend/utils | 0 | 2 |
 | backend/mcp | 1 | 4 |
 | backend/mcp/tools | 0 | 13 |
-| backend/tests | 1 | 44 |
+| backend/tests | 1 | 45 |
 | backend/tests/dreams | 1 | 0 |
 | backend/tests/dreams/golden | 0 | 3 |
 | backend/middleware | 0 | 2 |
@@ -105,7 +112,7 @@
 | backend/services/dreams/knowledge_base | 0 | 3 |
 | backend/services/strategic | 1 | 6 |
 | backend/services/strategic/knowledge_base | 0 | 1 |
-| backend/services/astrology | 6 | 23 |
+| backend/services/astrology | 6 | 24 |
 | backend/services/astrology/archetypes | 0 | 9 |
 | backend/services/astrology/validators | 0 | 2 |
 | backend/services/astrology/policies | 0 | 2 |
@@ -116,7 +123,7 @@
 | backend/services/physiognomy/knowledge_base | 0 | 2 |
 | backend/app | 0 | 2 |
 | backend/api | 1 | 1 |
-| backend/api/v1 | 0 | 9 |
+| backend/api/v1 | 0 | 10 |
 | backend/core | 0 | 8 |
 | backend/data | 1 | 1 |
 | backend/data/ephemeris | 0 | 3 |
@@ -129,4 +136,4 @@
 | external/DReAMy | 1 | 1 |
 | external/DReAMy/dreamy | 0 | 3 |
 
-**ИТОГО:** папок = 125, файлов = 464
+**ИТОГО:** папок = 132, файлов = 488
