@@ -9,7 +9,7 @@ import os
 import uuid
 import json
 import logging
-from datetime import datetime, date
+from datetime import datetime, date, timezone
 from typing import Optional, Dict
 from pathlib import Path
 
@@ -217,7 +217,7 @@ class DreamService:
         return DreamAnalysisResponse(
             status="success",
             dream_id=f"dream_{uuid.uuid4().hex[:12]}",
-            analyzed_at=datetime.utcnow(),
+            analyzed_at=datetime.now(timezone.utc),
             word_count=self.analyzer.get_word_count(dream_text),
             primary_emotion=emotion,
             emotion_intensity=intensity,

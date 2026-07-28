@@ -20,6 +20,8 @@ import sys
 
 from mcp.server.fastmcp import FastMCP
 
+from backend.mcp.tools._meta import with_meta
+
 from backend.mcp.tools import archetypes as ar
 from backend.mcp.tools import astrology as a
 from backend.mcp.tools import dreams as d
@@ -45,84 +47,84 @@ mcp = FastMCP(
 )
 
 # --- Astrology ---------------------------------------------------------------
-mcp.tool()(a.calculate_natal_chart)
-mcp.tool()(a.generate_horoscope)
-mcp.tool()(a.forecast_event)
-mcp.tool()(a.horoscope_report)
-mcp.tool()(a.profile_report_file)
-mcp.tool()(a.list_event_types)
-mcp.tool()(a.list_horoscope_periods)
+mcp.tool()(with_meta(a.calculate_natal_chart))
+mcp.tool()(with_meta(a.generate_horoscope))
+mcp.tool()(with_meta(a.forecast_event))
+mcp.tool()(with_meta(a.horoscope_report))
+mcp.tool()(with_meta(a.profile_report_file))
+mcp.tool()(with_meta(a.list_event_types))
+mcp.tool()(with_meta(a.list_horoscope_periods))
 
 # --- Dreams ------------------------------------------------------------------
-mcp.tool()(d.analyze_dream)
-mcp.tool()(d.dream_series_stats)
-mcp.tool()(d.list_dream_symbols)
-mcp.tool()(d.list_archetypes)
-mcp.tool()(d.list_hvdc_categories)
+mcp.tool()(with_meta(d.analyze_dream))
+mcp.tool()(with_meta(d.dream_series_stats))
+mcp.tool()(with_meta(d.list_dream_symbols))
+mcp.tool()(with_meta(d.list_archetypes))
+mcp.tool()(with_meta(d.list_hvdc_categories))
 
 # --- Lunar -------------------------------------------------------------------
-mcp.tool()(l.get_lunar_day)
-mcp.tool()(l.get_lunar_period)
+mcp.tool()(with_meta(l.get_lunar_day))
+mcp.tool()(with_meta(l.get_lunar_period))
 
 # --- Geo ---------------------------------------------------------------------
-mcp.tool()(g.search_city)
-mcp.tool()(g.validate_birth_data)
+mcp.tool()(with_meta(g.search_city))
+mcp.tool()(with_meta(g.validate_birth_data))
 
 # --- Strategic astronomy (Phase 7) -------------------------------------------
 # Deterministic chart geometry that the Strategic Life Cycle Analyst agent
 # cites as ASTRONOMY-layer evidence. Output is data, not interpretation.
-mcp.tool()(sa.compute_transits)
-mcp.tool()(sa.astrocartography_scan)
-mcp.tool()(sa.astrocartography_lines)
-mcp.tool()(sa.astrocartography_point)
-mcp.tool()(sa.solar_return_chart)
+mcp.tool()(with_meta(sa.compute_transits))
+mcp.tool()(with_meta(sa.astrocartography_scan))
+mcp.tool()(with_meta(sa.astrocartography_lines))
+mcp.tool()(with_meta(sa.astrocartography_point))
+mcp.tool()(with_meta(sa.solar_return_chart))
 
 # --- Pattern features (Phase 9: session-retrospective) -----------------------
 # Side-by-side relocation, thematic city ranking with clean-luck flags,
 # thematic transit arcs (pressure/support phases), synastry, and Solar
 # Return location suggestions.
-mcp.tool()(sa.compare_relocations)
-mcp.tool()(sa.scan_cities_by_theme)
-mcp.tool()(sa.transit_arc)
-mcp.tool()(sa.synastry)
-mcp.tool()(sa.solar_return_suggest)
+mcp.tool()(with_meta(sa.compare_relocations))
+mcp.tool()(with_meta(sa.scan_cities_by_theme))
+mcp.tool()(with_meta(sa.transit_arc))
+mcp.tool()(with_meta(sa.synastry))
+mcp.tool()(with_meta(sa.solar_return_suggest))
 
 # --- Archetypes (Phase 8) ----------------------------------------------------
 # Hard-table interpretations (MC/Sun/Houses/Aspects/Dignities) with cited
 # classical/modern sources. Layer = astrology_symbolic; confidence 0.9 —
 # above LLM narrative (0.7), below astronomy (1.0).
-mcp.tool()(ar.mc_in_sign)
-mcp.tool()(ar.sun_in_sign)
-mcp.tool()(ar.house_meaning)
-mcp.tool()(ar.planet_in_house)
-mcp.tool()(ar.transit_meaning)
-mcp.tool()(ar.aspect_meaning)
-mcp.tool()(ar.planet_dignity)
-mcp.tool()(ar.zodiac_sign)
-mcp.tool()(ar.list_archetype_topics)
+mcp.tool()(with_meta(ar.mc_in_sign))
+mcp.tool()(with_meta(ar.sun_in_sign))
+mcp.tool()(with_meta(ar.house_meaning))
+mcp.tool()(with_meta(ar.planet_in_house))
+mcp.tool()(with_meta(ar.transit_meaning))
+mcp.tool()(with_meta(ar.aspect_meaning))
+mcp.tool()(with_meta(ar.planet_dignity))
+mcp.tool()(with_meta(ar.zodiac_sign))
+mcp.tool()(with_meta(ar.list_archetype_topics))
 
 # --- Analysis patterns (Phase 10: patterns catalog) ---------------------------
 # One tool per pattern in strategic/knowledge_base/analysis_patterns.json.
 # Deterministic data + catalog ref; the paired skill interprets, labelled.
 # analysis_plan is the entry point: it tells the model what can be computed
 # and in which order, so nothing gets forgotten in a reading.
-mcp.tool()(sp.analysis_plan)
-mcp.tool()(sp.money_contour)
-mcp.tool()(sp.vocation_map)
-mcp.tool()(sp.decade_map)
-mcp.tool()(sp.life_pivots)
-mcp.tool()(sp.electional_day)
-mcp.tool()(sp.reverse_physiognomy_prompt)
+mcp.tool()(with_meta(sp.analysis_plan))
+mcp.tool()(with_meta(sp.money_contour))
+mcp.tool()(with_meta(sp.vocation_map))
+mcp.tool()(with_meta(sp.decade_map))
+mcp.tool()(with_meta(sp.life_pivots))
+mcp.tool()(with_meta(sp.electional_day))
+mcp.tool()(with_meta(sp.reverse_physiognomy_prompt))
 
 # --- Physiognomy (reflective face reading) -----------------------------------
 # Deterministic FaceMesh geometry (1.0) + cited tradition dictionary (0.6 —
 # own tier BELOW symbol dictionaries: physiognomy is not scientifically
 # validated). Self-reflection only; disclaimer in every response/report.
-mcp.tool()(ph.analyze_face)
-mcp.tool()(ph.analyze_face_archive)
-mcp.tool()(ph.physiognomy_report)
-mcp.tool()(ph.physiognomy_methods)
-mcp.tool()(ph.physiognomy_timeline)
+mcp.tool()(with_meta(ph.analyze_face))
+mcp.tool()(with_meta(ph.analyze_face_archive))
+mcp.tool()(with_meta(ph.physiognomy_report))
+mcp.tool()(with_meta(ph.physiognomy_methods))
+mcp.tool()(with_meta(ph.physiognomy_timeline))
 
 
 def main(argv: list[str] | None = None) -> int:

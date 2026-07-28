@@ -67,7 +67,7 @@ class AstrologyService:
         return ProvenanceInfo(
             ephemeris_engine=engine_label,
             ephemeris_version="Swiss Ephemeris 2.10+ / Moshier Algorithm",
-            calculation_timestamp=datetime.utcnow(),
+            calculation_timestamp=datetime.now(dt_timezone.utc),
             methodology="Placidus houses (natal chart) | Tropical zodiac | Geocentric coordinates",
             accuracy_statement="<1 arc second for modern dates (1900-2100) | Fallback approximate calculations if ephemeris unavailable"
         )
@@ -217,7 +217,7 @@ class AstrologyService:
             aspects=aspects,
             interpretation=interpretation,
             structured_interpretation=structured_interpretation,
-            created_at=datetime.utcnow(),
+            created_at=datetime.now(dt_timezone.utc),
             provenance=self._get_provenance(),
         )
 
@@ -330,7 +330,7 @@ class AstrologyService:
             career_and_finance=sections.get("career"),
             health_and_wellness=sections.get("health"),
             recommendations=recommendations,
-            created_at=datetime.utcnow(),
+            created_at=datetime.now(dt_timezone.utc),
             provenance=self._get_provenance(),
         )
 
@@ -431,7 +431,7 @@ class AstrologyService:
             risk_factors=risk_factors,
             recommendations=recommendations,
             alternative_dates=alternative_dates,
-            created_at=datetime.utcnow(),
+            created_at=datetime.now(dt_timezone.utc),
             provenance=self._get_provenance(),
         )
 

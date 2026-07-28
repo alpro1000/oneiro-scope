@@ -230,15 +230,20 @@ def test_birth_inputs_counts_coordinates_as_a_known_place():
 # ── the menu must not drift from the registry ───────────────────────────────
 
 def _registered_tool_names() -> set[str]:
-    """Tool names as `backend/mcp/server.py` actually registers them."""
+    """Tool names as `backend/mcp/server.py` actually registers them.
+
+    Understands both `mcp.tool()(module.function)` and the WP-6 form
+    `mcp.tool()(with_meta(module.function))` — the attribute is unwrapped
+    from however many call layers wrap it."""
     src = (REPO / "backend" / "mcp" / "server.py").read_text()
     names: set[str] = set()
     for node in ast.walk(ast.parse(src)):
-        # mcp.tool()(module.function)
+        # mcp.tool()(...): outer call whose func is itself a call
         if isinstance(node, ast.Call) and isinstance(node.func, ast.Call):
             for arg in node.args:
-                if isinstance(arg, ast.Attribute):
-                    names.add(arg.attr)
+                for inner in ast.walk(arg):
+                    if isinstance(inner, ast.Attribute):
+                        names.add(inner.attr)
     return names
 
 
