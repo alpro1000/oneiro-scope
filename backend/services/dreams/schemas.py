@@ -174,15 +174,25 @@ class NormDeviation(BaseModel):
     significance: str = Field(..., description="significant/moderate/normal")
     description_ru: str = Field(..., description="Russian description")
     description_en: str = Field(..., description="English description")
+    events_observed: int = Field(
+        0, description="Base events this value was computed from (WP-5)"
+    )
+    min_events_required: int = Field(
+        0, description="Minimum base events required to admit the indicator"
+    )
 
 
 class InsufficientIndicator(BaseModel):
     """Indicator excluded from norm comparison for lack of data.
 
-    0/0 is indeterminate — it must surface here, never as a 0.00 value."""
+    0/0 is indeterminate — it must surface here, never as a 0.00 value.
+    Thin data is treated the same way: a value from fewer base events
+    than min_events_required is an anecdote, not an index (WP-5)."""
     indicator: str
     reason_ru: str
     reason_en: str
+    events_observed: int = 0
+    min_events_required: int = 0
 
 
 class NormComparisonResult(BaseModel):
@@ -201,6 +211,14 @@ class NormComparisonResult(BaseModel):
         ge=0,
         le=100,
         description="How typical the dream is (0-100%)"
+    )
+    typicality_warning_ru: Optional[str] = Field(
+        None,
+        description="Set when typicality rests on a thin event basis (WP-5)",
+    )
+    typicality_warning_en: Optional[str] = Field(
+        None,
+        description="Set when typicality rests on a thin event basis (WP-5)",
     )
     deviations: List[NormDeviation] = Field(
         default_factory=list,

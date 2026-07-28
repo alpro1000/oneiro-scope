@@ -37,6 +37,8 @@ class NormDeviation:
     significance: str  # "significant", "moderate", "normal"
     description_ru: str
     description_en: str
+    events_observed: int = 0       # base events this value was computed from
+    min_events_required: int = 0   # threshold that admitted it (WP-5)
 
 
 @dataclass
@@ -45,10 +47,13 @@ class InsufficientIndicator:
 
     Zero aggression over zero friendliness is indeterminate, not an A/F of
     0.00 — presenting it as a value was the statistical bug this type
-    exists to prevent."""
+    exists to prevent. WP-5 extends the same honesty to thin data: one
+    aggression plus one friendliness is an anecdote, not an index."""
     indicator: str
     reason_ru: str
     reason_en: str
+    events_observed: int = 0
+    min_events_required: int = 0
 
 
 @dataclass
@@ -60,6 +65,8 @@ class NormComparison:
     overall_typicality: float  # 0-100, how typical the dream is
     notable_findings_ru: List[str]
     notable_findings_en: List[str]
+    typicality_warning_ru: Optional[str] = None  # set when the basis is thin
+    typicality_warning_en: Optional[str] = None
 
 
 class DreamBankLoader:
@@ -98,6 +105,12 @@ class DreamBankLoader:
             "significant_deviation": 15,
             "moderate_deviation": 10
         })
+        # WP-5: per-indicator minimum base-event counts; below the
+        # threshold the indicator is insufficient_data, not a value.
+        self.min_events = {
+            k: v for k, v in data.get("min_events_required", {}).items()
+            if isinstance(v, int)
+        }
         logger.info(f"Loaded HVDC norms: {len(self.indicators)} indicators")
 
     def get_norm(self, gender: Gender, category: str, indicator: str) -> Optional[float]:
@@ -136,33 +149,72 @@ class DreamBankLoader:
         # Calculate derived values from content analysis. An indicator whose
         # inputs are absent is EXCLUDED and reported as insufficient data —
         # never coerced to zero (0 aggression / 0 friendliness is
-        # indeterminate, not A/F = 0.00).
+        # indeterminate, not A/F = 0.00). WP-5 adds the thin-data gate: a
+        # value computed from fewer base events than min_events_required is
+        # an anecdote, not an index — it goes to insufficient_data too, with
+        # both counts visible.
+        def _too_thin(indicator: str, observed: int, ru_what: str, en_what: str) -> bool:
+            required = self.min_events.get(indicator, 0)
+            if observed >= required:
+                return False
+            insufficient.append(InsufficientIndicator(
+                indicator=indicator,
+                reason_ru=(
+                    f"Слишком мало событий для сравнения: {ru_what} — "
+                    f"{observed}, нужно ≥{required}. Значение по 1–2 событиям "
+                    f"— анекдот, а не индекс."
+                ),
+                reason_en=(
+                    f"Too few events to compare: {en_what} — {observed}, "
+                    f"need ≥{required}. A value from 1–2 events is an "
+                    f"anecdote, not an index."
+                ),
+                events_observed=observed,
+                min_events_required=required,
+            ))
+            return True
+
         total_human = content_analysis.get("male_characters", 0) + content_analysis.get("female_characters", 0)
-        male_percent = (content_analysis.get("male_characters", 0) / total_human * 100) if total_human > 0 else None
-        if male_percent is None:
+        male_percent = None
+        if total_human == 0:
             insufficient.append(InsufficientIndicator(
                 indicator="male_female_percent",
                 reason_ru="В сне нет людей-персонажей — сравнение по полу персонажей неприменимо",
                 reason_en="No human characters in the dream — character gender comparison not applicable",
+                events_observed=0,
+                min_events_required=self.min_events.get("male_female_percent", 0),
             ))
+        elif not _too_thin(
+            "male_female_percent", total_human,
+            "людей-персонажей", "human characters",
+        ):
+            male_percent = content_analysis.get("male_characters", 0) / total_human * 100
 
         friendly = content_analysis.get("friendly_interactions", 0)
         aggressive = content_analysis.get("aggressive_interactions", 0)
-        if friendly > 0:
-            af_ratio = aggressive / friendly
-        else:
-            af_ratio = None
-            if aggressive == 0:
-                insufficient.append(InsufficientIndicator(
-                    indicator="aggression_friendliness_index",
-                    reason_ru="Социальных взаимодействий не обнаружено — индекс A/F не определён (0/0 — неопределённость, а не ноль)",
-                    reason_en="No social interactions detected — A/F index is undefined (0/0 is indeterminate, not zero)",
-                ))
+        total_social = friendly + aggressive
+        af_ratio = None
+        if total_social == 0:
+            insufficient.append(InsufficientIndicator(
+                indicator="aggression_friendliness_index",
+                reason_ru="Социальных взаимодействий не обнаружено — индекс A/F не определён (0/0 — неопределённость, а не ноль)",
+                reason_en="No social interactions detected — A/F index is undefined (0/0 is indeterminate, not zero)",
+                events_observed=0,
+                min_events_required=self.min_events.get("aggression_friendliness_index", 0),
+            ))
+        elif not _too_thin(
+            "aggression_friendliness_index", total_social,
+            "социальных взаимодействий", "social interactions",
+        ):
+            if friendly > 0:
+                af_ratio = aggressive / friendly
             else:
                 insufficient.append(InsufficientIndicator(
                     indicator="aggression_friendliness_index",
                     reason_ru=f"Агрессия есть ({aggressive}), дружелюбия нет — коэффициент A/F не определён (деление на ноль)",
                     reason_en=f"Aggression present ({aggressive}) with no friendliness — A/F ratio undefined (division by zero)",
+                    events_observed=total_social,
+                    min_events_required=self.min_events.get("aggression_friendliness_index", 0),
                 ))
                 notable_findings_ru.append(f"Во сне есть агрессия ({aggressive}) при полном отсутствии дружеских взаимодействий")
                 notable_findings_en.append(f"The dream contains aggression ({aggressive}) with no friendly interactions at all")
@@ -170,24 +222,38 @@ class DreamBankLoader:
         positive_emotions = content_analysis.get("positive_emotions", 0)
         negative_emotions = content_analysis.get("negative_emotions", 0)
         total_emotions = positive_emotions + negative_emotions
-        negative_percent = (negative_emotions / total_emotions * 100) if total_emotions > 0 else None
-        if negative_percent is None:
+        negative_percent = None
+        if total_emotions == 0:
             insufficient.append(InsufficientIndicator(
                 indicator="negative_emotions_percent",
                 reason_ru="Явных эмоций в тексте сна не обнаружено — сравнение эмоций неприменимо",
                 reason_en="No explicit emotions detected in the dream text — emotion comparison not applicable",
+                events_observed=0,
+                min_events_required=self.min_events.get("negative_emotions_percent", 0),
             ))
+        elif not _too_thin(
+            "negative_emotions_percent", total_emotions,
+            "эмоциональных упоминаний", "emotion mentions",
+        ):
+            negative_percent = negative_emotions / total_emotions * 100
 
         successes = content_analysis.get("successes", 0)
         failures = content_analysis.get("failures", 0)
         total_outcomes = successes + failures
-        success_percent = (successes / total_outcomes * 100) if total_outcomes > 0 else None
-        if success_percent is None:
+        success_percent = None
+        if total_outcomes == 0:
             insufficient.append(InsufficientIndicator(
                 indicator="dreamer_success_percent",
                 reason_ru="Успехов и неудач в сне не обнаружено — показатель успешности не определён",
                 reason_en="No successes or failures detected — success rate is undefined",
+                events_observed=0,
+                min_events_required=self.min_events.get("dreamer_success_percent", 0),
             ))
+        elif not _too_thin(
+            "dreamer_success_percent", total_outcomes,
+            "исходов (успехов и неудач)", "outcomes (successes and failures)",
+        ):
+            success_percent = successes / total_outcomes * 100
 
         # Compare male/female character ratio (skip if no human characters)
         if male_percent is not None:
@@ -201,6 +267,8 @@ class DreamBankLoader:
                     "en": "Male character percentage"
                 }
             )
+            dev.events_observed = total_human
+            dev.min_events_required = self.min_events.get("male_female_percent", 0)
             deviations.append(dev)
             if dev.significance != "normal":
                 if male_percent > norm_male_percent:
@@ -223,6 +291,8 @@ class DreamBankLoader:
                 },
                 is_ratio=True
             )
+            dev.events_observed = total_social
+            dev.min_events_required = self.min_events.get("aggression_friendliness_index", 0)
             deviations.append(dev)
             if dev.significance != "normal":
                 if af_ratio > norm_af_ratio:
@@ -244,6 +314,8 @@ class DreamBankLoader:
                     "en": "Negative emotions percentage"
                 }
             )
+            dev.events_observed = total_emotions
+            dev.min_events_required = self.min_events.get("negative_emotions_percent", 0)
             deviations.append(dev)
             if dev.significance != "normal":
                 if negative_percent > norm_negative:
@@ -265,6 +337,8 @@ class DreamBankLoader:
                     "en": "Dreamer success percentage"
                 }
             )
+            dev.events_observed = total_outcomes
+            dev.min_events_required = self.min_events.get("dreamer_success_percent", 0)
             deviations.append(dev)
             if dev.significance != "normal":
                 if success_percent > norm_success:
@@ -281,13 +355,39 @@ class DreamBankLoader:
             0, min(100, 100 - sum(penalty[d.significance] for d in deviations))
         )
 
+        # WP-5: typicality resting on a thin basis must say so. Fewer than
+        # two admitted indicators, or under ~8 base events total, is a hint
+        # of the dream's texture, not a measurement.
+        typicality_warning_ru = typicality_warning_en = None
+        compared_basis = sum(d.events_observed for d in deviations)
+        if not deviations:
+            typicality_warning_ru = (
+                "Ни один индикатор не прошёл порог данных — типичность не "
+                "рассчитывалась по этому сну и не должна интерпретироваться."
+            )
+            typicality_warning_en = (
+                "No indicator passed the data threshold — typicality was not "
+                "computed for this dream and must not be interpreted."
+            )
+        elif len(deviations) < 2 or compared_basis < 8:
+            typicality_warning_ru = (
+                f"Типичность опирается на {len(deviations)} индикатор(а) и "
+                f"{compared_basis} событий — ориентир, а не измерение."
+            )
+            typicality_warning_en = (
+                f"Typicality rests on {len(deviations)} indicator(s) and "
+                f"{compared_basis} base events — a hint, not a measurement."
+            )
+
         return NormComparison(
             gender_used=gender_used,
             deviations=deviations,
             insufficient_data=insufficient,
             overall_typicality=overall_typicality,
             notable_findings_ru=notable_findings_ru,
-            notable_findings_en=notable_findings_en
+            notable_findings_en=notable_findings_en,
+            typicality_warning_ru=typicality_warning_ru,
+            typicality_warning_en=typicality_warning_en,
         )
 
     def _calculate_deviation(
