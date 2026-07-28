@@ -140,6 +140,44 @@ def test_without_birth_time_houses_stay_honestly_null():
         assert planet.distance_to_cusp_deg is None
 
 
+def test_cusp_distance_when_house_spans_zero_aries():
+    """A house wrapping 0° Aries must measure cusp distances across the wrap.
+
+    Python's % already returns non-negative values, so (planet-start)%360
+    IS the forward distance past the cusp: planet 5° in a 355°→10° house
+    is 10° past the start cusp and 5° before the next — borderline True.
+    (Raised by a PR-bot review; kept as a permanent regression test.)
+    """
+    from backend.services.astrology.ephemeris import SwissEphemeris
+    from backend.services.astrology.natal_chart import NatalChartCalculator
+    from backend.services.astrology.schemas import (
+        House, PlanetPosition, ZodiacSign,
+    )
+
+    calc = NatalChartCalculator(SwissEphemeris())
+    # 12 synthetic houses of 30° starting at 355° — house 1 spans 0° Aries.
+    houses = [
+        House(
+            number=i + 1,
+            sign=list(ZodiacSign)[int(((355.0 + 30.0 * i) % 360.0) // 30)],
+            degree=(355.0 + 30.0 * i) % 30.0,
+            cusp_degree=(355.0 + 30.0 * i) % 360.0,
+            planets=[],
+        )
+        for i in range(12)
+    ]
+    planet = PlanetPosition(
+        planet=Planet.SUN, sign=ZodiacSign.ARIES, degree=5.0, sign_degree=5.0,
+        retrograde=False, house=None, speed_deg_per_day=1.0,
+    )
+    calc.assign_planets_to_houses([planet], houses)
+    assert planet.house == 1
+    # House 1 runs 355°→25°: the planet is 10° past the start cusp and 20°
+    # before the next one — nearest cusp distance is 10°, across the wrap.
+    assert planet.distance_to_cusp_deg == pytest.approx(10.0)
+    assert planet.house_borderline is False
+
+
 def test_planets_carry_speed(chart):
     by_planet = {p.planet: p for p in chart.planets}
     assert by_planet[Planet.MOON].speed_deg_per_day == pytest.approx(14.92, abs=0.1)
