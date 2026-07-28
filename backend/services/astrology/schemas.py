@@ -106,6 +106,21 @@ class PlanetPosition(BaseModel):
     sign_degree: float = Field(ge=0, lt=30, description="Degree within sign (0-29.99)")
     retrograde: bool = False
     house: Optional[int] = Field(None, ge=1, le=12)
+    speed_deg_per_day: Optional[float] = Field(
+        None,
+        description="Ecliptic longitude speed, degrees/day (negative = retrograde)"
+    )
+    house_borderline: Optional[bool] = Field(
+        None,
+        description="True when the planet sits within 1° of a house cusp — a "
+                    "few minutes of birth-time error would move it next door. "
+                    "None when houses were not computed."
+    )
+    distance_to_cusp_deg: Optional[float] = Field(
+        None, ge=0,
+        description="Distance to the nearest cusp of its house, degrees. "
+                    "None when houses were not computed."
+    )
 
 
 # ===== Aspect =====
@@ -115,8 +130,20 @@ class Aspect(BaseModel):
     planet1: Planet
     planet2: Planet
     aspect_type: AspectType
-    orb: float = Field(ge=0, le=10, description="Orb in degrees")
-    applying: bool = Field(description="True if aspect is applying, False if separating")
+    orb: float = Field(ge=0, le=10, description="Deprecated alias of orb_deg")
+    orb_deg: Optional[float] = Field(
+        None, ge=0, le=10,
+        description="Deviation from the exact aspect angle, degrees"
+    )
+    applying: bool = Field(
+        description="True if the aspect is closing on exact (computed from both "
+                    "bodies' actual speeds), False if separating"
+    )
+    speed_diff_deg_per_day: Optional[float] = Field(
+        None,
+        description="planet1 speed minus planet2 speed, degrees/day — the "
+                    "relative rate that drives applying/separating"
+    )
 
 
 # ===== House =====
@@ -126,6 +153,10 @@ class House(BaseModel):
     number: int = Field(ge=1, le=12)
     sign: ZodiacSign
     degree: float = Field(ge=0, lt=30)
+    cusp_degree: Optional[float] = Field(
+        None, ge=0, lt=360,
+        description="Absolute ecliptic longitude of the cusp (0-359.99)"
+    )
     planets: list[Planet] = []
 
 

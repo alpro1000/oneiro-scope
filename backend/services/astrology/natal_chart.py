@@ -120,6 +120,7 @@ class NatalChartCalculator:
                     sign_degree=sign_degree,
                     retrograde=self.ephemeris.is_retrograde(data.speed),
                     house=None,  # Will be filled after house calculation
+                    speed_deg_per_day=data.speed,
                 )
             )
 
@@ -138,6 +139,8 @@ class NatalChartCalculator:
                     sign_degree=south_sign_degree,
                     retrograde=True,  # Nodes are always retrograde
                     house=None,
+                    # The south node is the antipode: same angular rate.
+                    speed_deg_per_day=north_node.speed_deg_per_day,
                 )
             )
 
@@ -150,9 +153,15 @@ class NatalChartCalculator:
         longitude: float,
         timezone: str,
         system: str = "P",  # Placidus
-    ) -> Optional[list[House]]:
+    ) -> list[House]:
         """
         Calculate house cusps.
+
+        The provenance promises Placidus — so a failure here raises instead
+        of silently swapping the house system (conventions.md §12). Swiss
+        Ephemeris itself handles circumpolar latitudes internally; an
+        exception from swe.houses means broken input or setup, not a
+        situation a different methodology should paper over.
 
         Args:
             birth_dt: Birth datetime (local time)
@@ -162,66 +171,35 @@ class NatalChartCalculator:
             system: House system ('P'=Placidus, 'K'=Koch, 'W'=Whole Sign, etc.)
 
         Returns:
-            List of 12 Houses or None if calculation fails
+            List of 12 Houses with absolute cusp longitudes
         """
         utc_dt = _to_utc_or_raise(birth_dt, timezone)
+        swe = self.ephemeris._swe
 
-        if self.ephemeris._swe is None:
-            # Fallback: use Whole Sign houses
-            return self._calculate_whole_sign_houses(utc_dt)
+        jd = swe.julday(
+            utc_dt.year, utc_dt.month, utc_dt.day,
+            utc_dt.hour + utc_dt.minute / 60.0 + utc_dt.second / 3600.0
+        )
 
         try:
-            swe = self.ephemeris._swe
-
-            # Convert to Julian Day
-            jd = swe.julday(
-                utc_dt.year, utc_dt.month, utc_dt.day,
-                utc_dt.hour + utc_dt.minute / 60.0 + utc_dt.second / 3600.0
-            )
-
-            # Calculate houses
             cusps, ascmc = swe.houses(jd, latitude, longitude, system.encode())
-
-            houses = []
-            for i in range(12):
-                cusp_degree = cusps[i]
-                sign, degree_in_sign = self.ephemeris.get_zodiac_sign(cusp_degree)
-
-                houses.append(
-                    House(
-                        number=i + 1,
-                        sign=sign,
-                        degree=degree_in_sign,
-                        planets=[],
-                    )
-                )
-
-            return houses
-
-        except Exception as e:
-            logger.warning(f"House calculation failed: {e}")
-            return self._calculate_whole_sign_houses(utc_dt)
-
-    def _calculate_whole_sign_houses(self, utc_dt: datetime) -> list[House]:
-        """
-        Calculate Whole Sign houses (simplified fallback).
-        Uses Sun sign as 1st house.
-        """
-        sun_data = self.ephemeris.calculate_planet_position(Planet.SUN, utc_dt)
-        sun_sign, _ = self.ephemeris.get_zodiac_sign(sun_data.longitude)
-
-        # Get index of sun sign
-        signs = list(ZodiacSign)
-        start_index = signs.index(sun_sign)
+        except Exception as exc:
+            raise RuntimeError(
+                f"House calculation ({system}) failed for jd={jd}, "
+                f"lat={latitude}, lon={longitude}: {exc}"
+            ) from exc
 
         houses = []
         for i in range(12):
-            sign_index = (start_index + i) % 12
+            cusp_degree = cusps[i]
+            sign, degree_in_sign = self.ephemeris.get_zodiac_sign(cusp_degree)
+
             houses.append(
                 House(
                     number=i + 1,
-                    sign=signs[sign_index],
-                    degree=0.0,
+                    sign=sign,
+                    degree=degree_in_sign,
+                    cusp_degree=cusp_degree % 360.0,
                     planets=[],
                 )
             )
@@ -285,55 +263,43 @@ class NatalChartCalculator:
         """
         Find aspect between two planets if within orb.
 
+        Applying/separating comes from both bodies' actual speeds: the
+        aspect is applying when the deviation from the exact angle is
+        shrinking. A retrograde body flips the geometry by itself — no
+        planet-class heuristics.
+
         Returns:
             Aspect if found, None otherwise
         """
-        # Calculate angular separation
-        diff = abs(planet1.degree - planet2.degree)
-        if diff > 180:
-            diff = 360 - diff
+        # Signed separation in (-180, 180]; delta = |s| is the angular distance.
+        s = (planet1.degree - planet2.degree + 180.0) % 360.0 - 180.0
+        delta = abs(s)
 
-        # Check each aspect type
+        speed1 = planet1.speed_deg_per_day or 0.0
+        speed2 = planet2.speed_deg_per_day or 0.0
+        speed_diff = speed1 - speed2
+        # d(delta)/dt: |s| grows at (speed1-speed2) when s>0, shrinks when s<0.
+        d_delta_dt = speed_diff if s >= 0 else -speed_diff
+
         for aspect_type, exact_angle in ASPECT_ANGLES.items():
             orb = ASPECT_ORBS[aspect_type]
-            deviation = abs(diff - exact_angle)
+            deviation = delta - exact_angle
 
-            if deviation <= orb:
-                # Determine if applying or separating
-                # (simplified: based on faster planet approaching slower)
-                applying = self._is_applying(planet1, planet2, aspect_type)
+            if abs(deviation) <= orb:
+                # |deviation| is shrinking ⇔ the aspect is closing on exact.
+                applying = deviation * d_delta_dt < 0
 
                 return Aspect(
                     planet1=planet1.planet,
                     planet2=planet2.planet,
                     aspect_type=aspect_type,
-                    orb=deviation,
+                    orb=abs(deviation),
+                    orb_deg=abs(deviation),
                     applying=applying,
+                    speed_diff_deg_per_day=speed_diff,
                 )
 
         return None
-
-    def _is_applying(
-        self,
-        planet1: PlanetPosition,
-        planet2: PlanetPosition,
-        aspect_type: AspectType,
-    ) -> bool:
-        """
-        Determine if aspect is applying (forming) or separating.
-        Simplified heuristic based on position.
-        """
-        # Moon and inner planets generally move faster
-        fast_planets = [Planet.MOON, Planet.SUN, Planet.MERCURY, Planet.VENUS, Planet.MARS]
-
-        if planet1.planet in fast_planets and planet2.planet not in fast_planets:
-            # Planet1 is faster, check if moving toward exact aspect
-            return True
-        elif planet2.planet in fast_planets and planet1.planet not in fast_planets:
-            return False
-
-        # Default to applying for simplicity
-        return True
 
     def assign_planets_to_houses(
         self,
@@ -343,6 +309,11 @@ class NatalChartCalculator:
         """
         Assign planets to their houses based on position.
 
+        Fills both directions of the relation — planet.house and
+        houses[i].planets — plus the cusp-proximity flags: a planet within
+        1° of either bounding cusp gets house_borderline=True, because a
+        few minutes of birth-time error would move it into the next house.
+
         Args:
             planets: List of planet positions
             houses: List of houses with cusps
@@ -350,28 +321,32 @@ class NatalChartCalculator:
         Returns:
             Updated planet positions with house assignments
         """
-        # Get house cusp degrees
         cusp_degrees = [
-            h.degree + (list(ZodiacSign).index(h.sign) * 30)
+            h.cusp_degree
+            if h.cusp_degree is not None
+            else h.degree + (list(ZodiacSign).index(h.sign) * 30)
             for h in houses
         ]
 
         for planet in planets:
-            # Find which house the planet falls in
             for i in range(12):
                 next_i = (i + 1) % 12
                 start = cusp_degrees[i]
                 end = cusp_degrees[next_i]
 
-                if end < start:  # Crosses 0 degrees
-                    if planet.degree >= start or planet.degree < end:
-                        planet.house = i + 1
-                        houses[i].planets.append(planet.planet)
-                        break
-                else:
-                    if start <= planet.degree < end:
-                        planet.house = i + 1
-                        houses[i].planets.append(planet.planet)
-                        break
+                in_house = (
+                    (planet.degree >= start or planet.degree < end)
+                    if end < start  # house spans 0° Aries
+                    else (start <= planet.degree < end)
+                )
+                if in_house:
+                    planet.house = i + 1
+                    houses[i].planets.append(planet.planet)
+                    to_prev = (planet.degree - start) % 360.0
+                    to_next = (end - planet.degree) % 360.0
+                    distance = min(to_prev, to_next)
+                    planet.distance_to_cusp_deg = round(distance, 3)
+                    planet.house_borderline = distance < 1.0
+                    break
 
         return planets

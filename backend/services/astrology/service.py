@@ -157,6 +157,11 @@ class AstrologyService:
             if houses:
                 ascendant = houses[0].sign  # 1st house cusp
                 midheaven = houses[9].sign  # 10th house cusp (MC)
+                # Both directions of the planet↔house relation (WP-2):
+                # planet.house + houses[i].planets + cusp-proximity flags.
+                planets = self.natal_calculator.assign_planets_to_houses(
+                    planets, houses
+                )
 
         # Calculate aspects
         aspects = self.natal_calculator.calculate_aspects(planets)
