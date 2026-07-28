@@ -604,7 +604,6 @@ async def list_event_types() -> dict:
                     "wedding": "Свадьба",
                     "business": "Бизнес-сделка",
                     "interview": "Собеседование",
-                    "surgery": "Операция",
                     "moving": "Переезд",
                     "contract": "Подписание контракта",
                     "exam": "Экзамен",

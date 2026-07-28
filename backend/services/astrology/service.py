@@ -500,7 +500,7 @@ class AstrologyService:
         retrograde_penalties = {
             Planet.MERCURY: ["contract", "interview", "exam"],
             Planet.VENUS: ["wedding", "date"],
-            Planet.MARS: ["surgery", "business"],
+            Planet.MARS: ["business"],
         }
 
         for planet in retrograde_planets:
@@ -519,9 +519,7 @@ class AstrologyService:
             "first_quarter": ["business", "moving"],
             "waxing_gibbous": ["wedding", "date"],
             "full_moon": ["travel"],
-            "waning_gibbous": ["surgery"],
             "last_quarter": ["moving"],
-            "waning_crescent": ["surgery"],
         }
 
         if event_type.value in favorable_phases.get(lunar_phase, []):

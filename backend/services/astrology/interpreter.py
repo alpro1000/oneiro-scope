@@ -365,10 +365,6 @@ class AstrologyInterpreter:
                 "Изучите компанию заранее" if locale == "ru" else "Research the company beforehand",
                 "Подготовьте вопросы" if locale == "ru" else "Prepare questions",
             ],
-            EventType.SURGERY: [
-                "Следуйте рекомендациям врача" if locale == "ru" else "Follow doctor's recommendations",
-                "Обеспечьте поддержку близких" if locale == "ru" else "Ensure support from loved ones",
-            ],
         }
 
         recommendations.extend(event_tips.get(event_type, []))

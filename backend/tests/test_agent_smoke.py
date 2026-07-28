@@ -36,18 +36,14 @@ def test_agent_allowed_tools_match_mcp_server():
 
     expected = {
         "mcp__oneiro__calculate_natal_chart",
-        "mcp__oneiro__generate_horoscope",
         "mcp__oneiro__forecast_event",
-        "mcp__oneiro__list_event_types",
-        "mcp__oneiro__list_horoscope_periods",
         "mcp__oneiro__analyze_dream",
-        "mcp__oneiro__list_dream_symbols",
-        "mcp__oneiro__list_archetypes",
-        "mcp__oneiro__list_hvdc_categories",
         "mcp__oneiro__get_lunar_day",
         "mcp__oneiro__get_lunar_period",
         "mcp__oneiro__search_city",
         "mcp__oneiro__validate_birth_data",
+        # WP-10: the list_* reference tools folded into one dispatcher.
+        "mcp__oneiro__lookup",
     }
     assert allowed == expected
 

@@ -1,21 +1,19 @@
-"""Attach a "what else can I compute" menu to tool responses.
+"""Attach a compact "what else can I compute" menu to tool responses.
 
-The problem. The server registers 46 tools. A chat that lands on one of them
-sees only that one — it has no way to discover that the same birth data also
-buys a money contour, a decade map, astrocartography over a city pool or a
-Solar Return. `analysis_plan` answered this from the start, but only if the
-model thought to ask, and it usually did not. So the answer travels with the
-data instead: every substantive response carries `can_also_compute`.
+The problem. A chat that lands on one tool sees only that one — it cannot
+discover that the same birth data also buys a money contour or a Solar
+Return. `analysis_plan` answered this from the start, but only if the
+model thought to ask, and it usually did not. So the answer travels with
+the data: every substantive response carries `can_also_compute`.
 
-Offered, not run. Firing everything on each call would cost minutes and quota —
-a decade map scans ten years at a 10-day step, a city scan runs a whole pool,
-and a Solar Return suggestion computes one return per candidate city. The menu
-lists only steps whose inputs are already satisfied, so the next call is one
-step away, and separately lists what is blocked and on which question.
+Compact since WP-11. The first version attached the full ready/blocked/
+questions structure; a live audit measured ~90k chars of menu across one
+conversation — the menu had become the payload. The block is now
+`{"next": [≤3 ready tools], "full_plan_tool": "analysis_plan"}`, ≤200
+chars by test, and everything else lives one call away in analysis_plan.
 
-Domains follow the split the owner asked for: "astro" covers chart and face —
-both read one standing person from static data — while "dreams" is per-episode
-and shares no inputs with them.
+Domains follow the owner's split: "astro" reads one standing person from
+static data; "dreams" is per-episode and shares no inputs with it.
 """
 
 from __future__ import annotations
@@ -33,6 +31,7 @@ from backend.services.strategic.analysis_plan import (  # noqa: F401
     DREAM_TEXT,
     FACE_PHOTOS,
     PARTNER_BIRTH,
+    POINT,
     SCAN_YEARS,
     START_YEAR,
     TARGET_DATE,

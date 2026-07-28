@@ -1,7 +1,7 @@
 """MCP server smoke tests.
 
 Verifies tools register correctly and pure tools (no LLM, no network) return
-sensible data. LLM-bound tools (`calculate_natal_chart`, `generate_horoscope`,
+sensible data. LLM-bound tools (`calculate_natal_chart`,
 `analyze_dream`) are intentionally NOT exercised here — they need API keys
 and would inflate CI cost.
 """
@@ -27,45 +27,39 @@ async def test_all_tools_registered():
     expected = {
         # astrology
         "calculate_natal_chart",
-        "generate_horoscope",
         "forecast_event",
-        "list_event_types",
-        "list_horoscope_periods",
         # dreams
         "analyze_dream",
-        "list_dream_symbols",
-        "list_archetypes",
-        "list_hvdc_categories",
+        "dream_series_stats",
         # lunar
         "get_lunar_day",
         "get_lunar_period",
         # geo
         "search_city",
         "validate_birth_data",
-        # strategic astronomy (Phase 7)
+        # strategic astronomy: timing and place
         "compute_transits",
         "astrocartography_scan",
+        "astrocartography_lines",
+        "astrocartography_point",
+        "compare_relocations",
         "solar_return_chart",
-        # analysis patterns (Phase 10)
+        "solar_return_suggest",
+        # analysis patterns
+        "analysis_plan",
         "money_contour",
         "vocation_map",
-        "decade_map",
-        "life_pivots",
-        "electional_day",
-        "reverse_physiognomy_prompt",
-        # archetype tables (Phase 8)
-        "mc_in_sign",
-        "sun_in_sign",
-        "house_meaning",
-        "aspect_meaning",
-        "planet_dignity",
-        "zodiac_sign",
-        "list_archetype_topics",
+        # folded reference lookups (WP-10)
+        "lookup",
     }
     tools = await mcp.list_tools()
     registered = {t.name for t in tools}
-    missing = expected - registered
-    assert not missing, f"Missing MCP tools: {missing}"
+    # Exact equality in BOTH directions: a missing tool breaks the product,
+    # a stray one re-grows the surface WP-10 just cut (47 -> 19).
+    assert registered == expected, (
+        f"missing: {sorted(expected - registered)}; "
+        f"unexpected: {sorted(registered - expected)}"
+    )
 
 
 def test_list_event_types_returns_known_set():
@@ -75,6 +69,9 @@ def test_list_event_types_returns_known_set():
     assert "wedding" in types
     assert "interview" in types
     assert len(types) >= 5
+    # WP-8: no medical events — a favourability forecast for surgery is
+    # medical advice territory, excluded by the disclaimer.
+    assert "surgery" not in types
 
 
 def test_list_horoscope_periods():

@@ -83,12 +83,16 @@ class HoroscopePeriod(str, Enum):
 
 
 class EventType(str, Enum):
-    """Types of events for forecasting."""
+    """Types of events for forecasting.
+
+    No medical events (WP-8): a favourability forecast for surgery is
+    medical advice territory, which the disclaimer explicitly excludes —
+    the service must not accept the question at all.
+    """
     TRAVEL = "travel"
     WEDDING = "wedding"
     BUSINESS = "business"
     INTERVIEW = "interview"
-    SURGERY = "surgery"
     MOVING = "moving"
     CONTRACT = "contract"
     EXAM = "exam"

@@ -9,13 +9,12 @@ from agents.base import BaseOneiroAgent
 ASTROLOGY_TOOLS: list[str] = [
     # Core astrology
     "calculate_natal_chart",
-    "generate_horoscope",
     "forecast_event",
-    "list_event_types",
-    "list_horoscope_periods",
     # Geo helpers — natal charts can't proceed without a resolved location.
     "search_city",
     "validate_birth_data",
+    # Folded KB lookups (event types, horoscope periods, archetype tables).
+    "lookup",
 ]
 
 

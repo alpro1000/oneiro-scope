@@ -40,28 +40,22 @@ carries a `can_also_compute` block:
 
 ```jsonc
 "can_also_compute": {
-  "domain": "astro",                 // "astro" = chart + face; "dreams" is separate
-  "hint": "…call the tool you need. Full ordered plan: analysis_plan.",
-  "ready":       [ {"name", "tool", "answers", "track", "better_after"?} ],
-  "needs_input": [ {"name", "tool", "missing"} ],            // terser: exists, and wants X
-  "questions_to_ask": ["Which cities should we compare?"],
-  "reference_lookups": ["house_meaning", "planet_dignity", …],
+  "next": ["money_contour", "vocation_map", "compute_transits"],  // ≤3 ready tools, stage order
   "full_plan_tool": "analysis_plan"
 }
 ```
 
-Offered, not run. A decade map scans ten years at a 10-day step, a city scan
-runs a whole pool, and a Solar Return suggestion computes one return per
-candidate city — firing all of it on every call would spend minutes and quota
-answering a question nobody asked. The menu costs ~3.5 KB and lists only what
-is already runnable, so the next call is one step away.
+Compact since WP-11: the first version attached the full ready/blocked/
+questions structure and a live audit measured ~90k chars of menu across one
+conversation. The block is now ≤200 chars (test-enforced); the ordered plan,
+blocked steps and their questions live one call away in `analysis_plan`.
+`next` lists only steps whose inputs the calling tool already had.
 
-Two domains, per the product split: **astro** covers chart *and* face (both
-read one standing person from static data), **dreams** is per-episode and
-shares no inputs with them. Dictionary lookups (`house_meaning`,
-`list_dream_symbols`, …) carry no menu of their own — they are not steps in a
-reading. `get_lunar_period` also has none: it returns a bare list, and wrapping
-a documented list shape in a dict to add a hint would break callers.
+Two domains, per the product split: **astro** reads one standing person from
+static data, **dreams** is per-episode and shares no inputs with it. The
+`lookup` reference tool carries no menu — a dictionary read is not a step in
+a reading. `get_lunar_period` also has none: it returns a bare list, and
+wrapping a documented list shape in a dict to add a hint would break callers.
 
 `depends_on` is a **soft** ordering hint, the same as in `build_plan`: each tool
 recomputes the chart geometry it needs, so a stage runs fine before its
@@ -75,28 +69,45 @@ tool attaches a menu, marks only its own stage completed, names a registered
 tool, and every step offered as `ready` is verified callable with nothing
 further supplied.
 
-## Available tools
+## Available tools (19 — WP-10 cut the surface from 47)
 
 ### Astrology
-- `calculate_natal_chart(birth_date, birth_place, birth_time?, locale)`
-- `generate_horoscope(period, target_date?, locale, natal_chart_id?)`
+- `calculate_natal_chart(birth_date, birth_place, birth_time?, locale, latitude?, longitude?, timezone_name?)`
 - `forecast_event(event_type, event_date, event_location?, event_description?, locale, natal_chart_id?)`
-- `list_event_types()` — pure
-- `list_horoscope_periods()` — pure
 
 ### Dreams
 - `analyze_dream(dream_text, dream_date?, dreamer_gender?, dreamer_age_group?, locale)`
-- `list_dream_symbols(locale)` — pure
-- `list_archetypes()` — pure
-- `list_hvdc_categories()` — pure
+- `dream_series_stats(user_id, locale)` — personal baseline over a stored series (N≥15)
 
 ### Lunar
-- `get_lunar_day(target_date, timezone?, locale)` — pure
+- `get_lunar_day(target_date?, timezone?, locale)` — pure
 - `get_lunar_period(start_date, end_date, timezone?, locale, include_content?)` — pure
 
 ### Geo
 - `search_city(query)` — GeoNames + small curated offline fallback; returns `candidates` + `ambiguous`/`name_matched` flags
 - `validate_birth_data(birth_date, birth_place, birth_time?)` — validates before paying LLM cost
+
+### Strategic astronomy (timing and place)
+- `compute_transits(birth…, start, end, orb_deg?)`
+- `astrocartography_scan(birth…, cities, orb_deg?)` · `astrocartography_lines(birth…)` · `astrocartography_point(birth…, lat, lon)`
+- `compare_relocations(birth…, cities)`
+- `solar_return_chart(birth…, return_year, location)` · `solar_return_suggest(birth…, cities)`
+
+### Analysis patterns
+- `analysis_plan(known_inputs?, completed?, locale)` — the ordered plan; entry point
+- `money_contour(birth…)` · `vocation_map(birth…)`
+
+### Reference lookups (folded, WP-10)
+- `lookup(topic, …)` — one dispatcher for all KB reads: zodiac_sign, sun_in_sign,
+  mc_in_sign, house_meaning, planet_in_house, planet_dignity, aspect_meaning,
+  transit_meaning, archetype_topics, event_types, horoscope_periods,
+  dream_symbols, dream_archetypes, hvdc_categories
+
+Removed from MCP in WP-8/WP-10 (module code remains for the web API):
+`generate_horoscope`, file reports (`horoscope_report`, `profile_report_file`,
+`physiognomy_report`), the physiognomy family, `synastry`, `transit_arc`,
+`scan_cities_by_theme`, `decade_map`, `life_pivots`, `electional_day`, and the
+fifteen single-purpose lookup tools now behind `lookup`.
 
 ## Configuration
 

@@ -26,12 +26,10 @@ def test_astrology_agent_tools_subset():
     allowed = set(a.options.allowed_tools)
     expected = {
         "mcp__oneiro__calculate_natal_chart",
-        "mcp__oneiro__generate_horoscope",
         "mcp__oneiro__forecast_event",
-        "mcp__oneiro__list_event_types",
-        "mcp__oneiro__list_horoscope_periods",
         "mcp__oneiro__search_city",
         "mcp__oneiro__validate_birth_data",
+        "mcp__oneiro__lookup",
     }
     assert allowed == expected
     # Must NOT have dream or lunar tools.
@@ -50,9 +48,8 @@ def test_dream_agent_tools_subset():
     allowed = set(a.options.allowed_tools)
     expected = {
         "mcp__oneiro__analyze_dream",
-        "mcp__oneiro__list_dream_symbols",
-        "mcp__oneiro__list_archetypes",
-        "mcp__oneiro__list_hvdc_categories",
+        "mcp__oneiro__dream_series_stats",
+        "mcp__oneiro__lookup",
     }
     assert allowed == expected
     forbidden = {
@@ -112,4 +109,4 @@ def test_generalist_still_works_after_refactor():
     from agents.oneiro_agent import OneiroAgent, ALL_ONEIRO_TOOLS
 
     agent = OneiroAgent()
-    assert len(agent.options.allowed_tools) == len(ALL_ONEIRO_TOOLS) == 13
+    assert len(agent.options.allowed_tools) == len(ALL_ONEIRO_TOOLS) == 8
