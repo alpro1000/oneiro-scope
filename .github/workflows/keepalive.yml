@@ -1,0 +1,40 @@
+# WP-14: Render free-tier spins the backend down after ~15 min idle, and a
+# cold start takes 50+ seconds — long enough for an MCP connector to time
+# out and surface as "the server is broken". A scheduled /health ping keeps
+# the instance warm during waking hours.
+#
+# Deliberately NOT every 10 minutes around the clock: GitHub schedules are
+# best-effort (often +3-10 min late) and a 24/7 ping burns Render's free
+# instance-hours budget. 06:00-23:00 UTC covers the RU/EU usage window.
+name: keepalive
+
+on:
+  schedule:
+    - cron: "*/10 6-23 * * *"
+  workflow_dispatch: {}
+
+permissions: {}
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Ping /health
+        run: |
+          set -euo pipefail
+          url="https://oneiroscope-backend.onrender.com/health"
+          # 90s ceiling: a cold start is the very case we're here to absorb.
+          body=$(curl -sS --max-time 90 --retry 2 --retry-delay 5 "$url")
+          echo "$body"
+          echo "$body" | grep -q '"status":[[:space:]]*"healthy"' || {
+            echo "::error::health endpoint responded but not healthy"
+            exit 1
+          }
+          # WP-1 invariant, checked in prod on every ping: the ephemeris
+          # block must name SWIEPH — anything else means the deploy lost
+          # the .se1 files and silently degraded.
+          echo "$body" | grep -q '"engine":[[:space:]]*"SWIEPH"' || {
+            echo "::error::ephemeris engine is not SWIEPH in production"
+            exit 1
+          }

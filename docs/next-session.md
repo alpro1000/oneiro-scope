@@ -5,9 +5,50 @@
 > that's easy to lose. Updated at the end of every substantial session
 > alongside `soul.md §9`.
 
-**Дата последнего обновления:** 2026-07-27 (part 6 — dream encoder rebuild)
-**Последняя ветка работы:** `claude/oneiroscope-dream-encoder-rebuild-g2iyp0` (НЕ смержена)
-**Текущий main HEAD:** `#165`
+**Дата последнего обновления:** 2026-07-28 (пакет WP-1…WP-18)
+**Последняя ветка работы:** `claude/oneiroscope-dream-encoder-rebuild-g2iyp0`
+(рестарт от main после мержа PR #166; НЕ смержена)
+**Текущий main HEAD:** merge PR #166 (08c7ca8)
+
+**Новое в сессии 2026-07-28 (пакет WP-1…WP-18 по консолидированному плану
+владельца; отчёт по каждому WP: `docs/reports/WP_FIXES_2026-07-28.md`):**
+- **WP-6/7**: `meta`-блок версионирования в каждом ответе каждого MCP-
+  инструмента (server_version/commit/input_hash/…); AST-страж тихой
+  деградации по расчётным модулям.
+- **WP-1**: SWIEPH — единственный режим эфемерид. `.se1` в репо
+  (`backend/data/ephemeris/`), `backend/core/ephemeris.py` верифицирует
+  файлы при импорте (нет файлов → процесс не стартует), все 9 модулей
+  без FLG_MOSEPH, фолбэк-лестницы удалены, provenance = swe.version.
+  Против skyfield+DE421: worst 0.17″ (бар 2″). «Neptune 13.55″» аудита —
+  ошибка референса (astronomy-engine), задокументировано.
+- **WP-2/3**: дома в natal chart РЕАЛЬНО привязаны (корень:
+  `assign_planets_to_houses` никем не вызывался); `cusp_degree`,
+  `house_borderline`+`distance_to_cusp_deg`; applying по скоростям обоих
+  тел (+`orb_deg`, `speed_diff_deg_per_day`). Эталон 01.07.1977 22:30
+  Запорожье: 10/10 домов, 5 applying / 15 separating (было 20/20 true).
+- **WP-4/5**: «старший знакомый …» → male=1 (морфология формы, у
+  «знакомый» нет NOUN-разбора в OpenCorpora — курируемый список);
+  «под кустом лежат золотые монеты» → GF=1 без глагола находки;
+  кодировщик **3.1.0**; A/F из 1+1 → insufficient_data;
+  typicality_warning. Приёмка на дословных фрагментах аудита
+  (`test_hvdc_live_text.py`); skip-тест ждёт полный текст монетного сна.
+- **WP-8/10/11**: surgery/медицина удалены из forecast; поверхность MCP
+  **47 → 19** (physiognomy/отчёты/generate_horoscope/synastry и пр. —
+  только веб-API; 15 lookup'ов → один `lookup`); меню `can_also_compute`
+  ~90k → ≤200 символов (`{"next": [...], "full_plan_tool"}`).
+- **WP-12/15/16/18**: контракт-тесты lookup; `scopes_supported` всегда в
+  RFC 9728; освещённость `swe_pheno_ut` (77.85% на 03.08.2026 10:00 UTC);
+  квинконс в KB; +6 символов (gold/treasure/earth_soil/hiding_place/
+  pockets/mentor), наставник → male-лексикон; ретро-списки
+  синхронизированы; `orb_policy_deg` в natal; соляр до секунды.
+- **WP-14**: `.github/workflows/keepalive.yml` — /health каждые 10 мин
+  06–23 UTC + проверка `engine=="SWIEPH"` в проде на каждом пинге.
+- **Не в этом пакете**: WP-13 (rule_source_tier — отложен письменно),
+  WP-17 (слепая разметка — владелец), compare_dreamy (нужен HF).
+- ⚠️ Смоук после деплоя обновился: монетный сон теперь должен давать
+  ещё и `male ≥ 1` (наставник/знакомый) и `good_fortunes ≥ 1` (монеты
+  «лежат»), символы `mentor`/`treasure`; у natal — заполненные
+  `planet.house` и `orb_policy_deg`; `/health` → `engine: SWIEPH`.
 
 **Новое в сессии 2026-07-27 part 6 (пересборка слоя снов; отчёт:
 `docs/reports/DREAM_ENCODER_REBUILD_2026-07-27.md`):**
