@@ -1,0 +1,55 @@
+# chart-kit is the client half of the chart contract: it re-derives
+# angles, cusps, aspects and astrocartography from a `chart_core` with
+# no server involved. Two implementations of one formula always drift,
+# and when they do the client silently draws a chart the server would
+# never have produced — so this job regenerates the golden fixture from
+# the live backend and fails if the kit disagrees by more than 0.01°.
+name: chart-kit
+
+on:
+  push:
+    branches: [main, dev]
+  pull_request:
+
+jobs:
+  golden:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install backend deps needed to produce the fixture
+        run: pip install pyswisseph pytz timezonefinder
+
+      - name: Regenerate the golden fixture from the server
+        # Regenerating rather than trusting the committed file: a drift
+        # introduced on the server would otherwise hide behind a stale
+        # fixture, which is precisely the failure this job exists to catch.
+        run: python scripts/generate_chart_golden.py
+
+      - name: Fail if the committed fixture is stale
+        run: |
+          if ! git diff --quiet packages/chart-kit/test/golden.json; then
+            echo "::error::golden.json is stale — run scripts/generate_chart_golden.py and commit the result"
+            git diff --stat packages/chart-kit/test/golden.json
+            exit 1
+          fi
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install chart-kit deps
+        working-directory: packages/chart-kit
+        run: npm install --ignore-scripts
+
+      - name: Typecheck
+        working-directory: packages/chart-kit
+        run: npm run typecheck
+
+      - name: Golden tests (client vs server, 0.01°)
+        working-directory: packages/chart-kit
+        run: npm test
