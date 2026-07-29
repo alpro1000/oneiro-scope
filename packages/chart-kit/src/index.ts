@@ -37,3 +37,14 @@ export {
 } from './aspects';
 export { acgLines, mcLongitude } from './acg';
 export type { AcgLine, LineKind } from './acg';
+export { SYNODIC_MONTH, lunarDay, phaseOf } from './lunar';
+export type { LunarMoment, MoonPhase } from './lunar';
+export { wheelLayout, wheelSvg } from './wheel';
+export type {
+  WheelAspect,
+  WheelGlyph,
+  WheelLayout,
+  WheelOptions,
+  WheelPoint,
+  WheelSpoke,
+} from './wheel';

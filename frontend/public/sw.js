@@ -14,7 +14,7 @@
  *   the page says so.
  */
 
-const VERSION = 'v1';
+const VERSION = 'v2';
 const SHELL_CACHE = `oneiro-shell-${VERSION}`;
 
 // Kept deliberately small: the shell plus the kit is all that is needed
@@ -24,7 +24,9 @@ const SHELL_CACHE = `oneiro-shell-${VERSION}`;
 const SHELL = [
   '/',
   '/astrocartography.html',
+  '/natal.html',
   '/vendor/chart-kit.js',
+  '/vendor/chart-store.js',
   // Leaflet is vendored precisely so it can live here: a CDN copy could
   // not be cached (cross-origin responses are opaque) and the map would
   // silently fail to render offline while everything else worked.

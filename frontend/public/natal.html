@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>OneiroScope · Натальная карта</title>
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#0b0d1a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<style>
+:root{--bg:#0f1226;--panel:#171a33;--ink:#e8eaf6;--mut:#9aa0c8;--acc:#8a7dff;--line:#2b3061}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;font-family:-apple-system,Segoe UI,Roboto,system-ui,sans-serif;background:var(--bg);color:var(--ink)}
+#app{display:flex;gap:18px;padding:18px;align-items:flex-start;max-width:1180px;margin:0 auto}
+#wheelBox{flex:1;min-width:0;color:var(--ink)}
+#wheelBox svg{width:100%;height:auto;display:block}
+#panel{width:360px;flex:none}
+h1{font-size:17px;margin:0 0 2px}
+.sub{color:var(--mut);font-size:12px;margin-bottom:12px;line-height:1.45}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:12px;font-size:13px}
+.card h2{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--mut);margin:0 0 8px;font-weight:700}
+/* Scoped to .card, not to form: the relocation card is a plain div, and
+   selectors that only matched <form> left its inputs at browser default
+   width, overflowing the card. */
+.card label{display:block;color:var(--mut);margin:8px 0 2px;font-size:12px}
+.card input,.card select{width:100%;max-width:100%;background:#0f1226;color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:6px 8px;font-size:12px}
+.row{display:flex;gap:8px}.row>div{flex:1}
+.go{margin-top:12px;width:100%;background:var(--acc);color:#fff;border:0;border-radius:9px;padding:10px;font-weight:700;cursor:pointer}
+.go[disabled]{opacity:.5;cursor:not-allowed}
+table{width:100%;border-collapse:collapse;font-size:12.5px;font-variant-numeric:tabular-nums}
+td{padding:2px 0;vertical-align:top}
+td.r{text-align:right;color:var(--mut)}
+.note{background:#241f3d;border:1px solid #4a3f7a;border-radius:10px;padding:9px 11px;font-size:12px;color:#d7cdff;margin-bottom:12px;line-height:1.45}
+.warn{background:#2c1d1d;border-color:#6b3a3a;color:#ffc9c9}
+.disc{font-size:10.5px;color:#5a6090;line-height:1.45;border-top:1px solid #232752;padding-top:10px}
+@media(max-width:900px){#app{flex-direction:column}#panel{width:100%}}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="wheelBox"></div>
+  <div id="panel">
+    <h1>🜚 Натальная карта</h1>
+    <div class="sub" id="sub">Загружаю…</div>
+    <div id="banner"></div>
+
+    <form class="card" id="form">
+      <h2>Данные рождения</h2>
+      <label>Дата</label><input type="date" id="bdate" value="1977-07-01">
+      <div class="row">
+        <div><label>Время</label><input type="time" id="btime" value="22:30"></div>
+        <div><label>Часовой пояс</label>
+          <select id="btz">
+            <option>Europe/Kyiv</option><option>Europe/Moscow</option>
+            <option>Europe/Prague</option><option>Europe/Madrid</option>
+            <option>Europe/Rome</option><option>Asia/Tokyo</option><option>UTC</option>
+          </select></div>
+      </div>
+      <div class="row">
+        <div><label>Широта</label><input type="number" id="blat" step="0.0001" value="47.8388"></div>
+        <div><label>Долгота</label><input type="number" id="blon" step="0.0001" value="35.1396"></div>
+      </div>
+      <label>API (для своих данных)</label>
+      <input type="text" id="apibase" placeholder="https://your-backend/api/v1" value="">
+      <button class="go" type="submit" id="go">Построить карту</button>
+    </form>
+
+    <div class="card">
+      <h2>Читать карту в точке</h2>
+      <div class="sub" style="margin:0 0 6px">Дома и углы пересчитываются для любого места — без сети и без нового расчёта.</div>
+      <div class="row">
+        <div><label>Широта</label><input type="number" id="rlat" step="0.0001"></div>
+        <div><label>Долгота</label><input type="number" id="rlon" step="0.0001"></div>
+      </div>
+    </div>
+
+    <div class="card" id="lunarCard"></div>
+    <div class="card" id="anglesCard"></div>
+    <div class="card" id="housesCard"></div>
+    <div class="disc" id="disc"></div>
+  </div>
+</div>
+
+<script type="module">
+import { angles, houses, lunarDay, resolveSystemFor, wheelLayout, wheelSvg, degreeInSign, signOf }
+  from "/vendor/chart-kit.js";
+import { fetchChart, lastChart, registerServiceWorker, saveChart }
+  from "/vendor/chart-store.js";
+
+// Demo chart (Swiss Ephemeris, 1977-07-01 19:30 UTC), so the page has
+// something real to draw before any network call. Replaced wholesale by
+// POST /api/v1/chart — this page never computes an ephemeris itself.
+let CORE = {"version":"1","jd_ut":2443326.3125,"gmst":212.2347,"obliquity":23.43962,"birth":{"lat":47.8388,"lon":35.1396,"tz_used":"Europe/Kyiv","utc_offset_used":"+03:00","tz_source":"coordinates","local_clock":"1977-07-01T22:30:00","utc":"1977-07-01T19:30:00+00:00","place_label":"Запорожье","time_known":true},"bodies":{"Sun":{"ecl_lon":99.8251,"ecl_lat":0.0,"ra":100.6892,"dec":23.0758,"speed_lon":0.9531,"retrograde":false},"Moon":{"ecl_lon":289.2449,"ecl_lat":5.0182,"ra":290.0909,"dec":-17.0892,"speed_lon":14.9173,"retrograde":false},"Mercury":{"ecl_lon":102.0171,"ecl_lat":1.457,"ra":103.206,"dec":24.3474,"speed_lon":2.1629,"retrograde":false},"Venus":{"ecl_lon":54.9195,"ecl_lat":-2.8885,"ra":53.294,"dec":16.1931,"speed_lon":1.0446,"retrograde":false},"Mars":{"ecl_lon":48.8009,"ecl_lat":-0.8224,"ra":46.58,"dec":16.6247,"speed_lon":0.7176,"retrograde":false},"Jupiter":{"ecl_lon":79.947,"ecl_lat":-0.4507,"ra":79.1006,"dec":22.6094,"speed_lon":0.2246,"retrograde":false},"Saturn":{"ecl_lon":135.1816,"ecl_lat":0.9798,"ra":137.9467,"dec":17.2193,"speed_lon":0.1124,"retrograde":false},"Uranus":{"ecl_lon":217.7776,"ecl_lat":0.437,"ra":215.5623,"dec":-13.6905,"speed_lon":-0.0123,"retrograde":true},"Neptune":{"ecl_lon":254.0923,"ecl_lat":1.5263,"ra":252.9362,"dec":-20.9759,"speed_lon":-0.0236,"retrograde":true},"Pluto":{"ecl_lon":191.4284,"ecl_lat":17.0623,"ra":197.2248,"dec":11.1776,"speed_lon":0.0058,"retrograde":false},"TrueNode":{"ecl_lon":200.8278,"ecl_lat":0.0,"ra":199.2404,"dec":-8.131,"speed_lon":-0.179,"retrograde":true},"Chiron":{"ecl_lon":35.121,"ecl_lat":-0.3641,"ra":32.9597,"dec":12.886,"speed_lon":0.0331,"retrograde":false}},"node_type":"true","house_system":"placidus"};
+
+const SIGN_RU = {aries:"Овен",taurus:"Телец",gemini:"Близнецы",cancer:"Рак",leo:"Лев",
+  virgo:"Дева",libra:"Весы",scorpio:"Скорпион",sagittarius:"Стрелец",
+  capricorn:"Козерог",aquarius:"Водолей",pisces:"Рыбы"};
+const BODY_RU = {Sun:"Солнце",Moon:"Луна",Mercury:"Меркурий",Venus:"Венера",Mars:"Марс",
+  Jupiter:"Юпитер",Saturn:"Сатурн",Uranus:"Уран",Neptune:"Нептун",Pluto:"Плутон",
+  TrueNode:"Сев. узел",Chiron:"Хирон"};
+const PHASE_RU = {new_moon:"новолуние",waxing_crescent:"растущий серп",
+  first_quarter:"первая четверть",waxing_gibbous:"растущая",full_moon:"полнолуние",
+  waning_gibbous:"убывающая",last_quarter:"последняя четверть",waning_crescent:"убывающий серп"};
+const SYSTEM_RU = {placidus:"Плацидус",porphyry:"Порфирий",equal:"равнодомная",whole_sign:"по знакам"};
+
+const $ = (id) => document.getElementById(id);
+const pos = (lon) => `${Math.floor(degreeInSign(lon))}°${String(Math.round(degreeInSign(lon) % 1 * 60)).padStart(2,"0")}′ ${SIGN_RU[signOf(lon)]}`;
+const banner = (html, cls) => { $("banner").innerHTML = html ? `<div class="note ${cls||""}">${html}</div>` : ""; };
+
+function target() {
+  const lat = parseFloat($("rlat").value), lon = parseFloat($("rlon").value);
+  return Number.isFinite(lat) && Number.isFinite(lon)
+    ? { lat, lon, relocated: true }
+    : { lat: CORE.birth.lat, lon: CORE.birth.lon, relocated: false };
+}
+
+function render() {
+  const t = target();
+
+  if (!CORE.birth.time_known) {
+    // Noon was assumed, so every angle and cusp is arbitrary. The wheel
+    // is withheld and said so, rather than drawn and quietly meaningless.
+    $("wheelBox").innerHTML = "";
+    banner("У этой карты нет времени рождения — принят полдень. Асцендент, MC и дома "
+      + "при этом произвольны, поэтому колесо не строится. Положения планет и лунный "
+      + "день остаются верными.", "warn");
+    $("anglesCard").innerHTML = "<h2>Углы</h2><div class='sub'>Недоступны без времени рождения.</div>";
+    $("housesCard").innerHTML = "<h2>Дома</h2><div class='sub'>Недоступны без времени рождения.</div>";
+  } else {
+    const layout = wheelLayout(CORE, t.lat, t.lon);
+    $("wheelBox").innerHTML = wheelSvg(layout);
+    const a = angles(CORE, t.lat, t.lon);
+    const resolved = resolveSystemFor(CORE, t.lat, t.lon);
+
+    banner(resolved.substituted
+      ? `Плацидус здесь не определён (широта ${t.lat.toFixed(2)}° за полярным кругом): `
+        + `ни одна точка эклиптики не пересекает горизонт, делить нечего. Дома построены `
+        + `по Порфирию — куспид 1 остаётся Асцендентом, 10 — MC. Сами углы верны на любой широте.`
+      : "");
+
+    $("anglesCard").innerHTML = "<h2>Углы"
+      + (t.relocated ? " · релокация" : "") + "</h2><table>"
+      + [["ASC",a.asc],["MC",a.mc],["DSC",a.desc],["IC",a.ic]]
+          .map(([n,v]) => `<tr><td>${n}</td><td class="r">${pos(v)}</td></tr>`).join("")
+      + "</table>";
+
+    $("housesCard").innerHTML = `<h2>Дома · ${SYSTEM_RU[layout.system] || layout.system}</h2><table>`
+      + houses(CORE, t.lat, t.lon).map(h =>
+          `<tr><td>${h.number}</td><td class="r">${pos(h.cusp)}</td></tr>`
+          + (h.bodies.length ? `<tr><td colspan="2" style="color:var(--acc);font-size:11.5px;padding-bottom:4px">${h.bodies.map(b=>BODY_RU[b]||b).join(", ")}</td></tr>` : ""))
+        .join("")
+      + "</table>";
+  }
+
+  const l = lunarDay(CORE);
+  $("lunarCard").innerHTML = "<h2>Лунный день рождения</h2><table>"
+    + `<tr><td>Лунный день</td><td class="r">${l.lunarDay}</td></tr>`
+    + `<tr><td>Фаза</td><td class="r">${PHASE_RU[l.phase] || l.phase}</td></tr>`
+    + `<tr><td>Луна в знаке</td><td class="r">${SIGN_RU[l.moonSign]}</td></tr>`
+    + `<tr><td>Возраст Луны</td><td class="r">${l.moonAgeDays.toFixed(2)} сут</td></tr>`
+    + "</table><div class='sub' style='margin:8px 0 0'>Освещённость здесь не показана: "
+    + "сервер берёт её из swe_pheno, а из одних долгот её честно не вывести.</div>";
+
+  $("sub").innerHTML = `${CORE.birth.place_label || "карта"} · ${CORE.birth.local_clock.replace("T"," ")} `
+    + `· ${CORE.birth.tz_used} ${CORE.birth.utc_offset_used}`
+    + (target().relocated ? "<br>Читается в другой точке — пересчитано на устройстве." : "");
+}
+
+$("form").addEventListener("submit", async (ev) => {
+  ev.preventDefault();
+  const api = $("apibase").value.trim();
+  if (!api) {
+    banner("Укажите адрес API, чтобы построить карту по своим данным. Сейчас показана "
+      + "встроенная демонстрационная карта.");
+    return;
+  }
+  if (!navigator.onLine) {
+    // §6: a new calculation needs the network, and that is said out loud.
+    banner("Нет сети. Новый расчёт требует обращения к серверу — сохранённая карта "
+      + "при этом работает полностью.", "warn");
+    return;
+  }
+  $("go").disabled = true;
+  try {
+    const data = await fetchChart(api, {
+      birth_date: $("bdate").value,
+      birth_time: $("btime").value + ":00",
+      birth_place: "рождение",
+      latitude: parseFloat($("blat").value),
+      longitude: parseFloat($("blon").value),
+      timezone_name: $("btz").value,
+      locale: "ru",
+    });
+    CORE = data.chart_core;
+    const failed = await saveChart(CORE);
+    $("rlat").value = ""; $("rlon").value = "";
+    render();
+    if (failed) banner("Карта построена, но офлайн-сохранение недоступно: " + failed, "warn");
+    if (data.disclaimer) $("disc").textContent = data.disclaimer;
+  } catch (err) {
+    banner("Не удалось получить карту: " + err, "warn");
+  } finally {
+    $("go").disabled = false;
+  }
+});
+
+for (const id of ["rlat", "rlon"]) $(id).addEventListener("change", render);
+
+window.addEventListener("offline", () => banner(
+  "Офлайн. Сохранённая карта работает целиком — углы, дома и лунный день "
+  + "считаются на устройстве. Новый расчёт потребует сети.", "warn"));
+window.addEventListener("online", () => banner(""));
+
+$("disc").textContent = "Материал носит рефлексивно-развлекательный характер и не является "
+  + "медицинской, психологической, юридической или финансовой консультацией. "
+  + "Астрономические величины вычислены по Swiss Ephemeris; всё остальное на этой "
+  + "странице выведено из них на вашем устройстве.";
+
+registerServiceWorker();
+render();
+lastChart().then((core) => {
+  if (!core) return;
+  CORE = core;
+  render();
+  $("sub").innerHTML += "<br>Ваша сохранённая карта — открыта без сети.";
+});
+</script>
+</body>
+</html>

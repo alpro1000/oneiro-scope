@@ -330,10 +330,231 @@ function acgLines(core, options = {}) {
   }
   return out;
 }
+
+// src/lunar.ts
+var SYNODIC_MONTH = 29.53058867;
+function phaseOf(angleDeg) {
+  const a = norm360(angleDeg);
+  if (a < 22.5 || a >= 337.5) return "new_moon";
+  if (a < 67.5) return "waxing_crescent";
+  if (a < 112.5) return "first_quarter";
+  if (a < 157.5) return "waxing_gibbous";
+  if (a < 202.5) return "full_moon";
+  if (a < 247.5) return "waning_gibbous";
+  if (a < 292.5) return "last_quarter";
+  return "waning_crescent";
+}
+function lunarDay(core) {
+  const sun = core.bodies.Sun;
+  const moon = core.bodies.Moon;
+  if (!sun || !moon) {
+    throw new Error(
+      "chart_core is missing Sun or Moon \u2014 the lunar day is the elongation between them and cannot be derived without both"
+    );
+  }
+  const phaseAngle = norm360(moon.ecl_lon - sun.ecl_lon);
+  const moonAgeDays = phaseAngle / 360 * SYNODIC_MONTH;
+  return {
+    phaseAngle,
+    moonAgeDays,
+    lunarDay: Math.max(1, Math.min(30, Math.floor(moonAgeDays) + 1)),
+    phase: phaseOf(phaseAngle),
+    moonSign: signOf(moon.ecl_lon),
+    illuminationKnown: false
+  };
+}
+
+// src/wheel.ts
+var DEFAULTS = { size: 640, minGlyphGap: 6 };
+function pointAt(center, radius, longitude, asc) {
+  const d = (longitude - asc) * Math.PI / 180;
+  return {
+    x: center.x - radius * Math.cos(d),
+    y: center.y + radius * Math.sin(d)
+  };
+}
+function spread(bodies, minGap) {
+  const n = bodies.length;
+  const drawn = /* @__PURE__ */ new Map();
+  if (n === 0) return drawn;
+  if (n * minGap > 360) {
+    throw new Error(
+      `${n} bodies cannot be drawn ${minGap}\xB0 apart on a 360\xB0 wheel; reduce minGlyphGap below ${(360 / n).toFixed(2)}\xB0`
+    );
+  }
+  const sorted = [...bodies].sort((a, b) => a.longitude - b.longitude);
+  let widest = 0;
+  let seamAfter = n - 1;
+  for (let i = 0; i < n; i++) {
+    const gap = norm360(sorted[(i + 1) % n].longitude - sorted[i].longitude);
+    if (gap > widest) {
+      widest = gap;
+      seamAfter = i;
+    }
+  }
+  const origin = sorted[(seamAfter + 1) % n].longitude;
+  const line = sorted.map((b) => ({ body: b.body, u: norm360(b.longitude - origin) })).sort((a, b) => a.u - b.u);
+  let groups = line.map((b) => ({ members: [b.body], count: 1, mean: b.u }));
+  for (let guard = 0; guard <= n; guard++) {
+    const merged = [];
+    let changed = false;
+    for (const g of groups) {
+      const prev = merged[merged.length - 1];
+      if (prev) {
+        const prevEnd = prev.mean + (prev.count - 1) * minGap / 2;
+        const gStart = g.mean - (g.count - 1) * minGap / 2;
+        if (gStart - prevEnd < minGap - 1e-9) {
+          const total = prev.count + g.count;
+          prev.mean = (prev.mean * prev.count + g.mean * g.count) / total;
+          prev.count = total;
+          prev.members.push(...g.members);
+          changed = true;
+          continue;
+        }
+      }
+      merged.push({ ...g, members: [...g.members] });
+    }
+    groups = merged;
+    if (!changed) break;
+  }
+  for (const g of groups) {
+    const start = g.mean - (g.count - 1) * minGap / 2;
+    g.members.forEach((body, k) => {
+      drawn.set(body, norm360(origin + start + k * minGap));
+    });
+  }
+  return drawn;
+}
+function wheelLayout(core, lat, lon, opts = {}) {
+  if (!core.birth.time_known) {
+    throw new Error(
+      "this chart has no birth time: it was computed for noon, so the Ascendant, Midheaven and every house cusp are arbitrary. A wheel drawn from them would look exactly as authoritative as a real one."
+    );
+  }
+  const size = opts.size ?? DEFAULTS.size;
+  const minGap = opts.minGlyphGap ?? DEFAULTS.minGlyphGap;
+  const center = { x: size / 2, y: size / 2 };
+  const outer = size * 0.47;
+  const radii = {
+    outer,
+    zodiac: outer * 0.86,
+    glyphs: outer * 0.74,
+    aspects: outer * 0.6
+  };
+  const resolved = resolveSystemFor(core, lat, lon);
+  const system = opts.system ?? resolved.system;
+  const { asc, mc } = angles(core, lat, lon);
+  const cusps = houseCusps(core, lat, lon, system);
+  const spokes = cusps.map((longitude, i) => ({
+    house: i + 1,
+    longitude,
+    from: pointAt(center, radii.aspects, longitude, asc),
+    to: pointAt(center, radii.zodiac, longitude, asc),
+    isAngle: i === 0 || i === 3 || i === 6 || i === 9
+  }));
+  const names = opts.bodies ?? Object.keys(core.bodies);
+  const sorted = names.map((body) => ({ body, longitude: core.bodies[body].ecl_lon })).sort((a, b) => a.longitude - b.longitude);
+  const drawnAt = spread(sorted, minGap);
+  const glyphs = sorted.map(({ body, longitude }) => {
+    const shown = drawnAt.get(body);
+    return {
+      body,
+      longitude,
+      drawnAt: shown,
+      retrograde: core.bodies[body].retrograde,
+      at: pointAt(center, radii.glyphs, shown, asc),
+      tick: [
+        pointAt(center, radii.zodiac, longitude, asc),
+        pointAt(center, radii.zodiac * 0.96, longitude, asc)
+      ]
+    };
+  });
+  const chords = aspects(core).filter((a) => names.includes(a.a) && names.includes(a.b)).map((a) => ({
+    ...a,
+    from: pointAt(center, radii.aspects, core.bodies[a.a].ecl_lon, asc),
+    to: pointAt(center, radii.aspects, core.bodies[a.b].ecl_lon, asc)
+  }));
+  return {
+    size,
+    center,
+    radii,
+    system,
+    substituted: opts.system ? false : resolved.substituted,
+    asc,
+    mc,
+    spokes,
+    glyphs,
+    chords,
+    signTicks: Array.from({ length: 12 }, (_, i) => i * 30)
+  };
+}
+var GLYPH = {
+  Sun: "\u2609",
+  Moon: "\u263D",
+  Mercury: "\u263F",
+  Venus: "\u2640",
+  Mars: "\u2642",
+  Jupiter: "\u2643",
+  Saturn: "\u2644",
+  Uranus: "\u2645",
+  Neptune: "\u2646",
+  Pluto: "\u2647",
+  TrueNode: "\u260A",
+  Chiron: "\u26B7"
+};
+var ASPECT_COLOUR = {
+  conjunction: "#b9a7ff",
+  opposition: "#ff8686",
+  square: "#ff8686",
+  trine: "#77d8a8",
+  sextile: "#77d8a8",
+  quincunx: "#c9a06a"
+};
+var esc = (s) => s.replace(
+  /[&<>"]/g,
+  (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]
+);
+var n2 = (v) => v.toFixed(2);
+function wheelSvg(layout) {
+  const { center: c, radii, asc } = layout;
+  const parts = [];
+  parts.push(
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${layout.size} ${layout.size}" width="100%" role="img" aria-label="Natal wheel">`,
+    `<circle cx="${n2(c.x)}" cy="${n2(c.y)}" r="${n2(radii.outer)}" fill="none" stroke="currentColor" stroke-opacity=".45"/>`,
+    `<circle cx="${n2(c.x)}" cy="${n2(c.y)}" r="${n2(radii.zodiac)}" fill="none" stroke="currentColor" stroke-opacity=".25"/>`,
+    `<circle cx="${n2(c.x)}" cy="${n2(c.y)}" r="${n2(radii.aspects)}" fill="none" stroke="currentColor" stroke-opacity=".15"/>`
+  );
+  for (const tick of layout.signTicks) {
+    const a = pointAt(c, radii.zodiac, tick, asc);
+    const b = pointAt(c, radii.outer, tick, asc);
+    parts.push(
+      `<line x1="${n2(a.x)}" y1="${n2(a.y)}" x2="${n2(b.x)}" y2="${n2(b.y)}" stroke="currentColor" stroke-opacity=".35"/>`
+    );
+  }
+  for (const ch of layout.chords) {
+    parts.push(
+      `<line x1="${n2(ch.from.x)}" y1="${n2(ch.from.y)}" x2="${n2(ch.to.x)}" y2="${n2(ch.to.y)}" stroke="${ASPECT_COLOUR[ch.type] ?? "#888"}" stroke-opacity="${ch.applying ? ".85" : ".4"}" stroke-width="${ch.type === "conjunction" ? 1.4 : 1}"/>`
+    );
+  }
+  for (const s of layout.spokes) {
+    parts.push(
+      `<line x1="${n2(s.from.x)}" y1="${n2(s.from.y)}" x2="${n2(s.to.x)}" y2="${n2(s.to.y)}" stroke="currentColor" stroke-opacity="${s.isAngle ? ".8" : ".3"}" stroke-width="${s.isAngle ? 1.8 : 1}"/>`
+    );
+  }
+  for (const g of layout.glyphs) {
+    parts.push(
+      `<line x1="${n2(g.tick[0].x)}" y1="${n2(g.tick[0].y)}" x2="${n2(g.tick[1].x)}" y2="${n2(g.tick[1].y)}" stroke="currentColor" stroke-opacity=".5"/>`,
+      `<text x="${n2(g.at.x)}" y="${n2(g.at.y)}" text-anchor="middle" dominant-baseline="central" font-size="${n2(layout.size * 0.032)}" fill="currentColor">${esc(GLYPH[g.body] ?? g.body)}${g.retrograde ? '<tspan font-size="60%" dy="-0.6em">\u211E</tspan>' : ""}</text>`
+    );
+  }
+  parts.push("</svg>");
+  return parts.join("");
+}
 export {
   ASPECTS,
   IMPLEMENTED_SYSTEMS,
   SIGNS,
+  SYNODIC_MONTH,
   acgLines,
   angles,
   aspects,
@@ -343,10 +564,14 @@ export {
   houseCusps,
   houseOf,
   houses,
+  lunarDay,
   mcLongitude,
   norm360,
+  phaseOf,
   ramc,
   resolveSystemFor,
   sep180,
-  signOf
+  signOf,
+  wheelLayout,
+  wheelSvg
 };

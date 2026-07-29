@@ -21,6 +21,7 @@ chart_core contract:
 from __future__ import annotations
 
 import json
+import math
 import sys
 from datetime import date, time
 from pathlib import Path
@@ -113,6 +114,36 @@ def server_aspects(core: dict) -> list[dict]:
     return out
 
 
+def server_lunar(core: dict) -> dict:
+    """The lunar day of the chart's instant, by the server's own code.
+
+    Imported from `backend.services.lunar.engine` rather than reproduced
+    here: the point of the fixture is to catch the kit drifting from the
+    server, and a second copy of the formula in this script would drift
+    right alongside it. If the engine ever changes its synodic constant
+    or its phase boundaries, this fixture moves and the kit's test fails —
+    which is exactly the alarm we want.
+
+    `illumination` is deliberately absent: the server takes it from
+    `swe.pheno_ut`, and it is not derivable from a longitude pair (WP-16).
+    """
+    from backend.services.lunar.engine import (
+        SYNODIC_MONTH, _moon_sign, _phase_key,
+    )
+
+    sun = core["bodies"]["Sun"]["ecl_lon"]
+    moon = core["bodies"]["Moon"]["ecl_lon"]
+    phase_angle = (moon - sun) % 360.0
+    age = (phase_angle / 360.0) * SYNODIC_MONTH
+    return {
+        "phase_angle": round(phase_angle, 6),
+        "moon_age_days": round(age, 6),
+        "lunar_day": max(1, min(30, math.floor(age) + 1)),
+        "phase": _phase_key(phase_angle),
+        "moon_sign": _moon_sign(moon),
+    }
+
+
 def main() -> int:
     charts = []
     for label, d, t, lat, lon, why in CASES:
@@ -133,6 +164,7 @@ def main() -> int:
                 "mc": round(ascmc[1], 6),
                 "cusps": [round(c, 6) for c in cusps[:12]],
                 "aspects": server_aspects(core),
+                "lunar": server_lunar(core),
             },
         })
         print(f"  {label:24} {system:10} asc={ascmc[0]:8.3f} mc={ascmc[1]:8.3f}")

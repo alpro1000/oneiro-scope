@@ -281,7 +281,14 @@
       "orb": 2.6639,
       "applying": true
      }
-    ]
+    ],
+    "lunar": {
+     "phase_angle": 189.4198,
+     "moon_age_days": 15.537995,
+     "lunar_day": 16,
+     "phase": "full_moon",
+     "moon_sign": "Capricorn"
+    }
    }
   },
   {
@@ -535,7 +542,14 @@
       "orb": 1.3447,
       "applying": false
      }
-    ]
+    ],
+    "lunar": {
+     "phase_angle": 183.7948,
+     "moon_age_days": 15.07658,
+     "lunar_day": 16,
+     "phase": "full_moon",
+     "moon_sign": "Libra"
+    }
    }
   },
   {
@@ -824,7 +838,14 @@
       "orb": 1.6837,
       "applying": false
      }
-    ]
+    ],
+    "lunar": {
+     "phase_angle": 259.5517,
+     "moon_age_days": 21.290874,
+     "lunar_day": 22,
+     "phase": "last_quarter",
+     "moon_sign": "Pisces"
+    }
    }
   },
   {
@@ -1078,7 +1099,14 @@
       "orb": 3.3619,
       "applying": false
      }
-    ]
+    ],
+    "lunar": {
+     "phase_angle": 239.7799,
+     "moon_age_days": 19.669004,
+     "lunar_day": 20,
+     "phase": "waning_gibbous",
+     "moon_sign": "Cancer"
+    }
    }
   },
   {
@@ -1318,7 +1346,14 @@
       "orb": 1.5382,
       "applying": false
      }
-    ]
+    ],
+    "lunar": {
+     "phase_angle": 202.0828,
+     "moon_age_days": 16.576733,
+     "lunar_day": 17,
+     "phase": "full_moon",
+     "moon_sign": "Cancer"
+    }
    }
   },
   {
@@ -1601,7 +1636,14 @@
       "orb": 4.8691,
       "applying": true
      }
-    ]
+    ],
+    "lunar": {
+     "phase_angle": 227.7775,
+     "moon_age_days": 18.684455,
+     "lunar_day": 19,
+     "phase": "waning_gibbous",
+     "moon_sign": "Virgo"
+    }
    }
   },
   {
@@ -1842,7 +1884,14 @@
       "orb": 5.6549,
       "applying": true
      }
-    ]
+    ],
+    "lunar": {
+     "phase_angle": 169.4101,
+     "moon_age_days": 13.896611,
+     "lunar_day": 14,
+     "phase": "full_moon",
+     "moon_sign": "Sagittarius"
+    }
    }
   },
   {
@@ -2103,7 +2152,14 @@
       "orb": 4.9768,
       "applying": false
      }
-    ]
+    ],
+    "lunar": {
+     "phase_angle": 196.4302,
+     "moon_age_days": 16.113054,
+     "lunar_day": 17,
+     "phase": "full_moon",
+     "moon_sign": "Pisces"
+    }
    }
   },
   {
@@ -2379,7 +2435,14 @@
       "orb": 5.5138,
       "applying": true
      }
-    ]
+    ],
+    "lunar": {
+     "phase_angle": 229.4402,
+     "moon_age_days": 18.820845,
+     "lunar_day": 19,
+     "phase": "waning_gibbous",
+     "moon_sign": "Aquarius"
+    }
    }
   },
   {
@@ -2647,7 +2710,14 @@
       "orb": 4.8201,
       "applying": true
      }
-    ]
+    ],
+    "lunar": {
+     "phase_angle": 62.5227,
+     "moon_age_days": 5.1287,
+     "lunar_day": 6,
+     "phase": "waxing_crescent",
+     "moon_sign": "Cancer"
+    }
    }
   },
   {
@@ -2880,7 +2950,14 @@
       "orb": 4.8803,
       "applying": false
      }
-    ]
+    ],
+    "lunar": {
+     "phase_angle": 66.6905,
+     "moon_age_days": 5.470583,
+     "lunar_day": 6,
+     "phase": "waxing_crescent",
+     "moon_sign": "Pisces"
+    }
    }
   },
   {
@@ -3113,7 +3190,14 @@
       "orb": 4.8936,
       "applying": false
      }
-    ]
+    ],
+    "lunar": {
+     "phase_angle": 77.8345,
+     "moon_age_days": 6.384718,
+     "lunar_day": 7,
+     "phase": "first_quarter",
+     "moon_sign": "Pisces"
+    }
    }
   },
   {
@@ -3367,7 +3451,14 @@
       "orb": 0.3933,
       "applying": true
      }
-    ]
+    ],
+    "lunar": {
+     "phase_angle": 105.6939,
+     "moon_age_days": 8.670009,
+     "lunar_day": 9,
+     "phase": "first_quarter",
+     "moon_sign": "Cancer"
+    }
    }
   },
   {
@@ -3670,7 +3761,14 @@
       "orb": 1.9699,
       "applying": true
      }
-    ]
+    ],
+    "lunar": {
+     "phase_angle": 218.4822,
+     "moon_age_days": 17.921967,
+     "lunar_day": 18,
+     "phase": "waning_gibbous",
+     "moon_sign": "Sagittarius"
+    }
    }
   },
   {
@@ -3952,7 +4050,14 @@
       "orb": 4.6698,
       "applying": false
      }
-    ]
+    ],
+    "lunar": {
+     "phase_angle": 141.5433,
+     "moon_age_days": 11.610714,
+     "lunar_day": 12,
+     "phase": "waxing_gibbous",
+     "moon_sign": "Scorpio"
+    }
    }
   },
   {
@@ -4234,7 +4339,14 @@
       "orb": 9.0311,
       "applying": false
      }
-    ]
+    ],
+    "lunar": {
+     "phase_angle": 255.0406,
+     "moon_age_days": 20.920831,
+     "lunar_day": 21,
+     "phase": "last_quarter",
+     "moon_sign": "Virgo"
+    }
    }
   },
   {
@@ -4516,7 +4628,14 @@
       "orb": 5.2219,
       "applying": false
      }
-    ]
+    ],
+    "lunar": {
+     "phase_angle": 213.0962,
+     "moon_age_days": 17.480156,
+     "lunar_day": 18,
+     "phase": "waning_gibbous",
+     "moon_sign": "Aries"
+    }
    }
   },
   {
@@ -4791,7 +4910,14 @@
       "orb": 5.2517,
       "applying": false
      }
-    ]
+    ],
+    "lunar": {
+     "phase_angle": 224.3549,
+     "moon_age_days": 18.403701,
+     "lunar_day": 19,
+     "phase": "waning_gibbous",
+     "moon_sign": "Taurus"
+    }
    }
   },
   {
@@ -5038,7 +5164,14 @@
       "orb": 3.5492,
       "applying": true
      }
-    ]
+    ],
+    "lunar": {
+     "phase_angle": 35.9208,
+     "moon_age_days": 2.946562,
+     "lunar_day": 3,
+     "phase": "waxing_crescent",
+     "moon_sign": "Aries"
+    }
    }
   },
   {
@@ -5313,7 +5446,14 @@
       "orb": 2.6768,
       "applying": true
      }
-    ]
+    ],
+    "lunar": {
+     "phase_angle": 183.287,
+     "moon_age_days": 15.034925,
+     "lunar_day": 16,
+     "phase": "full_moon",
+     "moon_sign": "Capricorn"
+    }
    }
   }
  ]
