@@ -5,10 +5,29 @@
 > that's easy to lose. Updated at the end of every substantial session
 > alongside `soul.md §9`.
 
-**Дата последнего обновления:** 2026-07-29 (ревью-раунд по PR #168)
+**Дата последнего обновления:** 2026-07-29 (ревью-раунд + §8 п.5)
 **Последняя ветка работы:** `claude/oneiroscope-dream-encoder-rebuild-g2iyp0`
-**PR #168** — открыт, CI зелёный на `8101eb2` (Build, MCP Smoke, chart-kit,
-Frontend Tests, UI Tests).
+**PR #168** — открыт, CI зелёный на `765eba2` (все 8 прогонов). Учтите:
+коммиты inventory-бота (`4a870a8`, `71cb0c7`) всегда садятся в
+`action_required` — это настройка репо для бот-пушей, не поломка; чтобы
+head PR был зелёным, надо ребейзиться поверх них своим коммитом.
+
+**§8 п.5 сделан (`765eba2`): натальное колесо + лунный день на chart-kit.**
+- `chart-kit/src/lunar.ts` — лунный день ТОЧНО по формуле сервера
+  (элонгация Луна−Солнце); golden-фикстура генерируется импортом
+  `SYNODIC_MONTH`/`_phase_key`/`_moon_sign` из `lunar/engine.py`.
+  Освещённости нет намеренно: она из `swe.pheno_ut`, из долгот честно
+  не выводится (WP-16). Поле `illuminationKnown: false`.
+- `chart-kit/src/wheel.ts` — `wheelLayout` (числа) + `wheelSvg` (строка).
+  Тесты поймали два бага: колесо крутилось по часовой (карта зеркальная,
+  MC внизу) и жадное разведение глифов наезжало на соседей.
+- `frontend/public/natal.html` + `/vendor/chart-store.js` (IndexedDB
+  вынесен из astrocartography.html). SW SHELL пополнен, VERSION → v2.
+- Тесты: chart-kit 358, фронтенд 28, контракт ядра 44.
+
+**Дальше по §8:** п.6 — PWA поверх Next-приложения (сейчас слой живёт на
+статических страницах `astrocartography.html` / `natal.html`); п.7 — гейт
+на выдаче payload'а, упирается в неподключённый биллинг (см. `soul.md §5`).
 
 **Ревью-раунд (коммит `8101eb2`), 8 находок Qodo — 7 настоящих:**
 - **Релокация наследовала систему домов места рождения** — главная.
