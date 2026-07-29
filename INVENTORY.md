@@ -29,9 +29,9 @@
 | frontend/app/api/lunar | 0 | 1 |
 | frontend/app/api/timezones | 0 | 1 |
 | frontend/stories | 0 | 1 |
-| frontend/public | 2 | 4 |
+| frontend/public | 2 | 5 |
 | frontend/public/icons | 0 | 3 |
-| frontend/public/vendor | 1 | 1 |
+| frontend/public/vendor | 1 | 2 |
 | frontend/public/vendor/leaflet | 1 | 2 |
 | frontend/public/vendor/leaflet/images | 0 | 5 |
 | frontend/.storybook | 0 | 2 |
@@ -39,8 +39,8 @@
 | oneiro-scope | 0 | 0 |
 | packages | 1 | 0 |
 | packages/chart-kit | 2 | 3 |
-| packages/chart-kit/src | 0 | 5 |
-| packages/chart-kit/test | 0 | 2 |
+| packages/chart-kit/src | 0 | 7 |
+| packages/chart-kit/test | 0 | 3 |
 | styles | 0 | 2 |
 | scripts | 0 | 11 |
 | config | 0 | 2 |
@@ -137,4 +137,4 @@
 | external/DReAMy | 1 | 1 |
 | external/DReAMy/dreamy | 0 | 3 |
 
-**ИТОГО:** папок = 133, файлов = 495
+**ИТОГО:** папок = 133, файлов = 500

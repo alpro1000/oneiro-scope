@@ -138,7 +138,7 @@
     {
       "path": "frontend/public",
       "dirs": 2,
-      "files": 4
+      "files": 5
     },
     {
       "path": "frontend/public/icons",
@@ -148,7 +148,7 @@
     {
       "path": "frontend/public/vendor",
       "dirs": 1,
-      "files": 1
+      "files": 2
     },
     {
       "path": "frontend/public/vendor/leaflet",
@@ -188,12 +188,12 @@
     {
       "path": "packages/chart-kit/src",
       "dirs": 0,
-      "files": 5
+      "files": 7
     },
     {
       "path": "packages/chart-kit/test",
       "dirs": 0,
-      "files": 2
+      "files": 3
     },
     {
       "path": "styles",
@@ -672,5 +672,5 @@
     }
   ],
   "total_dirs": 133,
-  "total_files": 495
+  "total_files": 500
 }
