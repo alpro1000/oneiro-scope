@@ -12,7 +12,7 @@
 | frontend/messages | 0 | 5 |
 | frontend/lib | 0 | 12 |
 | frontend/e2e | 0 | 2 |
-| frontend/__tests__ | 0 | 3 |
+| frontend/__tests__ | 0 | 4 |
 | frontend/styles | 0 | 2 |
 | frontend/app | 2 | 2 |
 | frontend/app/[locale] | 7 | 2 |
@@ -29,7 +29,8 @@
 | frontend/app/api/lunar | 0 | 1 |
 | frontend/app/api/timezones | 0 | 1 |
 | frontend/stories | 0 | 1 |
-| frontend/public | 1 | 4 |
+| frontend/public | 2 | 4 |
+| frontend/public/icons | 0 | 3 |
 | frontend/public/vendor | 1 | 1 |
 | frontend/public/vendor/leaflet | 1 | 2 |
 | frontend/public/vendor/leaflet/images | 0 | 5 |
@@ -37,11 +38,11 @@
 | frontend/components | 0 | 8 |
 | oneiro-scope | 0 | 0 |
 | packages | 1 | 0 |
-| packages/chart-kit | 2 | 2 |
+| packages/chart-kit | 2 | 3 |
 | packages/chart-kit/src | 0 | 5 |
 | packages/chart-kit/test | 0 | 2 |
 | styles | 0 | 2 |
-| scripts | 0 | 10 |
+| scripts | 0 | 11 |
 | config | 0 | 2 |
 | agents | 2 | 5 |
 | agents/prompts | 0 | 5 |
@@ -112,7 +113,7 @@
 | backend/services/dreams/knowledge_base | 0 | 3 |
 | backend/services/strategic | 1 | 6 |
 | backend/services/strategic/knowledge_base | 0 | 1 |
-| backend/services/astrology | 6 | 24 |
+| backend/services/astrology | 6 | 25 |
 | backend/services/astrology/archetypes | 0 | 9 |
 | backend/services/astrology/validators | 0 | 2 |
 | backend/services/astrology/policies | 0 | 2 |
@@ -136,4 +137,4 @@
 | external/DReAMy | 1 | 1 |
 | external/DReAMy/dreamy | 0 | 3 |
 
-**ИТОГО:** папок = 132, файлов = 488
+**ИТОГО:** папок = 133, файлов = 495

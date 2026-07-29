@@ -53,7 +53,7 @@
     {
       "path": "frontend/__tests__",
       "dirs": 0,
-      "files": 3
+      "files": 4
     },
     {
       "path": "frontend/styles",
@@ -137,8 +137,13 @@
     },
     {
       "path": "frontend/public",
-      "dirs": 1,
+      "dirs": 2,
       "files": 4
+    },
+    {
+      "path": "frontend/public/icons",
+      "dirs": 0,
+      "files": 3
     },
     {
       "path": "frontend/public/vendor",
@@ -178,7 +183,7 @@
     {
       "path": "packages/chart-kit",
       "dirs": 2,
-      "files": 2
+      "files": 3
     },
     {
       "path": "packages/chart-kit/src",
@@ -198,7 +203,7 @@
     {
       "path": "scripts",
       "dirs": 0,
-      "files": 10
+      "files": 11
     },
     {
       "path": "config",
@@ -553,7 +558,7 @@
     {
       "path": "backend/services/astrology",
       "dirs": 6,
-      "files": 24
+      "files": 25
     },
     {
       "path": "backend/services/astrology/archetypes",
@@ -666,6 +671,6 @@
       "files": 3
     }
   ],
-  "total_dirs": 132,
-  "total_files": 488
+  "total_dirs": 133,
+  "total_files": 495
 }
