@@ -23,6 +23,7 @@ export {
   houseOf,
   norm360,
   ramc,
+  resolveSystemFor,
   sep180,
 } from './angles';
 export {

@@ -104,19 +104,63 @@ export function houseOf(longitude: number, cusps: number[]): number {
 }
 
 /**
+ * The latitude past which Placidus and Koch stop existing, for this
+ * chart's epoch.
+ *
+ * Not a hardcoded 66.5°: the polar circle is 90° − obliquity, and the
+ * obliquity drifts by ~47″/century, which is why `chart_core` ships it.
+ * A binary search against `swe.houses_ex` puts the server's own refusal
+ * at exactly this value (66.557962° for a 1990 chart, obliquity
+ * 23.442038°), and it refuses for the whole latitude rather than
+ * per-cusp — so this is the rule the kit must use to stay in step. A
+ * finer per-cusp test would find some polar charts "defined" that the
+ * server would have substituted, which is precisely the silent
+ * divergence the golden set exists to catch.
+ */
+const placidusLimit = (core: ChartCore): number => 90 - core.obliquity;
+
+/**
+ * Which house system is usable at a given latitude, and why.
+ *
+ * Relocation is the whole point of the map, and the system that works
+ * at the birth place says nothing about the system that works at the
+ * target: Placidus is undefined poleward of the polar circle wherever
+ * you were born. Resolving per target is what keeps "move a London
+ * chart to Tromsø" from throwing and "move a Tromsø chart to London"
+ * from silently staying on Porphyry.
+ *
+ * `_lon` is accepted and ignored: the boundary is a function of
+ * latitude alone. It stays in the signature so callers can pass a
+ * location as one pair, the way every other function here takes it.
+ */
+export function resolveSystemFor(
+  core: ChartCore,
+  lat: number,
+  _lon?: number,
+): { system: HouseSystem; substituted: boolean } {
+  const requested = core.requested_house_system ?? core.house_system;
+  if (requested !== 'placidus' && requested !== 'koch') {
+    return { system: requested, substituted: false };
+  }
+  return Math.abs(lat) >= placidusLimit(core)
+    ? { system: 'porphyry', substituted: true }
+    : { system: requested, substituted: false };
+}
+
+/**
  * The twelve house cusps, as absolute ecliptic longitudes.
  *
- * `system` defaults to whatever the payload declares — the server has
- * already resolved what is defined at this latitude, so following the
- * payload keeps client and server on the same system. Asking for
- * Placidus poleward of the polar circle throws rather than quietly
- * returning something else.
+ * With no explicit `system`, the one usable AT THIS LOCATION is
+ * resolved — not the one the payload happened to need at the birth
+ * place. Passing a system explicitly forces it, and forcing Placidus
+ * where it is undefined throws rather than quietly returning something
+ * else.
  */
 export function houseCusps(
   core: ChartCore,
   lat: number,
   lon: number,
-  system: HouseSystem = core.house_system,
+  system: HouseSystem = resolveSystemFor(core, lat, lon).system,
 ): number[] {
   const { asc, mc, desc, ic } = angles(core, lat, lon);
   const eps = core.obliquity * D2R;
@@ -147,11 +191,19 @@ export function houseCusps(
     const c12 = placidusCusp(r, eps, phi, 60, 2 / 3);
     const c2 = placidusCusp(r, eps, phi, 120, 2 / 3);
     const c3 = placidusCusp(r, eps, phi, 150, 1 / 3);
-    if (c11 === null || c12 === null || c2 === null || c3 === null) {
+    // The latitude test comes first and is the authoritative one: for a
+    // few sidereal times past the polar circle all four cusps still
+    // converge, and returning them would hand back a Placidus chart the
+    // server refuses to produce.
+    if (
+      Math.abs(lat) >= placidusLimit(core) ||
+      c11 === null || c12 === null || c2 === null || c3 === null
+    ) {
       throw new Error(
         `Placidus is undefined at latitude ${lat}: beyond the polar circle ` +
-          `no ecliptic point crosses the horizon, so there is no semi-arc ` +
-          `to divide. Use the system declared in chart_core.house_system.`,
+          `(±${placidusLimit(core).toFixed(4)}° at this epoch) no ecliptic ` +
+          `point crosses the horizon, so there is no semi-arc to divide. ` +
+          `Omit the system argument to get the one usable here.`,
       );
     }
     return [
@@ -169,7 +221,7 @@ export function houses(
   core: ChartCore,
   lat: number,
   lon: number,
-  system: HouseSystem = core.house_system,
+  system: HouseSystem = resolveSystemFor(core, lat, lon).system,
 ): House[] {
   const cusps = houseCusps(core, lat, lon, system);
   const out: House[] = cusps.map((cusp, i) => ({

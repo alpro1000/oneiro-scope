@@ -58,3 +58,20 @@ jobs:
       - name: Golden tests (client vs server, 0.01°)
         working-directory: packages/chart-kit
         run: npm test
+
+      - name: Rebuild the browser bundle
+        # Everything above tests `src/`. The PWA loads a COMMITTED bundle
+        # at frontend/public/vendor/chart-kit.js, so a fix that lands in
+        # src and never gets rebuilt ships green CI and stale behaviour to
+        # every user — the tests would be checking code the browser does
+        # not run.
+        working-directory: packages/chart-kit
+        run: npm run build
+
+      - name: Fail if the committed bundle is stale
+        run: |
+          if ! git diff --quiet frontend/public/vendor/chart-kit.js; then
+            echo "::error::frontend/public/vendor/chart-kit.js is stale — run 'npm run build' in packages/chart-kit and commit the result"
+            git diff --stat frontend/public/vendor/chart-kit.js
+            exit 1
+          fi

@@ -16,6 +16,8 @@ from __future__ import annotations
 import asyncio
 import json
 import math
+import pathlib
+import re
 from datetime import date, time
 
 import pytest
@@ -25,7 +27,10 @@ from backend.services.astrology.chart_core import (
     BODIES,
     CHART_CORE_MAX_BYTES,
     CHART_CORE_VERSION,
+    CHART_KIT_HOUSE_SYSTEMS,
+    HOUSE_SYSTEM_CODES,
     NODE_TYPE,
+    PLACE_LABEL_MAX_BYTES,
     build_chart_core,
     build_chart_response,
     chart_core_bytes,
@@ -171,6 +176,82 @@ def test_unknown_house_system_is_refused_not_silently_substituted():
         resolve_house_system(jd, 47.8, 35.1, "plasidus")
 
 
+def test_substituted_core_carries_what_was_asked_for():
+    """Relocation needs the original request, not just the survivor.
+
+    `house_system` describes ONE point on Earth. A client relocating a
+    Tromsø chart to London has to know Placidus was wanted, or it keeps
+    the polar substitute forever — and relocation is the whole map.
+    """
+    polar = build_chart_core(**{**REF, "lat": 69.6492, "lon": 18.9553}).core
+    assert polar["house_system"] == "porphyry"
+    assert polar["requested_house_system"] == "placidus"
+
+
+def test_unsubstituted_core_spends_no_bytes_on_the_field():
+    core = build_chart_core(**REF).core
+    assert core["house_system"] == "placidus"
+    assert "requested_house_system" not in core
+
+
+def test_core_refuses_systems_the_client_cannot_draw():
+    """A chart_core promises the CLIENT can re-derive the cusps. Koch is
+    a real system the server's own natal service computes happily, but
+    chart-kit does not implement it, so declaring it here would ship
+    houses nobody can draw."""
+    for system in sorted(set(HOUSE_SYSTEM_CODES) - CHART_KIT_HOUSE_SYSTEMS):
+        with pytest.raises(ValueError, match="chart-kit"):
+            build_chart_core(**REF, house_system=system)
+    with pytest.raises(ValueError, match="Unknown house system"):
+        build_chart_core(**REF, house_system="plasidus")
+
+
+def test_the_two_lists_of_implemented_systems_cannot_drift():
+    """The Python set and the TypeScript array are one fact stored twice.
+
+    Parsed out of the kit's own source rather than duplicated here: a
+    system added on one side and forgotten on the other is exactly the
+    kind of divergence that shows up as a client drawing houses the
+    server never authorised.
+    """
+    src = (
+        pathlib.Path(__file__).resolve().parents[2]
+        / "packages/chart-kit/src/types.ts"
+    ).read_text(encoding="utf-8")
+    block = re.search(
+        r"export const IMPLEMENTED_SYSTEMS = \[(.*?)\] as const;", src, re.S
+    )
+    assert block, "IMPLEMENTED_SYSTEMS not found in chart-kit types.ts"
+    assert set(re.findall(r"'([a-z_]+)'", block.group(1))) == CHART_KIT_HOUSE_SYSTEMS
+
+
+# ── the one field a caller can inflate ──────────────────────────────────────
+
+def test_a_long_place_name_cannot_breach_the_budget():
+    """255 characters of Cyrillic is 510 bytes — a quarter of the budget
+    from a field no computation reads. The API allows a long geocoding
+    query; what rides in the core is the bounded echo of it."""
+    core = build_chart_core(**{**REF, "place_label": "Запорожье" * 40}).core
+    assert chart_core_bytes(core) <= CHART_CORE_MAX_BYTES
+    label = core["birth"]["place_label"]
+    assert len(label.encode()) <= PLACE_LABEL_MAX_BYTES
+    # Truncated visibly, not quietly cropped to look complete.
+    assert label.endswith("…")
+
+
+def test_a_short_place_name_is_left_exactly_as_given():
+    assert build_chart_core(**REF).core["birth"]["place_label"] == "Запорожье"
+
+
+@pytest.mark.parametrize("label", ["🌑" * 255, "a" * 255, "Ω" * 255])
+def test_no_encoding_of_a_max_length_label_breaks_the_budget(label):
+    """Emoji are 4 bytes each: 255 of them is 1020 bytes on their own."""
+    core = build_chart_core(**{**REF, "place_label": label}).core
+    assert chart_core_bytes(core) <= CHART_CORE_MAX_BYTES
+    # And the cut never leaves a broken code point behind.
+    core["birth"]["place_label"].encode().decode()
+
+
 def test_polar_birth_still_produces_a_chart():
     """The regression this fixes: a Tromsø birth used to raise RuntimeError
     and return no chart at all."""
@@ -271,6 +352,31 @@ def test_http_endpoint_delegates_to_the_shared_builder():
         "the HTTP layer must not touch swisseph directly — it would become "
         "a second implementation able to drift from the MCP surface"
     )
+
+
+@pytest.mark.parametrize("lat,lon", [(47.8388, 35.1396), (69.6492, 18.9553)])
+def test_the_http_response_model_changes_nothing_it_validates(lat, lon):
+    """A response_model sits between the builder and the wire, so it is a
+    place identity can be lost: a forgotten field is dropped, a reordered
+    one changes the bytes, `Optional` fields appear as nulls the MCP
+    surface never sends. Both parametrisations matter — the polar one is
+    the only chart carrying `requested_house_system` and a note.
+    """
+    from backend.services.astrology.chart_contract import ChartResponse
+
+    body = build_chart_response(
+        **{**REF, "lat": lat, "lon": lon}, timezone_name="Europe/Kyiv"
+    )
+    through_model = ChartResponse.model_validate(body).model_dump(
+        mode="json", exclude_none=True
+    )
+    assert _dump(through_model) == _dump(body), (
+        "the response_model altered the payload — the HTTP surface would "
+        "stop matching the MCP one"
+    )
+    # Order too, not just contents: byte-identical is the acceptance
+    # criterion, and sort_keys above would hide a reordered model.
+    assert list(through_model["chart_core"]) == list(body["chart_core"])
 
 
 def test_envelope_carries_provenance_and_disclaimer():

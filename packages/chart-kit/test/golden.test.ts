@@ -24,6 +24,7 @@ import {
   houseCusps,
   houses,
   mcLongitude,
+  resolveSystemFor,
   sep180,
   signOf,
 } from '../src/index';
@@ -252,6 +253,92 @@ describe('contacts and dignities', () => {
     const byBody = Object.fromEntries(dignities(fake).map((d) => [d.body, d.status]));
     expect(byBody.Sun).toBe('domicile');
     expect(byBody.Saturn).toBe('exaltation');
+  });
+});
+
+describe('relocation resolves the house system at the target, not at birth', () => {
+  // A chart is not read only where it was born — the whole map is
+  // relocation. `chart_core.house_system` describes ONE point on Earth,
+  // so using it everywhere would keep a Tromsø native on the polar
+  // substitution in London, and throw for a Londoner reading Tromsø.
+  const LONDON: [number, number] = [51.5074, -0.1278];
+  const LONGYEARBYEN: [number, number] = [78.2232, 15.6469];
+
+  const polar = charts.find((c) => c.house_system_note !== null)!;
+  const temperate = charts.find(
+    (c) =>
+      c.house_system_note === null &&
+      Math.abs(c.chart_core.birth.lat) < 60 &&
+      c.chart_core.birth.time_known,
+  )!;
+
+  it('the polar-born core carries what was originally asked for', () => {
+    expect(polar.chart_core.house_system).toBe('porphyry');
+    expect(polar.chart_core.requested_house_system).toBe('placidus');
+  });
+
+  it('a temperate core spends no bytes on a substitution that never happened', () => {
+    expect(temperate.chart_core.house_system).toBe('placidus');
+    expect(temperate.chart_core.requested_house_system).toBeUndefined();
+  });
+
+  it('polar-born → London gets Placidus back', () => {
+    const core = polar.chart_core;
+    const r = resolveSystemFor(core, ...LONDON);
+    expect(r.system).toBe('placidus');
+    expect(r.substituted).toBe(false);
+
+    const got = houseCusps(core, ...LONDON);
+    expect(got).toEqual(houseCusps(core, ...LONDON, 'placidus'));
+    // Not merely "no throw": Placidus quadrants are uneven, Porphyry's
+    // are exactly equal, so a real Placidus answer must differ from the
+    // substitute by more than the tolerance somewhere.
+    const substitute = houseCusps(core, ...LONDON, 'porphyry');
+    const apart = got.map((c, i) => diff(c, substitute[i]));
+    expect(Math.max(...apart)).toBeGreaterThan(TOL);
+  });
+
+  it('temperate-born → Longyearbyen substitutes instead of throwing', () => {
+    const core = temperate.chart_core;
+    const r = resolveSystemFor(core, ...LONGYEARBYEN);
+    expect(r.system).toBe('porphyry');
+    expect(r.substituted).toBe(true);
+
+    const got = houseCusps(core, ...LONGYEARBYEN);
+    expect(got).toHaveLength(12);
+    // The substitution keeps the frame: cusp 1 is still the Ascendant,
+    // cusp 10 still the MC. The angles themselves are pure trigonometry
+    // and stay valid at any latitude.
+    const a = angles(core, ...LONGYEARBYEN);
+    expect(diff(got[0], a.asc)).toBeLessThan(TOL);
+    expect(diff(got[9], a.mc)).toBeLessThan(TOL);
+  });
+
+  it('houses() relocates too, not just houseCusps()', () => {
+    // Same defaulting bug, one layer up: houses() used to reach for
+    // core.house_system directly.
+    const hs = houses(temperate.chart_core, ...LONGYEARBYEN);
+    expect(hs).toHaveLength(12);
+    const placed = hs.flatMap((h) => h.bodies);
+    expect(placed.sort()).toEqual(Object.keys(temperate.chart_core.bodies).sort());
+  });
+
+  it('an explicit system still forces itself, including into the refusal', () => {
+    // resolveSystemFor is the default, not a policy. Asking for Placidus
+    // past the polar circle is answered with a refusal, never with
+    // something else wearing its name.
+    expect(() =>
+      houseCusps(temperate.chart_core, ...LONGYEARBYEN, 'placidus'),
+    ).toThrow(/undefined/);
+  });
+
+  it('the boundary is the epoch’s polar circle, not a hardcoded 66.5°', () => {
+    const core = temperate.chart_core;
+    const limit = 90 - core.obliquity;
+    expect(resolveSystemFor(core, limit - 0.01).system).toBe('placidus');
+    expect(resolveSystemFor(core, limit + 0.01).system).toBe('porphyry');
+    // Southern hemisphere too — |lat|, not lat.
+    expect(resolveSystemFor(core, -(limit + 0.01)).system).toBe('porphyry');
   });
 });
 

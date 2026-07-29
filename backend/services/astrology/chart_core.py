@@ -80,6 +80,21 @@ HOUSE_SYSTEM_CODES: dict[str, bytes] = {
     "whole_sign": b"W",
 }
 
+# What `packages/chart-kit` can actually draw from a core. The full
+# HOUSE_SYSTEM_CODES table above stays as it is: the natal-chart service
+# computes cusps server-side with Swiss Ephemeris and can honour every
+# letter in it. A `chart_core`, though, promises something stronger —
+# that the CLIENT can re-derive the cusps with no server — so declaring a
+# system the kit does not implement would ship a payload whose houses
+# nobody can draw. Refused at this boundary instead.
+#
+# `test_chart_core_contract.py` parses the kit's own IMPLEMENTED_SYSTEMS
+# array and asserts it equals this set, so the two cannot drift apart
+# silently.
+CHART_KIT_HOUSE_SYSTEMS: frozenset[str] = frozenset(
+    {"placidus", "porphyry", "equal", "whole_sign"}
+)
+
 # Beyond the polar circle the time-based quadrant systems (Placidus,
 # Koch) are mathematically undefined — points of the ecliptic never
 # cross the horizon there, so there is no time to trisect, and Swiss
@@ -99,6 +114,14 @@ POLAR_FALLBACK_SYSTEM = "porphyry"
 # in every response and gets stored offline, so growth has to be an
 # explicit decision, not a drift.
 CHART_CORE_MAX_BYTES = 2048
+
+# The one field a caller can inflate at will. Everything else in the core
+# is a fixed-width number, so the payload sits at ~1.7 KB and the only
+# way to breach 2 KB is a long place name — 255 characters of Cyrillic is
+# 510 bytes, and of emoji up to 1020. The label is display-only and never
+# enters the computation, so bounding it costs nothing that matters,
+# whereas letting it through would break a budget the client relies on.
+PLACE_LABEL_MAX_BYTES = 96
 
 
 class ChartCore(NamedTuple):
@@ -166,6 +189,24 @@ def resolve_house_system(
         )
 
 
+def _bounded_label(label: str) -> str:
+    """Place label clipped to the bytes it is allowed to occupy.
+
+    Truncation is visible (an ellipsis) rather than silent, and it is the
+    only field in the core it is safe to shorten: the label is echoed for
+    display and never read by any computation. The alternative — letting
+    a 255-character name push the payload past its budget — would break
+    the promise the client caches against.
+    """
+    encoded = label.encode()
+    if len(encoded) <= PLACE_LABEL_MAX_BYTES:
+        return label
+    # errors="ignore" drops a partial multi-byte sequence at the cut
+    # instead of emitting U+FFFD; the reserved 3 bytes are the ellipsis.
+    head = encoded[: PLACE_LABEL_MAX_BYTES - 3].decode(errors="ignore").rstrip()
+    return head + "…"
+
+
 def _body_state(jd_ut: float, code: int, name: str) -> dict[str, Any]:
     """Ecliptic + equatorial state of one body, verified SWIEPH.
 
@@ -215,12 +256,27 @@ def build_chart_core(
             never participates in the computation.
         timezone_name: IANA zone override; omitted, the zone is derived
             from the coordinates via tzdata (historical rules included).
-        house_system: Declared for the client; cusps themselves are the
-            client's to compute.
+        house_system: Requested system, restricted to what chart-kit can
+            re-derive (`CHART_KIT_HOUSE_SYSTEMS`); the cusps themselves
+            are the client's to compute. When the birth latitude makes it
+            undefined the core declares the substitute in `house_system`
+            and the original in `requested_house_system`.
 
     Returns the `chart_core` object (not the response envelope).
     """
     require_in_range(birth_date, "birth_date")
+    requested = house_system.lower()
+    if requested not in CHART_KIT_HOUSE_SYSTEMS:
+        available = ", ".join(sorted(CHART_KIT_HOUSE_SYSTEMS))
+        if requested in HOUSE_SYSTEM_CODES:
+            raise ValueError(
+                f"{requested} is a real house system, but packages/chart-kit "
+                f"cannot re-derive its cusps, and a chart_core promises "
+                f"exactly that — declaring it would ship houses no client can "
+                f"draw. Available here: {available}."
+            )
+        raise ValueError(f"Unknown house system {requested!r}; available: {available}")
+
     moment = resolve_birth_moment(
         birth_date, birth_time, lat=lat, lon=lon, timezone_name=timezone_name
     )
@@ -231,7 +287,7 @@ def build_chart_core(
     obliquity = swe.calc_ut(jd_ut, swe.ECL_NUT, swe.FLG_SWIEPH)[0][0]
 
     local_clock = f"{birth_date.isoformat()}T{(birth_time or time_cls(12, 0)).isoformat()}"
-    system_used, substitution = resolve_house_system(jd_ut, lat, lon, house_system)
+    system_used, substitution = resolve_house_system(jd_ut, lat, lon, requested)
 
     core: dict[str, Any] = {
         "version": CHART_CORE_VERSION,
@@ -246,7 +302,7 @@ def build_chart_core(
             "tz_source": moment.source,
             "local_clock": local_clock,
             "utc": moment.utc_iso,
-            "place_label": place_label,
+            "place_label": _bounded_label(place_label),
             "time_known": birth_time is not None,
         },
         "bodies": {
@@ -255,6 +311,15 @@ def build_chart_core(
         "node_type": NODE_TYPE,
         "house_system": system_used,
     }
+    if system_used != requested:
+        # Relocation is the whole point of the client kit, and the system
+        # that survives the BIRTH latitude says nothing about the one that
+        # works at a target. Without the original request a client
+        # relocating a Tromsø chart to London would stay on the polar
+        # substitution forever, and one relocating London to Tromsø would
+        # have nothing to fall back to. Carried only when a substitution
+        # actually happened, so the common chart pays no bytes for it.
+        core["requested_house_system"] = requested
     # The substitution REASON is prose, not arithmetic: it rides in the
     # envelope, not in the budgeted core, so a long explanation can never
     # eat the bytes the numbers need.

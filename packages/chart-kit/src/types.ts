@@ -49,6 +49,23 @@ export type HouseSystem =
   | 'equal'
   | 'whole_sign';
 
+/**
+ * The systems this kit can actually compute cusps for.
+ *
+ * The union above is the server's full vocabulary — its own natal-chart
+ * service computes cusps with Swiss Ephemeris and honours all of it. A
+ * `chart_core` is a narrower promise: that the CLIENT can re-derive the
+ * cusps unaided. `chart_core.py::CHART_KIT_HOUSE_SYSTEMS` refuses
+ * anything outside this array, and a Python test parses this very line
+ * to check the two lists still agree.
+ */
+export const IMPLEMENTED_SYSTEMS = [
+  'placidus',
+  'porphyry',
+  'equal',
+  'whole_sign',
+] as const;
+
 export interface ChartCore {
   version: string;
   jd_ut: number;
@@ -65,8 +82,14 @@ export interface ChartCore {
   bodies: Record<string, BodyState>;
   /** 'true' | 'mean' — which lunar node the payload carries. */
   node_type: string;
-  /** The system that is actually defined at this latitude. */
+  /** The system that is actually defined at the BIRTH latitude. */
   house_system: HouseSystem;
+  /**
+   * What the caller asked for, present only when the birth latitude
+   * forced a substitution. Relocation needs it: `house_system` describes
+   * one point on Earth, and the map describes all of them.
+   */
+  requested_house_system?: HouseSystem;
 }
 
 export interface Angles {

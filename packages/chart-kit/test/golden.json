@@ -1439,7 +1439,8 @@
      }
     },
     "node_type": "true",
-    "house_system": "porphyry"
+    "house_system": "porphyry",
+    "requested_house_system": "placidus"
    },
    "house_system_note": "placidus is undefined at latitude 69.6492 (beyond the polar circle no ecliptic point crosses the horizon, so there is no diurnal arc to divide); using porphyry, which keeps cusp 1 = Asc and cusp 10 = MC. The four angles are unaffected.",
    "expected": {
@@ -1721,7 +1722,8 @@
      }
     },
     "node_type": "true",
-    "house_system": "porphyry"
+    "house_system": "porphyry",
+    "requested_house_system": "placidus"
    },
    "house_system_note": "placidus is undefined at latitude 78.2232 (beyond the polar circle no ecliptic point crosses the horizon, so there is no diurnal arc to divide); using porphyry, which keeps cusp 1 = Asc and cusp 10 = MC. The four angles are unaffected.",
    "expected": {
@@ -2222,7 +2224,8 @@
      }
     },
     "node_type": "true",
-    "house_system": "porphyry"
+    "house_system": "porphyry",
+    "requested_house_system": "placidus"
    },
    "house_system_note": "placidus is undefined at latitude -75.0000 (beyond the polar circle no ecliptic point crosses the horizon, so there is no diurnal arc to divide); using porphyry, which keeps cusp 1 = Asc and cusp 10 = MC. The four angles are unaffected.",
    "expected": {

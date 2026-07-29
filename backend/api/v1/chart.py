@@ -22,8 +22,10 @@ from typing import Any, Optional
 from fastapi import APIRouter, HTTPException, status
 from pydantic import BaseModel, Field, model_validator
 
+from backend.services.astrology.chart_contract import ChartResponse
 from backend.services.astrology.chart_core import (
     CHART_CORE_MAX_BYTES,
+    CHART_KIT_HOUSE_SYSTEMS,
     DEFAULT_HOUSE_SYSTEM,
     build_chart_response,
     chart_core_bytes,
@@ -64,9 +66,10 @@ class ChartRequest(BaseModel):
     )
     house_system: str = Field(
         DEFAULT_HOUSE_SYSTEM,
-        description="Requested house system. Beyond the polar circle "
-                    "Placidus is undefined; the response then declares the "
-                    "system actually used and why.",
+        description="Requested house system, restricted to those chart-kit "
+                    f"can re-derive client-side ({', '.join(sorted(CHART_KIT_HOUSE_SYSTEMS))}). "
+                    "Beyond the polar circle Placidus is undefined; the "
+                    "response then declares the system actually used and why.",
     )
     locale: str = Field("ru", pattern="^(en|ru)$")
 
@@ -84,7 +87,16 @@ class ChartRequest(BaseModel):
         return self
 
 
-@router.post("", status_code=status.HTTP_200_OK)
+@router.post(
+    "",
+    status_code=status.HTTP_200_OK,
+    response_model=ChartResponse,
+    # The two optional fields are ABSENT rather than null when they do not
+    # apply, which is what the MCP surface emits — with them nulled the
+    # HTTP body would stop being byte-identical, and clients would have to
+    # learn a second shape of the same contract.
+    response_model_exclude_none=True,
+)
 async def compute_chart(req: ChartRequest) -> dict[str, Any]:
     """Compute the self-contained chart core.
 
