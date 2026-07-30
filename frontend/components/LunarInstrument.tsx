@@ -82,6 +82,21 @@ function monthGrid(year: number, month: number): {days: string[]; lead: number} 
   return {days, lead};
 }
 
+/** Map with a concurrency cap, preserving order — a whole month is ~30 days,
+ *  and firing them all at once is a burst the backend should not have to eat. */
+async function mapLimit<T, R>(items: T[], limit: number, fn: (t: T) => Promise<R>): Promise<R[]> {
+  const out = new Array<R>(items.length);
+  let i = 0;
+  const worker = async () => {
+    while (i < items.length) {
+      const idx = i++;
+      out[idx] = await fn(items[idx]);
+    }
+  };
+  await Promise.all(Array.from({length: Math.min(limit, items.length)}, worker));
+  return out;
+}
+
 /** A moon disc whose brightness IS the illuminated fraction — no faked
  *  terminator geometry, just the number rendered as light. */
 function MoonDisc({illum, size = 46}: {illum: number; size?: number}) {
@@ -122,6 +137,12 @@ export default function LunarInstrument({initial, locale, defaultTz}: Props) {
   const cacheRef = useRef<Map<string, LunarDayPayload>>(
     new Map([[`${initial.date}|${initial.timezone || defaultTz}`, initial]]),
   );
+  // Guards against a slower earlier load (month nav / tz change) resolving after
+  // a newer one and overwriting the grid; and lets the post-load selection sync
+  // use the LATEST selected day rather than the one captured when the load began.
+  const reqRef = useRef(0);
+  const selectedRef = useRef(selected.date);
+  useEffect(() => { selectedRef.current = selected.date; }, [selected.date]);
 
   useEffect(() => {
     const stored = getStoredTimezone();
@@ -134,34 +155,31 @@ export default function LunarInstrument({initial, locale, defaultTz}: Props) {
   // Load every day of the viewed month for the chosen zone. No fabrication:
   // a day that will not load leaves the whole grid in an honest error state.
   const loadMonth = useCallback(async () => {
+    const reqId = ++reqRef.current;
     setStatus('loading');
     try {
-      const results = await Promise.all(
-        grid.days.map(async (date) => {
-          const key = `${date}|${tz}`;
-          const cached = cacheRef.current.get(key);
-          if (cached) return cached;
-          const payload = await fetchLunarDayClient(date, lang, tz, {retries: 2, baseDelay: 400});
-          cacheRef.current.set(key, payload);
-          return payload;
-        }),
-      );
+      const results = await mapLimit(grid.days, 6, async (date) => {
+        const key = `${date}|${tz}`;
+        const cached = cacheRef.current.get(key);
+        if (cached) return cached;
+        const payload = await fetchLunarDayClient(date, lang, tz, {retries: 2, baseDelay: 400});
+        cacheRef.current.set(key, payload);
+        return payload;
+      });
+      if (reqId !== reqRef.current) return; // a newer load superseded this one
       const next = new Map<string, LunarDayPayload>();
       results.forEach((p) => next.set(p.date, p));
       setCells(next);
       setStatus('ready');
-      // keep the hero in step with the chosen zone
-      const sel = next.get(selected.date);
+      // keep the hero in step with the chosen zone, using the LATEST selection
+      const sel = next.get(selectedRef.current);
       if (sel) setSelected(sel);
     } catch {
-      setStatus('error');
+      if (reqId === reqRef.current) setStatus('error');
     }
-  }, [grid, tz, lang, selected.date]);
+  }, [grid, tz, lang]);
 
-  useEffect(() => {
-    loadMonth();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [view, tz]);
+  useEffect(() => { loadMonth(); }, [loadMonth]);
 
   const shiftMonth = (delta: number) =>
     setView(({year, month}) => {
@@ -274,7 +292,7 @@ export default function LunarInstrument({initial, locale, defaultTz}: Props) {
             <table style={{width: '100%', borderCollapse: 'collapse'}} className="num">
               <tbody>
                 <tr><td style={cellL}>{t.phase}</td><td style={cellR}>{s.phase} <span style={{color: 'var(--dim)'}}>· {waxing ? t.waxing : t.waning}</span></td></tr>
-                <tr><td style={cellL}>{t.illum}</td><td style={cellR}>{Math.round(illum * 100)}%</td></tr>
+                <tr><td style={cellL}>{t.illum}</td><td style={cellR}>{(illum * 100).toFixed(1)}%</td></tr>
                 {s.moon_sign && <tr><td style={cellL}>{t.moonSign}</td><td style={cellR}>{s.moon_sign}</td></tr>}
                 {s.lunar_day_start_time && <tr><td style={cellL}>{t.dayStarted}</td><td style={cellR}>{s.lunar_day_start_time}</td></tr>}
               </tbody>
