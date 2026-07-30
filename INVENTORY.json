@@ -43,7 +43,7 @@
     {
       "path": "frontend/lib",
       "dirs": 0,
-      "files": 12
+      "files": 13
     },
     {
       "path": "frontend/e2e",
@@ -62,12 +62,12 @@
     },
     {
       "path": "frontend/app",
-      "dirs": 2,
+      "dirs": 3,
       "files": 2
     },
     {
       "path": "frontend/app/[locale]",
-      "dirs": 7,
+      "dirs": 8,
       "files": 2
     },
     {
@@ -77,6 +77,11 @@
     },
     {
       "path": "frontend/app/[locale]/face",
+      "dirs": 0,
+      "files": 1
+    },
+    {
+      "path": "frontend/app/[locale]/natal",
       "dirs": 0,
       "files": 1
     },
@@ -116,6 +121,26 @@
       "files": 1
     },
     {
+      "path": "frontend/app/legal",
+      "dirs": 3,
+      "files": 1
+    },
+    {
+      "path": "frontend/app/legal/terms",
+      "dirs": 0,
+      "files": 1
+    },
+    {
+      "path": "frontend/app/legal/privacy",
+      "dirs": 0,
+      "files": 1
+    },
+    {
+      "path": "frontend/app/legal/disclaimer",
+      "dirs": 0,
+      "files": 1
+    },
+    {
       "path": "frontend/app/api",
       "dirs": 2,
       "files": 0
@@ -138,7 +163,7 @@
     {
       "path": "frontend/public",
       "dirs": 2,
-      "files": 5
+      "files": 4
     },
     {
       "path": "frontend/public/icons",
@@ -168,7 +193,7 @@
     {
       "path": "frontend/components",
       "dirs": 0,
-      "files": 8
+      "files": 9
     },
     {
       "path": "oneiro-scope",
@@ -681,6 +706,6 @@
       "files": 3
     }
   ],
-  "total_dirs": 135,
-  "total_files": 507
+  "total_dirs": 140,
+  "total_files": 513
 }
