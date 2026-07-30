@@ -17,3 +17,58 @@ body {
   background-color: var(--gold);
   color: var(--bg);
 }
+
+/* Instrument top-nav (Header). Hover/active states can't be inline styles,
+   so they live here; colours are tokens, never hardcoded hex. */
+.nav-link {
+  font-family: var(--font-ui);
+  font-size: 13px;
+  letter-spacing: .01em;
+  color: var(--muted);
+  padding: 6px 9px;
+  white-space: nowrap;
+  border-bottom: 2px solid transparent;
+  transition: color .15s ease, border-color .15s ease;
+}
+.nav-link:hover { color: var(--parchment); }
+.nav-link[aria-current="page"] { color: var(--brass); border-bottom-color: var(--brass); }
+
+.nav-link-m {
+  font-family: var(--font-ui);
+  font-size: 14px;
+  color: var(--parchment);
+  padding: 10px 6px;
+  border-bottom: 1px solid var(--grat-1);
+}
+.nav-link-m:hover { color: var(--brass); }
+.nav-link-m[aria-current="page"] { color: var(--brass); }
+
+/* Home instrument-index cards. Border, not shadow; brass edge on hover. */
+.tool-card {
+  display: block;
+  border: 1px solid var(--grat-2);
+  background: var(--shelf);
+  padding: 15px 16px 17px;
+  transition: border-color .15s ease;
+}
+.tool-card:hover,
+.tool-card:focus-within { border-color: var(--brass); }
+
+/* The "Open →" affordance. Its resting colour and transition live here, NOT
+   inline on the element — an inline style would outrank these class rules and
+   make the hover/focus recolour dead. Base is --muted (>=4.5:1 on --shelf, AA);
+   --dim would fail contrast. */
+.tool-open {
+  color: var(--muted);
+  font-size: 12px;
+  letter-spacing: .06em;
+  transition: color .15s ease;
+}
+.tool-card:hover .tool-open,
+.tool-card:focus-within .tool-open { color: var(--brass); }
+
+/* Keyboard focus stays visible and on-brand (the UA default is the floor;
+   this restores the brass indicator the old header carried). */
+.nav-link:focus-visible,
+.nav-link-m:focus-visible,
+.tool-card:focus-visible { outline: 2px solid var(--brass); outline-offset: 2px; }

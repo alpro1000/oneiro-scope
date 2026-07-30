@@ -1,54 +1,59 @@
 'use client';
 
-import {usePathname, useRouter} from 'next/navigation';
-import {useParams} from 'next/navigation';
+import {usePathname, useRouter, useParams} from 'next/navigation';
 
 const locales = [
-  {code: 'ru', label: 'RU', flag: ''},
-  {code: 'en', label: 'EN', flag: ''},
-  {code: 'de', label: 'DE', flag: ''},
-  {code: 'es', label: 'ES', flag: ''},
-  {code: 'fr', label: 'FR', flag: ''},
+  {code: 'ru', label: 'RU'},
+  {code: 'en', label: 'EN'},
+  {code: 'de', label: 'DE'},
+  {code: 'es', label: 'ES'},
+  {code: 'fr', label: 'FR'},
 ];
 
 export default function LanguageSwitcher() {
   const pathname = usePathname();
   const router = useRouter();
   const params = useParams();
-  const currentLocale = (params?.locale as string) || 'ru';
+  const current = (params?.locale as string) || 'ru';
 
-  const switchLocale = (newLocale: string) => {
-    if (newLocale === currentLocale) return;
-
-    // Replace the locale in the pathname
-    const segments = pathname.split('/');
-    segments[1] = newLocale;
-    const newPath = segments.join('/');
-
-    // Store preference in localStorage
+  const switchLocale = (next: string) => {
+    if (next === current) return;
+    // Swap the locale segment, preserving the rest of the path.
+    const segments = (pathname || `/${current}`).split('/');
+    segments[1] = next;
     if (typeof window !== 'undefined') {
-      localStorage.setItem('preferred-locale', newLocale);
+      localStorage.setItem('preferred-locale', next);
     }
-
-    router.push(newPath);
+    router.push(segments.join('/'));
   };
 
   return (
-    <div className="flex items-center gap-1 rounded-md bg-surfaceStrong p-1">
-      {locales.map((locale) => (
-        <button
-          key={locale.code}
-          onClick={() => switchLocale(locale.code)}
-          className={`rounded px-2 py-1 text-xs font-medium transition-colors ${
-            currentLocale === locale.code
-              ? 'bg-gold text-bg'
-              : 'text-ink-muted hover:text-gold'
-          }`}
-          aria-label={`Switch to ${locale.label}`}
-        >
-          {locale.label}
-        </button>
-      ))}
+    <div style={{display: 'inline-flex', border: '1px solid var(--grat-2)'}}>
+      {locales.map((locale, i) => {
+        const active = current === locale.code;
+        return (
+          <button
+            key={locale.code}
+            type="button"
+            onClick={() => switchLocale(locale.code)}
+            aria-label={`Switch to ${locale.label}`}
+            aria-current={active ? 'true' : undefined}
+            style={{
+              background: active ? 'var(--brass)' : 'transparent',
+              color: active ? 'var(--abyss)' : 'var(--muted)',
+              border: 0,
+              borderLeft: i > 0 ? '1px solid var(--grat-2)' : 0,
+              fontFamily: 'var(--font-data)',
+              fontSize: 10.5,
+              letterSpacing: '.06em',
+              padding: '5px 7px',
+              cursor: active ? 'default' : 'pointer',
+            }}
+          >
+            {locale.label}
+          </button>
+        );
+      })}
     </div>
   );
 }

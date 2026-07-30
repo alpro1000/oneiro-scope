@@ -1,122 +1,125 @@
 'use client';
 
 import Link from 'next/link';
-import {useParams} from 'next/navigation';
+import {useParams, usePathname} from 'next/navigation';
 import {useTranslations} from 'next-intl';
 import {useState} from 'react';
 import LanguageSwitcher from './LanguageSwitcher';
 
+/**
+ * Global instrument chrome. The frame is the design system — abyss ground,
+ * a single brass accent, parchment ink, 1px graticule borders, no rounding
+ * or shadow (killed globally in tokens.css). It sits on top of every screen,
+ * so it is styled with the named tokens directly, never the Tailwind palette.
+ *
+ * The nav leads with the three finished instrument screens (natal,
+ * astrocartography, lunar calendar) and keeps the two real features that are
+ * still on the old design (dreams, account) reachable. The old `/astrology`
+ * (superseded by `/natal`), `/face` (not yet working) and `/pricing`
+ * (payment path is blocked upstream) are intentionally not in the primary
+ * nav until they are rebuilt — they still resolve at their URLs.
+ */
 export default function Header() {
   const params = useParams();
-  const locale = params?.locale as string || 'ru';
+  const pathname = usePathname() || '';
+  const locale = (params?.locale as string) || 'ru';
   const t = useTranslations('Header');
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [open, setOpen] = useState(false);
 
-  const navLinks = [
-    {href: `/${locale}`, label: t('home')},
+  const links = [
+    {href: `/${locale}`, label: t('home'), exact: true},
+    {href: `/${locale}/natal`, label: t('natal')},
+    {href: `/${locale}/astrocartography`, label: t('astrocartography')},
     {href: `/${locale}/calendar`, label: t('calendar')},
-    {href: `/${locale}/astrology`, label: t('astrology')},
     {href: `/${locale}/dreams`, label: t('dreams')},
-    {href: `/${locale}/face`, label: t('face')},
-    {href: `/${locale}/pricing`, label: t('pricing')},
     {href: `/${locale}/account`, label: t('account')},
   ];
 
+  const isActive = (href: string, exact?: boolean) =>
+    exact ? pathname === href : pathname === href || pathname.startsWith(`${href}/`);
+
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-gold-soft bg-surface/95 backdrop-blur supports-[backdrop-filter]:bg-surface/80">
-      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-        {/* Logo */}
-        <Link
-          href={`/${locale}`}
-          className="flex items-center gap-3 transition-opacity hover:opacity-80"
-        >
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-gold to-gold-soft shadow-md">
-            <svg
-              viewBox="0 0 100 100"
-              className="h-6 w-6"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                d="M 60 30 A 18 18 0 1 1 60 70 A 13 13 0 1 0 60 30 Z"
-                fill="currentColor"
-                className="text-bg"
-              />
-              <circle cx="40" cy="40" r="1.5" fill="currentColor" className="text-bg" opacity="0.7"/>
-              <circle cx="35" cy="55" r="1" fill="currentColor" className="text-bg" opacity="0.5"/>
-            </svg>
-          </div>
-          <div className="hidden sm:flex flex-col">
-            <span className="text-lg font-semibold tracking-tight text-gold">
-              OneiroScope
-            </span>
-            <span className="text-xs text-ink-muted tracking-wide">
-              {t('tagline')}
-            </span>
-          </div>
+    <header
+      className="sticky top-0 z-50 w-full"
+      style={{background: 'var(--abyss)', borderBottom: '1px solid var(--grat-2)'}}
+    >
+      <div className="mx-auto flex h-14 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+        {/* wordmark */}
+        <Link href={`/${locale}`} className="flex items-baseline gap-2" aria-label="OneiroScope">
+          <span aria-hidden style={{color: 'var(--brass)', fontSize: 17}}>☽</span>
+          <span className="display" style={{fontSize: 19, color: 'var(--parchment)', letterSpacing: '.01em'}}>
+            Oneiro<em style={{fontStyle: 'italic', color: 'var(--brass)'}}>Scope</em>
+          </span>
+          <span className="eyebrow hidden md:inline" style={{marginLeft: 10}}>{t('tagline')}</span>
         </Link>
 
-        {/* Desktop Navigation + Language Switcher */}
-        <div className="hidden md:flex items-center gap-4">
-          <nav className="flex items-center gap-2">
-            {navLinks.map((link) => (
-              <NavLink key={link.href} href={link.href} label={link.label} />
-            ))}
-          </nav>
+        {/* desktop nav */}
+        <nav className="hidden lg:flex items-center" style={{gap: 2}}>
+          {links.map((l) => (
+            <Link
+              key={l.href}
+              href={l.href}
+              className="nav-link"
+              aria-current={isActive(l.href, l.exact) ? 'page' : undefined}
+            >
+              {l.label}
+            </Link>
+          ))}
+        </nav>
+
+        <div className="hidden lg:flex items-center">
           <LanguageSwitcher />
         </div>
 
-        {/* Mobile: Language Switcher + Hamburger */}
-        <div className="flex md:hidden items-center gap-2">
-          <LanguageSwitcher />
+        {/* mobile controls — just the hamburger; the language switcher lives
+            inside the open menu so the top row never overflows a 320px screen. */}
+        <div className="flex lg:hidden items-center">
           <button
             type="button"
-            onClick={() => setMobileMenuOpen((prev) => !prev)}
-            className="inline-flex items-center justify-center rounded-md p-2 text-gold hover:bg-surfaceStrong focus:outline-none focus-visible:ring-2 focus-visible:ring-gold"
-            aria-expanded={mobileMenuOpen}
-            aria-label={mobileMenuOpen ? 'Close menu' : 'Open menu'}
+            onClick={() => setOpen((v) => !v)}
+            aria-expanded={open}
+            aria-label={open ? 'Close menu' : 'Open menu'}
+            style={{
+              background: 'transparent',
+              border: '1px solid var(--grat-2)',
+              color: 'var(--brass)',
+              width: 34,
+              height: 34,
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+              fontFamily: 'var(--font-data)',
+              fontSize: 17,
+              lineHeight: 1,
+            }}
           >
-            {mobileMenuOpen ? (
-              <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            ) : (
-              <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-              </svg>
-            )}
+            {open ? '✕' : '≡'}
           </button>
         </div>
       </div>
 
-      {/* Mobile Menu */}
-      {mobileMenuOpen && (
-        <nav className="md:hidden border-t border-gold-soft bg-surface/95 backdrop-blur">
-          <div className="flex flex-col px-4 py-2 space-y-1">
-            {navLinks.map((link) => (
+      {/* mobile menu */}
+      {open && (
+        <nav className="lg:hidden" style={{borderTop: '1px solid var(--grat-1)', background: 'var(--shelf)'}}>
+          <div className="flex flex-col px-4 py-1">
+            {links.map((l) => (
               <Link
-                key={link.href}
-                href={link.href}
-                onClick={() => setMobileMenuOpen(false)}
-                className="rounded-md px-3 py-2 text-sm font-medium text-ink transition-colors hover:bg-surfaceStrong hover:text-gold"
+                key={l.href}
+                href={l.href}
+                onClick={() => setOpen(false)}
+                className="nav-link-m"
+                aria-current={isActive(l.href, l.exact) ? 'page' : undefined}
               >
-                {link.label}
+                {l.label}
               </Link>
             ))}
+            <div style={{padding: '12px 6px 4px'}}>
+              <LanguageSwitcher />
+            </div>
           </div>
         </nav>
       )}
     </header>
-  );
-}
-
-function NavLink({href, label}: {href: string; label: string}) {
-  return (
-    <Link
-      href={href}
-      className="rounded-md px-3 py-2 text-sm font-medium text-ink transition-colors hover:bg-surfaceStrong hover:text-gold focus:outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2 focus-visible:ring-offset-bg"
-    >
-      {label}
-    </Link>
   );
 }
