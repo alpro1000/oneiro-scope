@@ -71,9 +71,9 @@ export default function Header() {
           <LanguageSwitcher />
         </div>
 
-        {/* mobile controls */}
-        <div className="flex lg:hidden items-center" style={{gap: 8}}>
-          <LanguageSwitcher />
+        {/* mobile controls — just the hamburger; the language switcher lives
+            inside the open menu so the top row never overflows a 320px screen. */}
+        <div className="flex lg:hidden items-center">
           <button
             type="button"
             onClick={() => setOpen((v) => !v)}
@@ -114,6 +114,9 @@ export default function Header() {
                 {l.label}
               </Link>
             ))}
+            <div style={{padding: '12px 6px 4px'}}>
+              <LanguageSwitcher />
+            </div>
           </div>
         </nav>
       )}

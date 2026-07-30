@@ -136,17 +136,10 @@ export default function HomePage({params}: {params: {locale: string}}) {
             <p style={{color: 'var(--muted)', fontSize: 13, lineHeight: 1.55, margin: '9px 0 0'}}>
               {tool.desc[lang]}
             </p>
-            <span
-              className="tool-open num"
-              style={{
-                display: 'inline-block',
-                marginTop: 14,
-                color: 'var(--dim)',
-                fontSize: 12,
-                letterSpacing: '.06em',
-                transition: 'color .15s ease',
-              }}
-            >
+            {/* Resting colour + transition come from the .tool-open class in
+                globals.css so the hover/focus recolour can actually win — an
+                inline colour here would outrank it. */}
+            <span className="tool-open num" style={{display: 'inline-block', marginTop: 14}}>
               {t.open} →
             </span>
           </Link>
