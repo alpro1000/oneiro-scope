@@ -10,12 +10,13 @@
 | frontend/types | 0 | 2 |
 | frontend/i18n | 0 | 1 |
 | frontend/messages | 0 | 5 |
-| frontend/lib | 0 | 13 |
+| frontend/lib | 0 | 15 |
 | frontend/e2e | 0 | 2 |
 | frontend/__tests__ | 0 | 4 |
 | frontend/styles | 0 | 2 |
 | frontend/app | 3 | 2 |
-| frontend/app/[locale] | 8 | 2 |
+| frontend/app/[locale] | 9 | 2 |
+| frontend/app/[locale]/astrocartography | 0 | 1 |
 | frontend/app/[locale]/account | 0 | 1 |
 | frontend/app/[locale]/face | 0 | 1 |
 | frontend/app/[locale]/natal | 0 | 1 |
@@ -34,11 +35,9 @@
 | frontend/app/api/lunar | 0 | 1 |
 | frontend/app/api/timezones | 0 | 1 |
 | frontend/stories | 0 | 1 |
-| frontend/public | 2 | 4 |
+| frontend/public | 2 | 3 |
 | frontend/public/icons | 0 | 3 |
-| frontend/public/vendor | 1 | 2 |
-| frontend/public/vendor/leaflet | 1 | 2 |
-| frontend/public/vendor/leaflet/images | 0 | 5 |
+| frontend/public/vendor | 0 | 2 |
 | frontend/.storybook | 0 | 2 |
 | frontend/components | 0 | 9 |
 | oneiro-scope | 0 | 0 |
@@ -144,4 +143,4 @@
 | external/DReAMy | 1 | 1 |
 | external/DReAMy/dreamy | 0 | 3 |
 
-**ИТОГО:** папок = 140, файлов = 513
+**ИТОГО:** папок = 139, файлов = 508
