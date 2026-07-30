@@ -13,11 +13,13 @@ import LanguageSwitcher from './LanguageSwitcher';
  * so it is styled with the named tokens directly, never the Tailwind palette.
  *
  * The nav leads with the three finished instrument screens (natal,
- * astrocartography, lunar calendar) and keeps the two real features that are
- * still on the old design (dreams, account) reachable. The old `/astrology`
- * (superseded by `/natal`), `/face` (not yet working) and `/pricing`
- * (payment path is blocked upstream) are intentionally not in the primary
- * nav until they are rebuilt — they still resolve at their URLs.
+ * astrocartography, lunar calendar) and keeps the real features still on the
+ * old design (dreams, face, account) reachable. The old `/astrology`
+ * (superseded by `/natal`) and `/pricing` (payment path is blocked upstream)
+ * are intentionally not in the primary nav until they are rebuilt — they still
+ * resolve at their URLs. `/face` is back in the nav now that its scanner loads
+ * (its runtime is self-hosted); its instrument redesign and analysis fixes are
+ * separate follow-ups.
  */
 export default function Header() {
   const params = useParams();
@@ -32,6 +34,7 @@ export default function Header() {
     {href: `/${locale}/astrocartography`, label: t('astrocartography')},
     {href: `/${locale}/calendar`, label: t('calendar')},
     {href: `/${locale}/dreams`, label: t('dreams')},
+    {href: `/${locale}/face`, label: t('face')},
     {href: `/${locale}/account`, label: t('account')},
   ];
 
