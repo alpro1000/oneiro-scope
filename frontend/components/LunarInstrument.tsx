@@ -117,7 +117,11 @@ export default function LunarInstrument({initial, locale, defaultTz}: Props) {
     () => new Map([[initial.date, initial]]),
   );
   const [status, setStatus] = useState<'idle' | 'loading' | 'ready' | 'error'>('idle');
-  const cacheRef = useRef<Map<string, LunarDayPayload>>(new Map([[`${initial.date}|${initial.timezone}`, initial]]));
+  // Seed the cache under the SAME zone the tz state starts with, or the first
+  // month load misses on the initial day and refetches it needlessly.
+  const cacheRef = useRef<Map<string, LunarDayPayload>>(
+    new Map([[`${initial.date}|${initial.timezone || defaultTz}`, initial]]),
+  );
 
   useEffect(() => {
     const stored = getStoredTimezone();
