@@ -22,7 +22,7 @@
     },
     {
       "path": "frontend",
-      "dirs": 12,
+      "dirs": 13,
       "files": 14
     },
     {
@@ -59,6 +59,11 @@
       "path": "frontend/styles",
       "dirs": 0,
       "files": 2
+    },
+    {
+      "path": "frontend/scripts",
+      "dirs": 0,
+      "files": 1
     },
     {
       "path": "frontend/app",
@@ -177,8 +182,13 @@
     },
     {
       "path": "frontend/public/vendor",
-      "dirs": 0,
+      "dirs": 1,
       "files": 2
+    },
+    {
+      "path": "frontend/public/vendor/mediapipe",
+      "dirs": 0,
+      "files": 1
     },
     {
       "path": "frontend/.storybook",
@@ -701,6 +711,6 @@
       "files": 3
     }
   ],
-  "total_dirs": 139,
-  "total_files": 507
+  "total_dirs": 141,
+  "total_files": 509
 }
