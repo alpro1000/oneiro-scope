@@ -14,7 +14,7 @@
  *   the page says so.
  */
 
-const VERSION = 'v2';
+const VERSION = 'v3';
 const SHELL_CACHE = `oneiro-shell-${VERSION}`;
 
 // Kept deliberately small: the shell plus the kit is all that is needed
@@ -24,7 +24,9 @@ const SHELL_CACHE = `oneiro-shell-${VERSION}`;
 const SHELL = [
   '/',
   '/astrocartography.html',
-  '/natal.html',
+  // The natal wheel moved into the Next app at /<locale>/natal; it is no
+  // longer a static shell page. Its route and chunks are runtime-cached by
+  // the fetch handler like any other app navigation, not precached here.
   '/vendor/chart-kit.js',
   '/vendor/chart-store.js',
   // Leaflet is vendored precisely so it can live here: a CDN copy could

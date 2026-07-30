@@ -35,6 +35,8 @@
   --p-uranus:   #6FBACB;
   --p-neptune:  #5F84BC;
   --p-pluto:    #997280;
+  --p-truenode: var(--muted);      /* лунный узел — служебная точка, не металл */
+  --p-chiron:   var(--p-mercury);  /* кентавр — ближе всего к ртути */
 
   /* --- типографика: три гарнитуры, роли фиксированы --- */
   --font-display: 'Bodoni Moda', Georgia, serif;

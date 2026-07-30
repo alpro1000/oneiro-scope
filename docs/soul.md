@@ -135,6 +135,61 @@ Recent decisions:
 
 ## §9 Session log
 
+### 2026-07-30 (part 4) — chart-kit в сборке Next + натальное колесо в роут + легал-каркасы
+
+**Повод:** владелец перед лунным календарём попросил убрать промежуточную
+остановку в `public/`: «подключи chart-kit к сборке Next и перенеси натальное
+колесо в роут `/[locale]/natal`. Дальше экраны делаем сразу в роутах. Заодно
+создай статические `/legal/privacy|terms|disclaimer` — пустые каркасы с
+заголовками, текст пришлю; открываются без авторизации и без языкового
+префикса».
+
+**chart-kit подключён к сборке Next** — единственным источником, без
+дублирования: `transpilePackages: ['@oneiroscope/chart-kit']` в
+`next.config.js` + `"@oneiroscope/chart-kit": "file:../packages/chart-kit"` в
+`frontend/package.json`. Пакет — чистый TS (его `exports` указывает на
+`src/index.ts`), все импорты относительные, рантайм-зависимостей нет — поэтому
+Next его просто транспилирует. `npm install` создал симлинк, `next build`
+зелёный: `✓ Compiled successfully`. **Открытый вопрос — build-context Vercel:**
+Root Directory там `frontend`, а `../packages` вне него. Локально работает;
+эмпирически проверяется на PREVIEW-деплое ветки (production деплоится только
+при merge в main, так что проверка не трогает прод). Если preview упадёт на
+симлинке — фолбэк: зеркалить `src` в `frontend/lib/chart-kit` с CI-проверкой
+дрейфа.
+
+**Натальное колесо стало роутом** `frontend/app/[locale]/natal/page.tsx`
+(React client-компонент, порт из `public/natal.html`): та же приборная
+эстетика, SVG-колесо из `wheelLayout`, панель, **переключатель систем домов
+(Ф-3)** с показом кто меняет дом против Плацидуса. Вся геометрия из
+`@oneiroscope/chart-kit` — импорт из пакета, а не из `/vendor/*.js`. Цвет
+планет — только `var(--p-*)` (добавил `--p-truenode`/`--p-chiron` в tokens.css,
+т.к. были только sun..pluto); хардкода hex нет. Все 5 обязательных правил
+данных на месте (градусы+минуты, аспекты орб+applying/separating, пограничные
+с ±, tz+смещение, строка провенанса). Фетч реальной карты — типизированный
+`lib/chart-store.ts` (порт `chart-store.js`: fetch единственная сетевая дверь,
+IndexedDB save/last, `ChartFetchError` с `.status`/`.detail` для нейтрального
+отказа 401/402). Экран билингвальный ru/en (прототип был только ru).
+`public/natal.html` удалён; из `sw.js` убран `/natal.html` из SHELL и поднята
+версия v2→v3 (иначе `cache.addAll` падал бы на отсутствующем URL). SW из роута
+НЕ регистрирую — его SHELL заточен под статические прототипы; офлайн-хранение
+карты (IndexedDB) работает и без SW.
+
+**Легал-каркасы** `frontend/app/legal/{privacy,terms,disclaimer}/page.tsx` —
+ВНЕ `[locale]`, поэтому свой root-layout `app/legal/layout.tsx` с `<html>/
+<body>` (корневой `app/layout.tsx` — pass-through, html/body даёт каждая ветка;
+так же устроен `[locale]`). Middleware matcher получил исключение `legal`:
+`'/((?!_next|api|legal|.*\\..*).*)'` — без intl-редиректа и без префикса.
+Собираются как статические (`○`), приборный стиль, заголовок + честная пометка
+«черновик, текст готовится». Общий каркас — `components/LegalSkeleton.tsx`.
+
+**Проверки:** `next build` зелёный (natal 12.7 kB, три legal статические);
+`tsc --noEmit` чисто; jest 27/27. Nav в Header пока НЕ трогал — `/natal`
+достижим прямым URL, но в глобальное меню не добавлен (перестройка меню
+astrology→natal — часть последовательного раскатывания экранов, отдельным
+шагом).
+
+**Дальше по порядку владельца:** лунный календарь → прайс → /connect → кабинет.
+
 ### 2026-07-30 (part 3) — дизайн-система «прибор» + экран 1 (натальное колесо)
 
 **Валидация против Astrodienst (авторы Swiss Ephemeris).** Владелец сверил

@@ -1,5 +1,25 @@
 # next-session.md — Handoff snapshot
 
+> **2026-07-30 (part 4) — chart-kit в Next + натальный роут + легал-каркасы.**
+> PR #168 **смержен** (`d0739f8`); ветка перезапущена с main для нового PR.
+> **chart-kit подключён к сборке Next** (единый источник, без дубля):
+> `transpilePackages` + `file:../packages/chart-kit`. Пакет — чистый TS с
+> относительными импортами, Next его транспилирует; `next build` зелёный.
+> ⚠️ **Проверить на Vercel PREVIEW:** Root Directory=`frontend`, `../packages`
+> вне него — build-context проверяется preview-деплоем ветки (прод не
+> трогается до merge). Фолбэк если упадёт: зеркало `src` в `frontend/lib/
+> chart-kit` + CI-дрейф. **Натальное колесо — теперь роут**
+> `app/[locale]/natal/page.tsx` (React, порт из `public/natal.html`, который
+> удалён; `sw.js` SHELL почищен, VERSION→v3). Геометрия из `@oneiroscope/
+> chart-kit`; цвета планет только `var(--p-*)` (добавлены truenode/chiron в
+> tokens). Fetch — типизированный `lib/chart-store.ts`. Билингвально ru/en.
+> **Легал-каркасы** `app/legal/{privacy,terms,disclaimer}` — вне `[locale]`,
+> свой layout с html/body, middleware matcher исключает `legal`; статические,
+> без авторизации и без языкового префикса. **Ждём от владельца:** текст
+> легал-страниц; правку privacy перед подачей в каталоги.
+> **Дальше по порядку:** лунный календарь → прайс → /connect → кабинет.
+> Nav в Header пока не трогал (`/natal` по прямому URL).
+
 > **2026-07-30 (part 3) — дизайн-система + экран 1.** Владелец сверил движок с
 > Astrodienst: планеты < 0.5″, ASC-расхождение с astro.com — геокодерное (мы
 > правы). Установлена дизайн-система «прибор»: `.claude/skills/design-system/

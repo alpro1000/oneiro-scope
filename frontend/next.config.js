@@ -17,6 +17,10 @@ const serverActionOrigins = [
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  // chart-kit ships TypeScript source (its `exports` points at src/index.ts);
+  // Next must transpile it rather than expect pre-built JS. The package has no
+  // runtime deps and only relative imports, so this is the whole integration.
+  transpilePackages: ['@oneiroscope/chart-kit'],
   experimental: {
     serverActions: {
       allowedOrigins: serverActionOrigins
