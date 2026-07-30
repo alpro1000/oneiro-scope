@@ -10,7 +10,7 @@
 | frontend/types | 0 | 2 |
 | frontend/i18n | 0 | 1 |
 | frontend/messages | 0 | 5 |
-| frontend/lib | 0 | 15 |
+| frontend/lib | 0 | 14 |
 | frontend/e2e | 0 | 2 |
 | frontend/__tests__ | 0 | 4 |
 | frontend/styles | 0 | 2 |
@@ -143,4 +143,4 @@
 | external/DReAMy | 1 | 1 |
 | external/DReAMy/dreamy | 0 | 3 |
 
-**ИТОГО:** папок = 139, файлов = 508
+**ИТОГО:** папок = 139, файлов = 507
