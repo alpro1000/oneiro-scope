@@ -86,17 +86,17 @@
 | .claude/skills/character-face | 0 | 1 |
 | backend | 12 | 5 |
 | backend/alembic | 1 | 2 |
-| backend/alembic/versions | 0 | 2 |
+| backend/alembic/versions | 0 | 3 |
 | backend/models | 0 | 7 |
 | backend/utils | 0 | 2 |
 | backend/mcp | 1 | 4 |
-| backend/mcp/tools | 0 | 13 |
-| backend/tests | 1 | 45 |
+| backend/mcp/tools | 0 | 14 |
+| backend/tests | 1 | 46 |
 | backend/tests/dreams | 1 | 0 |
 | backend/tests/dreams/golden | 0 | 3 |
 | backend/middleware | 0 | 2 |
 | backend/services | 8 | 0 |
-| backend/services/billing | 0 | 3 |
+| backend/services/billing | 0 | 4 |
 | backend/services/email | 1 | 2 |
 | backend/services/email/templates | 5 | 0 |
 | backend/services/email/templates/en | 0 | 2 |
@@ -137,4 +137,4 @@
 | external/DReAMy | 1 | 1 |
 | external/DReAMy/dreamy | 0 | 3 |
 
-**ИТОГО:** папок = 133, файлов = 500
+**ИТОГО:** папок = 133, файлов = 504

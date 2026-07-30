@@ -423,7 +423,7 @@
     {
       "path": "backend/alembic/versions",
       "dirs": 0,
-      "files": 2
+      "files": 3
     },
     {
       "path": "backend/models",
@@ -443,12 +443,12 @@
     {
       "path": "backend/mcp/tools",
       "dirs": 0,
-      "files": 13
+      "files": 14
     },
     {
       "path": "backend/tests",
       "dirs": 1,
-      "files": 45
+      "files": 46
     },
     {
       "path": "backend/tests/dreams",
@@ -473,7 +473,7 @@
     {
       "path": "backend/services/billing",
       "dirs": 0,
-      "files": 3
+      "files": 4
     },
     {
       "path": "backend/services/email",
@@ -672,5 +672,5 @@
     }
   ],
   "total_dirs": 133,
-  "total_files": 500
+  "total_files": 504
 }
