@@ -61,30 +61,48 @@ def _subject_from_request(request: object) -> Optional[str]:
     return None
 
 
-def mcp_subject() -> Optional[str]:
-    """The authenticated OAuth subject of the current MCP call, or None.
+def mcp_auth_context() -> tuple[bool, Optional[str]]:
+    """`(on_http_transport, subject)` for the current MCP call.
 
-    None means "no principal to meter": off the HTTP transport, or an open
-    server (`MCP_REQUIRE_AUTH` off), or a plumbing gap. Callers must treat
-    None as ungated-and-say-so, never as a silent free pass.
+    The gate needs to tell three situations apart, and a bare Optional
+    subject cannot:
+
+    - `(False, None)` — OFF the HTTP transport entirely: a stdio client
+      (local, trusted, no OAuth concept) or a direct in-process call. There is
+      no principal to expect, so issuance is simply not metered.
+    - `(True, None)` — ON the HTTP transport but the subject is unreadable.
+      Under `MCP_REQUIRE_AUTH` a valid bearer was required to get here, so this
+      is a broken handoff: the gate fails CLOSED.
+    - `(True, "sub…")` — a real authenticated principal to meter.
+
+    Never raises: any failure to read the context degrades to `(False, None)`.
     """
     try:
         from mcp.server.lowlevel.server import request_ctx
     except Exception:  # pragma: no cover - mcp layout differences
-        return None
+        return False, None
     try:
         rc = request_ctx.get()
     except LookupError:
-        return None  # No request in context (stdio / direct call).
+        return False, None  # No request in context (stdio / direct call).
     except Exception:  # pragma: no cover - defensive
-        return None
+        return False, None
     request = getattr(rc, "request", None)
     if request is None:
-        return None
+        return False, None
     try:
-        return _subject_from_request(request)
+        return True, _subject_from_request(request)
     except Exception:  # pragma: no cover - defensive
-        return None
+        return True, None
+
+
+def mcp_subject() -> Optional[str]:
+    """The authenticated OAuth subject of the current MCP call, or None.
+
+    Thin wrapper over `mcp_auth_context` for callers that only need the
+    subject and treat None uniformly.
+    """
+    return mcp_auth_context()[1]
 
 
 async def resolve_connector_user(db: AsyncSession, subject: str) -> User:

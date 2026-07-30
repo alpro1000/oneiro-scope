@@ -151,12 +151,12 @@ def _fake_factory(db):
     return lambda: _CM()
 
 
-def _wire_mcp(monkeypatch, *, subject, user, db):
+def _wire_mcp(monkeypatch, *, subject, user, db, on_http=True):
     """Point the MCP gate at a stub principal, user and session."""
     from backend.mcp.tools import astrology as A
     import backend.core.database as dbmod
 
-    monkeypatch.setattr(A, "mcp_subject", lambda: subject)
+    monkeypatch.setattr(A, "mcp_auth_context", lambda: (on_http, subject))
 
     async def _resolve(_db, _subject):
         return user
@@ -196,11 +196,25 @@ def test_mcp_gate_refetch_own_chart_is_free_and_no_commit(monkeypatch):
     assert db.committed is False  # already owned — nothing new to persist
 
 
-def test_mcp_gate_open_server_says_ungated(monkeypatch):
+def test_mcp_gate_off_transport_is_ungated(monkeypatch):
+    # stdio client or a direct in-process call: no principal exists to meter,
+    # regardless of MCP_REQUIRE_AUTH (which governs the HTTP transport).
     from backend.mcp.tools import astrology as A
     from backend.core import config
 
-    monkeypatch.setattr(A, "mcp_subject", lambda: None)
+    monkeypatch.setattr(A, "mcp_auth_context", lambda: (False, None))
+    monkeypatch.setattr(config.settings, "MCP_REQUIRE_AUTH", True)
+    refusal, stamp = asyncio.run(A._gate_chart_issuance("KEY-A"))
+    assert refusal is None
+    assert stamp["gated"] is False
+    assert "no account" in stamp["reason"].lower()
+
+
+def test_mcp_gate_open_http_connector_says_ungated(monkeypatch):
+    from backend.mcp.tools import astrology as A
+    from backend.core import config
+
+    monkeypatch.setattr(A, "mcp_auth_context", lambda: (True, None))
     monkeypatch.setattr(config.settings, "MCP_REQUIRE_AUTH", False)
     refusal, stamp = asyncio.run(A._gate_chart_issuance("KEY-A"))
     assert refusal is None
@@ -208,14 +222,33 @@ def test_mcp_gate_open_server_says_ungated(monkeypatch):
     assert "open" in stamp["reason"].lower()
 
 
-def test_mcp_gate_auth_required_but_no_principal_is_flagged_not_silent(monkeypatch):
+def test_mcp_gate_on_transport_no_subject_under_auth_fails_closed(monkeypatch):
     from backend.mcp.tools import astrology as A
     from backend.core import config
 
-    monkeypatch.setattr(A, "mcp_subject", lambda: None)
+    monkeypatch.setattr(A, "mcp_auth_context", lambda: (True, None))
     monkeypatch.setattr(config.settings, "MCP_REQUIRE_AUTH", True)
     refusal, stamp = asyncio.run(A._gate_chart_issuance("KEY-A"))
-    # No silent free pass: it issues but says it was not metered, and why.
-    assert refusal is None
-    assert stamp["gated"] is False
-    assert "not metered" in stamp["reason"].lower()
+    # A valid token was required to reach the tool; a missing subject is a
+    # broken handoff, not an anonymous user. Refuse, never issue ungated.
+    assert refusal is not None
+    assert refusal["error"] == "entitlement_unverifiable"
+    assert stamp == {"gated": True}
+
+
+def test_mcp_gate_store_unavailable_under_auth_fails_closed(monkeypatch):
+    from backend.mcp.tools import astrology as A
+    from backend.core import config
+    import backend.core.database as dbmod
+
+    monkeypatch.setattr(A, "mcp_auth_context", lambda: (True, "sub-1"))
+    monkeypatch.setattr(config.settings, "MCP_REQUIRE_AUTH", True)
+
+    def _boom():
+        raise RuntimeError("DATABASE_URL is not configured")
+
+    monkeypatch.setattr(dbmod, "get_sessionmaker", _boom)
+    refusal, stamp = asyncio.run(A._gate_chart_issuance("KEY-A"))
+    # Cannot check the account → refuse, don't hand out an unmetered chart.
+    assert refusal is not None and refusal["error"] == "entitlement_unverifiable"
+    assert stamp == {"gated": True}

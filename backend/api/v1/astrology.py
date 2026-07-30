@@ -477,7 +477,11 @@ async def calculate_natal_chart(
     one.
     """
     try:
-        response = await service.calculate_natal_chart(request)
+        # First pass WITHOUT the server LLM: the chart_core (hence the identity
+        # the gate needs) is cheap ephemeris, while the interpretation is an
+        # expensive LLM hop. Gating on this pass means a refused request never
+        # pays for an interpretation it will not receive.
+        response = await service.calculate_natal_chart(request, interpret=False)
     except ValueError as e:
         # Bad input — refused before the gate touches the account, so a
         # failed calculation consumes no quota.
@@ -493,10 +497,18 @@ async def calculate_natal_chart(
         )
 
     key = chart_identity(response.chart_core)
-    check_chart_entitlement(user, key)
+    check_chart_entitlement(user, key)  # refuses here, before any LLM
     if mark_chart_issued(user, key):
         await db.commit()
-    return response
+
+    # Entitled: add the server-side interpretation this endpoint contracts to
+    # return. Reuse the coordinates the first pass already resolved so the
+    # interpreted pass does not geocode the place a second time.
+    interp_req = request.model_copy(update={
+        "latitude": float(response.latitude),
+        "longitude": float(response.longitude),
+    })
+    return await service.calculate_natal_chart(interp_req, interpret=True)
 
 
 @router.get(

@@ -26,6 +26,19 @@ single chart the first time they cleared their browser, which is not what
 Refusals are structured and factual, never sales copy: the limit, when it
 resets (null = lifetime), the tier that lifts it, and where to manage the
 account. No "upgrade now!" — the client decides how to present the fact.
+
+KNOWN LIMITATION — concurrency. `check_chart_entitlement` then
+`mark_chart_issued` is a read-then-write, not an atomic compare-and-set. Two
+first-chart requests from the same free account, fired inside the window
+between them, can each pass the check and each mint a distinct chart before
+either marks the flag. This is the SAME non-atomicity `quotas.py` already
+documents ("would move to Redis in production for multi-process safety"): the
+leak is bounded (a free account gets at most a couple of charts under a
+precise race, never unlimited — once the flag commits, further charts are
+refused), and closing it properly needs a row lock (`SELECT … FOR UPDATE`) or
+an atomic UPDATE against the store, which is deferred with the rest of the
+quota layer's production hardening rather than shipped as untested
+concurrency code.
 """
 
 from __future__ import annotations
@@ -85,6 +98,25 @@ class EntitlementRequired(HTTPException):
         self.reason = reason
 
 
+def verification_unavailable_detail() -> dict[str, Any]:
+    """Refusal body for "we could not verify entitlement" (fail-closed).
+
+    Used when a metered transport reaches the gate but cannot check the
+    account — the MCP principal handoff broke, or the entitlement store is
+    unreachable. Refusing is safer than issuing an unmetered paid
+    computation; the caller should retry. Factual, not promotional.
+    """
+    return {
+        "error": "entitlement_unverifiable",
+        "message": (
+            "Could not verify this account's entitlement for the request. "
+            "Please retry; if it persists, the service is temporarily unable "
+            "to check your plan."
+        ),
+        "account_url": account_url(),
+    }
+
+
 class AccountRequired(HTTPException):
     """A chart was requested with no account to attribute it to.
 
@@ -124,6 +156,14 @@ def check_chart_entitlement(user: User, chart_key: str) -> None:
     granted_key = getattr(user, "free_natal_chart_key", None)
     if granted_key is not None and granted_key == chart_key:
         return  # Re-issuing the account's own chart — free, forever.
+
+    # If the flag is set but no key was recorded, the grant was written by
+    # something other than mark_chart_issued (the legacy quotas.mark_used sets
+    # free_natal_used without a key). That path has no production callers today;
+    # were it wired, it MUST also record the key, or an account lands here
+    # unable to re-fetch any chart. Refusing is the safe reading of that
+    # inconsistent state — it never hands out a free second chart — but it is a
+    # state this module's own writer never produces.
 
     raise EntitlementRequired(
         reason="free_natal_chart_used",

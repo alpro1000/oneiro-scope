@@ -13,7 +13,7 @@ from typing import Any, Optional
 from uuid import UUID
 
 from backend.mcp.tools._menu import TARGET_DATE, birth_inputs, with_menu
-from backend.mcp.tools._principal import mcp_subject, resolve_connector_user
+from backend.mcp.tools._principal import mcp_auth_context, resolve_connector_user
 from backend.services.astrology import (
     AstrologyService,
     EventForecastRequest,
@@ -46,28 +46,44 @@ async def _gate_chart_issuance(chart_key: str) -> tuple[Optional[dict], dict]:
       no silent free pass: an ungated issuance says so and gives the reason.
     """
     from backend.core.config import settings
+    from backend.services.billing.entitlements import verification_unavailable_detail
 
-    subject = mcp_subject()
+    on_http, subject = mcp_auth_context()
     if subject is None:
-        # No principal to meter. On an open server (MCP_REQUIRE_AUTH off) that
-        # is expected; when auth is required, reaching here without a subject
-        # is a plumbing gap worth a loud log — but failing every chart call
-        # over a DB/context hiccup is worse than issuing one ungated and
-        # saying so, for a free-tier natal chart.
+        if not on_http:
+            # Off-transport: a stdio client (local, trusted, no OAuth) or a
+            # direct in-process call. No principal exists to meter against.
+            return None, {
+                "gated": False,
+                "reason": "not on an authenticated HTTP transport; no account to meter",
+            }
         if settings.MCP_REQUIRE_AUTH:
-            reason = "authenticated principal did not reach the tool; issuance not metered"
-            logger.warning("MCP chart issued ungated: %s", reason)
-        else:
-            reason = "connector is open (MCP_REQUIRE_AUTH is off); no account to meter against"
-        return None, {"gated": False, "reason": reason}
+            # On the HTTP transport, a valid bearer was REQUIRED to reach this
+            # tool (BearerAuthMiddleware 401s otherwise), so a missing subject
+            # is a broken principal handoff, not an anonymous user. For a
+            # paywall the safe answer is to refuse (fail closed), not to issue
+            # a free chart we cannot attribute. Loud — it should never happen.
+            logger.error(
+                "MCP chart gate: MCP_REQUIRE_AUTH is on but no subject reached "
+                "the tool — refusing rather than issuing ungated"
+            )
+            return verification_unavailable_detail(), {"gated": True}
+        # Deliberately open HTTP connector: there is genuinely no account.
+        return None, {
+            "gated": False,
+            "reason": "connector is open (MCP_REQUIRE_AUTH is off); no account to meter against",
+        }
 
     try:
         from backend.core.database import get_sessionmaker
 
         factory = get_sessionmaker()
-    except Exception as exc:  # DB not configured — cannot meter durably.
+    except Exception as exc:
+        # Auth is on (we have a subject) but the entitlement store is
+        # unreachable. Fail closed for the same reason: better to refuse and
+        # be retried than to hand out an unmetered paid computation.
         logger.error("MCP chart gate: entitlement store unavailable (%s)", exc)
-        return None, {"gated": False, "reason": "entitlement store unavailable"}
+        return verification_unavailable_detail(), {"gated": True}
 
     from backend.services.billing.entitlements import (
         EntitlementRequired,
