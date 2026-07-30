@@ -564,7 +564,7 @@ export default function NatalPage() {
               </Field>
             </div>
             <button type="submit" disabled={busy} style={{
-              marginTop: 11, width: '100%', background: 'var(--brass)', color: '#0b0d1a', border: 0,
+              marginTop: 11, width: '100%', background: 'var(--brass)', color: 'var(--abyss)', border: 0,
               fontFamily: 'var(--font-ui)', fontWeight: 600, padding: 9, cursor: busy ? 'not-allowed' : 'pointer',
               letterSpacing: '.02em', opacity: busy ? 0.45 : 1,
             }}>{busy ? t.building : t.build}</button>
@@ -572,7 +572,7 @@ export default function NatalPage() {
 
           {notice && (
             <div style={{
-              border: '1px solid var(--brass-dim)', background: '#20180c', color: '#e8d4a0',
+              border: '1px solid var(--brass-dim)', background: 'var(--notice-bg)', color: 'var(--notice-ink)',
               padding: '9px 12px', fontSize: 12.5, lineHeight: 1.5, marginTop: 12,
             }}>
               {notice.text}

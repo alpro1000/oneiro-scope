@@ -70,12 +70,13 @@ function ui(lang: Lang) {
     date: 'Дата', time: 'Время', tz: 'Часовой пояс', lat: 'Широта', lon: 'Долгота',
     place: 'Место', build: 'Построить карту', building: 'Считаем…',
     engine: 'движок', lines: 'линий', tilt: 'наклон', data: 'данные', demo: 'демо-карта',
+    houses: 'дома', noTime: 'нет времени рождения — астрокарта строится на углах, а они без времени произвольны',
     saved: 'сохранённая карта · открыта без сети', accessLimited: 'Доступ ограничен.',
     account: 'Кабинет', resetAt: 'Сбрасывается: ', noNet: 'Нет сети. Новый расчёт требует сервера.',
-    disclaimer: 'Линии и углы — астрономическая геометрия, она проверяема. Символическое '
-      + 'значение планеты на угле — традиция толкования, а не прогноз. Это '
-      + 'рефлексивно-развлекательный материал, не медицинский, психологический, юридический '
-      + 'или финансовый совет.',
+    disclaimerLead: 'Линии и углы — геометрия, она проверяема.',
+    disclaimer: 'Символическое значение планеты на угле — традиция толкования, а не '
+      + 'прогноз. Это рефлексивно-развлекательный материал, не медицинский, '
+      + 'психологический, юридический или финансовый совет.',
   };
   const en = {
     eyebrow: 'Astro · Carto · Graphy · Lewis 1976', titleA: 'Where it ', titleEm: 'all', titleB: ' resonates',
@@ -86,11 +87,13 @@ function ui(lang: Lang) {
     date: 'Date', time: 'Time', tz: 'Timezone', lat: 'Latitude', lon: 'Longitude',
     place: 'Place', build: 'Build chart', building: 'Computing…',
     engine: 'engine', lines: 'lines', tilt: 'obliquity', data: 'data', demo: 'demo chart',
+    houses: 'houses', noTime: 'no birth time — astrocartography is built on the angles, and without a time they are arbitrary',
     saved: 'saved chart · opened offline', accessLimited: 'Access limited.',
     account: 'Account', resetAt: 'Resets: ', noNet: 'No network. A new computation needs the server.',
-    disclaimer: 'Lines and angles are astronomical geometry — verifiable. The symbolic meaning '
-      + 'of a planet on an angle is a tradition of interpretation, not a prediction. This is '
-      + 'reflective/entertainment material, not medical, psychological, legal or financial advice.',
+    disclaimerLead: 'Lines and angles are geometry — verifiable.',
+    disclaimer: 'The symbolic meaning of a planet on an angle is a tradition of '
+      + 'interpretation, not a prediction. This is reflective/entertainment material, '
+      + 'not medical, psychological, legal or financial advice.',
   };
   return lang === 'ru' ? ru : en;
 }
@@ -112,13 +115,17 @@ interface Colors {
 }
 function readColors(): Colors {
   const cs = getComputedStyle(document.documentElement);
-  const v = (n: string) => cs.getPropertyValue(n).trim() || '#88a';
+  // Colours come from tokens.css only. Canvas needs concrete strings, so the
+  // custom properties are resolved here rather than referenced as var(); no
+  // hex is hardcoded — a missing token degrades to the muted token or nothing.
+  const v = (n: string) => cs.getPropertyValue(n).trim();
+  const dim = v('--dim') || 'transparent';
   const planet: Record<string, string> = {};
-  for (const p of PLANETS) planet[p] = v(`--p-${p.toLowerCase()}`);
+  for (const p of PLANETS) planet[p] = v(`--p-${p.toLowerCase()}`) || dim;
   return {
     abyss: v('--abyss'), gratMinor: v('--grat-1'), gratMajor: v('--land-edge'),
     land: v('--land'), landEdge: v('--land-edge'), brass: v('--brass'),
-    parchment: v('--parchment'), dim: v('--dim'), planet,
+    parchment: v('--parchment'), dim, planet,
   };
 }
 
@@ -151,20 +158,26 @@ export default function AstrocartographyPage() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const baseRef = useRef<HTMLCanvasElement | null>(null);
 
+  // No birth time → the whole screen is meaningless: astrocartography is
+  // angle-derived, and with time unknown the angles were computed for an
+  // assumed noon. The contract forbids drawing them (BirthInfo.time_known);
+  // the natal route guards the same way. So: no lines, no cursor readout.
+  const timed = core.birth.time_known;
+
   const lines = useMemo(
-    () => acgLines(core, { latRange: [LAT_B, LAT_T], bodies: PLANETS }),
-    [core],
+    () => (timed ? acgLines(core, { latRange: [LAT_B, LAT_T], bodies: PLANETS }) : []),
+    [core, timed],
   );
 
   // Panel readout: the four angles at the cursor and which planets sit on them.
   const panel = useMemo(() => {
-    if (!cursor) return null;
+    if (!cursor || !timed) return null;
     const a = kitAngles(core, cursor.lat, cursor.lon);
     const cs = kitContacts(core, cursor.lat, cursor.lon, ORB)
       .filter((c) => !hidden.has(c.body))
       .sort((x, y) => x.orb - y.orb);
     return { a, contacts: cs };
-  }, [core, cursor, hidden]);
+  }, [core, cursor, hidden, timed]);
 
   const px = useCallback((lon: number, W: number) => ((lon + 180) / 360) * W, []);
   const py = useCallback((lat: number, H: number) => ((LAT_T - lat) / (LAT_T - LAT_B)) * H, []);
@@ -217,7 +230,7 @@ export default function AstrocartographyPage() {
     ctx.drawImage(base, 0, 0, W, H);
 
     const hot = new Set<string>();
-    if (cursor) {
+    if (cursor && timed) {
       for (const c of kitContacts(core, cursor.lat, cursor.lon, ORB)) {
         hot.add(`${c.body}|${c.angle.toUpperCase()}`);
       }
@@ -244,13 +257,15 @@ export default function AstrocartographyPage() {
 
     if (cursor) {
       const x = px(cursor.lon, W), y = py(cursor.lat, H);
-      ctx.strokeStyle = 'rgba(231,221,199,.55)'; ctx.lineWidth = 1; ctx.setLineDash([2, 5]);
+      // Dotted crosshair — the design reserves dashes for IC/Desc lines and
+      // dots for the cursor, so the two never read as the same mark.
+      ctx.strokeStyle = colors.parchment; ctx.globalAlpha = 0.55; ctx.lineWidth = 1; ctx.setLineDash([1, 3]);
       ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
-      ctx.setLineDash([]);
+      ctx.setLineDash([]); ctx.globalAlpha = 1;
       ctx.strokeStyle = colors.parchment; ctx.lineWidth = 1.4;
       ctx.beginPath(); ctx.arc(x, y, 6, 0, 7); ctx.stroke();
     }
-  }, [core, lines, hidden, cursor, colors, size, px, py]);
+  }, [core, lines, hidden, cursor, colors, size, px, py, timed]);
 
   // colours once the stylesheet is live
   useEffect(() => { setColors(readColors()); }, []);
@@ -435,22 +450,28 @@ export default function AstrocartographyPage() {
 
           <div className="panel-block">
             <div className="eyebrow" style={{ marginBottom: 9 }}>{t.anglesHere}</div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '7px 12px' }}>
-              {([['ASC', panel?.a.asc], ['MC', panel?.a.mc], ['DESC', panel?.a.desc], ['IC', panel?.a.ic]] as const).map(
-                ([nm, val]) => (
-                  <div key={nm} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 8, fontFamily: 'var(--font-data)', fontSize: 12 }}>
-                    <span style={{ color: 'var(--dim)', letterSpacing: '.1em' }}>{nm}</span>
-                    <span style={{ color: 'var(--parchment)' }}>{val === undefined ? '—' : fmtSign(val)}</span>
-                  </div>
-                ),
-              )}
-            </div>
+            {timed ? (
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '7px 12px' }}>
+                {([['ASC', panel?.a.asc], ['MC', panel?.a.mc], ['DESC', panel?.a.desc], ['IC', panel?.a.ic]] as const).map(
+                  ([nm, val]) => (
+                    <div key={nm} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 8, fontFamily: 'var(--font-data)', fontSize: 12 }}>
+                      <span style={{ color: 'var(--dim)', letterSpacing: '.1em' }}>{nm}</span>
+                      <span style={{ color: 'var(--parchment)' }}>{val === undefined ? '—' : fmtSign(val)}</span>
+                    </div>
+                  ),
+                )}
+              </div>
+            ) : (
+              <div style={{ fontSize: 12.5, color: 'var(--brass)', fontFamily: 'var(--font-display)', fontStyle: 'italic', lineHeight: 1.45 }}>{t.noTime}</div>
+            )}
           </div>
 
           <div className="panel-block">
             <div className="eyebrow" style={{ marginBottom: 9 }}>{t.onAngles}</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6, minHeight: 22 }}>
-              {!panel ? (
+              {!timed ? (
+                <div style={{ fontSize: 12, color: 'var(--dim)', fontStyle: 'italic', fontFamily: 'var(--font-display)' }}>{t.noTime}</div>
+              ) : !panel ? (
                 <div style={{ fontSize: 12, color: 'var(--dim)', fontStyle: 'italic', fontFamily: 'var(--font-display)' }}>{t.hoverPrompt}</div>
               ) : panel.contacts.length === 0 ? (
                 <div style={{ fontSize: 12, color: 'var(--dim)', fontStyle: 'italic', fontFamily: 'var(--font-display)' }}>{t.noneInOrb}</div>
@@ -500,12 +521,12 @@ export default function AstrocartographyPage() {
               </Field>
             </div>
             <button type="submit" disabled={busy} style={{
-              marginTop: 10, width: '100%', background: 'var(--brass)', color: '#0b0d1a', border: 0,
+              marginTop: 10, width: '100%', background: 'var(--brass)', color: 'var(--abyss)', border: 0,
               fontFamily: 'var(--font-ui)', fontWeight: 600, padding: 8, cursor: busy ? 'not-allowed' : 'pointer',
               letterSpacing: '.02em', opacity: busy ? 0.45 : 1,
             }}>{busy ? t.building : t.build}</button>
             {notice && (
-              <div style={{ border: '1px solid var(--brass-dim)', background: '#20180c', color: '#e8d4a0', padding: '8px 10px', fontSize: 12, lineHeight: 1.5, marginTop: 9 }}>
+              <div style={{ border: '1px solid var(--brass-dim)', background: 'var(--notice-bg)', color: 'var(--notice-ink)', padding: '8px 10px', fontSize: 12, lineHeight: 1.5, marginTop: 9 }}>
                 {notice.text}{notice.resetAt ? ` ${t.resetAt}${notice.resetAt}.` : ''}
                 {notice.accountUrl && <> <a href={notice.accountUrl} style={{ color: 'var(--brass)' }}>{t.account}</a></>}
               </div>
@@ -523,14 +544,15 @@ export default function AstrocartographyPage() {
             <span><b style={{ color: 'var(--muted)', fontWeight: 400 }}>{t.data}</b> {t.demo}</span>
           </>
         )}
+        <span><b style={{ color: 'var(--muted)', fontWeight: 400 }}>{t.houses}</b> {core.house_system}</span>
         <span><b style={{ color: 'var(--muted)', fontWeight: 400 }}>{t.lines}</b> {lines.length}</span>
         <span><b style={{ color: 'var(--muted)', fontWeight: 400 }}>GMST</b> {core.gmst.toFixed(4)}°</span>
         <span><b style={{ color: 'var(--muted)', fontWeight: 400 }}>{t.tilt}</b> {core.obliquity.toFixed(5)}°</span>
         <span><b style={{ color: 'var(--muted)', fontWeight: 400 }}>JD_UT</b> {core.jd_ut}</span>
       </div>
 
-      <p style={{ fontSize: 11.5, color: 'var(--muted)', maxWidth: '62ch', lineHeight: 1.55, marginTop: 10 }}>
-        {t.disclaimer}
+      <p style={{ fontSize: 13, color: 'var(--muted)', maxWidth: '64ch', lineHeight: 1.6, marginTop: 12 }}>
+        <b style={{ color: 'var(--parchment)', fontWeight: 500 }}>{t.disclaimerLead}</b> {t.disclaimer}
       </p>
     </main>
   );
