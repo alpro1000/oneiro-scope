@@ -1,5 +1,21 @@
 # next-session.md — Handoff snapshot
 
+> **2026-07-30 (part 5) — астрокарта в роут `/[locale]/astrocartography`.**
+> Порт с приборного ЭТАЛОНА (корневой `astrocartography.html`, canvas +
+> эквидистантная проекция + вшитые берега), НЕ со старого Leaflet-прототипа.
+> canvas-проекция, суша из `lib/world-coast.ts` (242 полигона), линии через
+> chart-kit `acgLines`, углы/контакты под курсором через `angles`/`contacts`
+> (формулы не дублирую), легенда-переключатели, города, форма+fetch (гейт
+> 401/402), офлайн через chart-store, билингвально. Цвета canvas — из токенов
+> через getComputedStyle. Демо-карта вынесена в `lib/demo-chart.ts` (натал
+> тоже импортирует; натал-бандл 12.7→7.5 КБ). Удалены `public/
+> astrocartography.html` + `public/vendor/leaflet/`; `sw.js` SHELL почищен,
+> VERSION v3→v4. **Эталон в корне не трогал.** next build зелёный (astro 26.4
+> КБ), tsc чисто, jest 24/24 (было 27: pwa-manifest data-driven по SHELL,
+> −3 записи = −3 кейса, это страж согласованности SHELL↔файлы). **Дальше:**
+> лунный календарь → прайс → /connect → кабинет. Nav в Header по-прежнему не
+> трогал (natal/astrocartography по прямым URL).
+
 > **2026-07-30 (part 4) — chart-kit в Next + натальный роут + легал-каркасы.**
 > PR #168 **смержен** (`d0739f8`); ветка перезапущена с main для нового PR.
 > **chart-kit подключён к сборке Next** (единый источник, без дубля):

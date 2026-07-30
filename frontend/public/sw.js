@@ -14,7 +14,7 @@
  *   the page says so.
  */
 
-const VERSION = 'v3';
+const VERSION = 'v4';
 const SHELL_CACHE = `oneiro-shell-${VERSION}`;
 
 // Kept deliberately small: the shell plus the kit is all that is needed
@@ -23,17 +23,13 @@ const SHELL_CACHE = `oneiro-shell-${VERSION}`;
 // rather than to a wrong chart.
 const SHELL = [
   '/',
-  '/astrocartography.html',
-  // The natal wheel moved into the Next app at /<locale>/natal; it is no
-  // longer a static shell page. Its route and chunks are runtime-cached by
-  // the fetch handler like any other app navigation, not precached here.
+  // Both static prototypes (the natal wheel and astrocartography) are now
+  // Next routes at /<locale>/natal and /<locale>/astrocartography. They and
+  // their chunks — including the bundled chart-kit and its own canvas basemap
+  // — are runtime-cached by the fetch handler like any app navigation, not
+  // precached here. The vendored kit below is kept for the drift check only.
   '/vendor/chart-kit.js',
   '/vendor/chart-store.js',
-  // Leaflet is vendored precisely so it can live here: a CDN copy could
-  // not be cached (cross-origin responses are opaque) and the map would
-  // silently fail to render offline while everything else worked.
-  '/vendor/leaflet/leaflet.js',
-  '/vendor/leaflet/leaflet.css',
   '/manifest.json',
 ];
 
