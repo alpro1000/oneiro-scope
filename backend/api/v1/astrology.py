@@ -7,7 +7,11 @@ from zoneinfo import ZoneInfo
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel, Field
+from sqlalchemy.ext.asyncio import AsyncSession
 
+from backend.api.v1.auth import require_account
+from backend.core.database import get_db
+from backend.models.user import User
 from backend.services.astrology import (
     AstrologyService,
     NatalChartRequest,
@@ -17,7 +21,12 @@ from backend.services.astrology import (
     EventForecastRequest,
     EventForecastResponse,
 )
+from backend.services.astrology.chart_core import chart_identity
 from backend.services.astrology.schemas import HoroscopePeriod, EventType
+from backend.services.billing.entitlements import (
+    check_chart_entitlement,
+    mark_chart_issued,
+)
 
 import logging
 
@@ -455,12 +464,27 @@ def get_astrology_service() -> AstrologyService:
 async def calculate_natal_chart(
     request: NatalChartRequest,
     service: AstrologyService = Depends(get_astrology_service),
-    # user_id: Optional[UUID] = Depends(get_current_user_id),  # TODO: Add auth
+    user: User = Depends(require_account),
+    db: AsyncSession = Depends(get_db),
 ) -> NatalChartResponse:
-    """Calculate natal chart from birth data."""
+    """Calculate natal chart from birth data.
+
+    This rich response carries the same `chart_core` the thin
+    `POST /api/v1/chart` door mints, so it is gated identically — otherwise
+    it would be a one-line bypass of the free-tier limit. The gate is on
+    issuance of the core, keyed on the chart's birth instant, so a free
+    account re-fetches its own chart freely and is refused only a different
+    one.
+    """
     try:
-        return await service.calculate_natal_chart(request)
+        # First pass WITHOUT the server LLM: the chart_core (hence the identity
+        # the gate needs) is cheap ephemeris, while the interpretation is an
+        # expensive LLM hop. Gating on this pass means a refused request never
+        # pays for an interpretation it will not receive.
+        response = await service.calculate_natal_chart(request, interpret=False)
     except ValueError as e:
+        # Bad input — refused before the gate touches the account, so a
+        # failed calculation consumes no quota.
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e),
@@ -471,6 +495,20 @@ async def calculate_natal_chart(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to calculate natal chart.",
         )
+
+    key = chart_identity(response.chart_core)
+    check_chart_entitlement(user, key)  # refuses here, before any LLM
+    if mark_chart_issued(user, key):
+        await db.commit()
+
+    # Entitled: add the server-side interpretation this endpoint contracts to
+    # return. Reuse the coordinates the first pass already resolved so the
+    # interpreted pass does not geocode the place a second time.
+    interp_req = request.model_copy(update={
+        "latitude": float(response.latitude),
+        "longitude": float(response.longitude),
+    })
+    return await service.calculate_natal_chart(interp_req, interpret=True)
 
 
 @router.get(

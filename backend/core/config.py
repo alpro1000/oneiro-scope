@@ -35,6 +35,11 @@ class Settings(BaseSettings):
     # CORS
     ALLOWED_ORIGINS: str = "http://localhost:3000"
 
+    # Where a quota refusal points the user to manage their plan. The portal
+    # serves /account on this same service, so a relative path is the honest
+    # default; set an absolute URL when the account page lives elsewhere.
+    ACCOUNT_URL: str | None = None
+
     # --- Remote MCP (connector surface) -------------------------------------
     # Serves the MCP server over HTTP so Claude / ChatGPT / Gemini can add it
     # by URL. See docs/deploy/mcp-connector.md.

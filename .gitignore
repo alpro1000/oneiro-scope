@@ -85,3 +85,6 @@ data/dreambank/
 
 # JPL DE421 kernel (~17 MB) — auto-downloaded by scripts/verify_ephemeris.py
 /data/ephemeris_ref/
+
+# chart-kit dev deps (installed by CI and locally on demand)
+packages/*/node_modules/

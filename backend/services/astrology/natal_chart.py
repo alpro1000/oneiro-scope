@@ -4,6 +4,7 @@ import logging
 from datetime import datetime
 from typing import Optional
 
+from .chart_core import HOUSE_SYSTEM_CODES, resolve_house_system
 from .ephemeris import SwissEphemeris
 from .schemas import (
     Aspect,
@@ -27,6 +28,13 @@ ASPECT_ORBS = {
 }
 
 # Aspect exact angles
+# Swisseph letter → the name chart_core speaks, so both paths resolve the
+# polar-latitude question through the same helper.
+_SYSTEM_NAMES = {
+    "P": "placidus", "K": "koch", "O": "porphyry", "R": "regiomontanus",
+    "C": "campanus", "E": "equal", "W": "whole_sign",
+}
+
 ASPECT_ANGLES = {
     AspectType.CONJUNCTION: 0,
     AspectType.SEXTILE: 60,
@@ -76,6 +84,11 @@ class NatalChartCalculator:
 
     def __init__(self, ephemeris: SwissEphemeris):
         self.ephemeris = ephemeris
+        # Set by calculate_houses so the service can surface which system
+        # actually produced the cusps (Placidus is undefined at polar
+        # latitudes) instead of the caller assuming the requested one.
+        self.last_house_system: str = "placidus"
+        self.last_house_system_note: Optional[str] = None
 
     def calculate_planets(
         self,
@@ -157,11 +170,14 @@ class NatalChartCalculator:
         """
         Calculate house cusps.
 
-        The provenance promises Placidus — so a failure here raises instead
-        of silently swapping the house system (conventions.md §12). Swiss
-        Ephemeris itself handles circumpolar latitudes internally; an
-        exception from swe.houses means broken input or setup, not a
-        situation a different methodology should paper over.
+        Placidus is undefined beyond the polar circle — Swiss Ephemeris
+        refuses there, because no ecliptic point crosses the horizon and
+        so there is no diurnal arc to trisect. Raising was wrong (a
+        Tromsø birth got no chart at all); silently swapping systems is
+        equally wrong. The third option is what conventions.md §12 asks
+        for: substitute a system that IS defined, and say so — the
+        returned houses carry `system_used` and a note, and the four
+        angles are unaffected either way.
 
         Args:
             birth_dt: Birth datetime (local time)
@@ -181,13 +197,16 @@ class NatalChartCalculator:
             utc_dt.hour + utc_dt.minute / 60.0 + utc_dt.second / 3600.0
         )
 
-        try:
-            cusps, ascmc = swe.houses(jd, latitude, longitude, system.encode())
-        except Exception as exc:
-            raise RuntimeError(
-                f"House calculation ({system}) failed for jd={jd}, "
-                f"lat={latitude}, lon={longitude}: {exc}"
-            ) from exc
+        requested = _SYSTEM_NAMES.get(system.upper(), "placidus")
+        system_used, note = resolve_house_system(jd, latitude, longitude, requested)
+        self.last_house_system = system_used
+        self.last_house_system_note = note
+        if note:
+            logger.warning("House system substituted: %s", note)
+
+        cusps, ascmc = swe.houses(
+            jd, latitude, longitude, HOUSE_SYSTEM_CODES[system_used]
+        )
 
         houses = []
         for i in range(12):

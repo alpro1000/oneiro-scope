@@ -1,0 +1,33 @@
+{
+  "name": "OneiroScope — карта, сны, луна",
+  "short_name": "OneiroScope",
+  "description": "Натальная карта, астрокартография и лунный календарь. Один раз получив карту, вы работаете с ней офлайн.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#0b0d1a",
+  "theme_color": "#0b0d1a",
+  "lang": "ru",
+  "categories": ["lifestyle", "education"],
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

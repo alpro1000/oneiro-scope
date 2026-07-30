@@ -277,6 +277,25 @@ class NatalChartResponse(BaseModel):
         description="Max orb per aspect type used by this calculation "
                     "(WP-18: the policy travels with the data it shaped)"
     )
+    house_system: Optional[str] = Field(
+        None,
+        description="House system that actually produced these cusps. "
+                    "Placidus is undefined beyond the polar circle, where a "
+                    "defined system is substituted — never silently."
+    )
+    house_system_note: Optional[str] = Field(
+        None,
+        description="Present only when the requested house system had to be "
+                    "substituted, explaining why and what changed."
+    )
+    chart_core: Optional[dict] = Field(
+        None,
+        description="Self-contained ~1.7 KB payload (sidereal time, obliquity, "
+                    "each body's ecliptic + equatorial state) from which a "
+                    "client computes angles, houses for ANY location, aspects "
+                    "and astrocartography with no further server call. "
+                    "Byte-identical to what POST /api/v1/chart returns."
+    )
 
     # LLM interpretation
     interpretation: Optional[str] = None

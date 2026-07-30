@@ -2,8 +2,8 @@
   "tree": [
     {
       "path": ".",
-      "dirs": 15,
-      "files": 20
+      "dirs": 16,
+      "files": 21
     },
     {
       "path": ".github",
@@ -13,7 +13,7 @@
     {
       "path": ".github/workflows",
       "dirs": 0,
-      "files": 8
+      "files": 9
     },
     {
       "path": "tests",
@@ -53,7 +53,7 @@
     {
       "path": "frontend/__tests__",
       "dirs": 0,
-      "files": 3
+      "files": 4
     },
     {
       "path": "frontend/styles",
@@ -137,8 +137,28 @@
     },
     {
       "path": "frontend/public",
+      "dirs": 2,
+      "files": 5
+    },
+    {
+      "path": "frontend/public/icons",
       "dirs": 0,
+      "files": 3
+    },
+    {
+      "path": "frontend/public/vendor",
+      "dirs": 1,
       "files": 2
+    },
+    {
+      "path": "frontend/public/vendor/leaflet",
+      "dirs": 1,
+      "files": 2
+    },
+    {
+      "path": "frontend/public/vendor/leaflet/images",
+      "dirs": 0,
+      "files": 5
     },
     {
       "path": "frontend/.storybook",
@@ -156,6 +176,26 @@
       "files": 0
     },
     {
+      "path": "packages",
+      "dirs": 1,
+      "files": 0
+    },
+    {
+      "path": "packages/chart-kit",
+      "dirs": 2,
+      "files": 3
+    },
+    {
+      "path": "packages/chart-kit/src",
+      "dirs": 0,
+      "files": 7
+    },
+    {
+      "path": "packages/chart-kit/test",
+      "dirs": 0,
+      "files": 3
+    },
+    {
       "path": "styles",
       "dirs": 0,
       "files": 2
@@ -163,7 +203,7 @@
     {
       "path": "scripts",
       "dirs": 0,
-      "files": 9
+      "files": 11
     },
     {
       "path": "config",
@@ -187,7 +227,7 @@
     },
     {
       "path": "docs",
-      "dirs": 7,
+      "dirs": 8,
       "files": 43
     },
     {
@@ -266,6 +306,11 @@
       "files": 3
     },
     {
+      "path": "docs/design",
+      "dirs": 0,
+      "files": 1
+    },
+    {
       "path": "etl",
       "dirs": 1,
       "files": 5
@@ -287,7 +332,7 @@
     },
     {
       "path": ".claude/skills",
-      "dirs": 16,
+      "dirs": 17,
       "files": 1
     },
     {
@@ -346,6 +391,11 @@
       "files": 1
     },
     {
+      "path": ".claude/skills/design-system",
+      "dirs": 0,
+      "files": 1
+    },
+    {
       "path": ".claude/skills/deploy-cycle",
       "dirs": 0,
       "files": 1
@@ -383,7 +433,7 @@
     {
       "path": "backend/alembic/versions",
       "dirs": 0,
-      "files": 2
+      "files": 3
     },
     {
       "path": "backend/models",
@@ -403,12 +453,12 @@
     {
       "path": "backend/mcp/tools",
       "dirs": 0,
-      "files": 13
+      "files": 14
     },
     {
       "path": "backend/tests",
       "dirs": 1,
-      "files": 44
+      "files": 46
     },
     {
       "path": "backend/tests/dreams",
@@ -433,7 +483,7 @@
     {
       "path": "backend/services/billing",
       "dirs": 0,
-      "files": 3
+      "files": 4
     },
     {
       "path": "backend/services/email",
@@ -518,7 +568,7 @@
     {
       "path": "backend/services/astrology",
       "dirs": 6,
-      "files": 23
+      "files": 25
     },
     {
       "path": "backend/services/astrology/archetypes",
@@ -573,7 +623,7 @@
     {
       "path": "backend/api/v1",
       "dirs": 0,
-      "files": 9
+      "files": 10
     },
     {
       "path": "backend/core",
@@ -631,6 +681,6 @@
       "files": 3
     }
   ],
-  "total_dirs": 125,
-  "total_files": 464
+  "total_dirs": 135,
+  "total_files": 507
 }

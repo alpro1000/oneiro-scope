@@ -21,6 +21,7 @@ from .schemas import (
     TransitInfo,
     ZodiacSign,
 )
+from .chart_core import build_chart_core
 from .ephemeris import SwissEphemeris
 from .natal_chart import ASPECT_ORBS, NatalChartCalculator
 from .transits import TransitCalculator
@@ -223,6 +224,22 @@ class AstrologyService:
                 aspect_type.value: float(orb)
                 for aspect_type, orb in ASPECT_ORBS.items()
             },
+            house_system=(
+                self.natal_calculator.last_house_system if houses else None
+            ),
+            house_system_note=(
+                self.natal_calculator.last_house_system_note if houses else None
+            ),
+            # The thin core rides along so a connector client can explore the
+            # chart offline afterwards — same object POST /api/v1/chart serves.
+            chart_core=build_chart_core(
+                birth_date=request.birth_date,
+                birth_time=request.birth_time,
+                lat=location.latitude,
+                lon=location.longitude,
+                place_label=request.birth_place,
+                timezone_name=location.timezone,
+            ).core,
             interpretation=interpretation,
             structured_interpretation=structured_interpretation,
             created_at=datetime.now(dt_timezone.utc),

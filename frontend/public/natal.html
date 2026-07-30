@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Натальная карта · OneiroScope</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400;0,6..96,600;1,6..96,400&family=IBM+Plex+Mono:wght@400;500&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#071320">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<style>
+/* Tokens inlined, matching frontend/styles/tokens.css — a static page does
+   not go through the Next bundle. Palette is the reference astrocartography.html's. */
+:root{
+  --abyss:#071320; --shelf:#0C1E2E; --panel:#0A1B29; --land:#152C3E;
+  --grat1:#1B3549; --grat2:#22415A;
+  --parchment:#E7DDC7; --muted:#89A0B1; --dim:#5C7385;
+  --brass:#D2A64B; --brass-dim:#8A6E32;
+  --p-Sun:#E8C25A; --p-Moon:#C7D3DD; --p-Mercury:#9FD5C8; --p-Venus:#DB8F6C;
+  --p-Mars:#C6544B; --p-Jupiter:#B9A8DA; --p-Saturn:#8493A2; --p-Uranus:#6FBACB;
+  --p-Neptune:#5F84BC; --p-Pluto:#997280; --p-TrueNode:#89A0B1; --p-Chiron:#9FD5C8;
+  --font-display:'Bodoni Moda',Georgia,serif;
+  --font-ui:'Instrument Sans',system-ui,sans-serif;
+  --font-data:'IBM Plex Mono',ui-monospace,monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0;border-radius:0;box-shadow:none}
+html,body{background:var(--abyss);color:var(--parchment);
+  font-family:var(--font-ui);-webkit-font-smoothing:antialiased}
+body{min-height:100vh;padding:clamp(14px,2.2vw,30px)}
+a{color:var(--brass)}
+.mono,.num{font-family:var(--font-data);font-variant-numeric:tabular-nums}
+.eyebrow{font-family:var(--font-data);font-size:10.5px;letter-spacing:.22em;
+  text-transform:uppercase;color:var(--brass-dim)}
+
+header{display:flex;flex-wrap:wrap;align-items:flex-end;gap:12px 28px;
+  padding-bottom:14px;margin-bottom:clamp(12px,1.6vw,20px);border-bottom:1px solid var(--grat1)}
+h1{font-family:var(--font-display);font-weight:400;font-size:clamp(28px,5vw,52px);
+  line-height:.94;letter-spacing:-.015em}
+h1 em{font-style:italic;color:var(--brass)}
+.subject{margin-left:auto;text-align:right;font-family:var(--font-data);
+  font-size:11.5px;line-height:1.7;color:var(--muted)}
+.subject b{color:var(--parchment);font-weight:500}
+
+.stage{display:grid;grid-template-columns:minmax(0,1fr) 320px;
+  gap:clamp(12px,1.4vw,20px);align-items:start}
+@media(max-width:900px){.stage{grid-template-columns:1fr}}
+
+.wheelwrap{position:relative;border:1px solid var(--grat2);background:var(--shelf)}
+.wheelwrap svg{display:block;width:100%;height:auto}
+.wheel-note{position:absolute;left:12px;bottom:10px;font-family:var(--font-data);
+  font-size:10px;color:var(--dim);letter-spacing:.04em;max-width:70%}
+
+.panel{border:1px solid var(--grat2);background:var(--panel)}
+.pblock{padding:12px 14px;border-bottom:1px solid var(--grat1)}
+.pblock:last-child{border-bottom:0}
+.pblock h2{font-size:0;margin-bottom:8px}
+.pblock .eyebrow{display:block;margin-bottom:9px}
+
+table{width:100%;border-collapse:collapse;font-family:var(--font-data);
+  font-size:12px;font-variant-numeric:tabular-nums}
+td{padding:2.5px 0;vertical-align:baseline}
+td.r{text-align:right;color:var(--muted);white-space:nowrap}
+.glyph{display:inline-block;width:1.1em;text-align:center;margin-right:5px}
+.retro{color:var(--brass);font-size:.82em}
+.borderline{color:var(--brass)}
+.borderline::after{content:' ±';font-size:.85em}
+.applying{color:var(--parchment)} .separating{color:var(--dim)}
+.sign{color:var(--muted)}
+
+.switch{display:flex;gap:0;border:1px solid var(--grat2);margin-top:2px}
+.switch button{flex:1;background:transparent;color:var(--muted);border:0;
+  border-right:1px solid var(--grat1);font-family:var(--font-data);font-size:11px;
+  letter-spacing:.03em;padding:7px 4px;cursor:pointer}
+.switch button:last-child{border-right:0}
+.switch button.on{background:var(--panel);color:var(--brass)}
+.mover{color:var(--brass)}
+
+.entry{border:1px solid var(--grat2);background:var(--shelf);padding:13px 15px;margin-top:14px}
+.entry .eyebrow{display:block;margin-bottom:9px}
+.entry .row{display:flex;gap:10px;flex-wrap:wrap}
+.entry label{display:block;color:var(--dim);font-family:var(--font-data);
+  font-size:10px;letter-spacing:.04em;text-transform:uppercase;margin:0 0 3px}
+.entry input,.entry select{width:100%;background:var(--abyss);color:var(--parchment);
+  border:1px solid var(--grat2);font-family:var(--font-data);font-size:12px;padding:6px 8px}
+.entry .row>div{flex:1;min-width:120px}
+.go{margin-top:11px;width:100%;background:var(--brass);color:#0b0d1a;border:0;
+  font-family:var(--font-ui);font-weight:600;padding:9px;cursor:pointer;letter-spacing:.02em}
+.go[disabled]{opacity:.45;cursor:not-allowed}
+
+.notice{border:1px solid var(--brass-dim);background:#20180c;color:#e8d4a0;
+  padding:9px 12px;font-size:12.5px;line-height:1.5;margin-top:12px}
+.disclaimer{color:var(--muted);font-size:12px;line-height:1.55;margin-top:14px;max-width:64ch}
+.disclaimer b{color:var(--parchment);font-weight:500}
+
+.provenance{font-family:var(--font-data);font-size:10px;letter-spacing:.05em;
+  color:var(--dim);padding-top:12px;margin-top:16px;border-top:1px solid var(--grat1);
+  display:flex;flex-wrap:wrap;gap:4px 18px}
+.provenance b{color:var(--muted);font-weight:400}
+
+@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <span class="eyebrow">натальная карта</span>
+    <h1>Где что <em>звучит</em></h1>
+  </div>
+  <div class="subject" id="subject">—</div>
+</header>
+
+<div class="stage">
+  <div class="wheelwrap">
+    <div id="wheel"></div>
+    <div class="wheel-note" id="wheelNote"></div>
+  </div>
+
+  <div>
+    <div class="panel">
+      <div class="pblock">
+        <span class="eyebrow">Система домов</span>
+        <div class="switch" id="switch">
+          <button data-sys="placidus" class="on">Плацидус</button>
+          <button data-sys="porphyry">Порфирий</button>
+          <button data-sys="whole_sign">По знакам</button>
+        </div>
+        <div id="movers" style="font-family:var(--font-data);font-size:11px;color:var(--dim);margin-top:8px;line-height:1.5"></div>
+      </div>
+      <div class="pblock"><span class="eyebrow">Углы</span><table id="angles"></table></div>
+      <div class="pblock"><span class="eyebrow">Положения</span><table id="positions"></table></div>
+      <div class="pblock"><span class="eyebrow">Аспекты · орб · сходится/расходится</span><table id="aspects"></table></div>
+      <div class="pblock"><span class="eyebrow">Дома</span><table id="houses"></table></div>
+      <div class="pblock"><span class="eyebrow">Луна рождения</span><table id="lunar"></table></div>
+    </div>
+
+    <form class="entry" id="form">
+      <span class="eyebrow">Ваши данные</span>
+      <div class="row">
+        <div><label>Дата</label><input type="date" id="bdate" value="1977-07-01"></div>
+        <div><label>Время</label><input type="time" id="btime" value="22:30"></div>
+      </div>
+      <div class="row">
+        <div><label>Широта</label><input type="number" id="blat" step="0.0001" value="47.8388"></div>
+        <div><label>Долгота</label><input type="number" id="blon" step="0.0001" value="35.1396"></div>
+      </div>
+      <div class="row">
+        <div><label>Часовой пояс</label>
+          <select id="btz">
+            <option>Europe/Kyiv</option><option>Europe/Moscow</option>
+            <option>Europe/Prague</option><option>Europe/Madrid</option>
+            <option>Asia/Tokyo</option><option>UTC</option>
+          </select></div>
+      </div>
+      <label style="margin-top:9px">API (для своих данных)</label>
+      <input type="text" id="apibase" placeholder="https://your-backend/api/v1" value="">
+      <button class="go" type="submit" id="go">Построить карту</button>
+    </form>
+    <div id="notice"></div>
+  </div>
+</div>
+
+<p class="disclaimer" id="disclaimer"></p>
+<div class="provenance" id="provenance"></div>
+
+<script type="module">
+import { angles, houseCusps, houses, houseOf, resolveSystemFor, aspects,
+         lunarDay, wheelLayout, degreeInSign, signOf, norm360, sep180 }
+  from "/vendor/chart-kit.js";
+import { fetchChart, lastChart, registerServiceWorker, saveChart }
+  from "/vendor/chart-store.js";
+
+// Demo chart (Swiss Ephemeris, 1977-07-01 19:30 UTC). Real numbers, works
+// offline; replaced wholesale by POST /api/v1/chart. This page never computes
+// an ephemeris itself — everything below is derived from the core client-side.
+let CORE = {"version":"1","jd_ut":2443326.3125,"gmst":212.2347,"obliquity":23.43962,"birth":{"lat":47.8388,"lon":35.1396,"tz_used":"Europe/Kyiv","utc_offset_used":"+03:00","tz_source":"coordinates","local_clock":"1977-07-01T22:30:00","utc":"1977-07-01T19:30:00+00:00","place_label":"Запорожье","time_known":true},"bodies":{"Sun":{"ecl_lon":99.8251,"ecl_lat":0.0,"ra":100.6892,"dec":23.0758,"speed_lon":0.9531,"retrograde":false},"Moon":{"ecl_lon":289.2449,"ecl_lat":5.0182,"ra":290.0909,"dec":-17.0892,"speed_lon":14.9173,"retrograde":false},"Mercury":{"ecl_lon":102.0171,"ecl_lat":1.457,"ra":103.206,"dec":24.3474,"speed_lon":2.1629,"retrograde":false},"Venus":{"ecl_lon":54.9195,"ecl_lat":-2.8885,"ra":53.294,"dec":16.1931,"speed_lon":1.0446,"retrograde":false},"Mars":{"ecl_lon":48.8009,"ecl_lat":-0.8224,"ra":46.58,"dec":16.6247,"speed_lon":0.7176,"retrograde":false},"Jupiter":{"ecl_lon":79.947,"ecl_lat":-0.4507,"ra":79.1006,"dec":22.6094,"speed_lon":0.2246,"retrograde":false},"Saturn":{"ecl_lon":135.1816,"ecl_lat":0.9798,"ra":137.9467,"dec":17.2193,"speed_lon":0.1124,"retrograde":false},"Uranus":{"ecl_lon":217.7776,"ecl_lat":0.437,"ra":215.5623,"dec":-13.6905,"speed_lon":-0.0123,"retrograde":true},"Neptune":{"ecl_lon":254.0923,"ecl_lat":1.5263,"ra":252.9362,"dec":-20.9759,"speed_lon":-0.0236,"retrograde":true},"Pluto":{"ecl_lon":191.4284,"ecl_lat":17.0623,"ra":197.2248,"dec":11.1776,"speed_lon":0.0058,"retrograde":false},"TrueNode":{"ecl_lon":200.8278,"ecl_lat":0.0,"ra":199.2404,"dec":-8.131,"speed_lon":-0.179,"retrograde":true},"Chiron":{"ecl_lon":35.121,"ecl_lat":-0.3641,"ra":32.9597,"dec":12.886,"speed_lon":0.0331,"retrograde":false}},"node_type":"true","house_system":"placidus"};
+let PROV = null;          // provenance from the server when a chart is fetched
+let SYSTEM = "placidus";  // house system the user is viewing
+
+const SIGN_GLYPH = ["♈","♉","♊","♋","♌","♍","♎","♏","♐","♑","♒","♓"];
+const SIGN_RU = ["Овен","Телец","Близнецы","Рак","Лев","Дева","Весы","Скорпион","Стрелец","Козерог","Водолей","Рыбы"];
+const P_GLYPH = {Sun:"☉",Moon:"☽",Mercury:"☿",Venus:"♀",Mars:"♂",Jupiter:"♃",Saturn:"♄",Uranus:"♅",Neptune:"♆",Pluto:"♇",TrueNode:"☊",Chiron:"⚷"};
+const P_RU = {Sun:"Солнце",Moon:"Луна",Mercury:"Меркурий",Venus:"Венера",Mars:"Марс",Jupiter:"Юпитер",Saturn:"Сатурн",Uranus:"Уран",Neptune:"Нептун",Pluto:"Плутон",TrueNode:"Сев. узел",Chiron:"Хирон"};
+const ASP_RU = {conjunction:"соединение",opposition:"оппозиция",trine:"трин",square:"квадрат",sextile:"секстиль",quincunx:"квинконс"};
+const MINOR = new Set(["sextile","quincunx"]);
+const SYS_RU = {placidus:"Плацидус",porphyry:"Порфирий",whole_sign:"по знакам",equal:"равнодомная"};
+const PHASE_RU = {new_moon:"новолуние",waxing_crescent:"растущий серп",first_quarter:"первая четверть",waxing_gibbous:"растущая",full_moon:"полнолуние",waning_gibbous:"убывающая",last_quarter:"последняя четверть",waning_crescent:"убывающий серп"};
+
+const $ = (id) => document.getElementById(id);
+const bodyColor = (b) => getComputedStyle(document.documentElement).getPropertyValue(`--p-${b}`).trim() || "#E7DDC7";
+
+const sIdx = (lon) => Math.floor(norm360(lon) / 30) % 12;
+const SIGN_EN = ["aries","taurus","gemini","cancer","leo","virgo","libra","scorpio","sagittarius","capricorn","aquarius","pisces"];
+/** Sign glyph + degrees°arcminutes′ — never just the sign (mandatory rule 1). */
+function pos(lon) {
+  const d = degreeInSign(lon), deg = Math.floor(d);
+  let min = Math.round((d - deg) * 60), dd = deg;
+  if (min === 60) { min = 0; dd += 1; }
+  return `${SIGN_GLYPH[sIdx(lon)]} ${dd}°${String(min).padStart(2,"0")}′`;
+}
+
+// ---- instrument-style wheel, rendered from chart-kit's wheelLayout geometry
+const RAD = Math.PI / 180;
+const pt = (cx, cy, r, lon, asc) => {
+  const a = (lon - asc) * RAD;
+  return [cx - r * Math.cos(a), cy + r * Math.sin(a)];
+};
+const n2 = (v) => v.toFixed(2);
+const esc = (s) => s.replace(/[&<>]/g, (c) => ({ "&":"&amp;","<":"&lt;",">":"&gt;" }[c]));
+
+// The system actually drawable here: past the polar circle Placidus/Koch are
+// undefined, so a user who picks Placidus at Tromsø gets the honest Porphyry
+// substitution instead of a crash — the same rule the server and chart-kit use.
+function effSystem() {
+  const b = CORE.birth;
+  if (SYSTEM === "placidus" || SYSTEM === "koch") {
+    try { houseCusps(CORE, b.lat, b.lon, SYSTEM); return SYSTEM; }
+    catch { return resolveSystemFor(CORE, b.lat, b.lon).system; }
+  }
+  return SYSTEM;
+}
+
+function drawWheel(system) {
+  const box = $("wheel").clientWidth || 560;
+  const size = Math.max(320, box);
+  if (!CORE.birth.time_known) {
+    $("wheel").innerHTML = "";
+    $("wheelNote").textContent = "Без времени рождения углы и дома произвольны — колесо не строится.";
+    return;
+  }
+  const L = wheelLayout(CORE, CORE.birth.lat, CORE.birth.lon, { size, system, minGlyphGap: 7 });
+  const { center: c, radii: R, asc } = L;
+  const p = [];
+  p.push(`<svg viewBox="0 0 ${size} ${size}" role="img" aria-label="Натальное колесо">`);
+  // rings
+  for (const [r, op] of [[R.outer,.5],[R.zodiac,.32],[R.glyphs,.16],[R.aspects,.22]])
+    p.push(`<circle cx="${n2(c.x)}" cy="${n2(c.y)}" r="${n2(r)}" fill="none" stroke="var(--grat2)" stroke-opacity="${op}"/>`);
+  // degree scale: tick every 5°, longer every 30° (sign boundary), brass
+  for (let deg = 0; deg < 360; deg += 5) {
+    const major = deg % 30 === 0;
+    const [x1,y1] = pt(c.x,c.y,R.outer,deg,asc);
+    const [x2,y2] = pt(c.x,c.y,R.outer-(major?12:6),deg,asc);
+    p.push(`<line x1="${n2(x1)}" y1="${n2(y1)}" x2="${n2(x2)}" y2="${n2(y2)}" stroke="var(--brass)" stroke-opacity="${major?.7:.28}" stroke-width="${major?1:.7}"/>`);
+  }
+  // sign glyphs on the scale
+  for (let s = 0; s < 12; s++) {
+    const [x,y] = pt(c.x,c.y,R.outer-24,s*30+15,asc);
+    p.push(`<text x="${n2(x)}" y="${n2(y)}" text-anchor="middle" dominant-baseline="central" font-size="${n2(size*.026)}" fill="var(--brass)" fill-opacity=".8" font-family="var(--font-data)">${SIGN_GLYPH[s]}</text>`);
+  }
+  // aspect chords — colour by first body's metal, dashed for minor
+  for (const ch of L.chords) {
+    const col = bodyColor(ch.a);
+    p.push(`<line x1="${n2(ch.from.x)}" y1="${n2(ch.from.y)}" x2="${n2(ch.to.x)}" y2="${n2(ch.to.y)}" stroke="${col}" stroke-opacity="${ch.applying?.85:.45}" stroke-width="${ch.type==='conjunction'?1.3:1}" ${MINOR.has(ch.type)?'stroke-dasharray="2 3"':''}/>`);
+  }
+  // cusp spokes — angles heavier + brass, others thin grat
+  for (const s of L.spokes)
+    p.push(`<line x1="${n2(s.from.x)}" y1="${n2(s.from.y)}" x2="${n2(s.to.x)}" y2="${n2(s.to.y)}" stroke="${s.isAngle?'var(--brass)':'var(--grat2)'}" stroke-opacity="${s.isAngle?.75:.5}" stroke-width="${s.isAngle?1.6:.8}"/>`);
+  // planets — metal colour, tick back to true position, retrograde mark
+  for (const g of L.glyphs) {
+    p.push(`<line x1="${n2(g.tick[0].x)}" y1="${n2(g.tick[0].y)}" x2="${n2(g.tick[1].x)}" y2="${n2(g.tick[1].y)}" stroke="${bodyColor(g.body)}" stroke-opacity=".55"/>`);
+    p.push(`<text x="${n2(g.at.x)}" y="${n2(g.at.y)}" text-anchor="middle" dominant-baseline="central" font-size="${n2(size*.033)}" fill="${bodyColor(g.body)}">${esc(P_GLYPH[g.body]||g.body)}${g.retrograde?'<tspan font-size="58%" dy="-.55em" fill="var(--brass)">℞</tspan>':''}</text>`);
+  }
+  p.push(`</svg>`);
+  $("wheel").innerHTML = p.join("");
+  const sub = system !== SYSTEM || L.substituted;
+  $("wheelNote").textContent = `${SYS_RU[L.system]||L.system}${sub?` (замена: ${SYS_RU[SYSTEM]||SYSTEM} здесь не определён)`:""} · Asc слева, против часовой`;
+}
+
+// borderline: within 1° of any cusp
+function borderlineSet(cusps) {
+  const near = new Set();
+  for (const [b, body] of Object.entries(CORE.bodies)) {
+    for (const cusp of cusps) if (Math.abs(sep180(body.ecl_lon, cusp)) < 1) { near.add(b); break; }
+  }
+  return near;
+}
+
+function render() {
+  const b = CORE.birth;
+  const timed = b.time_known;
+  $("subject").innerHTML =
+    `<b>${b.place_label || "—"}</b><br>${b.local_clock.replace("T"," ")}<br>`
+    + `${b.lat}°, ${b.lon}° · ${b.tz_used} ${b.utc_offset_used}`;
+
+  // the system usable at this latitude (Placidus→Porphyry past the polar circle)
+  const useSystem = timed ? effSystem() : SYSTEM;
+  for (const btn of document.querySelectorAll("#switch button")) btn.classList.toggle("on", btn.dataset.sys === SYSTEM);
+
+  drawWheel(useSystem);
+
+  // angles
+  if (timed) {
+    const a = angles(CORE, b.lat, b.lon);
+    $("angles").innerHTML = [["ASC",a.asc],["MC",a.mc],["DSC",a.desc],["IC",a.ic]]
+      .map(([n,v]) => `<tr><td>${n}</td><td class="r">${pos(v)}</td></tr>`).join("");
+  } else {
+    $("angles").innerHTML = `<tr><td colspan="2" class="sign">нет времени рождения — недоступно</td></tr>`;
+  }
+
+  const cusps = timed ? houseCusps(CORE, b.lat, b.lon, useSystem) : null;
+  const border = cusps ? borderlineSet(cusps) : new Set();
+  const houseOfBody = (lon) => cusps ? houseOf(lon, cusps) : "—";
+
+  // positions with degrees+arcminutes, retrograde, house, borderline flag
+  $("positions").innerHTML = Object.entries(CORE.bodies).map(([name, body]) => {
+    const cls = border.has(name) ? "borderline" : "";
+    return `<tr><td><span class="glyph" style="color:${bodyColor(name)}">${P_GLYPH[name]}</span>${P_RU[name]}${body.retrograde?' <span class="retro">℞</span>':''}</td>`
+      + `<td class="r ${cls}">${pos(body.ecl_lon)}${timed?` · д${houseOfBody(body.ecl_lon)}`:""}</td></tr>`;
+  }).join("");
+
+  // aspects with orb + applying/separating (mandatory rule 2)
+  const asps = aspects(CORE);
+  $("aspects").innerHTML = asps.length ? asps.map(x =>
+    `<tr><td><span style="color:${bodyColor(x.a)}">${P_GLYPH[x.a]}</span> ${ASP_RU[x.type]} <span style="color:${bodyColor(x.b)}">${P_GLYPH[x.b]}</span></td>`
+    + `<td class="r"><span class="${x.applying?'applying':'separating'}">${x.orb.toFixed(2)}° ${x.applying?'сходится':'расходится'}</span></td></tr>`
+  ).join("") : `<tr><td colspan="2" class="sign">в пределах орбов нет</td></tr>`;
+
+  // houses
+  $("houses").innerHTML = timed
+    ? houses(CORE, b.lat, b.lon, SYSTEM).map(h =>
+        `<tr><td>${h.number}</td><td class="r">${pos(h.cusp)}${h.bodies.length?` <span style="color:var(--brass)">${h.bodies.map(x=>P_GLYPH[x]).join("")}</span>`:""}</td></tr>`).join("")
+    : `<tr><td colspan="2" class="sign">нет времени рождения — недоступно</td></tr>`;
+
+  // lunar day of birth (exact server formula, no illumination — see chart-kit)
+  const l = lunarDay(CORE);
+  $("lunar").innerHTML =
+    `<tr><td>лунный день</td><td class="r">${l.lunarDay}</td></tr>`
+    + `<tr><td>фаза</td><td class="r sign">${PHASE_RU[l.phase]||l.phase}</td></tr>`
+    + `<tr><td>Луна в знаке</td><td class="r">${SIGN_GLYPH[SIGN_EN.indexOf(l.moonSign)]||""} ${SIGN_RU[SIGN_EN.indexOf(l.moonSign)]||l.moonSign}</td></tr>`;
+
+  renderMovers();
+  renderProvenance();
+}
+
+// which planets change house when the system changes — the feature nobody has
+function renderMovers() {
+  const b = CORE.birth;
+  if (!b.time_known || SYSTEM === "placidus") { $("movers").textContent = ""; return; }
+  const base = houseCusps(CORE, b.lat, b.lon, "placidus");
+  const cur = houseCusps(CORE, b.lat, b.lon, SYSTEM);
+  const moved = [];
+  for (const [name, body] of Object.entries(CORE.bodies)) {
+    const h0 = houseOf(body.ecl_lon, base), h1 = houseOf(body.ecl_lon, cur);
+    if (h0 !== h1) moved.push(`${P_GLYPH[name]} д${h0}→${h1}`);
+  }
+  $("movers").innerHTML = moved.length
+    ? `Меняют дом против Плацидуса: <span class="mover">${moved.join(" · ")}</span>`
+    : "Против Плацидуса дом не меняет никто.";
+}
+
+function renderProvenance() {
+  const parts = [];
+  if (PROV) {
+    parts.push(`<b>движок</b> ${PROV.ephemeris_engine||"SWIEPH"}`);
+    if (PROV.ephemeris_version) parts.push(`<b>эфемериды</b> ${PROV.ephemeris_version}`);
+    if (PROV.sidereal_time) parts.push(`<b>ST</b> ${PROV.sidereal_time}`);
+  } else {
+    parts.push(`<b>движок</b> Swiss Ephemeris (SWIEPH)`);
+    parts.push(`<b>данные</b> демо-карта`);
+  }
+  parts.push(`<b>дома</b> ${SYS_RU[SYSTEM]||SYSTEM}`);
+  parts.push(`<b>GMST</b> ${CORE.gmst.toFixed(4)}°`);
+  parts.push(`<b>наклон</b> ${CORE.obliquity.toFixed(5)}°`);
+  parts.push(`<b>JD_UT</b> ${CORE.jd_ut}`);
+  $("provenance").innerHTML = parts.join("");
+}
+
+// ---- house-system switch
+$("switch").addEventListener("click", (e) => {
+  const btn = e.target.closest("button"); if (!btn) return;
+  SYSTEM = btn.dataset.sys;
+  render();
+});
+
+// ---- fetch a real chart (gated; needs an account)
+$("form").addEventListener("submit", async (ev) => {
+  ev.preventDefault();
+  const api = $("apibase").value.trim();
+  if (!api) { showNotice("Укажите адрес API, чтобы построить карту по своим данным. Сейчас показана демо-карта."); return; }
+  if (!navigator.onLine) { showNotice("Нет сети. Новый расчёт требует сервера — сохранённая карта работает без него."); return; }
+  $("go").disabled = true;
+  try {
+    const data = await fetchChart(api, {
+      birth_date: $("bdate").value, birth_time: $("btime").value + ":00",
+      birth_place: "рождение", latitude: parseFloat($("blat").value),
+      longitude: parseFloat($("blon").value), timezone_name: $("btz").value, locale: "ru",
+    });
+    CORE = data.chart_core; PROV = data.provenance || null;
+    SYSTEM = CORE.house_system || "placidus";
+    await saveChart(CORE);
+    if (data.disclaimer) $("disclaimer").innerHTML = `<b>Расчёт проверяем, толкование — традиция.</b> ${data.disclaimer}`;
+    showNotice("");
+    render();
+  } catch (err) {
+    if (err.status === 401 || err.status === 402) {
+      const d = err.detail || {};
+      const link = d.account_url ? ` <a href="${d.account_url}">Кабинет</a>` : "";
+      const reset = d.reset_at ? ` Сбрасывается: ${d.reset_at}.` : "";
+      showNotice((d.message || "Доступ ограничен.") + reset + link);
+    } else showNotice("Не удалось получить карту: " + err.message);
+  } finally { $("go").disabled = false; }
+});
+function showNotice(html) { $("notice").innerHTML = html ? `<div class="notice">${html}</div>` : ""; }
+
+window.addEventListener("offline", () => showNotice("Офлайн. Сохранённая карта работает целиком; новый расчёт требует сети."));
+window.addEventListener("online", () => showNotice(""));
+window.addEventListener("resize", () => drawWheel());
+
+$("disclaimer").innerHTML = "<b>Расчёт проверяем, толкование — традиция.</b> "
+  + "Геометрия карты вычислена по Swiss Ephemeris и воспроизводима до угловых секунд; "
+  + "смысл домов, аспектов и знаков — это традиция интерпретации, а не предсказание, и не "
+  + "медицинская, психологическая, юридическая или финансовая консультация.";
+
+registerServiceWorker();
+render();
+lastChart().then((core) => { if (!core) return; CORE = core; SYSTEM = core.house_system || "placidus"; render();
+  $("subject").innerHTML += "<br><span style='color:var(--brass)'>сохранённая карта · открыта без сети</span>"; });
+</script>
+</body>
+</html>

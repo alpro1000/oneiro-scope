@@ -1,34 +1,144 @@
+/* OneiroScope design tokens
+   Единственный источник цвета, шрифтов и метрик.
+   Хардкод hex-значений в компонентах запрещён — только var().
+   Эталонная реализация: astrocartography.html */
+
+@import url('https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400;0,6..96,600;1,6..96,400&family=IBM+Plex+Mono:wght@400;500&family=Instrument+Sans:wght@400;500;600&display=swap');
+
 :root {
-  --bg: #0d0d0d;
-  --surface: rgba(19, 19, 19, 0.92);
-  --surface-strong: #161616;
-  --gold: #c3a56a;
-  --gold-soft: rgba(195, 165, 106, 0.24);
-  --ink: #f2ede1;
-  --ink-muted: rgba(242, 237, 225, 0.72);
-  --accent: #6ac3c0;
-  --danger: #e05f6b;
-  --font-sans: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  --radius-lg: 24px;
-  --radius-md: 16px;
-  --radius-sm: 12px;
-  --spacing-xs: 0.5rem;
-  --spacing-sm: 0.75rem;
-  --spacing-md: 1rem;
-  --spacing-lg: 1.5rem;
-  --spacing-xl: 2rem;
-  --shadow-gold: 0 24px 48px -24px rgba(195, 165, 106, 0.6);
-  --transition-slow: all 0.3s ease-in-out;
-  --transition-fast: all 0.18s ease-in-out;
-  --widget-max-width: 720px;
+  /* --- surfaces: ночная морская карта --- */
+  --abyss:      #071320;   /* фон страницы, глубокая вода */
+  --shelf:      #0C1E2E;   /* контейнеры */
+  --panel:      #0A1B29;   /* панели прибора */
+  --land:       #152C3E;   /* заливка суши */
+  --land-edge:  #24445B;   /* контур берега */
+  --grat-1:     #1B3549;   /* сетка, разделители */
+  --grat-2:     #22415A;   /* рамки */
+
+  /* --- ink --- */
+  --parchment:  #E7DDC7;   /* основной текст */
+  --muted:      #89A0B1;   /* второстепенный */
+  --dim:        #5C7385;   /* подписи, метки осей */
+
+  /* --- accent: единственный --- */
+  --brass:      #D2A64B;
+  --brass-dim:  #8A6E32;   /* eyebrow, служебные метки */
+
+  /* --- планеты: классические металлы --- */
+  --p-sun:      #E8C25A;   /* золото */
+  --p-moon:     #C7D3DD;   /* серебро */
+  --p-mercury:  #9FD5C8;   /* ртуть */
+  --p-venus:    #DB8F6C;   /* медь */
+  --p-mars:     #C6544B;   /* железо */
+  --p-jupiter:  #B9A8DA;   /* олово */
+  --p-saturn:   #8493A2;   /* свинец */
+  --p-uranus:   #6FBACB;
+  --p-neptune:  #5F84BC;
+  --p-pluto:    #997280;
+
+  /* --- типографика: три гарнитуры, роли фиксированы --- */
+  --font-display: 'Bodoni Moda', Georgia, serif;
+  --font-ui:      'Instrument Sans', system-ui, -apple-system, sans-serif;
+  --font-data:    'IBM Plex Mono', ui-monospace, monospace;
+
+  /* --- метрики --- */
+  --radius: 0;             /* прямые углы везде */
+  --hair: 1px;
+  --panel-w: 300px;
+  --collapse: 900px;
+
+  --track-eyebrow: .22em;
+  --track-display: -.015em;
+  --lh-display: .94;
 }
 
-@media (prefers-color-scheme: light) {
-  :root {
-    --bg: #f5f2e9;
-    --surface: rgba(255, 255, 255, 0.92);
-    --surface-strong: #ffffff;
-    --ink: #111111;
-    --ink-muted: rgba(17, 17, 17, 0.68);
-  }
+/* Прибор не скруглён и не отбрасывает тень. Границы вместо теней. */
+* { border-radius: var(--radius); box-shadow: none; }
+
+body {
+  background: var(--abyss);
+  color: var(--parchment);
+  font-family: var(--font-ui);
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, .display {
+  font-family: var(--font-display);
+  font-weight: 400;
+  letter-spacing: var(--track-display);
+  line-height: var(--lh-display);
+}
+h1 em, .display em { font-style: italic; color: var(--brass); }
+
+/* Всё, что является числом или измерением — моноширинным.
+   Это сигнал «здесь расчёт, а не мнение». Главный дифференциатор. */
+.num, .deg, .orb, .coord, .ver, code, kbd, samp {
+  font-family: var(--font-data);
+  font-variant-numeric: tabular-nums;
+}
+
+.eyebrow {
+  font-family: var(--font-data);
+  font-size: 10.5px;
+  letter-spacing: var(--track-eyebrow);
+  text-transform: uppercase;
+  color: var(--brass-dim);
+}
+
+/* Панель прибора: блоки через 1px разделитель */
+.panel        { border: var(--hair) solid var(--grat-2); background: var(--panel); }
+.panel-block  { padding: 13px 15px; border-bottom: var(--hair) solid var(--grat-1); }
+.panel-block:last-child { border-bottom: 0; }
+
+/* Основной паттерн компоновки */
+.stage {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) var(--panel-w);
+  gap: clamp(12px, 1.4vw, 20px);
+  align-items: start;
+}
+@media (max-width: 900px) { .stage { grid-template-columns: 1fr; } }
+
+/* Провенанс: обязателен на каждом экране с расчётом.
+   Это не мелкий шрифт для юристов, это доказательство работы прибора. */
+.provenance {
+  font-family: var(--font-data);
+  font-size: 10px;
+  letter-spacing: .06em;
+  color: var(--dim);
+  padding-top: 12px;
+  border-top: var(--hair) solid var(--grat-1);
+}
+
+/* Пограничное положение планеты — помечается явно, не подразумевается */
+.borderline { color: var(--brass); }
+.borderline::after { content: ' \00B1'; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition: none !important; animation: none !important; }
+}
+
+/* --- Compatibility bridge (transitional) ---------------------------------
+   The screens built before this design system (astrology, dreams, face,
+   calendar, Header) reach the palette through Tailwind utilities — bg-bg,
+   text-ink, gold, rounded-lg — that resolve to the OLD variable names below.
+   Until each screen is rebuilt on the instrument system (natal → lunar →
+   price → connect → cabinet), point those names at the nearest new token so
+   nothing renders unstyled and the whole app shifts toward the new look at
+   once. NEW work must use the named tokens above (--abyss, --brass,
+   --parchment, --font-data …), never these. Delete a line here as its screen
+   is rebuilt; delete the block when the last one is. */
+:root {
+  --bg:             var(--abyss);
+  --surface:        var(--shelf);
+  --surface-strong: var(--panel);
+  --gold:           var(--brass);
+  --gold-soft:      rgba(210, 166, 75, 0.24);
+  --ink:            var(--parchment);
+  --ink-muted:      var(--muted);
+  --accent:         var(--brass);   /* one accent only — collapse the old teal onto brass */
+  --danger:         var(--p-mars);
+  --font-sans:      var(--font-ui);
+  --radius-lg: 0; --radius-md: 0; --radius-sm: 0;  /* instruments are not rounded */
+  --shadow-gold: none;
 }

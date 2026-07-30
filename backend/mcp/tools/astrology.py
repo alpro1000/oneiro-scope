@@ -7,22 +7,100 @@ keep them precise.
 
 from __future__ import annotations
 
+import logging
 from datetime import date as date_cls, time as time_cls
 from typing import Any, Optional
 from uuid import UUID
 
 from backend.mcp.tools._menu import TARGET_DATE, birth_inputs, with_menu
+from backend.mcp.tools._principal import mcp_auth_context, resolve_connector_user
 from backend.services.astrology import (
     AstrologyService,
     EventForecastRequest,
     HoroscopeRequest,
     NatalChartRequest,
 )
+from backend.services.astrology.chart_core import chart_identity
 from backend.services.astrology.schemas import EventType, HoroscopePeriod
 from backend.services.strategic.disclaimer import DISCLAIMERS, DISCLAIMER_RU
 
+logger = logging.getLogger("oneiro.mcp.astrology")
 
 _service: Optional[AstrologyService] = None
+
+
+async def _gate_chart_issuance(chart_key: str) -> tuple[Optional[dict], dict]:
+    """Meter a connector chart against its principal's entitlement.
+
+    The MCP transport is one of the two doors that mint a `chart_core`, so it
+    shares the same gate as the web endpoints — keyed on the chart's birth
+    instant, free tier one chart forever, re-fetch of the account's own chart
+    always free.
+
+    Returns `(refusal_detail, entitlement_stamp)`:
+    - `refusal_detail` is non-None only when the principal is over its free
+      allowance; the caller returns it INSTEAD of the chart (a structured,
+      factual refusal — limit, reset, tier, account link).
+    - `entitlement_stamp` is always attached to a successful response so a
+      caller can see whether issuance was metered and, if not, why. There is
+      no silent free pass: an ungated issuance says so and gives the reason.
+    """
+    from backend.core.config import settings
+    from backend.services.billing.entitlements import verification_unavailable_detail
+
+    on_http, subject = mcp_auth_context()
+    if subject is None:
+        if not on_http:
+            # Off-transport: a stdio client (local, trusted, no OAuth) or a
+            # direct in-process call. No principal exists to meter against.
+            return None, {
+                "gated": False,
+                "reason": "not on an authenticated HTTP transport; no account to meter",
+            }
+        if settings.MCP_REQUIRE_AUTH:
+            # On the HTTP transport, a valid bearer was REQUIRED to reach this
+            # tool (BearerAuthMiddleware 401s otherwise), so a missing subject
+            # is a broken principal handoff, not an anonymous user. For a
+            # paywall the safe answer is to refuse (fail closed), not to issue
+            # a free chart we cannot attribute. Loud — it should never happen.
+            logger.error(
+                "MCP chart gate: MCP_REQUIRE_AUTH is on but no subject reached "
+                "the tool — refusing rather than issuing ungated"
+            )
+            return verification_unavailable_detail(), {"gated": True}
+        # Deliberately open HTTP connector: there is genuinely no account.
+        return None, {
+            "gated": False,
+            "reason": "connector is open (MCP_REQUIRE_AUTH is off); no account to meter against",
+        }
+
+    try:
+        from backend.core.database import get_sessionmaker
+
+        factory = get_sessionmaker()
+    except Exception as exc:
+        # Auth is on (we have a subject) but the entitlement store is
+        # unreachable. Fail closed for the same reason: better to refuse and
+        # be retried than to hand out an unmetered paid computation.
+        logger.error("MCP chart gate: entitlement store unavailable (%s)", exc)
+        return verification_unavailable_detail(), {"gated": True}
+
+    from backend.services.billing.entitlements import (
+        EntitlementRequired,
+        check_chart_entitlement,
+        mark_chart_issued,
+    )
+    from backend.services.billing.quotas import current_tier
+
+    async with factory() as db:
+        user = await resolve_connector_user(db, subject)
+        try:
+            check_chart_entitlement(user, chart_key)
+        except EntitlementRequired as exc:
+            return exc.detail, {"gated": True}
+        if mark_chart_issued(user, chart_key):
+            await db.commit()
+        return None, {"gated": True, "tier": current_tier(user).value}
 
 
 def _svc() -> AstrologyService:
@@ -92,7 +170,17 @@ async def calculate_natal_chart(
         timezone_name=timezone_name,
     )
     resp = await _svc().calculate_natal_chart(req, interpret=include_interpretation)
+
+    # Gate on issuance of the core (see _gate_chart_issuance). A refusal is a
+    # structured, factual response returned in place of the chart; otherwise
+    # the response carries an `entitlement` stamp saying whether it was
+    # metered.
+    refusal, entitlement = await _gate_chart_issuance(chart_identity(resp.chart_core))
+    if refusal is not None:
+        return refusal
+
     out = resp.model_dump(mode="json")
+    out["entitlement"] = entitlement
     if not include_interpretation:
         # Drop the empty interpretation fields and tell the caller to read it.
         out.pop("interpretation", None)

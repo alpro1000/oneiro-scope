@@ -2,9 +2,9 @@
 
 | Путь | Папок | Файлов |
 |---|---:|---:|
-| . | 15 | 20 |
+| . | 16 | 21 |
 | .github | 1 | 0 |
-| .github/workflows | 0 | 8 |
+| .github/workflows | 0 | 9 |
 | tests | 0 | 4 |
 | frontend | 12 | 14 |
 | frontend/types | 0 | 2 |
@@ -12,7 +12,7 @@
 | frontend/messages | 0 | 5 |
 | frontend/lib | 0 | 12 |
 | frontend/e2e | 0 | 2 |
-| frontend/__tests__ | 0 | 3 |
+| frontend/__tests__ | 0 | 4 |
 | frontend/styles | 0 | 2 |
 | frontend/app | 2 | 2 |
 | frontend/app/[locale] | 7 | 2 |
@@ -29,17 +29,25 @@
 | frontend/app/api/lunar | 0 | 1 |
 | frontend/app/api/timezones | 0 | 1 |
 | frontend/stories | 0 | 1 |
-| frontend/public | 0 | 2 |
+| frontend/public | 2 | 5 |
+| frontend/public/icons | 0 | 3 |
+| frontend/public/vendor | 1 | 2 |
+| frontend/public/vendor/leaflet | 1 | 2 |
+| frontend/public/vendor/leaflet/images | 0 | 5 |
 | frontend/.storybook | 0 | 2 |
 | frontend/components | 0 | 8 |
 | oneiro-scope | 0 | 0 |
+| packages | 1 | 0 |
+| packages/chart-kit | 2 | 3 |
+| packages/chart-kit/src | 0 | 7 |
+| packages/chart-kit/test | 0 | 3 |
 | styles | 0 | 2 |
-| scripts | 0 | 9 |
+| scripts | 0 | 11 |
 | config | 0 | 2 |
 | agents | 2 | 5 |
 | agents/prompts | 0 | 5 |
 | agents/specialists | 0 | 5 |
-| docs | 7 | 43 |
+| docs | 8 | 43 |
 | docs/deploy | 0 | 5 |
 | docs/steering | 0 | 5 |
 | docs/reports | 0 | 2 |
@@ -55,11 +63,12 @@
 | docs/templates | 2 | 0 |
 | docs/templates/_TEMPLATE_bug | 0 | 4 |
 | docs/templates/_TEMPLATE_spec | 0 | 3 |
+| docs/design | 0 | 1 |
 | etl | 1 | 5 |
 | etl/input | 0 | 1 |
 | data | 0 | 2 |
 | .claude | 1 | 1 |
-| .claude/skills | 16 | 1 |
+| .claude/skills | 17 | 1 |
 | .claude/skills/money-contour | 0 | 1 |
 | .claude/skills/horoscope | 0 | 1 |
 | .claude/skills/face-portrait | 0 | 1 |
@@ -71,6 +80,7 @@
 | .claude/skills/lunar | 0 | 1 |
 | .claude/skills/cost-report | 0 | 1 |
 | .claude/skills/research-symbol | 0 | 1 |
+| .claude/skills/design-system | 0 | 1 |
 | .claude/skills/deploy-cycle | 0 | 1 |
 | .claude/skills/client-report | 0 | 1 |
 | .claude/skills/life-pivots | 0 | 1 |
@@ -78,17 +88,17 @@
 | .claude/skills/character-face | 0 | 1 |
 | backend | 12 | 5 |
 | backend/alembic | 1 | 2 |
-| backend/alembic/versions | 0 | 2 |
+| backend/alembic/versions | 0 | 3 |
 | backend/models | 0 | 7 |
 | backend/utils | 0 | 2 |
 | backend/mcp | 1 | 4 |
-| backend/mcp/tools | 0 | 13 |
-| backend/tests | 1 | 44 |
+| backend/mcp/tools | 0 | 14 |
+| backend/tests | 1 | 46 |
 | backend/tests/dreams | 1 | 0 |
 | backend/tests/dreams/golden | 0 | 3 |
 | backend/middleware | 0 | 2 |
 | backend/services | 8 | 0 |
-| backend/services/billing | 0 | 3 |
+| backend/services/billing | 0 | 4 |
 | backend/services/email | 1 | 2 |
 | backend/services/email/templates | 5 | 0 |
 | backend/services/email/templates/en | 0 | 2 |
@@ -105,7 +115,7 @@
 | backend/services/dreams/knowledge_base | 0 | 3 |
 | backend/services/strategic | 1 | 6 |
 | backend/services/strategic/knowledge_base | 0 | 1 |
-| backend/services/astrology | 6 | 23 |
+| backend/services/astrology | 6 | 25 |
 | backend/services/astrology/archetypes | 0 | 9 |
 | backend/services/astrology/validators | 0 | 2 |
 | backend/services/astrology/policies | 0 | 2 |
@@ -116,7 +126,7 @@
 | backend/services/physiognomy/knowledge_base | 0 | 2 |
 | backend/app | 0 | 2 |
 | backend/api | 1 | 1 |
-| backend/api/v1 | 0 | 9 |
+| backend/api/v1 | 0 | 10 |
 | backend/core | 0 | 8 |
 | backend/data | 1 | 1 |
 | backend/data/ephemeris | 0 | 3 |
@@ -129,4 +139,4 @@
 | external/DReAMy | 1 | 1 |
 | external/DReAMy/dreamy | 0 | 3 |
 
-**ИТОГО:** папок = 125, файлов = 464
+**ИТОГО:** папок = 135, файлов = 507

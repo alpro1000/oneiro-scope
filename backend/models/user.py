@@ -23,6 +23,16 @@ class User(Base):
     password_hash = Column(String(255), nullable=True)
     name = Column(String(255), nullable=True)
 
+    # Connector identity (Phase 6, chart-core gate). The MCP surface
+    # authenticates via an EXTERNAL OAuth authorization server, so its
+    # principal is an opaque `sub` string, not this row's UUID. A connector
+    # user is a User keyed on that subject: free tier, one chart, tracked
+    # durably here. Nullable + unique so web (email) and connector (subject)
+    # accounts coexist as distinct rows until a future account-merge links
+    # them. Never overlaps a password account — the two identity spaces are
+    # separate providers.
+    oauth_subject = Column(String(255), unique=True, nullable=True, index=True)
+
     # Lemon Squeezy customer id — assigned on first successful checkout.
     lemon_customer_id = Column(String(255), nullable=True, index=True)
 
@@ -34,6 +44,11 @@ class User(Base):
     # Freemium model
     free_dream_used = Column(Boolean, default=False, nullable=False)
     free_natal_used = Column(Boolean, default=False, nullable=False)
+    # Which natal chart the free grant was spent on — the birth-instant
+    # identity from `chart_core.chart_identity`. Re-issuing THIS chart stays
+    # free forever (the account owns it); a different chart is what the flag
+    # above refuses. Null until the first chart is issued.
+    free_natal_chart_key = Column(String(128), nullable=True)
     dream_balance = Column(Integer, default=0, nullable=False)  # Prepaid dreams
 
     # Account status
