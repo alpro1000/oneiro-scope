@@ -3,7 +3,10 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
+    "vendor:mediapipe": "node scripts/vendor-mediapipe.mjs",
+    "predev": "npm run vendor:mediapipe",
     "dev": "next dev",
+    "prebuild": "npm run vendor:mediapipe",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",

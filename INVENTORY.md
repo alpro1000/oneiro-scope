@@ -6,7 +6,7 @@
 | .github | 1 | 0 |
 | .github/workflows | 0 | 9 |
 | tests | 0 | 4 |
-| frontend | 12 | 14 |
+| frontend | 13 | 14 |
 | frontend/types | 0 | 2 |
 | frontend/i18n | 0 | 1 |
 | frontend/messages | 0 | 5 |
@@ -14,6 +14,7 @@
 | frontend/e2e | 0 | 2 |
 | frontend/__tests__ | 0 | 4 |
 | frontend/styles | 0 | 2 |
+| frontend/scripts | 0 | 1 |
 | frontend/app | 3 | 2 |
 | frontend/app/[locale] | 9 | 2 |
 | frontend/app/[locale]/astrocartography | 0 | 1 |
@@ -37,7 +38,8 @@
 | frontend/stories | 0 | 1 |
 | frontend/public | 2 | 3 |
 | frontend/public/icons | 0 | 3 |
-| frontend/public/vendor | 0 | 2 |
+| frontend/public/vendor | 1 | 2 |
+| frontend/public/vendor/mediapipe | 0 | 1 |
 | frontend/.storybook | 0 | 2 |
 | frontend/components | 0 | 9 |
 | oneiro-scope | 0 | 0 |
@@ -143,4 +145,4 @@
 | external/DReAMy | 1 | 1 |
 | external/DReAMy/dreamy | 0 | 3 |
 
-**ИТОГО:** папок = 139, файлов = 507
+**ИТОГО:** папок = 141, файлов = 509

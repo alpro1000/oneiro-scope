@@ -243,6 +243,7 @@
     "gateLight": "Even lighting",
     "captured": "Frames: {n}/{total}",
     "errorNoCamera": "Camera unavailable (HTTPS and camera permission required)",
+    "errorModelLoad": "Couldn't load the face model. Check your connection and tap Retry.",
     "resultType": "Face type",
     "framesUsed": "Frames used: {used}, skipped: {skipped}",
     "support": "support",

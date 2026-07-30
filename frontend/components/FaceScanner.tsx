@@ -29,11 +29,16 @@ import {
 
 const TARGET_FRAMES = 5;
 const CAPTURE_SPACING_MS = 600; // spread captures over distinct moments
+// The wasm runtime and the model are served from THIS origin by default
+// (vendored under public/vendor/mediapipe — see scripts/vendor-mediapipe.mjs).
+// Loading them from a third-party CDN at runtime was the cause of the "Load
+// failed" screen when that host was blocked for the visitor. Both stay
+// overridable by env if a CDN is ever preferred.
 const WASM_BASE =
-  'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm';
+  process.env.NEXT_PUBLIC_FACE_WASM_URL || '/vendor/mediapipe/wasm';
 const MODEL_URL =
   process.env.NEXT_PUBLIC_FACE_MODEL_URL ||
-  'https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task';
+  '/vendor/mediapipe/face_landmarker.task';
 
 type Phase =
   | 'idle'
@@ -184,19 +189,34 @@ export default function FaceScanner({ locale }: { locale: string }) {
       if (!navigator.mediaDevices?.getUserMedia) {
         throw new Error(t('errorNoCamera'));
       }
-      const [{ FaceLandmarker, FilesetResolver }, stream] = await Promise.all([
-        import('@mediapipe/tasks-vision'),
-        navigator.mediaDevices.getUserMedia({
+      // Camera first, so a permission/HTTPS denial is reported as a camera
+      // error — distinct from a model-load failure below.
+      let stream: MediaStream;
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({
           video: { facingMode: 'user', width: { ideal: 1280 } },
           audio: false,
-        }),
-      ]);
-      const fileset = await FilesetResolver.forVisionTasks(WASM_BASE);
-      landmarkerRef.current = await FaceLandmarker.createFromOptions(fileset, {
-        baseOptions: { modelAssetPath: MODEL_URL },
-        runningMode: 'VIDEO',
-        numFaces: 1,
-      });
+        });
+      } catch {
+        throw new Error(t('errorNoCamera'));
+      }
+      // Model + wasm runtime (same-origin by default). A failure here is the
+      // model/runtime load — surfaced as a clear message, never the browser's
+      // raw "Load failed" fetch error.
+      try {
+        const { FaceLandmarker, FilesetResolver } = await import(
+          '@mediapipe/tasks-vision'
+        );
+        const fileset = await FilesetResolver.forVisionTasks(WASM_BASE);
+        landmarkerRef.current = await FaceLandmarker.createFromOptions(fileset, {
+          baseOptions: { modelAssetPath: MODEL_URL },
+          runningMode: 'VIDEO',
+          numFaces: 1,
+        });
+      } catch {
+        stream.getTracks().forEach((tr) => tr.stop());
+        throw new Error(t('errorModelLoad'));
+      }
       const video = videoRef.current;
       if (!video) throw new Error('video element missing');
       video.srcObject = stream;
