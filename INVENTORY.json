@@ -43,7 +43,7 @@
     {
       "path": "frontend/lib",
       "dirs": 0,
-      "files": 13
+      "files": 15
     },
     {
       "path": "frontend/e2e",
@@ -67,8 +67,13 @@
     },
     {
       "path": "frontend/app/[locale]",
-      "dirs": 8,
+      "dirs": 9,
       "files": 2
+    },
+    {
+      "path": "frontend/app/[locale]/astrocartography",
+      "dirs": 0,
+      "files": 1
     },
     {
       "path": "frontend/app/[locale]/account",
@@ -163,7 +168,7 @@
     {
       "path": "frontend/public",
       "dirs": 2,
-      "files": 4
+      "files": 3
     },
     {
       "path": "frontend/public/icons",
@@ -172,18 +177,8 @@
     },
     {
       "path": "frontend/public/vendor",
-      "dirs": 1,
-      "files": 2
-    },
-    {
-      "path": "frontend/public/vendor/leaflet",
-      "dirs": 1,
-      "files": 2
-    },
-    {
-      "path": "frontend/public/vendor/leaflet/images",
       "dirs": 0,
-      "files": 5
+      "files": 2
     },
     {
       "path": "frontend/.storybook",
@@ -706,6 +701,6 @@
       "files": 3
     }
   ],
-  "total_dirs": 140,
-  "total_files": 513
+  "total_dirs": 139,
+  "total_files": 508
 }
