@@ -1,5 +1,19 @@
 # next-session.md — Handoff snapshot
 
+> **2026-07-30 (part 6) — лунный календарь в роут `/[locale]/calendar`.**
+> `LunarInstrument` вместо `LunarWidget` (framer-motion ушёл, First Load JS
+> 145→93 КБ). Панель лунного дня (номер, фаза+освещённость, знак Луны, начало
+> дня, `MoonDisc` — яркость=освещённость, без геометрии терминатора; форму
+> полумесяца добавить после превью), сетка месяца с prev/next, инлайн-select
+> пояса (не next-intl TimezoneSelector — как натал/астро), провенанс,
+> дисклеймер. Билингвально; фаза/описание/знак — локализованы бэком.
+> **Убран тихий мок-фолбэк** (§12): `lunar-server.fetchLunarDay` бросает,
+> `/api/lunar` → честный 502, страница показывает ошибку. Удалены
+> `LunarWidget`+`lunar-mock`+их тест/стори; добавлены `LunarInstrument`+тест+
+> стори. build зелёный (calendar 5.72 КБ), tsc чисто, jest 24/24. Хвост:
+> ключи `CalendarPage`/`LunarWidget` в messages/*.json больше не нужны.
+> **Дальше:** прайс → /connect → кабинет.
+
 > **2026-07-30 (part 5) — астрокарта в роут `/[locale]/astrocartography`.**
 > Порт с приборного ЭТАЛОНА (корневой `astrocartography.html`, canvas +
 > эквидистантная проекция + вшитые берега), НЕ со старого Leaflet-прототипа.

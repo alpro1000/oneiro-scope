@@ -27,15 +27,11 @@ export async function GET(request: NextRequest) {
     const payload = await getLunarDay({date, locale, tz});
     return NextResponse.json({...payload, source: payload.source ?? 'backend'});
   } catch (error) {
+    // Honest failure, not a fabricated phase (conventions.md §12): a 502 with
+    // no data, so the caller shows an error rather than an invented lunar day.
     console.error('Failed to load lunar data from backend.', error);
     return NextResponse.json(
-      {
-        date,
-        locale,
-        tz,
-        source: 'mock',
-        error: 'Backend lunar service unavailable'
-      },
+      {date, locale, tz, error: 'Backend lunar service unavailable'},
       {status: 502}
     );
   }

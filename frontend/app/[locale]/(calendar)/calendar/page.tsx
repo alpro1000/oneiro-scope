@@ -1,55 +1,48 @@
 import type {Metadata} from 'next';
 import {format} from 'date-fns';
-import {getTranslations, unstable_setRequestLocale} from 'next-intl/server';
+import {unstable_setRequestLocale} from 'next-intl/server';
 import {getLunarDay} from '../../../../lib/lunar-server';
-import LunarWidget from '../../../../components/LunarWidget';
+import LunarInstrument from '../../../../components/LunarInstrument';
 
 export const metadata: Metadata = {
-  alternates: {
-    canonical: '/calendar'
-  }
+  alternates: {canonical: '/calendar'}
 };
 
-function formatDateForApi(date: Date): string {
-  return format(date, 'yyyy-MM-dd');
-}
+const LUNAR_DEFAULT_TZ = process.env.LUNAR_DEFAULT_TZ || 'Europe/Moscow';
 
 export default async function CalendarPage({params}: {params: {locale: string}}) {
   const {locale} = params;
   unstable_setRequestLocale(locale);
+  const lang = locale === 'ru' ? 'ru' : 'en';
+  const iso = format(new Date(), 'yyyy-MM-dd');
 
-  const today = new Date();
-  const iso = formatDateForApi(today);
-  const t = await getTranslations('CalendarPage');
-
-  let initialError: string | null = null;
   let initial: Awaited<ReturnType<typeof getLunarDay>> | null = null;
-
+  let err: string | null = null;
   try {
-    initial = await getLunarDay({locale, date: iso, tz: process.env.LUNAR_DEFAULT_TZ});
+    initial = await getLunarDay({locale, date: iso, tz: LUNAR_DEFAULT_TZ});
   } catch (error) {
+    // No mock fallback (conventions.md §12): if the server did not compute the
+    // day, we say so rather than render an invented one.
+    err = error instanceof Error ? error.message : 'Unknown error';
     console.error('Failed to load initial lunar day', error);
-    initialError = error instanceof Error ? error.message : 'Unknown error';
   }
 
-  return (
-    <main className="mx-auto flex min-h-screen w-full max-w-5xl flex-col items-center gap-8 px-4 py-12">
-      <header className="flex w-full flex-col items-center gap-2 text-center">
-        <h1 className="text-4xl font-semibold tracking-tight text-gold sm:text-5xl">
-          {t('title')}
-        </h1>
-        <p className="max-w-2xl text-base text-ink-muted sm:text-lg">{t('subtitle')}</p>
-      </header>
-      {initialError ? (
-        <div className="w-full max-w-3xl rounded-lg border border-danger/40 bg-danger/5 p-6 text-center text-ink">
-          <p className="text-lg font-semibold text-danger">{t('error.title')}</p>
-          <p className="mt-2 text-sm text-ink-muted">{t('error.subtitle')}</p>
-          <p className="mt-4 text-xs text-ink-muted">{initialError}</p>
-          <p className="mt-6 text-sm text-ink-muted">{t('error.cta')}</p>
+  if (!initial) {
+    const msg = lang === 'ru'
+      ? 'Лунные данные недоступны: сервер не ответил. Расчёт делается на сервере, и мы не подменяем его выдумкой — попробуйте позже.'
+      : 'Lunar data unavailable: the server did not answer. The computation is server-side and we do not substitute an invented one — try again later.';
+    return (
+      <main style={{padding: 'clamp(14px,2.2vw,30px)'}}>
+        <div style={{
+          border: '1px solid var(--brass-dim)', background: 'var(--notice-bg)', color: 'var(--notice-ink)',
+          padding: '16px 18px', maxWidth: '64ch', fontSize: 14, lineHeight: 1.6,
+        }}>
+          {msg}
+          {err && <div className="num" style={{marginTop: 8, fontSize: 11, color: 'var(--dim)'}}>{err}</div>}
         </div>
-      ) : (
-        initial && <LunarWidget initialData={initial} locale={locale} />
-      )}
-    </main>
-  );
+      </main>
+    );
+  }
+
+  return <LunarInstrument initial={initial} locale={locale} defaultTz={LUNAR_DEFAULT_TZ} />;
 }
