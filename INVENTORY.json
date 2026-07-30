@@ -3,7 +3,7 @@
     {
       "path": ".",
       "dirs": 16,
-      "files": 20
+      "files": 21
     },
     {
       "path": ".github",
@@ -227,7 +227,7 @@
     },
     {
       "path": "docs",
-      "dirs": 7,
+      "dirs": 8,
       "files": 43
     },
     {
@@ -306,6 +306,11 @@
       "files": 3
     },
     {
+      "path": "docs/design",
+      "dirs": 0,
+      "files": 1
+    },
+    {
       "path": "etl",
       "dirs": 1,
       "files": 5
@@ -327,7 +332,7 @@
     },
     {
       "path": ".claude/skills",
-      "dirs": 16,
+      "dirs": 17,
       "files": 1
     },
     {
@@ -382,6 +387,11 @@
     },
     {
       "path": ".claude/skills/research-symbol",
+      "dirs": 0,
+      "files": 1
+    },
+    {
+      "path": ".claude/skills/design-system",
       "dirs": 0,
       "files": 1
     },
@@ -671,6 +681,6 @@
       "files": 3
     }
   ],
-  "total_dirs": 133,
-  "total_files": 504
+  "total_dirs": 135,
+  "total_files": 507
 }

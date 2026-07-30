@@ -2,7 +2,7 @@
 
 | Путь | Папок | Файлов |
 |---|---:|---:|
-| . | 16 | 20 |
+| . | 16 | 21 |
 | .github | 1 | 0 |
 | .github/workflows | 0 | 9 |
 | tests | 0 | 4 |
@@ -47,7 +47,7 @@
 | agents | 2 | 5 |
 | agents/prompts | 0 | 5 |
 | agents/specialists | 0 | 5 |
-| docs | 7 | 43 |
+| docs | 8 | 43 |
 | docs/deploy | 0 | 5 |
 | docs/steering | 0 | 5 |
 | docs/reports | 0 | 2 |
@@ -63,11 +63,12 @@
 | docs/templates | 2 | 0 |
 | docs/templates/_TEMPLATE_bug | 0 | 4 |
 | docs/templates/_TEMPLATE_spec | 0 | 3 |
+| docs/design | 0 | 1 |
 | etl | 1 | 5 |
 | etl/input | 0 | 1 |
 | data | 0 | 2 |
 | .claude | 1 | 1 |
-| .claude/skills | 16 | 1 |
+| .claude/skills | 17 | 1 |
 | .claude/skills/money-contour | 0 | 1 |
 | .claude/skills/horoscope | 0 | 1 |
 | .claude/skills/face-portrait | 0 | 1 |
@@ -79,6 +80,7 @@
 | .claude/skills/lunar | 0 | 1 |
 | .claude/skills/cost-report | 0 | 1 |
 | .claude/skills/research-symbol | 0 | 1 |
+| .claude/skills/design-system | 0 | 1 |
 | .claude/skills/deploy-cycle | 0 | 1 |
 | .claude/skills/client-report | 0 | 1 |
 | .claude/skills/life-pivots | 0 | 1 |
@@ -137,4 +139,4 @@
 | external/DReAMy | 1 | 1 |
 | external/DReAMy/dreamy | 0 | 3 |
 
-**ИТОГО:** папок = 133, файлов = 504
+**ИТОГО:** папок = 135, файлов = 507
