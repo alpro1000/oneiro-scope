@@ -1,5 +1,24 @@
 # next-session.md — Handoff snapshot
 
+> **2026-07-30 — гейт на выдаче `chart_core` (§8 п.7) сделан.**
+> `check_chart_entitlement` подключён к ТРЁМ дверям (не двум: третья —
+> `POST /api/v1/astrology/natal-chart`, тоже чеканит core). Free = одна карта
+> навсегда, keyed по `chart_identity` (пере-выдача своей карты бесплатна;
+> отказ 402 — только на ДРУГУЮ вторую). Веб-двери теперь требуют аккаунт
+> (`require_account` → структурный 401). MCP: субъект OAuth → free-tier
+> `User.oauth_subject` (find-or-create); без субъекта на открытом коннекторе
+> честно `gated:false`. Новое: `services/billing/entitlements.py`,
+> `mcp/tools/_principal.py`, миграция `0002`, `test_chart_gate.py` (16),
+> фронт показывает отказ фактом + ссылкой на кабинет. 571 passed, 0 регрессий.
+>
+> **НЕ гейтится (осознанно, §8 «следующий шаг»):** PDF, транзиты, соляры,
+> прогнозы, серверная астрокартография — принимают сырые данные рождения, то
+> есть мягкий обход натального гейта до своих entitlement'ов (см. `soul.md §5`).
+> **Осталось по §8:** п.6 — PWA-слой на Next-приложении (сейчас статические
+> страницы). **Блокер продаж вне PR:** privacy policy — её никто за нас не
+> напишет, без неё каталоги не стартуют.
+
+
 > **English TL;DR:** Single-page snapshot for the next Claude Code
 > session. State, what works, what's broken, next priorities, context
 > that's easy to lose. Updated at the end of every substantial session

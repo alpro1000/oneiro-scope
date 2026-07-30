@@ -10,7 +10,7 @@ from typing import Optional
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from fastapi.security import HTTPAuthorizationCredentials
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from pydantic import BaseModel, EmailStr, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
@@ -72,16 +72,11 @@ async def _user_by_email(db: AsyncSession, email: str) -> Optional[User]:
     return result.scalar_one_or_none()
 
 
-async def get_current_user_db(
-    credentials: HTTPAuthorizationCredentials = Depends(security),
-    db: AsyncSession = Depends(get_db),
-) -> User:
-    """Resolve the JWT subject into a real User ORM row.
-
-    Raises 401 on missing/invalid token; 404 if the user was deleted
-    after token issuance.
-    """
-    payload = decode_access_token(credentials.credentials)
+async def _resolve_user_from_token(token: str, db: AsyncSession) -> User:
+    """Turn a validated JWT into a live User row, with the relationships the
+    downstream endpoints touch eager-loaded (async lazy-load raises
+    MissingGreenlet outside the session)."""
+    payload = decode_access_token(token)
     user_id = payload.get("sub")
     if not user_id:
         raise HTTPException(
@@ -94,9 +89,6 @@ async def get_current_user_db(
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token sub"
         )
-    # Eager-load relationships the downstream endpoints touch (tier
-    # computation, BYOK key listing, GDPR export) — async lazy-load
-    # raises MissingGreenlet outside the session.
     result = await db.execute(
         select(User)
         .options(
@@ -115,6 +107,48 @@ async def get_current_user_db(
             status_code=status.HTTP_403_FORBIDDEN, detail="User is inactive"
         )
     return user
+
+
+async def get_current_user_db(
+    credentials: HTTPAuthorizationCredentials = Depends(security),
+    db: AsyncSession = Depends(get_db),
+) -> User:
+    """Resolve the JWT subject into a real User ORM row.
+
+    Raises 401 on missing/invalid token; 404 if the user was deleted
+    after token issuance.
+    """
+    return await _resolve_user_from_token(credentials.credentials, db)
+
+
+# Optional-bearer variant: a missing token is a distinct, expected case here
+# (an anonymous chart request), not a malformed one. HTTPBearer's default
+# auto_error would answer it with a bare 403; the chart gate wants a 401 that
+# says "sign in to get your free chart" and points at the account page.
+_optional_bearer = HTTPBearer(auto_error=False)
+
+
+async def require_account(
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(_optional_bearer),
+    db: AsyncSession = Depends(get_db),
+) -> User:
+    """Resolve the caller into a User, or refuse with a structured 401.
+
+    The gate on `chart_core` issuance needs a durable identity to hang "one
+    chart forever" on; an anonymous caller has none. This turns the absence
+    of a token into an `AccountRequired` (401 + account link) rather than the
+    HTTPBearer default (403), so a client can tell "authenticate" apart from
+    "forbidden". A present-but-invalid token still surfaces as the normal 401
+    from token validation.
+    """
+    from backend.services.billing.entitlements import AccountRequired
+
+    if credentials is None:
+        raise AccountRequired(
+            "Sign in to get your free natal chart — one chart is included with "
+            "a free account."
+        )
+    return await _resolve_user_from_token(credentials.credentials, db)
 
 
 # ---------- Routes --------------------------------------------------------

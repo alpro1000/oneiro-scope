@@ -393,3 +393,19 @@ def _format_offset(hours: float) -> str:
 def chart_core_bytes(core: dict[str, Any]) -> int:
     """Size of the payload as compact JSON — what the wire actually costs."""
     return len(json.dumps(core, separators=(",", ":"), ensure_ascii=False).encode())
+
+
+def chart_identity(core: dict[str, Any]) -> str:
+    """A stable identity for "the same chart", from the issued core.
+
+    It is the resolved birth instant plus coordinates — the one thing that
+    is invariant across house-system choice, locale and place label (all of
+    which are views or annotations, not the chart). The string matches the
+    key the client already uses to store a core in IndexedDB
+    (`${birth.utc}|${birth.lat}|${birth.lon}`), so "the chart the browser
+    cached" and "the chart the account was granted" are provably the same
+    thing — which is what lets a free user re-fetch their one chart forever
+    without it counting as a second.
+    """
+    birth = core["birth"]
+    return f"{birth['utc']}|{birth['lat']}|{birth['lon']}"

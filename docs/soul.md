@@ -72,19 +72,22 @@ Personal/project memory file for cross-session continuity. Read by Claude Code a
 
 ## §5 Known issues / Tech debt
 
-- **🔴 Биллинг построен и подключён к нулю точек** (найдено 2026-07-29 при
-  разборе ревью PR #168, не исправлено). `backend/services/billing/quotas.py`
-  содержит рабочий `assert_quota(user, QuotaKind.…)` с лимитом «одна натальная
-  карта на бесплатный аккаунт», покрыт тестами — и **не вызывается ниоткуда**,
-  кроме `backend/tests/test_quotas.py`. `free_natal_used` встречается вне
-  `quotas.py` ровно один раз: как объявление колонки в `backend/models/user.py`.
-  Auth (`get_current_user_db`) подключён только к `users.py`/`auth.py`/billing;
-  на натальном эндпоинте это закомментированная строка `# TODO: Add auth`.
-  Итог: весь расчётный контур (astrology, dreams, horoscope, `/api/v1/chart`)
-  анонимен и не метрируется. Чинится не правкой одного эндпоинта — гейт на
-  одной двери бесполезен, пока рядом открыта равнозначная, — а подключением
-  слоя ко всей поверхности сразу. По §8 задания владельца это шаг 7, после
-  натального колеса, лунного календаря и PWA-слоя.
+- **Биллинг подключён к выдаче `chart_core`** (2026-07-29 найдено «построен и
+  подключён к нулю точек»; 2026-07-30 гейт на натальную карту подключён —
+  `entitlements.check_chart_entitlement`). Что закрыто: три двери выдачи
+  `chart_core` (`POST /api/v1/chart`, `POST /api/v1/astrology/natal-chart`,
+  MCP `calculate_natal_chart`) теперь метрируют free = одна карта навсегда.
+  **Что ещё НЕ метрируется** (осознанно, по §8 владельца — «отдельными
+  entitlement'ами, следующий шаг»): PDF-отчёты, транзиты, соляры, прогнозы,
+  серверная астрокартография (`compute_transits`, `astrocartography_*`,
+  `solar_return_*`, `forecast_event`, `horoscope_report`, `profile_report_file`).
+  Эти инструменты принимают сырые данные рождения и считают на сервере, то есть
+  пока остаются мягким обходом натального гейта до своих entitlement'ов.
+  **Остаточная зависимость по MCP:** durable-метрирование коннектора живо, когда
+  `MCP_REQUIRE_AUTH=true` И субъект долетает до инструмента; при открытом
+  коннекторе (`MCP_REQUIRE_AUTH=false`) выдача честно штампуется `gated:false`,
+  не молча. Полное объединение веб- и коннектор-аккаунтов (один пользователь,
+  оба провайдера) — отдельная работа, не сделана.
 - No user auth / natal chart persistence (TODOs in `backend/api/v1/astrology.py:59,102,175`).
 - ~~5/14 dream interpreter tests failing (64% pass rate).~~ **Fixed 2026-05-26 in `claude/fix-dream-narrative-tests`** — 14/14 passing.
 - ~~`ENVIRONMENT=production` not yet set on Render~~. Already set in `render.yaml` (verified 2026-05-26).
@@ -131,6 +134,59 @@ Recent decisions:
 ---
 
 ## §9 Session log
+
+### 2026-07-30 — claude/oneiroscope-dream-encoder-rebuild-g2iyp0 — гейт на выдаче `chart_core` (§8 п.7)
+
+**Триггер:** владелец выбрал гейт из двух оставшихся пунктов §8. Формулировка:
+«check_entitlement только к выдаче chart_core, оба транспорта; free = одна
+карта навсегда; всё производное — не гейтить; отказ нейтральный структурный».
+Повод — «оплатить можно, а получить нельзя»: биллинг был написан и подключён к
+нулю точек (см. §5).
+
+**Разведка вскрыла три вещи, которых формулировка не учитывала:**
+1. **Дверей не две, а три.** `chart_core` чеканят `POST /api/v1/chart`, MCP
+   `calculate_natal_chart` И богатый `POST /api/v1/astrology/natal-chart`
+   (с тем самым `# TODO: Add auth`). Гейт двух при открытой третьей — ровно тот
+   обход, о котором я сам писал владельцу. Закрыл все три.
+2. **У MCP нет моста к внутреннему User.** Принципал MCP — внешний OAuth `sub`
+   (Auth0/Clerk), кладётся middleware в `scope["state"]["mcp_subject"]` только
+   при `MCP_REQUIRE_AUTH`. Внутренняя квота живёт на `User`. Мост:
+   `User.oauth_subject` (uniq) + find-or-create → free-tier User по субъекту.
+3. **«Одна карта навсегда» булевым флагом нечестна.** Флаг `free_natal_used`
+   сжёг бы единственную карту при первой же чистке кэша. Сделал keyed:
+   `free_natal_chart_key` = identity карты (миг рождения + координаты, тот же
+   ключ, что клиент кладёт в IndexedDB). Пере-выдача СВОЕЙ карты бесплатна
+   навсегда; отказывается только ДРУГАЯ вторая.
+
+**Сделано (единый seam, три двери):**
+- `backend/services/billing/entitlements.py` — `check_chart_entitlement` +
+  `mark_chart_issued` (транспорт-нейтральные, работают на любом User-подобном
+  объекте, как `quotas.py`), `EntitlementRequired` (402) и `AccountRequired`
+  (401), оба со структурным телом: `error/message/allowance/reset_at/
+  tier_required/account_url`. Никакого продающего текста — факт, не «купи».
+- `chart_core.chart_identity(core)` — единый источник identity.
+- `User.oauth_subject` + `User.free_natal_chart_key`; миграция `0002`.
+- `auth.require_account` — optional-bearer → структурный 401 вместо голого 403.
+- Гейт на всех трёх дверях: build → identity → check → mark → commit; отказ
+  сборки (ValueError) РАНЬШЕ гейта, чтобы неудачный расчёт не жёг квоту.
+- MCP: `_principal.mcp_subject()` (читает субъект из contextvar, НИКОГДА не
+  падает) + `resolve_connector_user`; `_gate_chart_issuance` штампует
+  `entitlement:{gated:…}` — без субъекта на открытом коннекторе честно
+  `gated:false`, не молча.
+- Фронт: `chart-store.fetchChart` пробрасывает `.status`/`.detail`; natal.html и
+  astrocartography.html показывают отказ фактом + ссылкой на кабинет.
+
+**Тесты:** `test_chart_gate.py` (16) — keyed idempotency, tiers, форма отказа,
+MCP-ветки (метрирует первую, отказывает вторую, пере-выдаёт свою, штампует
+открытый коннектор). Байт-идентичность `chart_core` между транспортами держит
+прежний тест. Полный прогон: 571 passed, набор из 41 sandbox-падения идентичен
+до/после (0 регрессий).
+
+**Следствие для продукта (флаг владельцу):** гейт требует аккаунт — веб-двери
+из анонимных стали sign-in-required. Это влечёт «одна карта навсегда»: обещание
+про аккаунт держать не на чем без аккаунта. Прототип-страницы теперь показывают
+структурный отказ (демо-карта оффлайн работает); полноценный логин — в Next
+(§8 п.6).
 
 ### 2026-07-28/29 — claude/oneiroscope-dream-encoder-rebuild-g2iyp0 — тонкое ядро `chart_core` + `packages/chart-kit` + PWA
 

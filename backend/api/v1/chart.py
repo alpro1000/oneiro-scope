@@ -19,9 +19,13 @@ import logging
 from datetime import date as date_cls, time as time_cls
 from typing import Any, Optional
 
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field, model_validator
+from sqlalchemy.ext.asyncio import AsyncSession
 
+from backend.api.v1.auth import require_account
+from backend.core.database import get_db
+from backend.models.user import User
 from backend.services.astrology.chart_contract import ChartResponse
 from backend.services.astrology.chart_core import (
     CHART_CORE_MAX_BYTES,
@@ -29,6 +33,11 @@ from backend.services.astrology.chart_core import (
     DEFAULT_HOUSE_SYSTEM,
     build_chart_response,
     chart_core_bytes,
+    chart_identity,
+)
+from backend.services.billing.entitlements import (
+    check_chart_entitlement,
+    mark_chart_issued,
 )
 from backend.services.astrology.geocoder import Geocoder, GeocodingError
 
@@ -97,8 +106,16 @@ class ChartRequest(BaseModel):
     # learn a second shape of the same contract.
     response_model_exclude_none=True,
 )
-async def compute_chart(req: ChartRequest) -> dict[str, Any]:
+async def compute_chart(
+    req: ChartRequest,
+    user: User = Depends(require_account),
+    db: AsyncSession = Depends(get_db),
+) -> dict[str, Any]:
     """Compute the self-contained chart core.
+
+    This is the paid door. A free account is granted one chart forever
+    (its own chart re-fetches free; a different one needs Premium); the gate
+    lives on issuance, not on the features the client derives from the core.
 
     Returns `chart_core` plus provenance and disclaimer. The payload is
     ~1.7 KB and is everything a client needs; it is safe to cache in
@@ -131,10 +148,20 @@ async def compute_chart(req: ChartRequest) -> dict[str, Any]:
         )
     except ValueError as exc:
         # Out of ephemeris coverage, or an unknown house system: a caller
-        # error, answered as one rather than as a 500.
+        # error, answered as one rather than as a 500. Raised BEFORE the gate
+        # touches the account, so a failed calculation costs no quota.
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)
         ) from exc
+
+    # Gate on the resolved chart's identity. Checking after the (sub-
+    # millisecond) build lets "re-fetch your own chart" recognise the exact
+    # birth instant, and the mark+commit happens only once the chart truly
+    # exists — an entitlement refusal raises here and returns no body.
+    key = chart_identity(body["chart_core"])
+    check_chart_entitlement(user, key)
+    if mark_chart_issued(user, key):
+        await db.commit()
 
     size = chart_core_bytes(body["chart_core"])
     if size > CHART_CORE_MAX_BYTES:

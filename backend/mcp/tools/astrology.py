@@ -7,22 +7,84 @@ keep them precise.
 
 from __future__ import annotations
 
+import logging
 from datetime import date as date_cls, time as time_cls
 from typing import Any, Optional
 from uuid import UUID
 
 from backend.mcp.tools._menu import TARGET_DATE, birth_inputs, with_menu
+from backend.mcp.tools._principal import mcp_subject, resolve_connector_user
 from backend.services.astrology import (
     AstrologyService,
     EventForecastRequest,
     HoroscopeRequest,
     NatalChartRequest,
 )
+from backend.services.astrology.chart_core import chart_identity
 from backend.services.astrology.schemas import EventType, HoroscopePeriod
 from backend.services.strategic.disclaimer import DISCLAIMERS, DISCLAIMER_RU
 
+logger = logging.getLogger("oneiro.mcp.astrology")
 
 _service: Optional[AstrologyService] = None
+
+
+async def _gate_chart_issuance(chart_key: str) -> tuple[Optional[dict], dict]:
+    """Meter a connector chart against its principal's entitlement.
+
+    The MCP transport is one of the two doors that mint a `chart_core`, so it
+    shares the same gate as the web endpoints — keyed on the chart's birth
+    instant, free tier one chart forever, re-fetch of the account's own chart
+    always free.
+
+    Returns `(refusal_detail, entitlement_stamp)`:
+    - `refusal_detail` is non-None only when the principal is over its free
+      allowance; the caller returns it INSTEAD of the chart (a structured,
+      factual refusal — limit, reset, tier, account link).
+    - `entitlement_stamp` is always attached to a successful response so a
+      caller can see whether issuance was metered and, if not, why. There is
+      no silent free pass: an ungated issuance says so and gives the reason.
+    """
+    from backend.core.config import settings
+
+    subject = mcp_subject()
+    if subject is None:
+        # No principal to meter. On an open server (MCP_REQUIRE_AUTH off) that
+        # is expected; when auth is required, reaching here without a subject
+        # is a plumbing gap worth a loud log — but failing every chart call
+        # over a DB/context hiccup is worse than issuing one ungated and
+        # saying so, for a free-tier natal chart.
+        if settings.MCP_REQUIRE_AUTH:
+            reason = "authenticated principal did not reach the tool; issuance not metered"
+            logger.warning("MCP chart issued ungated: %s", reason)
+        else:
+            reason = "connector is open (MCP_REQUIRE_AUTH is off); no account to meter against"
+        return None, {"gated": False, "reason": reason}
+
+    try:
+        from backend.core.database import get_sessionmaker
+
+        factory = get_sessionmaker()
+    except Exception as exc:  # DB not configured — cannot meter durably.
+        logger.error("MCP chart gate: entitlement store unavailable (%s)", exc)
+        return None, {"gated": False, "reason": "entitlement store unavailable"}
+
+    from backend.services.billing.entitlements import (
+        EntitlementRequired,
+        check_chart_entitlement,
+        mark_chart_issued,
+    )
+    from backend.services.billing.quotas import current_tier
+
+    async with factory() as db:
+        user = await resolve_connector_user(db, subject)
+        try:
+            check_chart_entitlement(user, chart_key)
+        except EntitlementRequired as exc:
+            return exc.detail, {"gated": True}
+        if mark_chart_issued(user, chart_key):
+            await db.commit()
+        return None, {"gated": True, "tier": current_tier(user).value}
 
 
 def _svc() -> AstrologyService:
@@ -92,7 +154,17 @@ async def calculate_natal_chart(
         timezone_name=timezone_name,
     )
     resp = await _svc().calculate_natal_chart(req, interpret=include_interpretation)
+
+    # Gate on issuance of the core (see _gate_chart_issuance). A refusal is a
+    # structured, factual response returned in place of the chart; otherwise
+    # the response carries an `entitlement` stamp saying whether it was
+    # metered.
+    refusal, entitlement = await _gate_chart_issuance(chart_identity(resp.chart_core))
+    if refusal is not None:
+        return refusal
+
     out = resp.model_dump(mode="json")
+    out["entitlement"] = entitlement
     if not include_interpretation:
         # Drop the empty interpretation fields and tell the caller to read it.
         out.pop("interpretation", None)

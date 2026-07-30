@@ -76,15 +76,36 @@ export async function lastChart() {
  *
  * Throws with the server's own message on failure rather than returning
  * a blank chart: a natal chart nobody computed must never look like one
- * somebody did.
+ * somebody did. On a gate refusal (401 account_required / 402
+ * entitlement_required) the thrown error carries `.status` and the
+ * server's structured `.detail`, so the page can show the factual limit
+ * and the account link rather than a raw HTTP string.
+ *
+ * `token`, when given, is sent as a bearer — the chart endpoint requires
+ * an account, since "one chart forever" is a promise about one.
  */
-export async function fetchChart(apiBase, payload) {
+export async function fetchChart(apiBase, payload, token) {
+  const headers = { 'Content-Type': 'application/json' };
+  if (token) headers.Authorization = `Bearer ${token}`;
   const res = await fetch(`${apiBase.replace(/\/$/, '')}/chart`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers,
     body: JSON.stringify(payload),
   });
-  if (!res.ok) throw new Error(`${res.status} ${await res.text()}`);
+  if (!res.ok) {
+    let detail = null;
+    try {
+      detail = (await res.json()).detail ?? null;
+    } catch {
+      /* non-JSON error body — leave detail null, status still speaks */
+    }
+    const err = new Error(
+      (detail && detail.message) || `Request failed (${res.status})`,
+    );
+    err.status = res.status;
+    err.detail = detail;
+    throw err;
+  }
   return res.json();
 }
 

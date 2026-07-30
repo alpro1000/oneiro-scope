@@ -199,7 +199,17 @@ $("form").addEventListener("submit", async (ev) => {
     if (failed) banner("Карта построена, но офлайн-сохранение недоступно: " + failed, "warn");
     if (data.disclaimer) $("disc").textContent = data.disclaimer;
   } catch (err) {
-    banner("Не удалось получить карту: " + err, "warn");
+    // A gate refusal is a fact to present neutrally, not an error to dump.
+    if (err.status === 401 || err.status === 402) {
+      const d = err.detail || {};
+      const link = d.account_url
+        ? ` <a href="${d.account_url}" style="color:var(--acc)">Кабинет</a>`
+        : "";
+      const reset = d.reset_at ? ` Сбрасывается: ${d.reset_at}.` : "";
+      banner((d.message || "Доступ ограничен.") + reset + link, "warn");
+    } else {
+      banner("Не удалось получить карту: " + err.message, "warn");
+    }
   } finally {
     $("go").disabled = false;
   }
