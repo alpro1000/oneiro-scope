@@ -1,24 +1,49 @@
 import { useTranslations } from 'next-intl';
 import FaceScanner from '../../../components/FaceScanner';
 
+/**
+ * Face scanner shell — instrument header + the scanner itself.
+ *
+ * The gradient/slate shell this replaces was the last of the old palette on
+ * this route (it is what still read as "old design" once the global header had
+ * already been rebuilt). Layout matches natal/astro/calendar: eyebrow, display
+ * heading with a brass accent, then the instrument.
+ */
 export default function FacePage({
   params,
 }: {
   params: { locale: string };
 }) {
   const t = useTranslations('FacePage');
+  const ru = params.locale === 'ru';
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-slate-900 via-indigo-950 to-slate-900 px-4 py-10">
-      <div className="mx-auto max-w-2xl">
-        <h1 className="text-center text-3xl font-bold text-white">
+    <main style={{ padding: 'clamp(14px,2.2vw,30px)', maxWidth: 900, margin: '0 auto' }}>
+      <header
+        style={{
+          paddingBottom: 14,
+          marginBottom: 'clamp(12px,1.6vw,20px)',
+          borderBottom: '1px solid var(--grat-1)',
+        }}
+      >
+        <span className="eyebrow">{ru ? 'сканер лица · мяньсян' : 'face scanner · mianxiang'}</span>
+        <h1 style={{ fontSize: 'clamp(28px,5vw,52px)', margin: '4px 0 0' }}>
           {t('title')}
         </h1>
-        <p className="mt-2 text-center text-slate-400">{t('subtitle')}</p>
-        <div className="mt-8">
-          <FaceScanner locale={params.locale} />
-        </div>
-      </div>
+        <p
+          style={{
+            color: 'var(--muted)',
+            fontSize: 13.5,
+            lineHeight: 1.6,
+            maxWidth: '58ch',
+            marginTop: 12,
+          }}
+        >
+          {t('subtitle')}
+        </p>
+      </header>
+
+      <FaceScanner locale={params.locale} />
     </main>
   );
 }

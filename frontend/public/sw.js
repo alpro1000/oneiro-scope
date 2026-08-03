@@ -14,7 +14,7 @@
  *   the page says so.
  */
 
-const VERSION = 'v4';
+const VERSION = 'v5';
 const SHELL_CACHE = `oneiro-shell-${VERSION}`;
 
 // Kept deliberately small: the shell plus the kit is all that is needed
@@ -59,6 +59,23 @@ self.addEventListener('activate', (event) => {
   );
 });
 
+/** A real Response saying WHY there is nothing to show. A rejected
+ *  respondWith would surface the browser's own network error instead, which
+ *  tells the user nothing — and the first offline visit, with nothing cached,
+ *  is exactly when that happens. */
+function offlineResponse() {
+  return new Response(
+    'Офлайн, и эта страница ещё не сохранена. ' +
+      'Откройте приложение один раз с сетью — после этого ' +
+      'сохранённая карта работает без неё.',
+    {
+      status: 503,
+      statusText: 'Offline and not cached',
+      headers: { 'Content-Type': 'text/plain; charset=utf-8' },
+    },
+  );
+}
+
 self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
@@ -68,8 +85,37 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Shell and kit: cache first, refreshed in the background so a new
-  // chart-kit build reaches users without a hard reload.
+  // Navigations (HTML documents): NETWORK FIRST, cache only as the offline
+  // fallback.
+  //
+  // A document is the one thing here that is NOT content-addressed: its URL
+  // stays /ru/face across every deploy while the hashed chunk names inside it
+  // change. Serving it cache-first pinned a returning visitor to whichever
+  // build they last saw and made every deploy invisible for at least one
+  // visit — a shipped fix would sit there while the old bundle kept running
+  // (exactly how the self-hosted face-model fix stayed unseen behind a page
+  // cached one deploy earlier). Network-first keeps the offline promise: the
+  // cached copy still answers when the network does not.
+  if (request.mode === 'navigate') {
+    event.respondWith(
+      fetch(request)
+        .then((response) => {
+          if (response.ok && url.origin === self.location.origin) {
+            const copy = response.clone();
+            caches.open(SHELL_CACHE).then((cache) => cache.put(request, copy));
+          }
+          return response;
+        })
+        .catch(() =>
+          caches.match(request).then((cached) => cached || offlineResponse()),
+        ),
+    );
+    return;
+  }
+
+  // Everything else — hashed Next chunks, the vendored kit, the face model and
+  // wasm — is content-addressed or version-pinned, so cache-first is both safe
+  // and the reason a stored chart still opens with the radio off.
   event.respondWith(
     caches.match(request).then((cached) => {
       const network = fetch(request)
@@ -80,24 +126,7 @@ self.addEventListener('fetch', (event) => {
           }
           return response;
         })
-        .catch(
-          () =>
-            // A rejected respondWith shows the browser's own network error,
-            // which tells the user nothing about why. First offline visit —
-            // nothing cached, no network — is exactly when that happens, so
-            // answer with a real Response that says what is going on.
-            cached ||
-            new Response(
-              'Офлайн, и эта страница ещё не сохранена. ' +
-                'Откройте приложение один раз с сетью — после этого ' +
-                'сохранённая карта работает без неё.',
-              {
-                status: 503,
-                statusText: 'Offline and not cached',
-                headers: { 'Content-Type': 'text/plain; charset=utf-8' },
-              },
-            ),
-        );
+        .catch(() => cached || offlineResponse());
       return cached || network;
     }),
   );
