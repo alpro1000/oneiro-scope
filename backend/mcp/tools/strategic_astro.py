@@ -23,6 +23,7 @@ except ImportError as exc:  # pragma: no cover
     raise ImportError("pyswisseph required") from exc
 
 
+from backend.core.ephemeris import EPHEMERIS_VERSION
 from backend.services.astrology.astrocartography import (
     AngleHit,
     RelocationResult,
@@ -121,7 +122,7 @@ async def compute_transits(
     return with_menu(
         {
             "layer": "astronomy",
-            "methodology": "Swiss Ephemeris (SWIEPH); orb at midnight UT",
+            "methodology": f"{EPHEMERIS_VERSION}; orb at midnight UT",
             "window": {"start": start, "end": end, "orb_deg": orb_deg},
             "transit_count": len(events),
             "transits": [
@@ -152,6 +153,15 @@ def _hit_to_dict(h: AngleHit) -> dict:
 
 
 def _result_to_dict(r: RelocationResult) -> dict:
+    # A weighted `score` of 0 does NOT mean "nothing here": the composite
+    # scorer only weighs Venus/Jupiter/Sun/Moon (+) and Saturn/Mars/Pluto (−),
+    # so a real Mercury/Uranus/Neptune contact scores 0 and, in the scan table,
+    # became indistinguishable from a city with no contacts at all (Atlanta's
+    # Uranus→Asc 6° read as 0.0, same as contactless Chicago). Carry the
+    # valence-free `total_significance` and the `unweighted` contacts on every
+    # row — the same fields `astrocartography_point` already exposes — so the
+    # unscored planets stop vanishing from the comparison.
+    expl = score_explanation(r)
     return {
         "city": r.city,
         "latitude": r.latitude,
@@ -162,6 +172,8 @@ def _result_to_dict(r: RelocationResult) -> dict:
         "desc": r.desc,
         "angle_hits": [_hit_to_dict(h) for h in r.angle_hits],
         "score": r.score,
+        "total_significance": expl["total_significance"],
+        "unweighted": expl["unweighted"],
     }
 
 
@@ -194,10 +206,18 @@ async def astrocartography_scan(
             "layer": "astronomy",
             "methodology": (
                 "Placidus house system; Astro*Carto*Graphy (Lewis 1976); "
-                "Swiss Ephemeris SWIEPH"
+                f"{EPHEMERIS_VERSION}"
             ),
             "orb_deg": orb_deg,
             "city_count": len(results),
+            "note": (
+                "Rank cities by `total_significance` (unsigned angle load), not "
+                "`score` alone: the composite `score` weighs only "
+                "Venus/Jupiter/Sun/Moon (+) and Saturn/Mars/Pluto (−), so a "
+                "Mercury/Uranus/Neptune contact scores 0. A `score` of 0.0 with "
+                "`total_significance` > 0 still has real contacts (see each "
+                "row's `unweighted`) — unlike a genuinely empty city."
+            ),
             "results": [_result_to_dict(r) for r in results],
         },
         domain="astro",
@@ -243,7 +263,7 @@ async def astrocartography_lines(
         {
             "layer": "astronomy",
             "methodology": (
-                "Astro*Carto*Graphy (Lewis 1976); Swiss Ephemeris SWIEPH; "
+                f"Astro*Carto*Graphy (Lewis 1976); {EPHEMERIS_VERSION}; "
                 "MC/IC = meridian loci, Asc/Desc = horizon curves"
             ),
             "chart": chart_geometry(jd, birth_lat, birth_lon, birth_name),

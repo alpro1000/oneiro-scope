@@ -10,6 +10,7 @@ import re
 
 import pytest
 
+from backend.core import ephemeris
 from backend.services.strategic.pattern_engine import (
     SIGNS,
     SIGN_RULERS,
@@ -44,7 +45,12 @@ def test_natal_geometry_basics(geo):
     for p in geo["planets"].values():
         assert 1 <= p["house"] <= 12
         assert p["sign"] in SIGNS
-    assert geo["provenance"]["ephemeris_engine"] == "SwissEph/SWIEPH"
+    # Provenance now carries version + DE431 basis (WP-1), sourced from the
+    # single EPHEMERIS_VERSION constant, not a version-less "SwissEph/SWIEPH".
+    engine = geo["provenance"]["ephemeris_engine"]
+    assert "SWIEPH" in engine
+    assert "DE431" in engine
+    assert ephemeris.SWE_VERSION in engine
 
 
 def test_legacy_timezone_alias():

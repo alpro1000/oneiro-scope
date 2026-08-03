@@ -53,10 +53,17 @@ async def lifespan(app: FastAPI):
         ",".join(eph["files"]),
     )
 
-    # Initialize database
-    if settings.ENVIRONMENT == "development":
-        logger.info("Initializing database...")
-        await init_db()
+    # Ensure the database schema exists. init_db() is Base.metadata.create_all,
+    # which is idempotent (checkfirst): it creates only MISSING tables and never
+    # alters or drops. The base tables (users, dream_entries, …) have no
+    # create-table migration — Alembic here only carries column deltas (0002
+    # ALTERs `users`) — so create_all is currently the sole thing that creates
+    # them. Gating it to `development` (an earlier hardening) meant production
+    # never created `users`, so the natal entitlement gate raised UndefinedTable
+    # (500) on every call. It runs in all environments until the base tables get
+    # a real Alembic baseline + `alembic upgrade head` on deploy (tracked).
+    logger.info("Ensuring database schema (create_all, idempotent)...")
+    await init_db()
 
     logger.info("Application startup complete")
 

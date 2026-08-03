@@ -118,7 +118,17 @@ async def get_db() -> AsyncGenerator[AsyncSession, None]:
 
 
 async def init_db():
-    """Initialize database - create all tables"""
+    """Create any MISSING tables — idempotent ``create_all`` (checkfirst).
+
+    Importing ``backend.models`` first registers every ORM model on
+    ``Base.metadata``; without it a table whose module has not been imported
+    yet would be silently skipped. ``create_all`` never alters or drops an
+    existing table, so this is safe to run against a populated database — it
+    only fills in what is absent (e.g. the ``users`` table on a prod DB that
+    predates it).
+    """
+    import backend.models  # noqa: F401 — side effect: registers models on Base
+
     async with get_async_engine().begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
 

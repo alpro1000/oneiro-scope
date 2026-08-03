@@ -28,7 +28,7 @@ try:
 except ImportError as exc:  # pragma: no cover
     raise ImportError("pyswisseph required for pattern_engine") from exc
 
-from backend.core.ephemeris import FLAGS as _FLG
+from backend.core.ephemeris import FLAGS as _FLG, EPHEMERIS_VERSION
 
 SIGNS = [
     "aries", "taurus", "gemini", "cancer", "leo", "virgo",
@@ -66,7 +66,12 @@ ASPECT_NATURE: dict[str, str] = {
 }
 
 _PROVENANCE = {
-    "ephemeris_engine": "SwissEph/SWIEPH",
+    # Single source of truth for the engine string — carries the Swiss
+    # Ephemeris version AND the DE431 basis (WP-1). Was a version-less
+    # "SwissEph/SWIEPH", so money_contour / vocation_map / decade_map /
+    # life_pivots / electional_day all shipped provenance a reviewer couldn't
+    # pin to a build.
+    "ephemeris_engine": EPHEMERIS_VERSION,
     "house_system": "Placidus",
     "zodiac": "tropical",
 }
