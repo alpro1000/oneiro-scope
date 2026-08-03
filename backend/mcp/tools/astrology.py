@@ -92,15 +92,38 @@ async def _gate_chart_issuance(chart_key: str) -> tuple[Optional[dict], dict]:
     )
     from backend.services.billing.quotas import current_tier
 
-    async with factory() as db:
-        user = await resolve_connector_user(db, subject)
-        try:
-            check_chart_entitlement(user, chart_key)
-        except EntitlementRequired as exc:
-            return exc.detail, {"gated": True}
-        if mark_chart_issued(user, chart_key):
-            await db.commit()
-        return None, {"gated": True, "tier": current_tier(user).value}
+    try:
+        async with factory() as db:
+            user = await resolve_connector_user(db, subject)
+            # Snapshot the subscriptions ONCE, while the object is known to be
+            # loaded, and hand the list to every later tier computation. Reading
+            # `user.subscriptions` again after the commit below could fall
+            # through to a lazy SELECT, and a lazy load emitted from synchronous
+            # code inside an async request is precisely what raises
+            # "greenlet_spawn has not been called".
+            active_subs = [s for s in (user.subscriptions or []) if s.status == "active"]
+            try:
+                check_chart_entitlement(user, chart_key, active_subs=active_subs)
+            except EntitlementRequired as exc:
+                return exc.detail, {"gated": True}
+            if mark_chart_issued(user, chart_key, active_subs=active_subs):
+                await db.commit()
+            return None, {
+                "gated": True,
+                "tier": current_tier(user, active_subs=active_subs).value,
+            }
+    except EntitlementRequired as exc:
+        # Over the free allowance — a decision, not a fault. Return the same
+        # structured refusal wherever it was raised from.
+        return exc.detail, {"gated": True}
+    except Exception as exc:  # noqa: BLE001 — any store fault, same answer
+        # The entitlement store faulted mid-check (driver error, lost
+        # connection, schema drift). Same posture as an unreachable store
+        # above: refuse rather than issue an unmetered paid computation — but
+        # as the structured "cannot verify" refusal, never as a raw 500. A
+        # metering fault must not take the flagship tool down with a traceback.
+        logger.exception("MCP chart gate: entitlement check failed (%s)", exc)
+        return verification_unavailable_detail(), {"gated": True}
 
 
 def _svc() -> AstrologyService:

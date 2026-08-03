@@ -138,15 +138,22 @@ class AccountRequired(HTTPException):
         )
 
 
-def check_chart_entitlement(user: User, chart_key: str) -> None:
+def check_chart_entitlement(
+    user: User, chart_key: str, *, active_subs: Optional[list] = None
+) -> None:
     """Raise if this account may not be issued the chart identified by `chart_key`.
 
     Premium and Pro are never gated. A free account may be issued its one
     granted chart any number of times (same `chart_key`), and no other.
     Does not mutate the user — call `mark_chart_issued` after a successful
     issuance to record the grant.
+
+    `active_subs`, when given, is used instead of reading `user.subscriptions`.
+    Callers inside an async request should pass it: this function is
+    synchronous, so an unloaded relationship read here would emit a lazy SELECT
+    from sync code and raise "greenlet_spawn has not been called".
     """
-    if current_tier(user) in (Tier.PREMIUM, Tier.PRO):
+    if current_tier(user, active_subs=active_subs) in (Tier.PREMIUM, Tier.PRO):
         return
 
     already_used = bool(getattr(user, "free_natal_used", False))
@@ -178,7 +185,9 @@ def check_chart_entitlement(user: User, chart_key: str) -> None:
     )
 
 
-def mark_chart_issued(user: User, chart_key: str) -> bool:
+def mark_chart_issued(
+    user: User, chart_key: str, *, active_subs: Optional[list] = None
+) -> bool:
     """Record that a free account has now been granted `chart_key`.
 
     Idempotent and free-tier-only: premium/pro accounts have no flag to set,
@@ -186,8 +195,11 @@ def mark_chart_issued(user: User, chart_key: str) -> bool:
     chart must not overwrite the grant). Returns True when it changed state,
     so the caller knows whether a DB commit is needed. The caller owns the
     commit — this function never touches the session.
+
+    `active_subs` — same contract as `check_chart_entitlement`: pass the
+    already-loaded list from async callers so no lazy load can fire here.
     """
-    if current_tier(user) in (Tier.PREMIUM, Tier.PRO):
+    if current_tier(user, active_subs=active_subs) in (Tier.PREMIUM, Tier.PRO):
         return False
     if getattr(user, "free_natal_used", False):
         return False
