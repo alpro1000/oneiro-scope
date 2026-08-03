@@ -11,6 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.api.v1.auth import require_account
 from backend.core.database import get_db
+from backend.core.ephemeris import EPHEMERIS_VERSION
 from backend.models.user import User
 from backend.services.astrology import (
     AstrologyService,
@@ -119,7 +120,7 @@ async def astrocartography_chart(req: AstrocartographyBirth) -> dict:
         return {
             "layer": "astronomy",
             "methodology": (
-                "Astro*Carto*Graphy (Lewis 1976); Swiss Ephemeris SWIEPH"
+                f"Astro*Carto*Graphy (Lewis 1976); {EPHEMERIS_VERSION}"
             ),
             "chart": chart_geometry(
                 jd, req.birth_lat, req.birth_lon, req.birth_place or "birth"

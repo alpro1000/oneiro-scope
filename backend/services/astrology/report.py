@@ -29,7 +29,7 @@ from backend.services.astrology.astrocartography import (
 from backend.services.astrology.historic_tz import BirthMoment
 from backend.services.astrology.transits_engine import find_transits
 
-from backend.core.ephemeris import FLAGS as _FLAGS
+from backend.core.ephemeris import FLAGS as _FLAGS, EPHEMERIS_VERSION
 
 _BODIES = {
     "Sun": swe.SUN, "Moon": swe.MOON, "Mercury": swe.MERCURY,
@@ -167,7 +167,7 @@ def build_report(
         "themes": themes,
         "year_transits": events,
         "provenance": {
-            "astronomy": "Swiss Ephemeris (SWIEPH)",
+            "astronomy": EPHEMERIS_VERSION,
             "method": "Astro*Carto*Graphy (Lewis 1976); Placidus houses",
             "confidence": {"astronomy": 1.0, "labels": 0.8},
         },
