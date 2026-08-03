@@ -127,5 +127,14 @@ async def resolve_connector_user(db: AsyncSession, subject: str) -> User:
     user = result.scalar_one_or_none()
     if user is None:
         user = User(oauth_subject=subject, is_active=True, is_verified=True)
+        # Seed the collection explicitly. A brand-new account has no
+        # subscriptions, but leaving the relationship untouched means it is
+        # merely UNLOADED — and once the caller commits, the row turns
+        # persistent, so the next `user.subscriptions` read becomes a lazy
+        # SELECT. Emitted from synchronous code (current_tier) inside an async
+        # request that is exactly the `greenlet_spawn has not been called`
+        # crash. Assigning the empty list marks it loaded, so no read of this
+        # object can ever go back to the database.
+        user.subscriptions = []
         db.add(user)
     return user
