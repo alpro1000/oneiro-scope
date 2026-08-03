@@ -51,6 +51,45 @@ export interface LunarContext {
   interpretation_en: string;
 }
 
+/** One structurally coded HVdC event with the clause it was coded from.
+ *  This is the provenance behind every ContentAnalysis count — confidence is
+ *  always 1.0 because the coding is deterministic, not inferred. */
+export interface HvdcEvent {
+  category: string;
+  subtype: string;
+  actor: string;
+  target?: string | null;
+  evidence: string;
+  source: string;
+  confidence: number;
+}
+
+export interface NormDeviation {
+  indicator: string;
+  user_value: number;
+  norm_value: number;
+  deviation: number;
+  /** percentage_points | ratio — never assume one; the units differ per indicator. */
+  deviation_unit: string;
+  significance: string;
+  description_ru: string;
+  description_en: string;
+  events_observed: number;
+  min_events_required?: number;
+}
+
+export interface NormComparisonResult {
+  gender_used: string;
+  method_note_ru?: string | null;
+  method_note_en?: string | null;
+  /** null when no indicator passed the data threshold — an uncomputed score
+   *  is NOT a perfect 100, and must not be rendered as one. */
+  overall_typicality?: number | null;
+  typicality_warning_ru?: string | null;
+  typicality_warning_en?: string | null;
+  deviations: NormDeviation[];
+}
+
 export interface DreamAnalysisResponse {
   status: 'success' | 'error';
   dream_id: string;
@@ -60,6 +99,12 @@ export interface DreamAnalysisResponse {
   emotion_intensity: number;
   symbols: DreamSymbol[];
   content_analysis: ContentAnalysis;
+  /** Per-event evidence behind the content_analysis counts. The frontend used
+   *  to drop this along with norm_comparison/disclaimer/degraded — i.e. it hid
+   *  the deterministic layer and showed only the LLM prose. */
+  hvdc_evidence?: HvdcEvent[];
+  hvdc_coder_version?: string | null;
+  norm_comparison?: NormComparisonResult | null;
   lunar_context?: LunarContext;
   summary: string;
   interpretation: string;
@@ -67,6 +112,11 @@ export interface DreamAnalysisResponse {
   archetypes: string[];
   recommendations: string[];
   methodology: string;
+  /** Required on every dreams response (reflective/entertainment framing). */
+  disclaimer?: string | null;
+  /** Explicit degradation ledger ('field: reason'). Empty = full data.
+   *  Shown, never swallowed — silent nulls are banned (conventions.md §12). */
+  degraded?: string[];
 }
 
 export interface DreamCategory {

@@ -239,52 +239,84 @@ export default function FaceScanner({ locale }: { locale: string }) {
   ];
 
   return (
-    <div className="mx-auto w-full max-w-2xl">
+    <div style={{ maxWidth: 720, margin: '0 auto', width: '100%' }}>
       {/* Privacy note is permanent — it IS the product promise. */}
-      <p className="mb-4 rounded-lg bg-indigo-500/10 p-3 text-sm text-indigo-200">
-        🔒 {t('privacy')}
+      <p
+        style={{
+          border: '1px solid var(--grat-2)',
+          background: 'var(--shelf)',
+          color: 'var(--muted)',
+          padding: '10px 13px',
+          fontSize: 12.5,
+          lineHeight: 1.55,
+          margin: '0 0 14px',
+        }}
+      >
+        <b style={{ color: 'var(--parchment)', fontWeight: 500 }}>🔒 </b>
+        {t('privacy')}
       </p>
 
       {phase !== 'done' && (
-        <div className="relative overflow-hidden rounded-2xl bg-slate-950">
+        <div style={{ position: 'relative', border: '1px solid var(--grat-2)', background: 'var(--abyss)' }}>
           <video
             ref={videoRef}
             playsInline
             muted
-            className="w-full -scale-x-100"
+            style={{ display: 'block', width: '100%', transform: 'scaleX(-1)' }}
             aria-label={t('videoLabel')}
           />
-          <canvas ref={canvasRef} className="hidden" aria-hidden="true" />
+          <canvas ref={canvasRef} style={{ display: 'none' }} aria-hidden="true" />
           {phase === 'scanning' && (
-            <div className="absolute bottom-2 left-2 rounded-lg bg-slate-900/80 px-3 py-1 text-sm text-white">
+            <div
+              className="num"
+              style={{
+                position: 'absolute', left: 10, bottom: 9,
+                background: 'var(--abyss)', border: '1px solid var(--grat-2)',
+                color: 'var(--brass)', fontSize: 11, padding: '3px 8px', letterSpacing: '.04em',
+              }}
+            >
               {t('captured', { n: captured, total: TARGET_FRAMES })}
             </div>
           )}
         </div>
       )}
 
-      <div role="status" aria-live="polite" className="mt-4">
+      <div role="status" aria-live="polite" style={{ marginTop: 14 }}>
         {phase === 'idle' && (
           <button
             onClick={start}
-            className="w-full rounded-xl bg-indigo-600 px-6 py-3 font-semibold text-white transition-colors hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+            style={{
+              width: '100%', background: 'var(--brass)', color: 'var(--abyss)', border: 0,
+              fontFamily: 'var(--font-ui)', fontWeight: 600, padding: 11,
+              letterSpacing: '.02em', cursor: 'pointer',
+            }}
           >
             {t('start')}
           </button>
         )}
         {phase === 'loading' && (
-          <p className="animate-pulse text-slate-300">{t('loading')}</p>
+          <p className="num" style={{ color: 'var(--muted)', fontSize: 12, letterSpacing: '.04em' }}>
+            {t('loading')}
+          </p>
         )}
         {phase === 'scanning' && (
-          <ul className="grid gap-1 sm:grid-cols-2" aria-label={t('gatesLabel')}>
+          <ul
+            aria-label={t('gatesLabel')}
+            style={{
+              listStyle: 'none', margin: 0, padding: 0, display: 'grid', gap: 1,
+              gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+              border: '1px solid var(--grat-2)', background: 'var(--grat-1)',
+            }}
+          >
             {gateItems.map(({ key, label }) => (
               <li
                 key={key}
-                className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm ${
-                  gates[key]
-                    ? 'bg-emerald-500/15 text-emerald-300'
-                    : 'bg-slate-800/70 text-slate-400'
-                }`}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 8,
+                  background: 'var(--panel)', padding: '9px 11px',
+                  fontFamily: 'var(--font-data)', fontSize: 11.5, letterSpacing: '.03em',
+                  color: gates[key] ? 'var(--brass)' : 'var(--dim)',
+                }}
               >
                 <span aria-hidden="true">{gates[key] ? '✓' : '○'}</span>
                 {label}
@@ -293,14 +325,25 @@ export default function FaceScanner({ locale }: { locale: string }) {
           </ul>
         )}
         {phase === 'analyzing' && (
-          <p className="animate-pulse text-slate-300">{t('analyzing')}</p>
+          <p className="num" style={{ color: 'var(--muted)', fontSize: 12, letterSpacing: '.04em' }}>
+            {t('analyzing')}
+          </p>
         )}
         {phase === 'error' && (
-          <div className="rounded-lg bg-rose-500/10 p-4 text-rose-300">
-            <p>{error}</p>
+          <div
+            style={{
+              border: '1px solid var(--brass-dim)', background: 'var(--notice-bg)',
+              color: 'var(--notice-ink)', padding: '11px 13px', fontSize: 13, lineHeight: 1.5,
+            }}
+          >
+            <p style={{ margin: 0 }}>{error}</p>
             <button
               onClick={start}
-              className="mt-3 rounded-lg bg-rose-600/80 px-4 py-2 text-sm font-medium text-white hover:bg-rose-500"
+              style={{
+                marginTop: 11, background: 'var(--brass)', color: 'var(--abyss)', border: 0,
+                fontFamily: 'var(--font-ui)', fontWeight: 600, fontSize: 13,
+                padding: '7px 16px', cursor: 'pointer',
+              }}
             >
               {t('retry')}
             </button>
@@ -310,14 +353,14 @@ export default function FaceScanner({ locale }: { locale: string }) {
 
       {phase === 'done' && result && (
         <section aria-label={t('reportLabel')}>
-          <div className="mb-4 rounded-xl bg-slate-800/60 p-4">
-            <h2 className="text-lg font-semibold text-white">
-              {t('resultType')}:{' '}
-              <span className="text-indigo-300">
-                {result.primary_element} + {result.secondary_element}
-              </span>
+          <div style={{ border: '1px solid var(--grat-2)', background: 'var(--shelf)', padding: '13px 15px' }}>
+            <span className="eyebrow" style={{ display: 'block' }}>{t('resultType')}</span>
+            <h2 className="display" style={{ fontSize: 26, margin: '6px 0 0', color: 'var(--parchment)' }}>
+              {result.primary_element} <em style={{ fontStyle: 'italic', color: 'var(--brass)' }}>
+                + {result.secondary_element}
+              </em>
             </h2>
-            <p className="mt-1 text-sm text-slate-400">
+            <p className="num" style={{ margin: '8px 0 0', fontSize: 11.5, color: 'var(--dim)' }}>
               {t('framesUsed', {
                 used: result.frames_used,
                 skipped: result.skipped.length,
@@ -325,11 +368,21 @@ export default function FaceScanner({ locale }: { locale: string }) {
             </p>
           </div>
 
-          <ul className="space-y-3">
+          <ul style={{ listStyle: 'none', margin: '12px 0 0', padding: 0 }}>
             {result.readings.map((r) => (
-              <li key={r.topic} className="rounded-xl bg-slate-800/60 p-4">
-                <p className="text-slate-100">{r.text}</p>
-                <p className="mt-2 text-xs text-slate-500">
+              <li
+                key={r.topic}
+                style={{
+                  border: '1px solid var(--grat-2)', background: 'var(--shelf)',
+                  padding: '11px 14px', marginBottom: 8,
+                }}
+              >
+                <p style={{ margin: 0, fontSize: 13.5, lineHeight: 1.55, color: 'var(--parchment)' }}>
+                  {r.text}
+                </p>
+                {/* Source and confidence stay attached to the claim — the
+                    reading is a tradition, the measurement behind it is not. */}
+                <p className="num" style={{ margin: '7px 0 0', fontSize: 10.5, color: 'var(--dim)' }}>
                   {r.source} · {r.confidence}
                   {r.support ? ` · ${t('support')}: ${r.support}` : ''}
                 </p>
@@ -337,29 +390,35 @@ export default function FaceScanner({ locale }: { locale: string }) {
             ))}
           </ul>
 
-          <div className="mt-6 rounded-xl bg-slate-800/40 p-4">
-            <h3 className="mb-2 text-sm font-semibold uppercase tracking-wide text-slate-400">
+          <div style={{ border: '1px solid var(--grat-2)', background: 'var(--shelf)', padding: '13px 15px', marginTop: 12 }}>
+            <span className="eyebrow" style={{ display: 'block', marginBottom: 9 }}>
               {t('coverageTitle')}
-            </h3>
-            <dl className="space-y-2 text-sm">
+            </span>
+            <dl style={{ margin: 0 }}>
               {Object.entries(result.coverage).map(([k, v]) => (
-                <div key={k}>
-                  <dt className="font-medium text-slate-300">
+                <div key={k} style={{ marginBottom: 8 }}>
+                  <dt className="num" style={{ fontSize: 11, color: 'var(--brass)', letterSpacing: '.04em' }}>
                     {t(`coverage_${k}`)}
                   </dt>
-                  <dd className="text-slate-500">{v}</dd>
+                  <dd style={{ margin: '2px 0 0', fontSize: 12.5, lineHeight: 1.5, color: 'var(--muted)' }}>
+                    {v}
+                  </dd>
                 </div>
               ))}
             </dl>
           </div>
 
-          <p className="mt-6 text-xs leading-relaxed text-slate-500">
+          <p style={{ marginTop: 14, fontSize: 12.5, lineHeight: 1.55, color: 'var(--muted)', maxWidth: '66ch' }}>
             {result.disclaimer}
           </p>
 
           <button
             onClick={start}
-            className="mt-6 w-full rounded-xl bg-slate-700 px-6 py-3 font-semibold text-white transition-colors hover:bg-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+            style={{
+              marginTop: 14, width: '100%', background: 'transparent', color: 'var(--brass)',
+              border: '1px solid var(--brass-dim)', fontFamily: 'var(--font-ui)', fontWeight: 600,
+              padding: 11, letterSpacing: '.02em', cursor: 'pointer',
+            }}
           >
             {t('rescan')}
           </button>
