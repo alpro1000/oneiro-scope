@@ -64,6 +64,53 @@ def account_url() -> str:
     return (settings.ACCOUNT_URL or "").rstrip("/") or "/account"
 
 
+# Two coordinates this close describe the same birth PLACE for charting
+# purposes: 0.1° is ~11 km, which shifts the Ascendant by well under a degree,
+# while a geocoder centroid routinely sits more than a kilometre from a
+# coordinate the caller typed for the same city.
+_SAME_PLACE_TOL_DEG = 0.1
+
+
+def _lon_delta(a: float, b: float) -> float:
+    """Angular distance between two longitudes, correct across the ±180 seam."""
+    d = abs(a - b) % 360.0
+    return min(d, 360.0 - d)
+
+
+def same_chart(granted_key: Optional[str], requested_key: str) -> bool:
+    """Whether a granted chart key and a requested one denote the same chart.
+
+    Deliberately NOT string equality. The key is `utc|lat|lon`, and the same
+    birth in the same city resolves to slightly different coordinates
+    depending on how the place was supplied — typed by the caller, or returned
+    by the geocoder (whose centroid also moves when its data updates). Exact
+    matching turned that into "this is a second chart, pay for it": observed
+    live on Запорожье, 47.8388/35.1396 typed against 47.85167/35.11714
+    geocoded — 1.4 km apart, and refused.
+
+    The birth INSTANT must still match exactly: a different moment is a
+    different chart, full stop. Only the place is compared with tolerance.
+    """
+    if not granted_key:
+        return False
+    if granted_key == requested_key:
+        return True
+
+    granted = granted_key.split("|")
+    requested = requested_key.split("|")
+    if len(granted) != 3 or len(requested) != 3 or granted[0] != requested[0]:
+        return False
+    try:
+        return (
+            abs(float(granted[1]) - float(requested[1])) <= _SAME_PLACE_TOL_DEG
+            and _lon_delta(float(granted[2]), float(requested[2])) <= _SAME_PLACE_TOL_DEG
+        )
+    except ValueError:
+        # An unparseable stored key predates this format; exact match already
+        # failed above, so treat it as a different chart rather than guessing.
+        return False
+
+
 class EntitlementRequired(HTTPException):
     """A principal asked for a chart their plan does not include.
 
@@ -98,7 +145,7 @@ class EntitlementRequired(HTTPException):
         self.reason = reason
 
 
-def verification_unavailable_detail() -> dict[str, Any]:
+def verification_unavailable_detail(locale: str = "en") -> dict[str, Any]:
     """Refusal body for "we could not verify entitlement" (fail-closed).
 
     Used when a metered transport reaches the gate but cannot check the
@@ -109,7 +156,11 @@ def verification_unavailable_detail() -> dict[str, Any]:
     return {
         "error": "entitlement_unverifiable",
         "message": (
-            "Could not verify this account's entitlement for the request. "
+            "Не удалось проверить права этого аккаунта на запрос. "
+            "Повторите попытку; если повторяется — сервис временно не может "
+            "проверить ваш тариф."
+            if locale == "ru"
+            else "Could not verify this account's entitlement for the request. "
             "Please retry; if it persists, the service is temporarily unable "
             "to check your plan."
         ),
@@ -139,7 +190,11 @@ class AccountRequired(HTTPException):
 
 
 def check_chart_entitlement(
-    user: User, chart_key: str, *, active_subs: Optional[list] = None
+    user: User,
+    chart_key: str,
+    *,
+    active_subs: Optional[list] = None,
+    locale: str = "en",
 ) -> None:
     """Raise if this account may not be issued the chart identified by `chart_key`.
 
@@ -161,7 +216,7 @@ def check_chart_entitlement(
         return  # First chart on this account — always allowed.
 
     granted_key = getattr(user, "free_natal_chart_key", None)
-    if granted_key is not None and granted_key == chart_key:
+    if same_chart(granted_key, chart_key):
         return  # Re-issuing the account's own chart — free, forever.
 
     # If the flag is set but no key was recorded, the grant was written by
@@ -175,7 +230,10 @@ def check_chart_entitlement(
     raise EntitlementRequired(
         reason="free_natal_chart_used",
         message=(
-            "This account's free natal chart has already been issued. "
+            "Бесплатная натальная карта этого аккаунта уже выдана. "
+            "Своя карта остаётся доступной; другая карта входит в Premium."
+            if locale == "ru"
+            else "This account's free natal chart has already been issued. "
             "Its own chart remains available; a different chart is included "
             "with Premium."
         ),

@@ -159,7 +159,7 @@ async def compute_chart(
     # birth instant, and the mark+commit happens only once the chart truly
     # exists — an entitlement refusal raises here and returns no body.
     key = chart_identity(body["chart_core"])
-    check_chart_entitlement(user, key)
+    check_chart_entitlement(user, key, locale=req.locale)
     if mark_chart_issued(user, key):
         await db.commit()
 

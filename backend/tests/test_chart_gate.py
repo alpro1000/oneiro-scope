@@ -252,3 +252,63 @@ def test_mcp_gate_store_unavailable_under_auth_fails_closed(monkeypatch):
     # Cannot check the account → refuse, don't hand out an unmetered chart.
     assert refusal is not None and refusal["error"] == "entitlement_unverifiable"
     assert stamp == {"gated": True}
+
+
+# ── "the same chart" is a place tolerance, not string equality ──────────────
+#
+# The key is `utc|lat|lon`. The same birth in the same city resolves to
+# slightly different coordinates depending on how the place was supplied, so
+# exact matching billed a re-fetch as a second chart. Observed live on
+# Запорожье: 47.8388/35.1396 typed vs 47.85167/35.11714 geocoded, 1.4 km apart.
+
+from backend.services.billing.entitlements import same_chart  # noqa: E402
+
+_UTC = "1977-07-01T19:30:00Z"
+
+
+def test_same_chart_accepts_the_geocoder_vs_typed_coordinate_gap():
+    typed = f"{_UTC}|47.8388|35.1396"
+    geocoded = f"{_UTC}|47.85167|35.11714"
+    assert same_chart(typed, geocoded)
+    assert same_chart(geocoded, typed)  # symmetric
+
+
+def test_same_chart_still_requires_the_identical_birth_instant():
+    """A different moment is a different chart, however close the place."""
+    assert not same_chart(
+        f"{_UTC}|47.8388|35.1396", f"1977-07-01T19:31:00Z|47.8388|35.1396"
+    )
+
+
+def test_same_chart_rejects_a_genuinely_different_place():
+    # Kyiv is ~2.5° north of Zaporizhzhia — far outside the tolerance.
+    assert not same_chart(f"{_UTC}|47.8388|35.1396", f"{_UTC}|50.4501|30.5234")
+
+
+def test_same_chart_handles_the_antimeridian():
+    """±180 is one seam, not a 360° gap — a wrap-unaware diff would refuse."""
+    assert same_chart(f"{_UTC}|-16.5|-179.97", f"{_UTC}|-16.5|179.97")
+
+
+def test_same_chart_on_missing_or_unparseable_key():
+    assert not same_chart(None, f"{_UTC}|47.8|35.1")
+    assert not same_chart("", f"{_UTC}|47.8|35.1")
+    # A legacy/odd stored key that is not utc|lat|lon: exact match only.
+    assert same_chart("LEGACY-KEY", "LEGACY-KEY")
+    assert not same_chart("LEGACY-KEY", f"{_UTC}|47.8|35.1")
+
+
+def test_refusal_message_follows_the_locale():
+    from backend.services.billing.entitlements import (
+        EntitlementRequired,
+        check_chart_entitlement,
+    )
+
+    user = _user(free_natal=True, key="KEY-A")
+    for locale, needle in (("ru", "Бесплатная"), ("en", "already been issued")):
+        try:
+            check_chart_entitlement(user, "KEY-B", locale=locale)
+        except EntitlementRequired as exc:
+            assert needle in exc.detail["message"], (locale, exc.detail["message"])
+        else:  # pragma: no cover - the gate must refuse here
+            raise AssertionError("expected a refusal")

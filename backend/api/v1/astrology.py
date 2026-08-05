@@ -498,7 +498,8 @@ async def calculate_natal_chart(
         )
 
     key = chart_identity(response.chart_core)
-    check_chart_entitlement(user, key)  # refuses here, before any LLM
+    # Refuses here, before any LLM — and in the caller's language.
+    check_chart_entitlement(user, key, locale=getattr(request, "locale", "en"))
     if mark_chart_issued(user, key):
         await db.commit()
 
