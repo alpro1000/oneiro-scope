@@ -15,6 +15,32 @@ on:
 jobs:
   smoke:
     runs-on: ubuntu-latest
+
+    # A real Postgres for the chart-gate tests. The gate is the paywall and it
+    # is the one place that touches the ORM on the request path; two outages
+    # (missing `users` table, then `greenlet_spawn` from a lazy relationship
+    # load) both slipped through because the existing gate tests use
+    # SimpleNamespace fakes — no table, no session, nothing to fail. Postgres
+    # specifically, not SQLite: `User.id` is `dialects.postgresql.UUID`, which
+    # SQLite cannot even render.
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: oneiro
+          POSTGRES_PASSWORD: oneiro
+          POSTGRES_DB: oneiro_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U oneiro -d oneiro_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      TEST_DATABASE_URL: postgresql+asyncpg://oneiro:oneiro@localhost:5432/oneiro_test
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -63,6 +89,7 @@ jobs:
             httpx \
             uvicorn \
             aiosqlite \
+            asyncpg \
             "pymorphy3>=2.0" \
             pymorphy3-dicts-ru
           # The block above is deliberately not requirements.txt — these are the
@@ -101,4 +128,6 @@ jobs:
             backend/tests/test_analysis_plan.py \
             backend/tests/test_strategic_patterns.py \
             backend/tests/test_capability_menu.py \
+            backend/tests/test_chart_gate.py \
+            backend/tests/test_chart_gate_postgres.py \
             -v
