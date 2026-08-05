@@ -53,15 +53,14 @@ async def lifespan(app: FastAPI):
         ",".join(eph["files"]),
     )
 
-    # Ensure the database schema exists. init_db() is Base.metadata.create_all,
-    # which is idempotent (checkfirst): it creates only MISSING tables and never
-    # alters or drops. The base tables (users, dream_entries, …) have no
-    # create-table migration — Alembic here only carries column deltas (0002
-    # ALTERs `users`) — so create_all is currently the sole thing that creates
-    # them. Gating it to `development` (an earlier hardening) meant production
-    # never created `users`, so the natal entitlement gate raised UndefinedTable
-    # (500) on every call. It runs in all environments until the base tables get
-    # a real Alembic baseline + `alembic upgrade head` on deploy (tracked).
+    # Belt and braces. Migrations are now the source of truth for the schema —
+    # the 0000 baseline creates the base tables and `alembic upgrade head` runs
+    # ahead of this process on deploy (render.yaml). This stays as a safety net
+    # for the paths that do NOT go through that start command: local runs, a
+    # bare `uvicorn`, tests. create_all is idempotent (checkfirst) — it creates
+    # only missing tables and never alters or drops — so when the migration has
+    # already run this is a no-op. Remove it once every environment is known to
+    # boot through the migration step.
     logger.info("Ensuring database schema (create_all, idempotent)...")
     await init_db()
 

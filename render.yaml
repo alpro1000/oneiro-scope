@@ -14,7 +14,17 @@ services:
     plan: free
     rootDir: .
     buildCommand: pip install -r backend/requirements.txt
-    startCommand: uvicorn backend.app.main:app --host 0.0.0.0 --port $PORT
+    # Apply migrations before serving. Until now nothing ran alembic on deploy,
+    # so the schema existed only where the dev-only `init_db()` had run — which
+    # is why production had no `users` table and every natal chart 500'd. The
+    # chain starts from an idempotent baseline, so this is a no-op against the
+    # database as it stands today and provisions a fresh one from nothing.
+    # Prefixed onto startCommand rather than `preDeployCommand`, which Render
+    # offers only on paid instance types and this service is on `free`.
+    # `&&`: a failed migration must stop the boot, not serve on a schema nobody
+    # verified — serving on an unverified schema is exactly what produced the
+    # UndefinedTable outage.
+    startCommand: alembic -c backend/alembic.ini upgrade head && uvicorn backend.app.main:app --host 0.0.0.0 --port $PORT
     healthCheckPath: /health
     envVars:
       - key: PYTHON_VERSION

@@ -53,9 +53,14 @@ Blueprint автоматически подставит:
 
 ## 5) Первые деплой и миграции
 - Запустите **Manual Deploy → Deploy latest commit** для backend и frontend.
-- Если у вас есть миграции Alembic, добавьте команду запуска в Render (или выполните из консоли):
+- Миграции применяются **сами**: `startCommand` в `render.yaml` начинается с
+  `alembic -c backend/alembic.ini upgrade head &&` — до `uvicorn`. Если
+  миграция упала, сервис не поднимется вовсе, и это намеренно: раздавать
+  ответы на схеме, которую никто не проверил, — ровно то, что дало отказ
+  «relation "users" does not exist».
+- Вручную из консоли Render команда та же (из корня репозитория):
   ```bash
-  alembic upgrade head
+  alembic -c backend/alembic.ini upgrade head
   ```
 
 ## 6) Смоук-тест продакшена
