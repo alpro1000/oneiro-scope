@@ -1,5 +1,14 @@
 'use client';
 
+/**
+ * Checkout success — instrument screen.
+ *
+ * Polling logic unchanged. Presentation moved off the transitional Tailwind
+ * bridge onto the tokens, and the "start using" link now points at /natal:
+ * /astrology is the superseded screen that was dropped from the nav, so
+ * sending a user who just paid to it was a dead end by our own decision.
+ */
+
 import { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { useParams } from 'next/navigation';
@@ -11,6 +20,7 @@ export default function CheckoutSuccessPage() {
   const t = useTranslations('CheckoutSuccess');
   const params = useParams();
   const locale = (params?.locale as string) || 'ru';
+  const ru = locale === 'ru';
 
   const [sub, setSub] = useState<SubscriptionSummary | null>(null);
   const [checking, setChecking] = useState(true);
@@ -48,29 +58,59 @@ export default function CheckoutSuccessPage() {
   const activated = sub && sub.tier !== 'free';
 
   return (
-    <main className="mx-auto max-w-md px-4 py-16 text-center sm:px-6">
-      <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-gold/15 text-3xl text-gold">
-        ✓
-      </div>
-      <h1 className="mt-6 text-2xl font-semibold text-gold">{t('title')}</h1>
-      <p className="mt-3 text-ink-muted">
-        {checking
-          ? t('verifying')
-          : activated
-            ? t('activated', { tier: t(`tiers.${sub!.tier}`) })
-            : t('pending')}
-      </p>
+    <main style={{ padding: 'clamp(14px,2.2vw,30px)', maxWidth: 520, margin: '0 auto' }}>
+      <header style={{ paddingBottom: 14, marginBottom: 18, borderBottom: '1px solid var(--grat-1)' }}>
+        <span className="eyebrow">{ru ? 'оплата' : 'checkout'}</span>
+        <h1 style={{ fontSize: 'clamp(26px,4.5vw,42px)', margin: '4px 0 0' }}>{t('title')}</h1>
+      </header>
 
-      <div className="mt-8 flex flex-col gap-3">
+      <div style={{ border: '1px solid var(--grat-2)', background: 'var(--shelf)', padding: '15px 16px' }}>
+        <p
+          className={checking ? 'num' : undefined}
+          style={{
+            margin: 0,
+            fontSize: checking ? 12 : 14,
+            lineHeight: 1.6,
+            letterSpacing: checking ? '.04em' : undefined,
+            color: checking ? 'var(--muted)' : 'var(--parchment)',
+          }}
+        >
+          {checking
+            ? t('verifying')
+            : activated
+              ? t('activated', { tier: t(`tiers.${sub!.tier}`) })
+              : t('pending')}
+        </p>
+      </div>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 9, marginTop: 16 }}>
         <Link
           href={`/${locale}/account`}
-          className="inline-flex items-center justify-center rounded-lg bg-gold px-4 py-2.5 text-sm font-semibold text-bg transition-colors hover:bg-gold-soft"
+          style={{
+            textAlign: 'center',
+            background: 'var(--brass)',
+            color: 'var(--abyss)',
+            fontFamily: 'var(--font-ui)',
+            fontWeight: 600,
+            fontSize: 13,
+            padding: '10px 18px',
+            letterSpacing: '.02em',
+          }}
         >
           {t('goToAccount')}
         </Link>
         <Link
-          href={`/${locale}/astrology`}
-          className="inline-flex items-center justify-center rounded-lg border border-gold-soft px-4 py-2.5 text-sm font-semibold text-gold transition-colors hover:bg-surfaceStrong"
+          href={`/${locale}/natal`}
+          style={{
+            textAlign: 'center',
+            border: '1px solid var(--brass-dim)',
+            color: 'var(--brass)',
+            fontFamily: 'var(--font-ui)',
+            fontWeight: 600,
+            fontSize: 13,
+            padding: '10px 18px',
+            letterSpacing: '.02em',
+          }}
         >
           {t('startUsing')}
         </Link>

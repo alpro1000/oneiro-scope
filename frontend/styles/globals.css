@@ -43,6 +43,19 @@ body {
 .nav-link-m:hover { color: var(--brass); }
 .nav-link-m[aria-current="page"] { color: var(--brass); }
 
+/* City suggestion row — hover/focus need a selector, not an inline style. */
+.city-option:hover,
+.city-option:focus-visible { background: var(--shelf); }
+.city-option:focus-visible { outline: 2px solid var(--brass); outline-offset: -2px; }
+
+/* Recording indicator. A keyframe rather than a JS spring, so the global
+   prefers-reduced-motion rule in tokens.css genuinely stops it. */
+@keyframes rec-pulse {
+  0%, 100% { border-color: var(--brass); }
+  50%      { border-color: var(--brass-dim); }
+}
+.rec-pulse { animation: rec-pulse 1.4s ease-in-out infinite; }
+
 /* Home instrument-index cards. Border, not shadow; brass edge on hover. */
 .tool-card {
   display: block;
