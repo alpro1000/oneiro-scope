@@ -14,12 +14,43 @@ export interface ArchiveReading {
   source: string;
   confidence: number;
   support?: string; // e.g. "5/5" — share of frames confirming the topic
+  /** "background" marks a width-family reading the backend itself flags as
+   *  lens-sensitive (close phone range inflates face width). Must be shown
+   *  de-emphasised — not silently mixed in with the robust ones. */
+  scope?: string;
+}
+
+/** The backend's own reconciled verdict per dimension — the layer it trusts
+ *  most. The frontend used to drop it and render only the raw readings. */
+export interface ArchiveTrait {
+  dimension: string;
+  label: string;
+  verdict: string;
+  verdict_label: string;
+  score: number;
+  conflicted: boolean;
+  evidence: string[];
+  /** What is missing before this dimension can be read at all. */
+  needed: string[];
+}
+
+/** Lens-ROBUST deviations from neutral: deliberately excludes the width
+ *  family, which is why it is the honest headline. */
+export interface ArchiveSignatureItem {
+  metric: string;
+  median: number;
+  neutral: number;
+  deviation_units: number;
 }
 
 export interface ArchiveResponse {
   frames_used: number;
   skipped: string[];
   metrics: Record<string, number | null>;
+  traits: ArchiveTrait[];
+  signature: ArchiveSignatureItem[];
+  /** Why the width-family readings are caveated; empty when not applicable. */
+  lens_note: string;
   stability: Record<
     string,
     { median: number; spread: number; frames: number; stable: boolean }

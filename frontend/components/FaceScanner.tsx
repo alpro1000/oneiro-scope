@@ -81,6 +81,7 @@ function patchLuma(
 
 export default function FaceScanner({ locale }: { locale: string }) {
   const t = useTranslations('FacePage');
+  const ru = locale === 'ru';
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const landmarkerRef = useRef<{
@@ -368,26 +369,118 @@ export default function FaceScanner({ locale }: { locale: string }) {
             </p>
           </div>
 
+          {/* The backend's own reconciled verdicts. This block was dropped
+              entirely by the old UI, which showed only the raw readings —
+              i.e. it hid the layer the server trusts most and displayed the
+              one it flags as lens-sensitive. */}
+          {result.traits?.length > 0 && (
+            <div style={{ border: '1px solid var(--grat-2)', background: 'var(--shelf)', padding: '13px 15px', marginTop: 12 }}>
+              <span className="eyebrow" style={{ display: 'block', marginBottom: 9 }}>
+                {ru ? 'сводные оценки' : 'reconciled verdicts'}
+              </span>
+              {result.traits.map((tr, i) => (
+                <div
+                  key={tr.dimension}
+                  style={{
+                    borderTop: i ? '1px solid var(--grat-1)' : 0,
+                    paddingTop: i ? 9 : 0,
+                    marginTop: i ? 9 : 0,
+                  }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'baseline' }}>
+                    <span style={{ fontSize: 13.5, color: 'var(--parchment)' }}>{tr.label}</span>
+                    <span className="num" style={{ fontSize: 11.5, color: 'var(--brass)', whiteSpace: 'nowrap' }}>
+                      {tr.verdict_label}
+                      {tr.conflicted ? ' ±' : ''}
+                    </span>
+                  </div>
+                  {tr.evidence?.length > 0 && (
+                    <p className="num" style={{ margin: '4px 0 0', fontSize: 10.5, color: 'var(--dim)', lineHeight: 1.5 }}>
+                      {tr.evidence.join(' · ')}
+                    </p>
+                  )}
+                  {/* What is missing is stated, not hidden behind a blank. */}
+                  {tr.needed?.length > 0 && (
+                    <p style={{ margin: '4px 0 0', fontSize: 11.5, color: 'var(--notice-ink)', lineHeight: 1.45 }}>
+                      {tr.needed.join('; ')}
+                    </p>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Lens-robust deviations — the honest headline (no width family). */}
+          {result.signature?.length > 0 && (
+            <div style={{ border: '1px solid var(--grat-2)', background: 'var(--shelf)', padding: '13px 15px', marginTop: 12 }}>
+              <span className="eyebrow" style={{ display: 'block', marginBottom: 9 }}>
+                {ru ? 'подпись лица · устойчиво к ракурсу' : 'face signature · lens-robust'}
+              </span>
+              <table className="num" style={{ width: '100%', borderCollapse: 'collapse', fontFamily: 'var(--font-data)', fontSize: 11.5 }}>
+                <tbody>
+                  {result.signature.map((s) => (
+                    <tr key={s.metric} style={{ borderTop: '1px solid var(--grat-1)' }}>
+                      <td style={{ padding: '5px 6px 5px 0', color: 'var(--parchment)' }}>{s.metric}</td>
+                      <td style={{ padding: '5px 6px 5px 0', textAlign: 'right', color: 'var(--muted)' }}>
+                        {s.median.toFixed(4)}
+                      </td>
+                      <td style={{ padding: '5px 0', textAlign: 'right', color: 'var(--brass)', whiteSpace: 'nowrap' }}>
+                        {s.deviation_units > 0 ? '+' : ''}
+                        {s.deviation_units.toFixed(2)} σ
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          {result.lens_note && (
+            <p style={{ marginTop: 12, fontSize: 12, lineHeight: 1.5, color: 'var(--notice-ink)', maxWidth: '66ch' }}>
+              {result.lens_note}
+            </p>
+          )}
+
           <ul style={{ listStyle: 'none', margin: '12px 0 0', padding: 0 }}>
-            {result.readings.map((r) => (
-              <li
-                key={r.topic}
-                style={{
-                  border: '1px solid var(--grat-2)', background: 'var(--shelf)',
-                  padding: '11px 14px', marginBottom: 8,
-                }}
-              >
-                <p style={{ margin: 0, fontSize: 13.5, lineHeight: 1.55, color: 'var(--parchment)' }}>
-                  {r.text}
-                </p>
-                {/* Source and confidence stay attached to the claim — the
-                    reading is a tradition, the measurement behind it is not. */}
-                <p className="num" style={{ margin: '7px 0 0', fontSize: 10.5, color: 'var(--dim)' }}>
-                  {r.source} · {r.confidence}
-                  {r.support ? ` · ${t('support')}: ${r.support}` : ''}
-                </p>
-              </li>
-            ))}
+            {result.readings.map((r) => {
+              // A "background" reading is one the backend flags as
+              // lens-sensitive. Showing it identically to a robust one is what
+              // made the display contradict the server's own reliability model.
+              const background = r.scope === 'background';
+              return (
+                <li
+                  key={r.topic}
+                  style={{
+                    border: `1px solid ${background ? 'var(--grat-1)' : 'var(--grat-2)'}`,
+                    background: background ? 'transparent' : 'var(--shelf)',
+                    padding: '11px 14px',
+                    marginBottom: 8,
+                  }}
+                >
+                  {background && (
+                    <span className="eyebrow" style={{ display: 'block', marginBottom: 5 }}>
+                      {ru ? 'фон · зависит от ракурса' : 'background · lens-sensitive'}
+                    </span>
+                  )}
+                  <p
+                    style={{
+                      margin: 0,
+                      fontSize: 13.5,
+                      lineHeight: 1.55,
+                      color: background ? 'var(--muted)' : 'var(--parchment)',
+                    }}
+                  >
+                    {r.text}
+                  </p>
+                  {/* Source and confidence stay attached to the claim — the
+                      reading is a tradition, the measurement behind it is not. */}
+                  <p className="num" style={{ margin: '7px 0 0', fontSize: 10.5, color: 'var(--dim)' }}>
+                    {r.source} · {r.confidence}
+                    {r.support ? ` · ${t('support')}: ${r.support}` : ''}
+                  </p>
+                </li>
+              );
+            })}
           </ul>
 
           <div style={{ border: '1px solid var(--grat-2)', background: 'var(--shelf)', padding: '13px 15px', marginTop: 12 }}>

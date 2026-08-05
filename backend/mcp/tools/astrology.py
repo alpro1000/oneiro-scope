@@ -29,7 +29,9 @@ logger = logging.getLogger("oneiro.mcp.astrology")
 _service: Optional[AstrologyService] = None
 
 
-async def _gate_chart_issuance(chart_key: str) -> tuple[Optional[dict], dict]:
+async def _gate_chart_issuance(
+    chart_key: str, locale: str = "en"
+) -> tuple[Optional[dict], dict]:
     """Meter a connector chart against its principal's entitlement.
 
     The MCP transport is one of the two doors that mint a `chart_core`, so it
@@ -67,7 +69,7 @@ async def _gate_chart_issuance(chart_key: str) -> tuple[Optional[dict], dict]:
                 "MCP chart gate: MCP_REQUIRE_AUTH is on but no subject reached "
                 "the tool — refusing rather than issuing ungated"
             )
-            return verification_unavailable_detail(), {"gated": True}
+            return verification_unavailable_detail(locale), {"gated": True}
         # Deliberately open HTTP connector: there is genuinely no account.
         return None, {
             "gated": False,
@@ -83,7 +85,7 @@ async def _gate_chart_issuance(chart_key: str) -> tuple[Optional[dict], dict]:
         # unreachable. Fail closed for the same reason: better to refuse and
         # be retried than to hand out an unmetered paid computation.
         logger.error("MCP chart gate: entitlement store unavailable (%s)", exc)
-        return verification_unavailable_detail(), {"gated": True}
+        return verification_unavailable_detail(locale), {"gated": True}
 
     from backend.services.billing.entitlements import (
         EntitlementRequired,
@@ -103,7 +105,9 @@ async def _gate_chart_issuance(chart_key: str) -> tuple[Optional[dict], dict]:
             # "greenlet_spawn has not been called".
             active_subs = [s for s in (user.subscriptions or []) if s.status == "active"]
             try:
-                check_chart_entitlement(user, chart_key, active_subs=active_subs)
+                check_chart_entitlement(
+                    user, chart_key, active_subs=active_subs, locale=locale
+                )
             except EntitlementRequired as exc:
                 return exc.detail, {"gated": True}
             if mark_chart_issued(user, chart_key, active_subs=active_subs):
@@ -123,7 +127,7 @@ async def _gate_chart_issuance(chart_key: str) -> tuple[Optional[dict], dict]:
         # as the structured "cannot verify" refusal, never as a raw 500. A
         # metering fault must not take the flagship tool down with a traceback.
         logger.exception("MCP chart gate: entitlement check failed (%s)", exc)
-        return verification_unavailable_detail(), {"gated": True}
+        return verification_unavailable_detail(locale), {"gated": True}
 
 
 def _svc() -> AstrologyService:
@@ -198,7 +202,7 @@ async def calculate_natal_chart(
     # structured, factual response returned in place of the chart; otherwise
     # the response carries an `entitlement` stamp saying whether it was
     # metered.
-    refusal, entitlement = await _gate_chart_issuance(chart_identity(resp.chart_core))
+    refusal, entitlement = await _gate_chart_issuance(chart_identity(resp.chart_core), locale)
     if refusal is not None:
         return refusal
 
