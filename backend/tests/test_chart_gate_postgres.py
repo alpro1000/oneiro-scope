@@ -41,6 +41,7 @@ KEY_OTHER_CHART = "1985-03-10T06:00:00Z|50.4501|30.5234"
 
 
 def _engine_and_factory():
+    from sqlalchemy.pool import NullPool
     from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
     url = TEST_DB
@@ -48,8 +49,13 @@ def _engine_and_factory():
         url = url.replace("postgres://", "postgresql+asyncpg://", 1)
     elif url.startswith("postgresql://"):
         url = url.replace("postgresql://", "postgresql+asyncpg://", 1)
-    engine = create_async_engine(url)
-    # Same configuration as production (backend/core/database.py).
+    # NullPool because each test drives the gate through its own `asyncio.run`,
+    # i.e. a fresh event loop, while a pooled asyncpg connection stays bound to
+    # the loop that opened it — reusing one across loops raises "got Future
+    # attached to a different loop". Production keeps its pool; it serves every
+    # request from a single long-lived loop, so it has no such problem.
+    engine = create_async_engine(url, poolclass=NullPool)
+    # Otherwise the same configuration as production (backend/core/database.py).
     return engine, async_sessionmaker(engine, expire_on_commit=False)
 
 
