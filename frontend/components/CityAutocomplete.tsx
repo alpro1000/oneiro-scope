@@ -1,7 +1,6 @@
 'use client';
 
 import {useState, useEffect, useRef} from 'react';
-import {motion, AnimatePresence} from 'framer-motion';
 
 type City = {
   name: string;
@@ -22,9 +21,15 @@ type Props = {
 };
 
 /**
- * City autocomplete with GeoNames API integration.
- * Shows clear indication when city is found/not found.
- * Prevents submission until valid city is selected.
+ * City autocomplete with GeoNames API integration — instrument styling.
+ *
+ * The search logic is unchanged. The presentation was rebuilt: it used green
+ * for "found" and red for "not found", i.e. a second and third accent, which
+ * the design system forbids — brass carries "resolved", the notice palette
+ * carries "not resolved". Each suggestion now also shows its COORDINATES in
+ * mono: two cities can share a name (Запорожье the city vs the villages), and
+ * the coordinate is the thing that actually distinguishes them — the geocoder
+ * ambiguity warning exists for exactly this case.
  */
 export default function CityAutocomplete({
   value,
@@ -133,9 +138,15 @@ export default function CityAutocomplete({
     setSelectedCity(null); // Reset selection when user types
   };
 
+  const borderColor = selectedCity
+    ? 'var(--brass)'
+    : showError
+    ? 'var(--brass-dim)'
+    : 'var(--grat-2)';
+
   return (
-    <div className="relative">
-      <div className="relative">
+    <div style={{position: 'relative'}}>
+      <div style={{position: 'relative'}}>
         <input
           ref={inputRef}
           type="text"
@@ -144,93 +155,116 @@ export default function CityAutocomplete({
           onFocus={() => value.length >= 2 && suggestions.length > 0 && setIsOpen(true)}
           placeholder={placeholder}
           disabled={disabled}
-          className={`
-            w-full p-3 pr-10 bg-slate-900/50 border rounded-lg text-white placeholder-slate-500
-            focus:outline-none focus:ring-2 transition-all
-            ${selectedCity
-              ? 'border-green-500 focus:ring-green-500'
-              : showError
-                ? 'border-red-500 focus:ring-red-500'
-                : 'border-slate-700 focus:ring-amber-500'
-            }
-            disabled:opacity-50 disabled:cursor-not-allowed
-          `}
+          style={{
+            width: '100%',
+            background: 'var(--abyss)',
+            color: 'var(--parchment)',
+            border: `1px solid ${borderColor}`,
+            fontFamily: 'var(--font-ui)',
+            fontSize: 13.5,
+            padding: '8px 34px 8px 10px',
+            opacity: disabled ? 0.5 : 1,
+            cursor: disabled ? 'not-allowed' : 'text',
+          }}
         />
 
-        {/* Status indicator */}
-        <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
-          {isLoading && (
-            <motion.div
-              className="w-4 h-4 border-2 border-amber-500 border-t-transparent rounded-full"
-              animate={{rotate: 360}}
-              transition={{duration: 1, repeat: Infinity, ease: 'linear'}}
-            />
-          )}
-          {!isLoading && selectedCity && (
-            <motion.div
-              initial={{scale: 0}}
-              animate={{scale: 1}}
-              className="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center"
-            >
-              <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-              </svg>
-            </motion.div>
-          )}
-          {!isLoading && !selectedCity && showError && (
-            <motion.div
-              initial={{scale: 0}}
-              animate={{scale: 1}}
-              className="w-5 h-5 rounded-full bg-red-500 flex items-center justify-center"
-            >
-              <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </motion.div>
-          )}
-        </div>
+        {/* Status mark — mono glyph, no coloured pill. */}
+        <span
+          className="num"
+          aria-hidden="true"
+          style={{
+            position: 'absolute',
+            right: 10,
+            top: '50%',
+            transform: 'translateY(-50%)',
+            fontSize: 12,
+            color: showError && !selectedCity ? 'var(--notice-ink)' : 'var(--brass)',
+          }}
+        >
+          {isLoading ? '…' : selectedCity ? '✓' : showError ? '✕' : ''}
+        </span>
       </div>
 
-      {/* Helper text */}
+      {/* Helper line */}
       {selectedCity && (
-        <p className="text-xs text-green-400 mt-1 flex items-center gap-1">
-          <span>✓</span>
-          {locale === 'ru' ? 'Город найден' : 'City found'}
+        <p
+          className="num"
+          style={{margin: '4px 0 0', fontSize: 10.5, color: 'var(--dim)', letterSpacing: '.04em'}}
+        >
+          {locale === 'ru' ? 'город найден' : 'city found'} ·{' '}
+          {selectedCity.lat.toFixed(4)}°, {selectedCity.lon.toFixed(4)}°
         </p>
       )}
       {!selectedCity && showError && value.length > 2 && (
-        <p className="text-xs text-red-400 mt-1 flex items-center gap-1">
-          <span>✗</span>
-          {locale === 'ru' ? 'Город не найден. Попробуйте другое название.' : 'City not found. Try another name.'}
+        <p
+          style={{margin: '4px 0 0', fontSize: 11.5, lineHeight: 1.45, color: 'var(--notice-ink)'}}
+        >
+          {locale === 'ru'
+            ? 'Город не найден. Попробуйте другое написание или укажите страну.'
+            : 'City not found. Try another spelling, or add the country.'}
         </p>
       )}
 
-      {/* Suggestions dropdown */}
-      <AnimatePresence>
-        {isOpen && suggestions.length > 0 && (
-          <motion.div
-            ref={dropdownRef}
-            initial={{opacity: 0, y: -10}}
-            animate={{opacity: 1, y: 0}}
-            exit={{opacity: 0, y: -10}}
-            className="absolute z-10 w-full mt-2 bg-slate-800 border border-slate-700 rounded-lg shadow-xl max-h-60 overflow-y-auto"
-          >
-            {suggestions.map((city, index) => (
-              <button
-                key={`${city.name}-${city.country}-${index}`}
-                type="button"
-                onClick={() => handleSelect(city)}
-                className="w-full px-4 py-3 text-left hover:bg-slate-700 transition-colors flex flex-col gap-1 border-b border-slate-700 last:border-b-0"
+      {/* Suggestions — a panel, 1px dividers, coordinates in mono. */}
+      {isOpen && suggestions.length > 0 && (
+        <div
+          ref={dropdownRef}
+          style={{
+            position: 'absolute',
+            zIndex: 10,
+            width: '100%',
+            marginTop: 4,
+            background: 'var(--panel)',
+            border: '1px solid var(--grat-2)',
+            maxHeight: 260,
+            overflowY: 'auto',
+          }}
+        >
+          {suggestions.map((city, index) => (
+            <button
+              key={`${city.name}-${city.country}-${index}`}
+              type="button"
+              onClick={() => handleSelect(city)}
+              className="city-option"
+              style={{
+                width: '100%',
+                textAlign: 'left',
+                background: 'transparent',
+                border: 0,
+                borderBottom:
+                  index < suggestions.length - 1 ? '1px solid var(--grat-1)' : 0,
+                padding: '8px 11px',
+                cursor: 'pointer',
+                display: 'block',
+              }}
+            >
+              <span
+                style={{
+                  display: 'block',
+                  color: 'var(--parchment)',
+                  fontFamily: 'var(--font-ui)',
+                  fontSize: 13.5,
+                }}
               >
-                <span className="text-white font-medium">{city.name}</span>
-                <span className="text-xs text-slate-400">
-                  {city.adminName && `${city.adminName}, `}{city.country}
-                </span>
-              </button>
-            ))}
-          </motion.div>
-        )}
-      </AnimatePresence>
+                {city.name}
+              </span>
+              <span
+                className="num"
+                style={{
+                  display: 'block',
+                  color: 'var(--dim)',
+                  fontSize: 10.5,
+                  letterSpacing: '.03em',
+                  marginTop: 2,
+                }}
+              >
+                {city.adminName && `${city.adminName}, `}
+                {city.country} · {city.lat.toFixed(4)}°, {city.lon.toFixed(4)}°
+              </span>
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

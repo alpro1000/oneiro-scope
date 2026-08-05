@@ -1,8 +1,19 @@
 'use client';
 
+/**
+ * Voice input — instrument styling.
+ *
+ * The speech-recognition logic below is unchanged; only the presentation was
+ * rebuilt. It used to be a rose→pink gradient circle with framer-motion
+ * springs: the last visibly old element left sitting on the rebuilt /dreams
+ * screen. Now it is a bordered square in the token palette (brass is the only
+ * accent, radius 0, borders not shadows), the pulse is a CSS keyframe — so the
+ * global prefers-reduced-motion rule in tokens.css actually silences it — and
+ * framer-motion is gone from this component entirely.
+ */
+
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
-import { motion, AnimatePresence } from 'framer-motion';
 import type {
   SpeechRecognition,
   SpeechRecognitionErrorEvent,
@@ -17,6 +28,12 @@ interface VoiceInputProps {
 }
 
 type RecordingState = 'idle' | 'listening' | 'processing' | 'error';
+
+const SIZE_PX: Record<NonNullable<VoiceInputProps['size']>, number> = {
+  sm: 38,
+  md: 46,
+  lg: 56,
+};
 
 export default function VoiceInput({
   onTranscript,
@@ -77,14 +94,11 @@ export default function VoiceInput({
 
     recognition.onresult = (event: SpeechRecognitionEvent) => {
       let finalTranscript = '';
-      let interimTranscript = '';
 
       for (let i = event.resultIndex; i < event.results.length; i++) {
         const result = event.results[i];
         if (result.isFinal) {
           finalTranscript += result[0].transcript;
-        } else {
-          interimTranscript += result[0].transcript;
         }
       }
 
@@ -142,144 +156,78 @@ export default function VoiceInput({
     }
   }, [state, startRecording, stopRecording]);
 
-  // Size classes
-  const sizeClasses = {
-    sm: 'w-12 h-12 text-xl',
-    md: 'w-16 h-16 text-2xl',
-    lg: 'w-20 h-20 text-3xl',
-  };
-
-  const buttonSize = sizeClasses[size];
+  const px = SIZE_PX[size];
+  const listening = state === 'listening';
 
   return (
-    <div className={`flex flex-col items-center gap-3 ${className}`}>
-      {/* Main button */}
-      <motion.button
+    <div className={`flex flex-col items-center ${className}`} style={{ gap: 6 }}>
+      <button
+        type="button"
         onClick={handleClick}
         disabled={state === 'processing'}
-        className={`
-          ${buttonSize}
-          rounded-full
-          flex items-center justify-center
-          transition-all duration-300
-          disabled:opacity-50 disabled:cursor-not-allowed
-          focus:outline-none focus:ring-4 focus:ring-offset-2 focus:ring-offset-slate-900
-          ${
-            state === 'listening'
-              ? 'bg-red-500 hover:bg-red-600 focus:ring-red-500/50'
-              : state === 'error'
-              ? 'bg-amber-500 hover:bg-amber-600 focus:ring-amber-500/50'
-              : 'bg-gradient-to-br from-rose-500 to-pink-600 hover:from-rose-600 hover:to-pink-700 focus:ring-rose-500/50'
-          }
-        `}
-        whileTap={{ scale: 0.95 }}
-        aria-label={state === 'listening' ? t('stop') : t('start')}
+        aria-label={listening ? t('stop') : t('start')}
+        className={listening ? 'rec-pulse' : undefined}
+        style={{
+          width: px,
+          height: px,
+          display: 'inline-flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          background: listening ? 'var(--brass)' : 'transparent',
+          border: `1px solid ${
+            state === 'error' ? 'var(--brass-dim)' : 'var(--grat-2)'
+          }`,
+          color: listening ? 'var(--abyss)' : 'var(--brass)',
+          cursor: state === 'processing' ? 'not-allowed' : 'pointer',
+          opacity: state === 'processing' ? 0.45 : 1,
+          transition: 'background .15s ease, color .15s ease',
+        }}
       >
-        <AnimatePresence mode="wait">
-          {state === 'listening' ? (
-            <motion.div
-              key="recording"
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              exit={{ scale: 0 }}
-              className="relative"
-            >
-              {/* Pulsing animation */}
-              <motion.div
-                className="absolute inset-0 rounded-full bg-white/30"
-                animate={{
-                  scale: [1, 1.5, 1],
-                  opacity: [0.5, 0, 0.5],
-                }}
-                transition={{
-                  duration: 1.5,
-                  repeat: Infinity,
-                  ease: 'easeInOut',
-                }}
-              />
-              {/* Stop icon */}
-              <div className="w-5 h-5 bg-white rounded-sm" />
-            </motion.div>
-          ) : state === 'processing' ? (
-            <motion.div
-              key="processing"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-            >
-              {/* Spinner */}
-              <motion.div
-                className="w-6 h-6 border-2 border-white border-t-transparent rounded-full"
-                animate={{ rotate: 360 }}
-                transition={{
-                  duration: 1,
-                  repeat: Infinity,
-                  ease: 'linear',
-                }}
-              />
-            </motion.div>
-          ) : (
-            <motion.span
-              key="mic"
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              exit={{ scale: 0 }}
-            >
-              🎤
-            </motion.span>
-          )}
-        </AnimatePresence>
-      </motion.button>
-
-      {/* Status text */}
-      <AnimatePresence mode="wait">
-        {state === 'listening' && (
-          <motion.p
-            key="listening"
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 10 }}
-            className="text-rose-400 text-sm font-medium"
-          >
-            {t('listening')}
-          </motion.p>
+        {listening ? (
+          // Stop: a filled square. An instrument reads as a control, not a toy.
+          <span
+            aria-hidden="true"
+            style={{ width: px * 0.28, height: px * 0.28, background: 'var(--abyss)' }}
+          />
+        ) : state === 'processing' ? (
+          <span className="num" aria-hidden="true" style={{ fontSize: px * 0.32 }}>
+            …
+          </span>
+        ) : (
+          <span aria-hidden="true" style={{ fontSize: px * 0.42, lineHeight: 1 }}>
+            ◉
+          </span>
         )}
+      </button>
 
-        {state === 'processing' && (
-          <motion.p
-            key="processing"
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 10 }}
-            className="text-slate-400 text-sm"
-          >
-            {t('processing')}
-          </motion.p>
-        )}
-
-        {state === 'error' && errorMessage && (
-          <motion.p
-            key="error"
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 10 }}
-            className="text-amber-400 text-sm text-center max-w-[200px]"
-          >
-            {errorMessage}
-          </motion.p>
-        )}
-
-        {state === 'idle' && !isSupported && (
-          <motion.p
-            key="not-supported"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="text-slate-500 text-sm text-center max-w-[200px]"
-          >
-            {t('notSupported')}
-          </motion.p>
-        )}
-      </AnimatePresence>
+      {/* Status line — mono, like every other service label on the screen. */}
+      {(listening || state === 'processing' || (state === 'error' && errorMessage)
+        || (state === 'idle' && !isSupported)) && (
+        <p
+          className="num"
+          style={{
+            margin: 0,
+            fontSize: 10.5,
+            letterSpacing: '.04em',
+            textAlign: 'center',
+            maxWidth: 190,
+            color:
+              state === 'error' || !isSupported
+                ? 'var(--notice-ink)'
+                : listening
+                ? 'var(--brass)'
+                : 'var(--dim)',
+          }}
+        >
+          {listening
+            ? t('listening')
+            : state === 'processing'
+            ? t('processing')
+            : state === 'error'
+            ? errorMessage
+            : t('notSupported')}
+        </p>
+      )}
     </div>
   );
 }
