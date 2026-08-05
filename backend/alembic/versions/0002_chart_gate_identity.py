@@ -31,17 +31,26 @@ depends_on = None
 
 
 def upgrade() -> None:
-    op.add_column(
-        "users",
-        sa.Column("oauth_subject", sa.String(length=255), nullable=True),
-    )
-    op.create_index(
-        "ix_users_oauth_subject", "users", ["oauth_subject"], unique=True
-    )
-    op.add_column(
-        "users",
-        sa.Column("free_natal_chart_key", sa.String(length=128), nullable=True),
-    )
+    # Same reason as 0001: on a database created by `create_all` from the
+    # current models, these columns are already present.
+    inspector = sa.inspect(op.get_bind())
+    existing = {c["name"] for c in inspector.get_columns("users")}
+    indexes = {i["name"] for i in inspector.get_indexes("users")}
+
+    if "oauth_subject" not in existing:
+        op.add_column(
+            "users",
+            sa.Column("oauth_subject", sa.String(length=255), nullable=True),
+        )
+    if "ix_users_oauth_subject" not in indexes:
+        op.create_index(
+            "ix_users_oauth_subject", "users", ["oauth_subject"], unique=True
+        )
+    if "free_natal_chart_key" not in existing:
+        op.add_column(
+            "users",
+            sa.Column("free_natal_chart_key", sa.String(length=128), nullable=True),
+        )
 
 
 def downgrade() -> None:

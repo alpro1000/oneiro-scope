@@ -20,12 +20,17 @@ import sqlalchemy as sa
 from alembic import op
 
 revision = "0001_dream_entries"
-down_revision = None
+down_revision = "0000_baseline"
 branch_labels = None
 depends_on = None
 
 
 def upgrade() -> None:
+    # Production built this table with `create_all` long before any
+    # migration ran, so the baseline may have just adopted it. Creating it
+    # again would abort the whole upgrade on "already exists".
+    if "dream_entries" in sa.inspect(op.get_bind()).get_table_names():
+        return
     op.create_table(
         "dream_entries",
         sa.Column("id", sa.Uuid(), primary_key=True),

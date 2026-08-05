@@ -90,6 +90,8 @@ jobs:
             uvicorn \
             aiosqlite \
             asyncpg \
+            psycopg2-binary \
+            "alembic==1.13.1" \
             "pymorphy3>=2.0" \
             pymorphy3-dicts-ru
           # The block above is deliberately not requirements.txt — these are the
@@ -130,4 +132,5 @@ jobs:
             backend/tests/test_capability_menu.py \
             backend/tests/test_chart_gate.py \
             backend/tests/test_chart_gate_postgres.py \
+            backend/tests/test_migrations_postgres.py \
             -v
