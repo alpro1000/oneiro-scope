@@ -177,3 +177,53 @@ def test_running_upgrade_twice_changes_nothing():
     command.upgrade(cfg, "head")  # must not raise
 
     assert _tables() == before
+
+
+# --- the URL the deploy hands to alembic ------------------------------------
+# `alembic upgrade head && uvicorn` means a URL the sync engine cannot load is
+# no longer a lazy error on first query — it stops the service from booting.
+
+
+@pytest.mark.parametrize(
+    "given,expected",
+    [
+        # What Render's connectionString actually hands out.
+        ("postgresql://u:p@h:5432/db", "postgresql+psycopg2://u:p@h:5432/db"),
+        # Legacy shape; SQLAlchemy 2.0 dropped the `postgres` dialect alias.
+        ("postgres://u:p@h:5432/db", "postgresql+psycopg2://u:p@h:5432/db"),
+        # The async URL, reached by falling back when only DATABASE_URL is set.
+        ("postgresql+asyncpg://u:p@h/db", "postgresql+psycopg2://u:p@h/db"),
+        # Already explicit — left alone.
+        ("postgresql+psycopg2://u:p@h/db", "postgresql+psycopg2://u:p@h/db"),
+        # Not Postgres at all — not ours to rewrite.
+        ("sqlite:///./local.db", "sqlite:///./local.db"),
+    ],
+)
+def test_sync_driver_is_resolved_for_every_shape_that_reaches_us(given, expected):
+    from backend.core.database import _ensure_sync_driver
+
+    assert _ensure_sync_driver(given) == expected
+
+
+def test_migration_url_falls_back_to_the_async_setting(monkeypatch):
+    """Only DATABASE_URL set must not take the whole service down."""
+    from backend.core import config
+
+    monkeypatch.setattr(config.settings, "DATABASE_URL_SYNC", None)
+    monkeypatch.setattr(config.settings, "DATABASE_URL", "postgresql+asyncpg://u@h/db")
+
+    from backend.core.database import migration_url
+
+    assert migration_url() == "postgresql+psycopg2://u@h/db"
+
+
+def test_migration_url_names_the_variables_when_nothing_is_configured(monkeypatch):
+    from backend.core import config
+
+    monkeypatch.setattr(config.settings, "DATABASE_URL_SYNC", None)
+    monkeypatch.setattr(config.settings, "DATABASE_URL", None)
+
+    from backend.core.database import migration_url
+
+    with pytest.raises(RuntimeError, match="DATABASE_URL_SYNC"):
+        migration_url()

@@ -11,8 +11,7 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
 # Import models and config
-from backend.core.config import settings
-from backend.core.database import Base
+from backend.core.database import Base, migration_url
 from backend.models import *  # Import all models
 
 # this is the Alembic Config object
@@ -22,8 +21,9 @@ config = context.config
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
-# Set sqlalchemy.url from settings
-config.set_main_option("sqlalchemy.url", settings.DATABASE_URL_SYNC)
+# Set sqlalchemy.url from settings. Resolved in backend.core.database so it is
+# testable — this file is a script alembic execs, not an importable module.
+config.set_main_option("sqlalchemy.url", migration_url())
 
 # add your model's MetaData object here
 target_metadata = Base.metadata
