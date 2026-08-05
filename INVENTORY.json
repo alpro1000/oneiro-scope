@@ -463,7 +463,7 @@
     {
       "path": "backend/alembic/versions",
       "dirs": 0,
-      "files": 3
+      "files": 4
     },
     {
       "path": "backend/models",
@@ -488,7 +488,7 @@
     {
       "path": "backend/tests",
       "dirs": 1,
-      "files": 47
+      "files": 48
     },
     {
       "path": "backend/tests/dreams",
@@ -712,5 +712,5 @@
     }
   ],
   "total_dirs": 141,
-  "total_files": 510
+  "total_files": 512
 }
