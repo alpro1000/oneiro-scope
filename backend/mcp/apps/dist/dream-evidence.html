@@ -1,0 +1,341 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Dream coding · OneiroScope</title>
+<style>/* OneiroScope design tokens
+   Единственный источник цвета, шрифтов и метрик.
+   Хардкод hex-значений в компонентах запрещён — только var().
+   Эталонная реализация: astrocartography.html */
+
+
+
+:root {
+  /* --- surfaces: ночная морская карта --- */
+  --abyss:      #071320;   /* фон страницы, глубокая вода */
+  --shelf:      #0C1E2E;   /* контейнеры */
+  --panel:      #0A1B29;   /* панели прибора */
+  --land:       #152C3E;   /* заливка суши */
+  --land-edge:  #24445B;   /* контур берега */
+  --grat-1:     #1B3549;   /* сетка, разделители */
+  --grat-2:     #22415A;   /* рамки */
+
+  /* --- ink --- */
+  --parchment:  #E7DDC7;   /* основной текст */
+  --muted:      #89A0B1;   /* второстепенный */
+  --dim:        #5C7385;   /* подписи, метки осей */
+
+  /* --- accent: единственный --- */
+  --brass:      #D2A64B;
+  --brass-dim:  #8A6E32;   /* eyebrow, служебные метки */
+
+  /* --- notice: приглушённая латунь для лимитов/предупреждений (не второй акцент) --- */
+  --notice-bg:  #20180C;   /* тёмно-янтарная подложка сообщения о лимите */
+  --notice-ink: #E8D4A0;   /* текст на ней */
+
+  /* --- планеты: классические металлы --- */
+  --p-sun:      #E8C25A;   /* золото */
+  --p-moon:     #C7D3DD;   /* серебро */
+  --p-mercury:  #9FD5C8;   /* ртуть */
+  --p-venus:    #DB8F6C;   /* медь */
+  --p-mars:     #C6544B;   /* железо */
+  --p-jupiter:  #B9A8DA;   /* олово */
+  --p-saturn:   #8493A2;   /* свинец */
+  --p-uranus:   #6FBACB;
+  --p-neptune:  #5F84BC;
+  --p-pluto:    #997280;
+  --p-truenode: var(--muted);      /* лунный узел — служебная точка, не металл */
+  --p-chiron:   var(--p-mercury);  /* кентавр — ближе всего к ртути */
+
+  /* --- типографика: три гарнитуры, роли фиксированы --- */
+  --font-display: 'Bodoni Moda', Georgia, serif;
+  --font-ui:      'Instrument Sans', system-ui, -apple-system, sans-serif;
+  --font-data:    'IBM Plex Mono', ui-monospace, monospace;
+
+  /* --- метрики --- */
+  --radius: 0;             /* прямые углы везде */
+  --hair: 1px;
+  --panel-w: 300px;
+  --collapse: 900px;
+
+  --track-eyebrow: .22em;
+  --track-display: -.015em;
+  --lh-display: .94;
+}
+
+/* Прибор не скруглён и не отбрасывает тень. Границы вместо теней. */
+* { border-radius: var(--radius); box-shadow: none; }
+
+body {
+  background: var(--abyss);
+  color: var(--parchment);
+  font-family: var(--font-ui);
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, .display {
+  font-family: var(--font-display);
+  font-weight: 400;
+  letter-spacing: var(--track-display);
+  line-height: var(--lh-display);
+}
+h1 em, .display em { font-style: italic; color: var(--brass); }
+
+/* Всё, что является числом или измерением — моноширинным.
+   Это сигнал «здесь расчёт, а не мнение». Главный дифференциатор. */
+.num, .deg, .orb, .coord, .ver, code, kbd, samp {
+  font-family: var(--font-data);
+  font-variant-numeric: tabular-nums;
+}
+
+.eyebrow {
+  font-family: var(--font-data);
+  font-size: 10.5px;
+  letter-spacing: var(--track-eyebrow);
+  text-transform: uppercase;
+  color: var(--brass-dim);
+}
+
+/* Панель прибора: блоки через 1px разделитель */
+.panel        { border: var(--hair) solid var(--grat-2); background: var(--panel); }
+.panel-block  { padding: 13px 15px; border-bottom: var(--hair) solid var(--grat-1); }
+.panel-block:last-child { border-bottom: 0; }
+
+/* Основной паттерн компоновки */
+.stage {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) var(--panel-w);
+  gap: clamp(12px, 1.4vw, 20px);
+  align-items: start;
+}
+@media (max-width: 900px) { .stage { grid-template-columns: 1fr; } }
+
+/* Провенанс: обязателен на каждом экране с расчётом.
+   Это не мелкий шрифт для юристов, это доказательство работы прибора. */
+.provenance {
+  font-family: var(--font-data);
+  font-size: 10px;
+  letter-spacing: .06em;
+  color: var(--dim);
+  padding-top: 12px;
+  border-top: var(--hair) solid var(--grat-1);
+}
+
+/* Пограничное положение планеты — помечается явно, не подразумевается */
+.borderline { color: var(--brass); }
+.borderline::after { content: ' \00B1'; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition: none !important; animation: none !important; }
+}
+
+/* --- Compatibility bridge (transitional) ---------------------------------
+   The screens built before this design system (astrology, dreams, face,
+   calendar, Header) reach the palette through Tailwind utilities — bg-bg,
+   text-ink, gold, rounded-lg — that resolve to the OLD variable names below.
+   Until each screen is rebuilt on the instrument system (natal → lunar →
+   price → connect → cabinet), point those names at the nearest new token so
+   nothing renders unstyled and the whole app shifts toward the new look at
+   once. NEW work must use the named tokens above (--abyss, --brass,
+   --parchment, --font-data …), never these. Delete a line here as its screen
+   is rebuilt; delete the block when the last one is. */
+:root {
+  --bg:             var(--abyss);
+  --surface:        var(--shelf);
+  --surface-strong: var(--panel);
+  --gold:           var(--brass);
+  --gold-soft:      rgba(210, 166, 75, 0.24);
+  --ink:            var(--parchment);
+  --ink-muted:      var(--muted);
+  --accent:         var(--brass);   /* one accent only — collapse the old teal onto brass */
+  --danger:         var(--p-mars);
+  --font-sans:      var(--font-ui);
+  --radius-lg: 0; --radius-md: 0; --radius-sm: 0;  /* instruments are not rounded */
+  --shadow-gold: none;
+}
+
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;background:var(--abyss);color:var(--parchment);
+  font-family:var(--font-ui);font-size:14px}
+body{padding:14px}
+.wrap{display:grid;gap:16px;grid-template-columns:minmax(0,1fr) minmax(0,300px);align-items:start}
+@media (max-width:720px){.wrap{grid-template-columns:1fr}}
+.wheel{color:var(--parchment)}
+.wheel svg{display:block;width:100%;height:auto}
+.panels{display:grid;gap:14px}
+section{border:1px solid var(--grat-2);background:var(--panel);padding:11px 13px}
+.eyebrow{font-family:var(--font-data);font-size:10.5px;letter-spacing:.22em;
+  text-transform:uppercase;color:var(--brass);margin-bottom:8px}
+.kv{display:flex;justify-content:space-between;gap:12px;padding:3px 0;
+  font-size:12.5px;color:var(--muted)}
+.kv b{font-weight:400;color:var(--parchment)}
+table{width:100%;border-collapse:collapse}
+td{padding:3px 0;font-size:12.5px;vertical-align:baseline;border-bottom:1px solid var(--grat-1)}
+tr:last-child td{border-bottom:0}
+.num{font-family:var(--font-data);color:var(--parchment);text-align:right;white-space:nowrap}
+.body{color:var(--muted)}
+.dim{color:var(--dim)}
+.glyph{font-size:15px;width:1.6em}
+.flag{color:var(--brass);margin-left:5px}
+.note{border:1px solid var(--brass-dim);background:var(--notice-bg);color:var(--notice-ink);
+  padding:9px 11px;font-size:12.5px;line-height:1.55;margin:0}
+.prov{display:flex;flex-wrap:wrap;gap:5px 22px;margin-top:14px;padding-top:10px;
+  border-top:1px solid var(--grat-1);font-family:var(--font-data);font-size:11px;color:var(--parchment)}
+.prov b{font-weight:400;color:var(--muted)}
+.asp{padding:5px 0;border-bottom:1px solid var(--grat-1)}
+.asp:last-child{border-bottom:0}
+.asp-pair{font-size:12.5px;color:var(--muted)}
+.asp-num{font-size:11.5px;text-align:left;margin-top:1px}
+.disclaimer{color:var(--muted);font-size:12.5px;line-height:1.6;margin:11px 0 0;max-width:64ch}
+.disclaimer b{color:var(--parchment);font-weight:500}
+
+/* --- "explain" controls: the seam between the computed layer and the model's
+   ---  reading of it.
+   ---
+   ---  Per-row controls are QUIET text, not outlined boxes. A natal chart
+   ---  carries thirty of them, and thirty brass rectangles fight the numbers
+   ---  they sit next to — the design system's rule that emphasis must not
+   ---  compete with data. Only the section-level "read this as a whole" is
+   ---  drawn as a button, because there is exactly one of it per panel. */
+.ask{
+  background:transparent;border:0;padding:0;cursor:pointer;
+  font-family:var(--font-ui);font-size:11px;letter-spacing:.02em;
+  color:var(--muted);border-bottom:1px solid transparent;
+  transition:color .15s ease,border-color .15s ease;
+}
+.ask:hover{color:var(--brass);border-bottom-color:var(--brass-dim)}
+.ask:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
+.ask-strong{
+  border:1px solid var(--brass-dim);color:var(--brass);padding:5px 10px;
+  font-size:12px;width:100%;text-align:center;
+}
+.ask-strong:hover{background:var(--brass);color:var(--abyss);border-bottom-color:var(--brass-dim)}
+.ask-cell{text-align:right;white-space:nowrap;padding-left:10px}
+.asp .ask{margin-top:3px}
+.ev-row .ask{margin-top:5px;margin-left:2.1em}
+.lday .ask{margin-top:6px}
+.lg .ask{margin-left:5px;font-size:10px}
+.ask-row{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;margin-top:11px;
+  padding-top:10px;border-top:1px solid var(--grat-1)}
+.ask-row .ask-strong{width:auto}
+.ask-hint{font-family:var(--font-ui);font-size:11px;color:var(--dim);line-height:1.5;
+  margin:7px 0 0;display:block}
+.ask-row .ask-hint{margin:0;flex:1;min-width:14ch}
+section > .ask-strong{margin-top:10px}
+@media (prefers-reduced-motion: reduce){.ask{transition:none}}
+
+/* --- shared page furniture ------------------------------------------------ */
+.head{margin-bottom:14px}
+h1{font-family:var(--font-display);font-weight:400;letter-spacing:-.015em;
+  line-height:1.02;font-size:clamp(22px,3.4vw,32px);margin:6px 0 0}
+.lede{color:var(--muted);font-size:13.5px;line-height:1.6;margin:8px 0 0;max-width:62ch}
+.head .eyebrow{margin-bottom:0}
+
+/* --- astrocartography ----------------------------------------------------- */
+svg{display:block;width:100%;height:auto;border:1px solid var(--grat-2)}
+.legend{margin-top:12px;border:1px solid var(--grat-2);background:var(--panel);padding:11px 13px}
+.lgs{display:flex;flex-wrap:wrap;gap:6px 14px;margin-bottom:9px}
+.lg{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--muted)}
+.lg i{width:13px;height:2px;display:inline-block}
+.kinds{display:flex;flex-wrap:wrap;gap:5px 18px;font-size:11.5px;color:var(--dim);
+  padding-top:8px;border-top:1px solid var(--grat-1)}
+.kinds span{display:inline-flex;align-items:center;gap:6px}
+.k{width:16px;height:0;border-top:1.4px solid var(--muted);display:inline-block}
+.k.dashed{border-top-style:dashed}
+.k.dotted{border-top-style:dotted}
+
+/* --- lunar calendar ------------------------------------------------------- */
+.lgrid{display:grid;gap:1px;background:var(--grat-1);
+  grid-template-columns:repeat(auto-fill,minmax(132px,1fr));border:1px solid var(--grat-2)}
+.lday{background:var(--panel);padding:9px 10px}
+.lday-top{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.lday-date{font-size:10.5px;color:var(--dim)}
+.lday-n{font-size:19px;color:var(--brass);margin-top:4px;line-height:1.1}
+.lday-n .dim{font-size:10.5px}
+.lday-phase{font-size:11.5px;color:var(--muted);margin-top:2px}
+.lday-illum{font-size:11.5px;margin-top:3px}
+.lday-illum .dim{font-size:10px}
+.lday-sign{font-size:11.5px;color:var(--muted);margin-top:2px}
+.lday-start{font-size:10.5px;margin-top:2px}
+
+/* --- dream coding --------------------------------------------------------- */
+.dream{font-size:14.5px;line-height:1.85;color:var(--parchment);margin:0;max-width:66ch}
+mark.ev{background:transparent;color:var(--parchment);
+  border-bottom:2px solid var(--brass);padding-bottom:1px}
+mark.ev sup{font-family:var(--font-data);font-size:9.5px;color:var(--brass);
+  margin-left:2px;vertical-align:super}
+.ev-row{padding:8px 0;border-bottom:1px solid var(--grat-1)}
+.ev-row:last-child{border-bottom:0}
+.ev-head{display:flex;align-items:baseline;gap:7px;font-size:12.5px}
+.ev-n{color:var(--brass);min-width:1.4em}
+.ev-cat{color:var(--parchment)}
+.ev-conf{margin-left:auto;color:var(--dim);font-size:11px}
+.ev-quote{font-size:13px;color:var(--muted);margin:3px 0 0;padding-left:2.1em;line-height:1.5}
+.ev-meta,.ev-src{font-size:11px;padding-left:2.1em;margin-top:2px}
+.deg{margin:0;padding-left:17px;font-size:11.5px;color:var(--notice-ink)}
+.deg li{margin-bottom:3px}
+.llm{margin-top:14px}
+.prose{font-size:13.5px;line-height:1.7;color:var(--muted);margin:9px 0 0;max-width:66ch;
+  white-space:pre-wrap}
+</style>
+</head>
+<body><div id="root"></div><script>"use strict";(()=>{var x="2026-01-26",v=class{constructor(n){this.nextId=1;this.lastSize={width:0,height:0};this.handler=n,window.addEventListener("message",s=>this.receive(s))}initialize(n=4e3){let s=this.nextId++;return new Promise(e=>{let l=!1,c=o=>{l||(l=!0,window.removeEventListener("message",r),e(o))},r=o=>{let d=o.data;!d||d.jsonrpc!=="2.0"||d.id!==s||c(d.result?.hostContext??{})};window.addEventListener("message",r),this.send({jsonrpc:"2.0",id:s,method:"ui/initialize",params:{capabilities:{},clientInfo:{name:"oneiroscope-view",version:"0.1.0"},protocolVersion:x}}),window.setTimeout(()=>c(null),n)})}reportSize(){let n=document.documentElement,s=Math.ceil(n.scrollWidth),e=Math.ceil(n.scrollHeight);s===this.lastSize.width&&e===this.lastSize.height||(this.lastSize={width:s,height:e},this.send({jsonrpc:"2.0",method:"ui/notifications/size-changed",params:{width:s,height:e}}))}ask(n){this.send({jsonrpc:"2.0",id:this.nextId++,method:"ui/message",params:{role:"user",content:{type:"text",text:n}}})}receive(n){let s=n.data;if(!(!s||s.jsonrpc!=="2.0"||typeof s.method!="string"))switch(s.method){case"ui/notifications/tool-input":this.handler.onToolInput?.((s.params??{}).arguments??{});break;case"ui/notifications/tool-result":this.handler.onToolResult?.(s.params??{});break;case"ui/notifications/host-context-changed":this.handler.onContext?.(s.params??{});break;case"ui/resource-teardown":s.id!==void 0&&this.send({jsonrpc:"2.0",id:s.id,result:{}});break;default:break}}send(n){window.parent.postMessage(n,"*")}};function h(t,n,s=!1){return`<button type="button" class="${s?"ask ask-strong":"ask"}" data-ask="${a(t)}">${a(n)}</button>`}var f={ru:"\u043E\u0431\u044A\u044F\u0441\u043D\u0438\u0442\u044C",en:"explain"};function R(t){let n=t?.locale;return n==="en"||n==="ru"?n:document.documentElement.lang==="en"?"en":"ru"}function y(t,n){let s=t.structuredContent;if(s&&typeof s=="object"){let e=n(s);if(e)return e}for(let e of t.content??[]){let l=e;if(!(l?.type!=="text"||typeof l.text!="string"))try{let c=JSON.parse(l.text);if(c&&typeof c=="object"){let r=n(c);if(r)return r}}catch{}}return null}function $(t){let n=document.getElementById("root");if(!n)throw new Error("view shell has no #root");let s=r=>`<p class="note">${r}</p>`,e=document.documentElement.lang==="en"?"en":"ru",l={},c=new v({onToolInput:r=>{l=r??{}},onToolResult:r=>{let o=t.pick(r);e=o?R(o):e,n.innerHTML=o?t.render(o,e,l):s(t.strings[e].empty),c.reportSize()},onContext:r=>{r.theme&&(document.documentElement.dataset.theme=r.theme),c.reportSize()}});n.innerHTML=s(t.strings[e].waiting),c.initialize().then(r=>{r?.theme&&(document.documentElement.dataset.theme=r.theme),c.reportSize()}),n.addEventListener("click",r=>{let d=r.target?.closest?.("[data-ask]")?.getAttribute("data-ask");d&&c.ask(d)}),typeof ResizeObserver<"u"&&new ResizeObserver(()=>c.reportSize()).observe(document.documentElement)}var a=t=>t.replace(/[&<>"]/g,n=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"})[n]);var b=t=>t.toLowerCase().replace(/ё/g,"\u0435");function w(t,n){let s=b(t),e=n.map((o,d)=>({clause:b((o.evidence??"").trim()),i:d})).filter(o=>o.clause.length>2),l=[];for(let{clause:o,i:d}of e){let m=0;for(;m<=s.length;){let u=s.indexOf(o,m);if(u===-1)break;if(!l.some(p=>u<p.end&&u+o.length>p.start)){l.push({start:u,end:u+o.length,i:d});break}m=u+1}}l.sort((o,d)=>o.start-d.start);let c="",r=0;for(let o of l)c+=a(t.slice(r,o.start)),c+=`<mark class="ev" data-i="${o.i}">${a(t.slice(o.start,o.end))}<sup>${o.i+1}</sup></mark>`,r=o.end;return c+=a(t.slice(r)),c}var k={ru:{aggression:"\u0430\u0433\u0440\u0435\u0441\u0441\u0438\u044F",friendliness:"\u0434\u0440\u0443\u0436\u0435\u043B\u044E\u0431\u0438\u0435",sexuality:"\u0441\u0435\u043A\u0441\u0443\u0430\u043B\u044C\u043D\u043E\u0441\u0442\u044C",success:"\u0443\u0441\u043F\u0435\u0445",failure:"\u043D\u0435\u0443\u0434\u0430\u0447\u0430",misfortune:"\u043D\u0435\u0441\u0447\u0430\u0441\u0442\u044C\u0435",good_fortune:"\u0443\u0434\u0430\u0447\u0430",characters:"\u043F\u0435\u0440\u0441\u043E\u043D\u0430\u0436\u0438",emotions:"\u044D\u043C\u043E\u0446\u0438\u0438"},en:{aggression:"aggression",friendliness:"friendliness",sexuality:"sexuality",success:"success",failure:"failure",misfortune:"misfortune",good_fortune:"good fortune",characters:"characters",emotions:"emotions"}},g={ru:{title:"\u0420\u0430\u0437\u0431\u043E\u0440 \u0441\u043D\u0430",eyebrow:"Hall / Van de Castle \xB7 1966",text:"\u0422\u0435\u043A\u0441\u0442 \u0441 \u043E\u0442\u043C\u0435\u0447\u0435\u043D\u043D\u044B\u043C\u0438 \u0443\u043B\u0438\u043A\u0430\u043C\u0438",ledger:"\u0427\u0442\u043E \u0437\u0430\u043A\u043E\u0434\u0438\u0440\u043E\u0432\u0430\u043D\u043E \u0438 \u043F\u043E\u0447\u0435\u043C\u0443",counts:"\u0421\u0447\u0451\u0442\u0447\u0438\u043A\u0438",symbols:"\u0421\u0438\u043C\u0432\u043E\u043B\u044B",emotion:"\u0412\u0435\u0434\u0443\u0449\u0430\u044F \u044D\u043C\u043E\u0446\u0438\u044F",themes:"\u0422\u0435\u043C\u044B",degraded:"\u0427\u0442\u043E \u043D\u0435 \u0443\u0434\u0430\u043B\u043E\u0441\u044C \u043F\u043E\u0441\u0447\u0438\u0442\u0430\u0442\u044C",interpretation:"\u0422\u043E\u043B\u043A\u043E\u0432\u0430\u043D\u0438\u0435 \u043C\u043E\u0434\u0435\u043B\u0438",actor:"\u043A\u0442\u043E",target:"\u043D\u0430 \u043A\u043E\u0433\u043E",source:"\u043F\u0440\u0430\u0432\u0438\u043B\u043E",coder:"\u043A\u043E\u0434\u0438\u0440\u043E\u0432\u0449\u0438\u043A",noText:"\u0422\u0435\u043A\u0441\u0442 \u0441\u043D\u0430 \u043D\u0435 \u043F\u0435\u0440\u0435\u0434\u0430\u043D \u2014 \u0443\u043B\u0438\u043A\u0438 \u043F\u043E\u043A\u0430\u0437\u0430\u043D\u044B \u0441\u043F\u0438\u0441\u043A\u043E\u043C.",llmNote:"\u041D\u0438\u0436\u0435 \u2014 \u0441\u0438\u043D\u0442\u0435\u0437 \u044F\u0437\u044B\u043A\u043E\u0432\u043E\u0439 \u043C\u043E\u0434\u0435\u043B\u0438 (0.7). \u0412\u0441\u0451, \u0447\u0442\u043E \u0432\u044B\u0448\u0435, \u2014 \u0434\u0435\u0442\u0435\u0440\u043C\u0438\u043D\u0438\u0440\u043E\u0432\u0430\u043D\u043D\u044B\u0439 \u043F\u043E\u0434\u0441\u0447\u0451\u0442 (1.0) \u0438 \u0441\u043B\u043E\u0432\u0430\u0440\u044C (0.8).",waiting:"\u041E\u0436\u0438\u0434\u0430\u043D\u0438\u0435 \u0440\u0430\u0437\u0431\u043E\u0440\u0430\u2026",empty:"\u041D\u0435\u0442 \u0434\u0430\u043D\u043D\u044B\u0445. \u0412\u044B\u0437\u043E\u0432\u0438\u0442\u0435 analyze_dream.",askOne:"\u041E\u0431\u044A\u044F\u0441\u043D\u0438 \u044D\u0442\u0443 \u0437\u0430\u043A\u043E\u0434\u0438\u0440\u043E\u0432\u0430\u043D\u043D\u0443\u044E \u0443\u043B\u0438\u043A\u0443 \u0438\u0437 \u043C\u043E\u0435\u0433\u043E \u0441\u043D\u0430",askAll:"\u041F\u0440\u043E\u0447\u0438\u0442\u0430\u0439 \u044D\u0442\u043E\u0442 \u0440\u0430\u0437\u0431\u043E\u0440 \u0446\u0435\u043B\u0438\u043A\u043E\u043C \u043F\u043E \u0425\u043E\u043B\u043B\u0443/\u0412\u0430\u043D \u0434\u0435 \u041A\u0430\u0441\u043B\u0443",askHint:"\u041D\u0430\u0436\u043C\u0438\u0442\u0435 \xAB\u043E\u0431\u044A\u044F\u0441\u043D\u0438\u0442\u044C\xBB \u0443 \u043B\u044E\u0431\u043E\u0439 \u0443\u043B\u0438\u043A\u0438 \u2014 \u0432 \u0447\u0430\u0442 \u0443\u0439\u0434\u0451\u0442 \u0441\u0430\u043C\u0430 \u0444\u0440\u0430\u0437\u0430 \u0438 \u0435\u0451 \u043F\u0440\u0430\u0432\u0438\u043B\u043E.",disclaimerLead:"\u041F\u043E\u0434\u0441\u0447\u0451\u0442 \u043F\u0440\u043E\u0432\u0435\u0440\u044F\u0435\u043C: \u043F\u043E\u0434 \u043A\u0430\u0436\u0434\u044B\u043C \u0447\u0438\u0441\u043B\u043E\u043C \u043B\u0435\u0436\u0438\u0442 \u0444\u0440\u0430\u0437\u0430.",disclaimer:"\u0417\u043D\u0430\u0447\u0435\u043D\u0438\u0435 \u0441\u0438\u043C\u0432\u043E\u043B\u0430 \u2014 \u0442\u0440\u0430\u0434\u0438\u0446\u0438\u044F \u0442\u043E\u043B\u043A\u043E\u0432\u0430\u043D\u0438\u044F, \u043D\u0435 \u0434\u0438\u0430\u0433\u043D\u043E\u0437. \u0420\u0435\u0444\u043B\u0435\u043A\u0441\u0438\u0432\u043D\u043E-\u0440\u0430\u0437\u0432\u043B\u0435\u043A\u0430\u0442\u0435\u043B\u044C\u043D\u044B\u0439 \u043C\u0430\u0442\u0435\u0440\u0438\u0430\u043B, \u043D\u0435 \u043C\u0435\u0434\u0438\u0446\u0438\u043D\u0441\u043A\u0438\u0439, \u043F\u0441\u0438\u0445\u043E\u043B\u043E\u0433\u0438\u0447\u0435\u0441\u043A\u0438\u0439, \u044E\u0440\u0438\u0434\u0438\u0447\u0435\u0441\u043A\u0438\u0439 \u0438\u043B\u0438 \u0444\u0438\u043D\u0430\u043D\u0441\u043E\u0432\u044B\u0439 \u0441\u043E\u0432\u0435\u0442."},en:{title:"Dream coding",eyebrow:"Hall / Van de Castle \xB7 1966",text:"Text with the coded clauses marked",ledger:"What was coded, and why",counts:"Counts",symbols:"Symbols",emotion:"Leading emotion",themes:"Themes",degraded:"What could not be computed",interpretation:"Model interpretation",actor:"actor",target:"target",source:"rule",coder:"coder",noText:"The dream text was not returned \u2014 the evidence is listed instead.",llmNote:"Below is language-model synthesis (0.7). Everything above is deterministic coding (1.0) and the symbol dictionary (0.8).",waiting:"Waiting for the analysis\u2026",empty:"No data. Call analyze_dream.",askOne:"Explain this coded piece of evidence from my dream",askAll:"Read this Hall/Van de Castle coding as a whole",askHint:'Press "explain" on any item \u2014 the clause and its rule go to the chat.',disclaimerLead:"The coding is checkable: every number has a clause under it.",disclaimer:"What a symbol means is a tradition of interpretation, not a diagnosis. Reflective / entertainment material, not medical, psychological, legal or financial advice."}};function _(t,n){return Object.entries(t).filter(([,s])=>typeof s=="number").map(([s,e])=>`<div class="kv"><span>${k[n][s]??a(s)}</span><b class="num">${e}</b></div>`).join("")}function L(t,n,s){let e=g[n],l=t.hvdc_evidence??[],c=typeof s.dream_text=="string"?s.dream_text:"",r=l.map((i,p)=>`<div class="ev-row">
+      <div class="ev-head">
+        <span class="ev-n num">${p+1}</span>
+        <span class="ev-cat">${k[n][i.category??""]??a(i.category??"")}</span>
+        ${i.subtype?`<span class="dim">\xB7 ${a(i.subtype)}</span>`:""}
+        <span class="num ev-conf">${(i.confidence??1).toFixed(1)}</span>
+      </div>
+      ${i.evidence?`<div class="ev-quote">\xAB${a(i.evidence)}\xBB</div>`:""}
+      <div class="ev-meta dim">
+        ${i.actor?`${e.actor}: ${a(i.actor)}`:""}
+        ${i.target?` \xB7 ${e.target}: ${a(i.target)}`:""}
+      </div>
+      ${i.source?`<div class="ev-src dim">${e.source}: ${a(i.source)}</div>`:""}
+      ${h(`${e.askOne}: ${i.category??""}${i.subtype?` / ${i.subtype}`:""}, \xAB${i.evidence??""}\xBB${i.actor?`, ${e.actor}: ${i.actor}`:""}${i.target?`, ${e.target}: ${i.target}`:""}. ${i.source??""}`,f[n])}
+    </div>`).join(""),o=(t.symbols??[]).map(i=>`<div class="kv"><span>${a(i.symbol??"")}</span><b class="dim">${a(i.category??"")}${i.archetype?` \xB7 ${a(i.archetype)}`:""}</b></div>`).join(""),d=(t.degraded??[]).map(i=>`<li>${a(typeof i=="string"?i:JSON.stringify(i))}</li>`).join(""),m=t.meta??{},u=[t.hvdc_coder_version?`<span><b>${e.coder}</b> ${a(t.hvdc_coder_version)}</span>`:"",m.request_id?`<span><b>request</b> ${a(String(m.request_id))}</span>`:""].filter(Boolean).join("");return`
+    <div class="head">
+      <div class="eyebrow">${e.eyebrow}</div>
+      <h1>${e.title}</h1>
+    </div>
+    <div class="wrap">
+      <div>
+        <section>
+          <div class="eyebrow">${e.text}</div>
+          ${c?`<p class="dream">${w(c,l)}</p>`:`<p class="note">${e.noText}</p>`}
+        </section>
+        <section>
+          <div class="eyebrow">${e.ledger}</div>
+          ${r||'<p class="dim">\u2014</p>'}
+          ${l.length?`${h(`${e.askAll}. ${JSON.stringify(t.content_analysis??{})}`,e.askAll,!0)}<p class="ask-hint">${e.askHint}</p>`:""}
+        </section>
+      </div>
+      <div class="panels">
+        ${t.content_analysis?`<section>
+          <div class="eyebrow">${e.counts}</div>
+          ${_(t.content_analysis,n)}
+        </section>`:""}
+        ${t.primary_emotion?`<section>
+          <div class="eyebrow">${e.emotion}</div>
+          <div class="kv"><span>${a(t.primary_emotion)}</span></div>
+        </section>`:""}
+        ${o?`<section>
+          <div class="eyebrow">${e.symbols}</div>${o}
+        </section>`:""}
+        ${d?`<section>
+          <div class="eyebrow">${e.degraded}</div>
+          <ul class="deg">${d}</ul>
+        </section>`:""}
+      </div>
+    </div>
+    ${t.interpretation?`<section class="llm">
+      <div class="eyebrow">${e.interpretation}</div>
+      <p class="note">${e.llmNote}</p>
+      <p class="prose">${a(t.interpretation)}</p>
+    </section>`:""}
+    <div class="prov">${u}</div>
+    <p class="disclaimer"><b>${e.disclaimerLead}</b> ${a(t.disclaimer??e.disclaimer)}</p>
+  `}$({pick:t=>y(t,n=>Array.isArray(n.hvdc_evidence)?n:null),render:L,strings:{ru:{waiting:g.ru.waiting,empty:g.ru.empty},en:{waiting:g.en.waiting,empty:g.en.empty}}});})();
+</script></body>
+</html>

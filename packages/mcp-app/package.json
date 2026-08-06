@@ -1,0 +1,18 @@
+{
+  "name": "@oneiroscope/mcp-app",
+  "version": "0.1.0",
+  "private": true,
+  "description": "MCP Apps (io.modelcontextprotocol/ui) views for OneiroScope — self-contained HTML rendered by the chat host in a sandboxed iframe, derived from chart_core by chart-kit with no network.",
+  "type": "module",
+  "scripts": {
+    "build": "node build.mjs",
+    "check": "node build.mjs --check",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "esbuild": "^0.24.0",
+    "typescript": "^5.6.0",
+    "vitest": "^2.1.0"
+  }
+}

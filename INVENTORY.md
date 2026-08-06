@@ -44,7 +44,10 @@
 | frontend/.storybook | 0 | 2 |
 | frontend/components | 0 | 11 |
 | oneiro-scope | 0 | 0 |
-| packages | 1 | 0 |
+| packages | 2 | 0 |
+| packages/mcp-app | 2 | 5 |
+| packages/mcp-app/src | 0 | 7 |
+| packages/mcp-app/test | 0 | 2 |
 | packages/chart-kit | 2 | 3 |
 | packages/chart-kit/src | 0 | 7 |
 | packages/chart-kit/test | 0 | 3 |
@@ -98,9 +101,11 @@
 | backend/alembic/versions | 0 | 4 |
 | backend/models | 0 | 7 |
 | backend/utils | 0 | 2 |
-| backend/mcp | 1 | 4 |
+| backend/mcp | 2 | 4 |
+| backend/mcp/apps | 1 | 1 |
+| backend/mcp/apps/dist | 0 | 5 |
 | backend/mcp/tools | 0 | 14 |
-| backend/tests | 1 | 48 |
+| backend/tests | 1 | 49 |
 | backend/tests/dreams | 1 | 0 |
 | backend/tests/dreams/golden | 0 | 3 |
 | backend/middleware | 0 | 2 |
@@ -146,4 +151,4 @@
 | external/DReAMy | 1 | 1 |
 | external/DReAMy/dreamy | 0 | 3 |
 
-**ИТОГО:** папок = 142, файлов = 517
+**ИТОГО:** папок = 147, файлов = 538
