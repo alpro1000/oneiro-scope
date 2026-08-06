@@ -29,6 +29,9 @@ const OUT_DIR = resolve(REPO, 'backend/mcp/apps/dist');
 
 const VIEWS = [
   { entry: 'src/natal-wheel.ts', out: 'natal-wheel.html', title: 'Natal wheel' },
+  { entry: 'src/acg-map.ts', out: 'acg-map.html', title: 'Astrocartography' },
+  { entry: 'src/lunar-month.ts', out: 'lunar-month.html', title: 'Lunar calendar' },
+  { entry: 'src/dream-evidence.ts', out: 'dream-evidence.html', title: 'Dream coding' },
 ];
 
 /** Design tokens, minus anything that would need the network. */
@@ -86,6 +89,60 @@ tr:last-child td{border-bottom:0}
 .asp-num{font-size:11.5px;text-align:left;margin-top:1px}
 .disclaimer{color:var(--muted);font-size:12.5px;line-height:1.6;margin:11px 0 0;max-width:64ch}
 .disclaimer b{color:var(--parchment);font-weight:500}
+
+/* --- shared page furniture ------------------------------------------------ */
+.head{margin-bottom:14px}
+h1{font-family:var(--font-display);font-weight:400;letter-spacing:-.015em;
+  line-height:1.02;font-size:clamp(22px,3.4vw,32px);margin:6px 0 0}
+.lede{color:var(--muted);font-size:13.5px;line-height:1.6;margin:8px 0 0;max-width:62ch}
+.head .eyebrow{margin-bottom:0}
+
+/* --- astrocartography ----------------------------------------------------- */
+svg{display:block;width:100%;height:auto;border:1px solid var(--grat-2)}
+.legend{margin-top:12px;border:1px solid var(--grat-2);background:var(--panel);padding:11px 13px}
+.lgs{display:flex;flex-wrap:wrap;gap:6px 14px;margin-bottom:9px}
+.lg{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--muted)}
+.lg i{width:13px;height:2px;display:inline-block}
+.kinds{display:flex;flex-wrap:wrap;gap:5px 18px;font-size:11.5px;color:var(--dim);
+  padding-top:8px;border-top:1px solid var(--grat-1)}
+.kinds span{display:inline-flex;align-items:center;gap:6px}
+.k{width:16px;height:0;border-top:1.4px solid var(--muted);display:inline-block}
+.k.dashed{border-top-style:dashed}
+.k.dotted{border-top-style:dotted}
+
+/* --- lunar calendar ------------------------------------------------------- */
+.lgrid{display:grid;gap:1px;background:var(--grat-1);
+  grid-template-columns:repeat(auto-fill,minmax(132px,1fr));border:1px solid var(--grat-2)}
+.lday{background:var(--panel);padding:9px 10px}
+.lday-top{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.lday-date{font-size:10.5px;color:var(--dim)}
+.lday-n{font-size:19px;color:var(--brass);margin-top:4px;line-height:1.1}
+.lday-n .dim{font-size:10.5px}
+.lday-phase{font-size:11.5px;color:var(--muted);margin-top:2px}
+.lday-illum{font-size:11.5px;margin-top:3px}
+.lday-illum .dim{font-size:10px}
+.lday-sign{font-size:11.5px;color:var(--muted);margin-top:2px}
+.lday-start{font-size:10.5px;margin-top:2px}
+
+/* --- dream coding --------------------------------------------------------- */
+.dream{font-size:14.5px;line-height:1.85;color:var(--parchment);margin:0;max-width:66ch}
+mark.ev{background:transparent;color:var(--parchment);
+  border-bottom:2px solid var(--brass);padding-bottom:1px}
+mark.ev sup{font-family:var(--font-data);font-size:9.5px;color:var(--brass);
+  margin-left:2px;vertical-align:super}
+.ev-row{padding:8px 0;border-bottom:1px solid var(--grat-1)}
+.ev-row:last-child{border-bottom:0}
+.ev-head{display:flex;align-items:baseline;gap:7px;font-size:12.5px}
+.ev-n{color:var(--brass);min-width:1.4em}
+.ev-cat{color:var(--parchment)}
+.ev-conf{margin-left:auto;color:var(--dim);font-size:11px}
+.ev-quote{font-size:13px;color:var(--muted);margin:3px 0 0;padding-left:2.1em;line-height:1.5}
+.ev-meta,.ev-src{font-size:11px;padding-left:2.1em;margin-top:2px}
+.deg{margin:0;padding-left:17px;font-size:11.5px;color:var(--notice-ink)}
+.deg li{margin-bottom:3px}
+.llm{margin-top:14px}
+.prose{font-size:13.5px;line-height:1.7;color:var(--muted);margin:9px 0 0;max-width:66ch;
+  white-space:pre-wrap}
 `;
 
 async function renderView(view) {
@@ -99,7 +156,11 @@ async function renderView(view) {
     absWorkingDir: HERE,
     // chart-kit is source-only (main points at src/index.ts); esbuild follows
     // it through the workspace symlink and inlines it — ~10 kB minified.
-    alias: { '@oneiroscope/chart-kit': resolve(REPO, 'packages/chart-kit/src/index.ts') },
+    alias: {
+      '@oneiroscope/chart-kit': resolve(REPO, 'packages/chart-kit/src/index.ts'),
+      // One copy of the coastline, shared with the Next app.
+      '@frontend/world-coast': resolve(REPO, 'frontend/lib/world-coast.ts'),
+    },
   });
   const js = result.outputFiles[0].text;
   const css = `${await tokens()}\n${VIEW_CSS}`;

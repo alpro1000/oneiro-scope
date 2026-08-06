@@ -23,9 +23,8 @@ import {
   wheelSvg,
   type ChartCore,
 } from '@oneiroscope/chart-kit';
-import { HostBridge, type HostContext, type ToolResult } from './bridge';
-
-type Lang = 'ru' | 'en';
+import type { ToolResult } from './bridge';
+import { esc, fromResult, mountView, type Lang } from './view';
 
 const SIGN_GLYPH = ['♈', '♉', '♊', '♋', '♌', '♍', '♎', '♏', '♐', '♑', '♒', '♓'];
 const P_GLYPH: Record<string, string> = {
@@ -95,9 +94,6 @@ function fmtSign(lon: number): string {
 /** Orb to hundredths — never rounded in a flattering direction. */
 const fmtOrb = (orb: number) => `${orb.toFixed(2)}°`;
 
-const esc = (s: string) =>
-  s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]!));
-
 interface Payload {
   chart_core?: ChartCore;
   provenance?: Record<string, unknown>;
@@ -105,31 +101,13 @@ interface Payload {
 }
 
 function pickPayload(result: ToolResult): Payload | null {
-  const sc = result.structuredContent;
-  if (sc && typeof sc === 'object') {
-    if ((sc as Payload).chart_core) return sc as Payload;
-  }
-  // Some hosts deliver the JSON as a text content block instead.
-  for (const block of result.content ?? []) {
-    const b = block as { type?: string; text?: string };
-    if (b?.type === 'text' && typeof b.text === 'string') {
-      try {
-        const parsed = JSON.parse(b.text);
-        if (parsed?.chart_core) return parsed as Payload;
-      } catch {
-        /* not JSON — the next block may be */
-      }
-    }
-  }
-  return null;
+  return fromResult<Payload>(result, (c) =>
+    (c as Payload).chart_core ? (c as Payload) : null);
 }
 
-function render(payload: Payload | null, lang: Lang): string {
+function render(payload: Payload, lang: Lang): string {
   const t = COPY[lang];
-  if (!payload?.chart_core) {
-    return `<p class="note">${t.empty}</p>`;
-  }
-  const core = payload.chart_core;
+  const core = payload.chart_core!;
   const b = core.birth;
   const timed = b.time_known;
 
@@ -239,31 +217,11 @@ function render(payload: Payload | null, lang: Lang): string {
 }
 
 // ── boot ─────────────────────────────────────────────────────────────────────
-const root = document.getElementById('root')!;
-let lang: Lang = 'ru';
-
-function paint(payload: Payload | null): void {
-  root.innerHTML = render(payload, lang);
-  bridge.reportSize();
-}
-
-const bridge = new HostBridge({
-  onToolResult: (result) => paint(pickPayload(result)),
-  onContext: (ctx) => applyContext(ctx),
+mountView<Payload>({
+  pick: pickPayload,
+  render,
+  strings: {
+    ru: { waiting: COPY.ru.waiting, empty: COPY.ru.empty },
+    en: { waiting: COPY.en.waiting, empty: COPY.en.empty },
+  },
 });
-
-function applyContext(ctx: HostContext): void {
-  if (ctx.theme) document.documentElement.dataset.theme = ctx.theme;
-}
-
-root.innerHTML = `<p class="note">${COPY[lang].waiting}</p>`;
-
-bridge.initialize().then((ctx) => {
-  if (ctx) applyContext(ctx);
-  bridge.reportSize();
-});
-
-// Reflow (host resized the container, fonts settled) changes our height.
-if (typeof ResizeObserver !== 'undefined') {
-  new ResizeObserver(() => bridge.reportSize()).observe(document.documentElement);
-}

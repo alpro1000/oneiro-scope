@@ -78,12 +78,18 @@ mcp.tool(meta=apps.tool_ui_meta(apps.NATAL_WHEEL) if _ui_views else None)(
 mcp.tool()(with_meta(a.forecast_event))
 
 # --- Dreams ------------------------------------------------------------------
-mcp.tool()(with_meta(d.analyze_dream))
+# The coding view shows the dream text with each coded clause marked — the one
+# place a count and its evidence can be read in a single glance.
+mcp.tool(meta=apps.tool_ui_meta(apps.DREAM_EVIDENCE) if _ui_views else None)(
+    with_meta(d.analyze_dream)
+)
 mcp.tool()(with_meta(d.dream_series_stats))
 
 # --- Lunar -------------------------------------------------------------------
 mcp.tool()(with_meta(l.get_lunar_day))
-mcp.tool()(with_meta(l.get_lunar_period))
+mcp.tool(meta=apps.tool_ui_meta(apps.LUNAR_MONTH) if _ui_views else None)(
+    with_meta(l.get_lunar_period)
+)
 
 # --- Geo (the natal chain's input control) -----------------------------------
 mcp.tool()(with_meta(g.search_city))
@@ -93,7 +99,10 @@ mcp.tool()(with_meta(g.validate_birth_data))
 # Deterministic chart geometry cited as ASTRONOMY-layer evidence.
 mcp.tool()(with_meta(sa.compute_transits))
 mcp.tool()(with_meta(sa.astrocartography_scan))
-mcp.tool()(with_meta(sa.astrocartography_lines))
+# The line set is a MAP; a list of coordinates is not the same object.
+mcp.tool(meta=apps.tool_ui_meta(apps.ACG_MAP) if _ui_views else None)(
+    with_meta(sa.astrocartography_lines)
+)
 mcp.tool()(with_meta(sa.astrocartography_point))
 mcp.tool()(with_meta(sa.compare_relocations))
 mcp.tool()(with_meta(sa.solar_return_chart))

@@ -100,6 +100,12 @@ jobs:
         working-directory: packages/mcp-app
         run: npm run typecheck
 
+      - name: View unit tests
+        # markUp ties a coded clause back to its span in the dream text. It
+        # shipped case-sensitive once, silently dropping a count's evidence.
+        working-directory: packages/mcp-app
+        run: npm test
+
       - name: Fail if a committed view is stale
         working-directory: packages/mcp-app
         run: npm run check

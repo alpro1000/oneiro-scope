@@ -35,7 +35,8 @@ def test_every_declared_view_has_a_built_bundle():
     )
 
 
-def test_the_view_is_self_contained_and_reaches_no_network():
+@pytest.mark.parametrize("view", apps.VIEWS, ids=lambda v: v.slug)
+def test_the_view_is_self_contained_and_reaches_no_network(view):
     """The security claim that lets the resource declare no CSP domains.
 
     If a view ever needs a socket or an external asset, the host must be told
@@ -48,7 +49,7 @@ def test_the_view_is_self_contained_and_reaches_no_network():
     identifier the parser never dereferences. Grepping for "http" would fail
     on that and teach the next person to weaken the test.
     """
-    html = apps.NATAL_WHEEL.html()
+    html = view.html()
 
     forbidden = {
         "fetch(": "network fetch",
@@ -67,8 +68,18 @@ def test_the_view_is_self_contained_and_reaches_no_network():
     hits = [why for token, why in forbidden.items() if token in html]
     assert not hits, f"view is not offline — found: {', '.join(hits)}"
 
-    # And the one URL-shaped string that IS expected stays legitimate.
-    assert 'xmlns="http://www.w3.org/2000/svg"' in html
+    # Belt and braces on the same claim: the ONLY URL-shaped string a view may
+    # contain is the SVG namespace, which is an identifier the parser never
+    # dereferences. (Inline SVG in HTML does not need it declared — the HTML
+    # parser assigns the namespace — so its presence is optional, but anything
+    # else URL-shaped is not.)
+    leftovers = [
+        html[i:i + 60]
+        for i in range(len(html))
+        if html.startswith(("http://", "https://"), i)
+        and not html.startswith("http://www.w3.org/2000/svg", i)
+    ]
+    assert not leftovers, f"unexpected URL in {view.slug}: {leftovers[:2]}"
 
 
 def test_tool_meta_points_at_a_registered_view():
@@ -92,24 +103,29 @@ def test_a_missing_bundle_raises_rather_than_serving_a_blank_page(tmp_path):
 
 
 @pytest.mark.anyio
-async def test_the_server_registers_the_view_as_a_ui_resource():
+async def test_the_server_registers_every_view_as_a_ui_resource():
     from backend.mcp.server import mcp
 
     resources = await mcp.list_resources()
     by_uri = {str(r.uri): r for r in resources}
-    assert apps.NATAL_WHEEL.uri in by_uri, sorted(by_uri)
-    assert by_uri[apps.NATAL_WHEEL.uri].mimeType == apps.UI_MIME
+    for view in apps.VIEWS:
+        assert view.uri in by_uri, sorted(by_uri)
+        assert by_uri[view.uri].mimeType == apps.UI_MIME
 
 
 @pytest.mark.anyio
-async def test_reading_the_resource_returns_the_document():
+@pytest.mark.parametrize("view", apps.VIEWS, ids=lambda v: v.slug)
+async def test_reading_a_resource_returns_its_own_document(view):
+    """Per view, not just one: a late-binding closure in the registration
+    loop would happily serve the last view's HTML under every URI."""
     from backend.mcp.server import mcp
 
-    contents = list(await mcp.read_resource(apps.NATAL_WHEEL.uri))
+    contents = list(await mcp.read_resource(view.uri))
     assert contents, "resources/read returned nothing"
     body = contents[0]
     assert body.mime_type == apps.UI_MIME
     assert body.content.lstrip().startswith("<!doctype html")
+    assert body.content == view.html(), f"{view.slug} served another view's body"
 
 
 @pytest.mark.anyio
@@ -134,7 +150,27 @@ async def test_no_other_tool_accidentally_claims_a_view():
         t.name for t in tools
         if (t.model_dump(by_alias=True, exclude_none=True).get("_meta") or {}).get("ui")
     }
-    assert with_ui == {"calculate_natal_chart"}, with_ui
+    assert with_ui == {
+        "calculate_natal_chart",
+        "analyze_dream",
+        "get_lunar_period",
+        "astrocartography_lines",
+    }, with_ui
+
+
+@pytest.mark.anyio
+async def test_every_declared_view_is_claimed_by_exactly_one_tool():
+    """A view nothing points at is dead weight the host will never fetch."""
+    from backend.mcp.server import mcp
+
+    claimed: list[str] = []
+    for tool in await mcp.list_tools():
+        ui = (tool.model_dump(by_alias=True, exclude_none=True).get("_meta") or {}).get("ui")
+        if ui:
+            claimed.append(ui["resourceUri"])
+
+    assert sorted(claimed) == sorted(v.uri for v in apps.VIEWS)
+    assert len(claimed) == len(set(claimed)), "two tools share one view"
 
 
 @pytest.fixture

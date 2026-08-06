@@ -8,7 +8,8 @@
  *
  * What the view does here:
  *   → `ui/initialize`                      handshake, learns theme and size
- *   ← `ui/notifications/tool-result`       the chart payload to render
+ *   ← `ui/notifications/tool-input`        the arguments the tool was called with
+ *   ← `ui/notifications/tool-result`       the payload to render
  *   ← `ui/notifications/host-context-changed`  theme / display-mode changes
  *   → `ui/notifications/size-changed`      so the host can size the iframe
  *
@@ -35,6 +36,16 @@ export interface ToolResult {
 
 type Handler = {
   onToolResult?: (result: ToolResult) => void;
+  /**
+   * The arguments the tool was called with.
+   *
+   * Worth having on its own: the dream view highlights the coded clauses
+   * inside the dream TEXT, and the server never echoes that text back — it
+   * would be a pointless round trip of the user's own words. The host already
+   * holds the arguments and hands them over, so the text reaches the view
+   * without the server ever repeating it.
+   */
+  onToolInput?: (args: Record<string, unknown>) => void;
   onContext?: (ctx: HostContext) => void;
 };
 
@@ -102,6 +113,9 @@ export class HostBridge {
     const msg = ev.data;
     if (!msg || msg.jsonrpc !== '2.0' || typeof msg.method !== 'string') return;
     switch (msg.method) {
+      case 'ui/notifications/tool-input':
+        this.handler.onToolInput?.((msg.params ?? {}).arguments ?? {});
+        break;
       case 'ui/notifications/tool-result':
         this.handler.onToolResult?.(msg.params ?? {});
         break;

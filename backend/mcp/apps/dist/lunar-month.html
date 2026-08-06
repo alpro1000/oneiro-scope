@@ -1,0 +1,268 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Lunar calendar · OneiroScope</title>
+<style>/* OneiroScope design tokens
+   Единственный источник цвета, шрифтов и метрик.
+   Хардкод hex-значений в компонентах запрещён — только var().
+   Эталонная реализация: astrocartography.html */
+
+
+
+:root {
+  /* --- surfaces: ночная морская карта --- */
+  --abyss:      #071320;   /* фон страницы, глубокая вода */
+  --shelf:      #0C1E2E;   /* контейнеры */
+  --panel:      #0A1B29;   /* панели прибора */
+  --land:       #152C3E;   /* заливка суши */
+  --land-edge:  #24445B;   /* контур берега */
+  --grat-1:     #1B3549;   /* сетка, разделители */
+  --grat-2:     #22415A;   /* рамки */
+
+  /* --- ink --- */
+  --parchment:  #E7DDC7;   /* основной текст */
+  --muted:      #89A0B1;   /* второстепенный */
+  --dim:        #5C7385;   /* подписи, метки осей */
+
+  /* --- accent: единственный --- */
+  --brass:      #D2A64B;
+  --brass-dim:  #8A6E32;   /* eyebrow, служебные метки */
+
+  /* --- notice: приглушённая латунь для лимитов/предупреждений (не второй акцент) --- */
+  --notice-bg:  #20180C;   /* тёмно-янтарная подложка сообщения о лимите */
+  --notice-ink: #E8D4A0;   /* текст на ней */
+
+  /* --- планеты: классические металлы --- */
+  --p-sun:      #E8C25A;   /* золото */
+  --p-moon:     #C7D3DD;   /* серебро */
+  --p-mercury:  #9FD5C8;   /* ртуть */
+  --p-venus:    #DB8F6C;   /* медь */
+  --p-mars:     #C6544B;   /* железо */
+  --p-jupiter:  #B9A8DA;   /* олово */
+  --p-saturn:   #8493A2;   /* свинец */
+  --p-uranus:   #6FBACB;
+  --p-neptune:  #5F84BC;
+  --p-pluto:    #997280;
+  --p-truenode: var(--muted);      /* лунный узел — служебная точка, не металл */
+  --p-chiron:   var(--p-mercury);  /* кентавр — ближе всего к ртути */
+
+  /* --- типографика: три гарнитуры, роли фиксированы --- */
+  --font-display: 'Bodoni Moda', Georgia, serif;
+  --font-ui:      'Instrument Sans', system-ui, -apple-system, sans-serif;
+  --font-data:    'IBM Plex Mono', ui-monospace, monospace;
+
+  /* --- метрики --- */
+  --radius: 0;             /* прямые углы везде */
+  --hair: 1px;
+  --panel-w: 300px;
+  --collapse: 900px;
+
+  --track-eyebrow: .22em;
+  --track-display: -.015em;
+  --lh-display: .94;
+}
+
+/* Прибор не скруглён и не отбрасывает тень. Границы вместо теней. */
+* { border-radius: var(--radius); box-shadow: none; }
+
+body {
+  background: var(--abyss);
+  color: var(--parchment);
+  font-family: var(--font-ui);
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, .display {
+  font-family: var(--font-display);
+  font-weight: 400;
+  letter-spacing: var(--track-display);
+  line-height: var(--lh-display);
+}
+h1 em, .display em { font-style: italic; color: var(--brass); }
+
+/* Всё, что является числом или измерением — моноширинным.
+   Это сигнал «здесь расчёт, а не мнение». Главный дифференциатор. */
+.num, .deg, .orb, .coord, .ver, code, kbd, samp {
+  font-family: var(--font-data);
+  font-variant-numeric: tabular-nums;
+}
+
+.eyebrow {
+  font-family: var(--font-data);
+  font-size: 10.5px;
+  letter-spacing: var(--track-eyebrow);
+  text-transform: uppercase;
+  color: var(--brass-dim);
+}
+
+/* Панель прибора: блоки через 1px разделитель */
+.panel        { border: var(--hair) solid var(--grat-2); background: var(--panel); }
+.panel-block  { padding: 13px 15px; border-bottom: var(--hair) solid var(--grat-1); }
+.panel-block:last-child { border-bottom: 0; }
+
+/* Основной паттерн компоновки */
+.stage {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) var(--panel-w);
+  gap: clamp(12px, 1.4vw, 20px);
+  align-items: start;
+}
+@media (max-width: 900px) { .stage { grid-template-columns: 1fr; } }
+
+/* Провенанс: обязателен на каждом экране с расчётом.
+   Это не мелкий шрифт для юристов, это доказательство работы прибора. */
+.provenance {
+  font-family: var(--font-data);
+  font-size: 10px;
+  letter-spacing: .06em;
+  color: var(--dim);
+  padding-top: 12px;
+  border-top: var(--hair) solid var(--grat-1);
+}
+
+/* Пограничное положение планеты — помечается явно, не подразумевается */
+.borderline { color: var(--brass); }
+.borderline::after { content: ' \00B1'; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition: none !important; animation: none !important; }
+}
+
+/* --- Compatibility bridge (transitional) ---------------------------------
+   The screens built before this design system (astrology, dreams, face,
+   calendar, Header) reach the palette through Tailwind utilities — bg-bg,
+   text-ink, gold, rounded-lg — that resolve to the OLD variable names below.
+   Until each screen is rebuilt on the instrument system (natal → lunar →
+   price → connect → cabinet), point those names at the nearest new token so
+   nothing renders unstyled and the whole app shifts toward the new look at
+   once. NEW work must use the named tokens above (--abyss, --brass,
+   --parchment, --font-data …), never these. Delete a line here as its screen
+   is rebuilt; delete the block when the last one is. */
+:root {
+  --bg:             var(--abyss);
+  --surface:        var(--shelf);
+  --surface-strong: var(--panel);
+  --gold:           var(--brass);
+  --gold-soft:      rgba(210, 166, 75, 0.24);
+  --ink:            var(--parchment);
+  --ink-muted:      var(--muted);
+  --accent:         var(--brass);   /* one accent only — collapse the old teal onto brass */
+  --danger:         var(--p-mars);
+  --font-sans:      var(--font-ui);
+  --radius-lg: 0; --radius-md: 0; --radius-sm: 0;  /* instruments are not rounded */
+  --shadow-gold: none;
+}
+
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;background:var(--abyss);color:var(--parchment);
+  font-family:var(--font-ui);font-size:14px}
+body{padding:14px}
+.wrap{display:grid;gap:16px;grid-template-columns:minmax(0,1fr) minmax(0,300px);align-items:start}
+@media (max-width:720px){.wrap{grid-template-columns:1fr}}
+.wheel{color:var(--parchment)}
+.wheel svg{display:block;width:100%;height:auto}
+.panels{display:grid;gap:14px}
+section{border:1px solid var(--grat-2);background:var(--panel);padding:11px 13px}
+.eyebrow{font-family:var(--font-data);font-size:10.5px;letter-spacing:.22em;
+  text-transform:uppercase;color:var(--brass);margin-bottom:8px}
+.kv{display:flex;justify-content:space-between;gap:12px;padding:3px 0;
+  font-size:12.5px;color:var(--muted)}
+.kv b{font-weight:400;color:var(--parchment)}
+table{width:100%;border-collapse:collapse}
+td{padding:3px 0;font-size:12.5px;vertical-align:baseline;border-bottom:1px solid var(--grat-1)}
+tr:last-child td{border-bottom:0}
+.num{font-family:var(--font-data);color:var(--parchment);text-align:right;white-space:nowrap}
+.body{color:var(--muted)}
+.dim{color:var(--dim)}
+.glyph{font-size:15px;width:1.6em}
+.flag{color:var(--brass);margin-left:5px}
+.note{border:1px solid var(--brass-dim);background:var(--notice-bg);color:var(--notice-ink);
+  padding:9px 11px;font-size:12.5px;line-height:1.55;margin:0}
+.prov{display:flex;flex-wrap:wrap;gap:5px 22px;margin-top:14px;padding-top:10px;
+  border-top:1px solid var(--grat-1);font-family:var(--font-data);font-size:11px;color:var(--parchment)}
+.prov b{font-weight:400;color:var(--muted)}
+.asp{padding:5px 0;border-bottom:1px solid var(--grat-1)}
+.asp:last-child{border-bottom:0}
+.asp-pair{font-size:12.5px;color:var(--muted)}
+.asp-num{font-size:11.5px;text-align:left;margin-top:1px}
+.disclaimer{color:var(--muted);font-size:12.5px;line-height:1.6;margin:11px 0 0;max-width:64ch}
+.disclaimer b{color:var(--parchment);font-weight:500}
+
+/* --- shared page furniture ------------------------------------------------ */
+.head{margin-bottom:14px}
+h1{font-family:var(--font-display);font-weight:400;letter-spacing:-.015em;
+  line-height:1.02;font-size:clamp(22px,3.4vw,32px);margin:6px 0 0}
+.lede{color:var(--muted);font-size:13.5px;line-height:1.6;margin:8px 0 0;max-width:62ch}
+.head .eyebrow{margin-bottom:0}
+
+/* --- astrocartography ----------------------------------------------------- */
+svg{display:block;width:100%;height:auto;border:1px solid var(--grat-2)}
+.legend{margin-top:12px;border:1px solid var(--grat-2);background:var(--panel);padding:11px 13px}
+.lgs{display:flex;flex-wrap:wrap;gap:6px 14px;margin-bottom:9px}
+.lg{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--muted)}
+.lg i{width:13px;height:2px;display:inline-block}
+.kinds{display:flex;flex-wrap:wrap;gap:5px 18px;font-size:11.5px;color:var(--dim);
+  padding-top:8px;border-top:1px solid var(--grat-1)}
+.kinds span{display:inline-flex;align-items:center;gap:6px}
+.k{width:16px;height:0;border-top:1.4px solid var(--muted);display:inline-block}
+.k.dashed{border-top-style:dashed}
+.k.dotted{border-top-style:dotted}
+
+/* --- lunar calendar ------------------------------------------------------- */
+.lgrid{display:grid;gap:1px;background:var(--grat-1);
+  grid-template-columns:repeat(auto-fill,minmax(132px,1fr));border:1px solid var(--grat-2)}
+.lday{background:var(--panel);padding:9px 10px}
+.lday-top{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.lday-date{font-size:10.5px;color:var(--dim)}
+.lday-n{font-size:19px;color:var(--brass);margin-top:4px;line-height:1.1}
+.lday-n .dim{font-size:10.5px}
+.lday-phase{font-size:11.5px;color:var(--muted);margin-top:2px}
+.lday-illum{font-size:11.5px;margin-top:3px}
+.lday-illum .dim{font-size:10px}
+.lday-sign{font-size:11.5px;color:var(--muted);margin-top:2px}
+.lday-start{font-size:10.5px;margin-top:2px}
+
+/* --- dream coding --------------------------------------------------------- */
+.dream{font-size:14.5px;line-height:1.85;color:var(--parchment);margin:0;max-width:66ch}
+mark.ev{background:transparent;color:var(--parchment);
+  border-bottom:2px solid var(--brass);padding-bottom:1px}
+mark.ev sup{font-family:var(--font-data);font-size:9.5px;color:var(--brass);
+  margin-left:2px;vertical-align:super}
+.ev-row{padding:8px 0;border-bottom:1px solid var(--grat-1)}
+.ev-row:last-child{border-bottom:0}
+.ev-head{display:flex;align-items:baseline;gap:7px;font-size:12.5px}
+.ev-n{color:var(--brass);min-width:1.4em}
+.ev-cat{color:var(--parchment)}
+.ev-conf{margin-left:auto;color:var(--dim);font-size:11px}
+.ev-quote{font-size:13px;color:var(--muted);margin:3px 0 0;padding-left:2.1em;line-height:1.5}
+.ev-meta,.ev-src{font-size:11px;padding-left:2.1em;margin-top:2px}
+.deg{margin:0;padding-left:17px;font-size:11.5px;color:var(--notice-ink)}
+.deg li{margin-bottom:3px}
+.llm{margin-top:14px}
+.prose{font-size:13.5px;line-height:1.7;color:var(--muted);margin:9px 0 0;max-width:66ch;
+  white-space:pre-wrap}
+</style>
+</head>
+<body><div id="root"></div><script>"use strict";(()=>{var y="2026-01-26",u=class{constructor(e){this.nextId=1;this.lastSize={width:0,height:0};this.handler=e,window.addEventListener("message",t=>this.receive(t))}initialize(e=4e3){let t=this.nextId++;return new Promise(n=>{let a=!1,r=o=>{a||(a=!0,window.removeEventListener("message",s),n(o))},s=o=>{let l=o.data;!l||l.jsonrpc!=="2.0"||l.id!==t||r(l.result?.hostContext??{})};window.addEventListener("message",s),this.send({jsonrpc:"2.0",id:t,method:"ui/initialize",params:{capabilities:{},clientInfo:{name:"oneiroscope-view",version:"0.1.0"},protocolVersion:y}}),window.setTimeout(()=>r(null),e)})}reportSize(){let e=document.documentElement,t=Math.ceil(e.scrollWidth),n=Math.ceil(e.scrollHeight);t===this.lastSize.width&&n===this.lastSize.height||(this.lastSize={width:t,height:n},this.send({jsonrpc:"2.0",method:"ui/notifications/size-changed",params:{width:t,height:n}}))}receive(e){let t=e.data;if(!(!t||t.jsonrpc!=="2.0"||typeof t.method!="string"))switch(t.method){case"ui/notifications/tool-input":this.handler.onToolInput?.((t.params??{}).arguments??{});break;case"ui/notifications/tool-result":this.handler.onToolResult?.(t.params??{});break;case"ui/notifications/host-context-changed":this.handler.onContext?.(t.params??{});break;case"ui/resource-teardown":t.id!==void 0&&this.send({jsonrpc:"2.0",id:t.id,result:{}});break;default:break}}send(e){window.parent.postMessage(e,"*")}};function f(i){let e=i?.locale;return e==="en"||e==="ru"?e:document.documentElement.lang==="en"?"en":"ru"}function p(i,e){let t=i.structuredContent;if(t&&typeof t=="object"){let n=e(t);if(n)return n}for(let n of i.content??[]){let a=n;if(!(a?.type!=="text"||typeof a.text!="string"))try{let r=JSON.parse(a.text);if(r&&typeof r=="object"){let s=e(r);if(s)return s}}catch{}}return null}function h(i){let e=document.getElementById("root");if(!e)throw new Error("view shell has no #root");let t=s=>`<p class="note">${s}</p>`,n=document.documentElement.lang==="en"?"en":"ru",a={},r=new u({onToolInput:s=>{a=s??{}},onToolResult:s=>{let o=i.pick(s);n=o?f(o):n,e.innerHTML=o?i.render(o,n,a):t(i.strings[n].empty),r.reportSize()},onContext:s=>{s.theme&&(document.documentElement.dataset.theme=s.theme),r.reportSize()}});e.innerHTML=t(i.strings[n].waiting),r.initialize().then(s=>{s?.theme&&(document.documentElement.dataset.theme=s.theme),r.reportSize()}),typeof ResizeObserver<"u"&&new ResizeObserver(()=>r.reportSize()).observe(document.documentElement)}var c=i=>i.replace(/[&<>"]/g,e=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"})[e]);var v={ru:{new_moon:"\u043D\u043E\u0432\u043E\u043B\u0443\u043D\u0438\u0435",waxing_crescent:"\u0440\u0430\u0441\u0442\u0443\u0449\u0438\u0439 \u0441\u0435\u0440\u043F",first_quarter:"\u043F\u0435\u0440\u0432\u0430\u044F \u0447\u0435\u0442\u0432\u0435\u0440\u0442\u044C",waxing_gibbous:"\u0440\u0430\u0441\u0442\u0443\u0449\u0430\u044F",full_moon:"\u043F\u043E\u043B\u043D\u043E\u043B\u0443\u043D\u0438\u0435",waning_gibbous:"\u0443\u0431\u044B\u0432\u0430\u044E\u0449\u0430\u044F",last_quarter:"\u043F\u043E\u0441\u043B\u0435\u0434\u043D\u044F\u044F \u0447\u0435\u0442\u0432\u0435\u0440\u0442\u044C",waning_crescent:"\u0443\u0431\u044B\u0432\u0430\u044E\u0449\u0438\u0439 \u0441\u0435\u0440\u043F"},en:{new_moon:"new moon",waxing_crescent:"waxing crescent",first_quarter:"first quarter",waxing_gibbous:"waxing gibbous",full_moon:"full moon",waning_gibbous:"waning gibbous",last_quarter:"last quarter",waning_crescent:"waning crescent"}},b={Aries:"\u2648",Taurus:"\u2649",Gemini:"\u264A",Cancer:"\u264B",Leo:"\u264C",Virgo:"\u264D",Libra:"\u264E",Scorpio:"\u264F",Sagittarius:"\u2650",Capricorn:"\u2651",Aquarius:"\u2652",Pisces:"\u2653"},d={ru:{title:"\u041B\u0443\u043D\u043D\u044B\u0439 \u043A\u0430\u043B\u0435\u043D\u0434\u0430\u0440\u044C",day:"\u043B\u0443\u043D\u043D\u044B\u0439 \u0434\u0435\u043D\u044C",starts:"\u043D\u0430\u0447\u0430\u043B\u043E",illum:"\u043E\u0441\u0432\u0435\u0449\u0451\u043D\u043D\u043E\u0441\u0442\u044C",sign:"\u041B\u0443\u043D\u0430 \u0432 \u0437\u043D\u0430\u043A\u0435",tz:"\u0447\u0430\u0441\u043E\u0432\u043E\u0439 \u043F\u043E\u044F\u0441",days:"\u0434\u043D\u0435\u0439",waiting:"\u041E\u0436\u0438\u0434\u0430\u043D\u0438\u0435 \u043A\u0430\u043B\u0435\u043D\u0434\u0430\u0440\u044F\u2026",empty:"\u041D\u0435\u0442 \u0434\u0430\u043D\u043D\u044B\u0445. \u0412\u044B\u0437\u043E\u0432\u0438\u0442\u0435 get_lunar_period.",disclaimerLead:"\u0424\u0430\u0437\u044B \u0438 \u0437\u043D\u0430\u043A\u0438 \u2014 \u0430\u0441\u0442\u0440\u043E\u043D\u043E\u043C\u0438\u044F, \u043E\u043D\u0438 \u043F\u0440\u043E\u0432\u0435\u0440\u044F\u0435\u043C\u044B.",disclaimer:"\u0420\u0435\u043A\u043E\u043C\u0435\u043D\u0434\u0430\u0446\u0438\u0438 \u043B\u0443\u043D\u043D\u043E\u0433\u043E \u0434\u043D\u044F \u2014 \u0442\u0440\u0430\u0434\u0438\u0446\u0438\u044F, \u0430 \u043D\u0435 \u043F\u0440\u043E\u0433\u043D\u043E\u0437. \u0420\u0435\u0444\u043B\u0435\u043A\u0441\u0438\u0432\u043D\u043E-\u0440\u0430\u0437\u0432\u043B\u0435\u043A\u0430\u0442\u0435\u043B\u044C\u043D\u044B\u0439 \u043C\u0430\u0442\u0435\u0440\u0438\u0430\u043B, \u043D\u0435 \u043C\u0435\u0434\u0438\u0446\u0438\u043D\u0441\u043A\u0438\u0439, \u043F\u0441\u0438\u0445\u043E\u043B\u043E\u0433\u0438\u0447\u0435\u0441\u043A\u0438\u0439, \u044E\u0440\u0438\u0434\u0438\u0447\u0435\u0441\u043A\u0438\u0439 \u0438\u043B\u0438 \u0444\u0438\u043D\u0430\u043D\u0441\u043E\u0432\u044B\u0439 \u0441\u043E\u0432\u0435\u0442."},en:{title:"Lunar calendar",day:"lunar day",starts:"starts",illum:"illumination",sign:"Moon in",tz:"timezone",days:"days",waiting:"Waiting for the calendar\u2026",empty:"No data. Call get_lunar_period.",disclaimerLead:"Phases and signs are astronomy \u2014 verifiable.",disclaimer:"What a lunar day is good for is a tradition, not a prediction. Reflective / entertainment material, not medical, psychological, legal or financial advice."}};function _(i,e){let n=e.startsWith("waning")||e==="last_quarter",a=Math.max(0,Math.min(1,i)),r=Math.abs(11*(1-2*a)),s=n?0:1,o=a<.5?n?1:0:n?0:1;return`<svg viewBox="-14 -14 28 28" width="26" height="26" aria-hidden="true"><circle cx="0" cy="0" r="11" fill="var(--shelf)" stroke="var(--grat-2)" stroke-width="0.8"/>${a<=.01?"":a>=.99?'<circle cx="0" cy="0" r="11" fill="var(--p-moon)"/>':`<path d="M 0 -11 A 11 11 0 0 ${s} 0 11 A ${r} 11 0 0 ${o} 0 -11 Z" fill="var(--p-moon)"/>`}</svg>`}function x(i,e){let t=d[e],n=i.days??[],a=n.map(o=>{let l=typeof o.illumination=="number"?o.illumination:0,m=o.phase??"",w=v[e][m]??c(m),g=o.moon_sign?`${b[o.moon_sign]??""} ${c(o.moon_sign)}`:"";return`<div class="lday">
+      <div class="lday-top">
+        <span class="num lday-date">${c(o.date??"")}</span>
+        ${_(l,m)}
+      </div>
+      <div class="num lday-n">${o.lunar_day??"\u2014"}<span class="dim"> ${t.day}</span></div>
+      <div class="lday-phase">${w}</div>
+      <div class="num lday-illum">${(l*100).toFixed(1)}%<span class="dim"> ${t.illum}</span></div>
+      ${g?`<div class="lday-sign">${g}</div>`:""}
+      ${o.lunar_day_start_time?`<div class="num lday-start dim">${t.starts} ${c(o.lunar_day_start_time)}</div>`:""}
+    </div>`}).join(""),r=i.meta??{},s=[i.timezone?`<span><b>${t.tz}</b> ${c(i.timezone)}</span>`:"",`<span><b>${t.days}</b> ${n.length}</span>`,r.request_id?`<span><b>request</b> ${c(String(r.request_id))}</span>`:""].filter(Boolean).join("");return`
+    <div class="head">
+      <div class="eyebrow">Swiss Ephemeris \xB7 SWIEPH</div>
+      <h1>${t.title}</h1>
+    </div>
+    <div class="lgrid">${a}</div>
+    <div class="prov">${s}</div>
+    <p class="disclaimer"><b>${t.disclaimerLead}</b> ${t.disclaimer}</p>
+  `}h({pick:i=>p(i,e=>Array.isArray(e.days)?e:null),render:x,strings:{ru:{waiting:d.ru.waiting,empty:d.ru.empty},en:{waiting:d.en.waiting,empty:d.en.empty}}});})();
+</script></body>
+</html>

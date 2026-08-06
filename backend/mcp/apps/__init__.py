@@ -85,7 +85,39 @@ NATAL_WHEEL = View(
     ),
 )
 
-VIEWS: tuple[View, ...] = (NATAL_WHEEL,)
+ACG_MAP = View(
+    slug="acg-map",
+    filename="acg-map.html",
+    title="Astrocartography",
+    description=(
+        "World map of the astrocartography line set — MC/IC meridians and "
+        "Asc/Desc horizon curves per planet, with the birth place marked. "
+        "Drawn from the GeoJSON the tool returned."
+    ),
+)
+
+LUNAR_MONTH = View(
+    slug="lunar-month",
+    filename="lunar-month.html",
+    title="Lunar calendar",
+    description=(
+        "Grid of lunar days over the requested period: day number, drawn phase, "
+        "illumination as a figure, Moon sign, and when the lunar day begins."
+    ),
+)
+
+DREAM_EVIDENCE = View(
+    slug="dream-evidence",
+    filename="dream-evidence.html",
+    title="Dream coding",
+    description=(
+        "Hall/Van de Castle coding with its evidence: the dream text with every "
+        "coded clause marked, and a ledger tying each count back to the phrase "
+        "it came from. Model prose, if any, is shown last and labelled."
+    ),
+)
+
+VIEWS: tuple[View, ...] = (NATAL_WHEEL, ACG_MAP, LUNAR_MONTH, DREAM_EVIDENCE)
 
 
 def tool_ui_meta(view: View, *, visibility: list[str] | None = None) -> dict[str, Any]:
