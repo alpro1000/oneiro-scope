@@ -1,0 +1,7 @@
+# The repo-wide `dist/` rule (see /.gitignore) does not apply here.
+#
+# These bundles are BUILD OUTPUT that must ship: the backend deploys with pip
+# and no Node step, so the server can only serve an HTML file that is in the
+# repository. Ignoring them would deploy an MCP App whose view 404s, and the
+# `npm run check` gate in CI would be checking a file production never gets.
+!*.html

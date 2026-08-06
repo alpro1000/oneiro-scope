@@ -75,3 +75,31 @@ jobs:
             git diff --stat frontend/public/vendor/chart-kit.js
             exit 1
           fi
+
+  # MCP Apps views (packages/mcp-app → backend/mcp/apps/dist/*.html).
+  # Same trap as the bundle above, one layer further out: the backend deploys
+  # by pip with no Node step, so it serves a COMMITTED html file. A change to
+  # the view source that is never rebuilt ships a green CI and a stale app.
+  mcp-app:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install deps
+        working-directory: packages/mcp-app
+        run: npm install --ignore-scripts
+
+      - name: Typecheck the views
+        # esbuild strips types without checking them. The first natal view
+        # called wheelLayout(core, {size}) against a (core, lat, lon, opts)
+        # signature, built clean, and drew a wheel of NaN coordinates.
+        working-directory: packages/mcp-app
+        run: npm run typecheck
+
+      - name: Fail if a committed view is stale
+        working-directory: packages/mcp-app
+        run: npm run check

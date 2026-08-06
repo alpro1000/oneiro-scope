@@ -20,6 +20,7 @@ import sys
 
 from mcp.server.fastmcp import FastMCP
 
+from backend.mcp import apps
 from backend.mcp.tools._meta import with_meta
 
 from backend.mcp.tools import astrology as a
@@ -61,8 +62,19 @@ mcp = FastMCP(
 # MCP tools. Every stage in analysis_plan.STAGES must name a tool from this
 # registry; tests enforce the sync in both directions.
 
+# --- Interactive views (MCP Apps) --------------------------------------------
+# `ui://` resources the host renders in a sandboxed iframe beside the answer.
+# Purely additive: hosts without the io.modelcontextprotocol/ui extension
+# ignore the metadata and receive the same JSON they always did.
+_ui_views = apps.register(mcp)
+
 # --- Astrology ---------------------------------------------------------------
-mcp.tool()(with_meta(a.calculate_natal_chart))
+# The natal chart is the one tool whose result is a DRAWING as much as a table,
+# so it carries a view. The tool stays visible to the model either way — the
+# chart is useful as data even where nothing is rendered.
+mcp.tool(meta=apps.tool_ui_meta(apps.NATAL_WHEEL) if _ui_views else None)(
+    with_meta(a.calculate_natal_chart)
+)
 mcp.tool()(with_meta(a.forecast_event))
 
 # --- Dreams ------------------------------------------------------------------
