@@ -217,13 +217,18 @@
     },
     {
       "path": "packages/mcp-app",
-      "dirs": 1,
+      "dirs": 2,
       "files": 5
     },
     {
       "path": "packages/mcp-app/src",
       "dirs": 0,
-      "files": 2
+      "files": 7
+    },
+    {
+      "path": "packages/mcp-app/test",
+      "dirs": 0,
+      "files": 1
     },
     {
       "path": "packages/chart-kit",
@@ -503,7 +508,7 @@
     {
       "path": "backend/mcp/apps/dist",
       "dirs": 0,
-      "files": 2
+      "files": 5
     },
     {
       "path": "backend/mcp/tools",
@@ -736,6 +741,6 @@
       "files": 3
     }
   ],
-  "total_dirs": 146,
-  "total_files": 528
+  "total_dirs": 147,
+  "total_files": 537
 }

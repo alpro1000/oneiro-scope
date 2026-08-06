@@ -45,8 +45,9 @@
 | frontend/components | 0 | 11 |
 | oneiro-scope | 0 | 0 |
 | packages | 2 | 0 |
-| packages/mcp-app | 1 | 5 |
-| packages/mcp-app/src | 0 | 2 |
+| packages/mcp-app | 2 | 5 |
+| packages/mcp-app/src | 0 | 7 |
+| packages/mcp-app/test | 0 | 1 |
 | packages/chart-kit | 2 | 3 |
 | packages/chart-kit/src | 0 | 7 |
 | packages/chart-kit/test | 0 | 3 |
@@ -102,7 +103,7 @@
 | backend/utils | 0 | 2 |
 | backend/mcp | 2 | 4 |
 | backend/mcp/apps | 1 | 1 |
-| backend/mcp/apps/dist | 0 | 2 |
+| backend/mcp/apps/dist | 0 | 5 |
 | backend/mcp/tools | 0 | 14 |
 | backend/tests | 1 | 49 |
 | backend/tests/dreams | 1 | 0 |
@@ -150,4 +151,4 @@
 | external/DReAMy | 1 | 1 |
 | external/DReAMy/dreamy | 0 | 3 |
 
-**ИТОГО:** папок = 146, файлов = 528
+**ИТОГО:** папок = 147, файлов = 537
