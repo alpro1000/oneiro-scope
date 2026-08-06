@@ -212,8 +212,18 @@
     },
     {
       "path": "packages",
-      "dirs": 1,
+      "dirs": 2,
       "files": 0
+    },
+    {
+      "path": "packages/mcp-app",
+      "dirs": 1,
+      "files": 5
+    },
+    {
+      "path": "packages/mcp-app/src",
+      "dirs": 0,
+      "files": 2
     },
     {
       "path": "packages/chart-kit",
@@ -482,8 +492,18 @@
     },
     {
       "path": "backend/mcp",
-      "dirs": 1,
+      "dirs": 2,
       "files": 4
+    },
+    {
+      "path": "backend/mcp/apps",
+      "dirs": 1,
+      "files": 1
+    },
+    {
+      "path": "backend/mcp/apps/dist",
+      "dirs": 0,
+      "files": 2
     },
     {
       "path": "backend/mcp/tools",
@@ -493,7 +513,7 @@
     {
       "path": "backend/tests",
       "dirs": 1,
-      "files": 48
+      "files": 49
     },
     {
       "path": "backend/tests/dreams",
@@ -716,6 +736,6 @@
       "files": 3
     }
   ],
-  "total_dirs": 142,
-  "total_files": 517
+  "total_dirs": 146,
+  "total_files": 528
 }
