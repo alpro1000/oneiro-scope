@@ -140,8 +140,54 @@ async def test_gdpr_export_and_delete(session):
     assert len(await series.export_entries(session, other)) == 2
 
 
-async def test_mcp_tool_rejects_bad_uuid():
+async def test_series_tools_take_no_user_argument_at_all():
+    """The series is the CALLER's, and there is nothing to point elsewhere.
+
+    Both tools used to accept a `user_id` / `store_for_user_id` UUID straight
+    off the tool call, with nothing verifying the caller owned it — so anyone
+    who learned another person's UUID could read and append to their dream
+    journal. The fix is structural rather than a validation check: no
+    parameter names a user, so no argument can be forged.
+    """
+    import inspect
+
+    from backend.mcp.tools.dreams import analyze_dream, dream_series_stats
+
+    stats_params = set(inspect.signature(dream_series_stats).parameters)
+    assert "user_id" not in stats_params, stats_params
+
+    analyze_params = set(inspect.signature(analyze_dream).parameters)
+    assert "store_for_user_id" not in analyze_params, analyze_params
+    # Journalling stays opt-in — it just consents for yourself now.
+    assert "remember" in analyze_params
+
+
+async def test_series_stats_refuses_without_an_authenticated_caller():
+    """No principal, no series — never a silent read of somebody's data."""
     from backend.mcp.tools.dreams import dream_series_stats
 
-    out = await dream_series_stats("not-a-uuid")
-    assert out["status"] == "error"
+    # No MCP request in context here, so there is no authenticated subject.
+    out = await dream_series_stats()
+    assert out["status"] in {"sign_in_required", "no_connector_account"}
+    assert "error" in out
+
+
+async def test_storing_refuses_without_an_authenticated_caller():
+    """`remember=True` off an authenticated transport must not guess an owner."""
+    from backend.mcp.tools.dreams import _store_in_series
+
+    out = await _store_in_series(
+        _FakeAnalysis(),
+        dream_date=date(2026, 1, 1),
+        locale="en",
+    )
+    assert out["stored"] is False
+    assert out["reason"] in {"sign_in_required", "no_connector_account"}
+
+
+class _FakeAnalysis:
+    """Enough of a DreamAnalysisResponse for the storage path's early exit."""
+
+    content_analysis = None
+    symbols: list = []
+    primary_emotion = None

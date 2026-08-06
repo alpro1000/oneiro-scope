@@ -77,7 +77,7 @@ further supplied.
 
 ### Dreams
 - `analyze_dream(dream_text, dream_date?, dreamer_gender?, dreamer_age_group?, locale)`
-- `dream_series_stats(user_id, locale)` — personal baseline over a stored series (N≥15)
+- `dream_series_stats(period, locale)` — personal baseline over the CALLER's stored series (N≥15)
 
 ### Lunar
 - `get_lunar_day(target_date?, timezone?, locale)` — pure

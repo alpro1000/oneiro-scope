@@ -9,7 +9,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
+from datetime import datetime
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -20,6 +20,7 @@ from sqlalchemy.orm import selectinload
 
 from backend.api.v1.auth import get_current_user_db
 from backend.core.database import get_db
+from backend.core.logging import logger
 from backend.models.user import User
 from backend.models.user_llm_key import UserLLMKey
 from backend.services.byok import encrypt, hint as make_hint
@@ -233,16 +234,49 @@ async def gdpr_export(
 
 
 @router.delete("/me", status_code=status.HTTP_200_OK)
-async def request_account_deletion(
+async def delete_account(
     user: User = Depends(get_current_user_db),
     db: AsyncSession = Depends(get_db),
 ):
-    """GDPR Article 17 — request soft-delete. Cron job hard-purges in 30 days."""
-    user.pending_deletion_at = datetime.now(timezone.utc) + timedelta(days=30)
-    user.is_active = False
+    """GDPR Article 17 — erase the account and its personal data, now.
+
+    This used to set `pending_deletion_at = now + 30 days`, mark the account
+    inactive and return "pending_deletion", on the stated promise that a cron
+    job would purge later. No such job ever existed: nothing anywhere read
+    `pending_deletion_at`, and there is no scheduler in the deployment. So the
+    email, password hash, `free_natal_chart_key` (which IS birth data — the
+    birth instant and coordinates) and the coded dream series were kept
+    indefinitely while the account page told the user they had been removed.
+
+    Erasing on confirmation makes the promise true without needing a scheduler,
+    and Article 17 asks for erasure "without undue delay" in any case. The row
+    itself goes; `cascade="all, delete-orphan"` on the relationships plus
+    ON DELETE CASCADE take subscriptions, dreams, dream_usage and the stored
+    BYOK keys with it. `delete_entries` handles the dream series explicitly
+    because `dream_entries` is keyed on the user without an ORM relationship.
+
+    It is irreversible, which is why the portal requires a typed confirmation
+    before calling this (backend/portal/account.py).
+    """
+    user_id = user.id
+
+    # One statement, one transaction: either everything goes or nothing does.
+    # `dream_entries.user_id` carries ON DELETE CASCADE (backend/models/dream.py)
+    # as do the other child tables, so the database removes them with the row.
+    # If a constraint were ever created without it this raises rather than
+    # silently leaving orphaned personal data behind.
+    await db.delete(user)
     await db.commit()
+
+    logger.info("Account erased on user request", extra={"user_id": str(user_id)})
+
     return {
-        "status": "pending_deletion",
-        "purge_at": user.pending_deletion_at.isoformat(),
-        "cancel_until": user.pending_deletion_at.isoformat(),
+        "status": "deleted",
+        "erased": [
+            "account (email, name, password hash, connector identity)",
+            "stored birth-chart grant key",
+            "subscriptions and usage records",
+            "coded dream series",
+            "stored provider keys",
+        ],
     }
