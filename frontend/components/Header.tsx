@@ -35,6 +35,7 @@ export default function Header() {
     {href: `/${locale}/calendar`, label: t('calendar')},
     {href: `/${locale}/dreams`, label: t('dreams')},
     {href: `/${locale}/face`, label: t('face')},
+    {href: `/${locale}/connect`, label: t('connect')},
     {href: `/${locale}/account`, label: t('account')},
   ];
 

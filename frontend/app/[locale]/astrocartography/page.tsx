@@ -35,6 +35,10 @@ import {
 } from '@/lib/chart-store';
 import { DEMO_CORE } from '@/lib/demo-chart';
 import { WORLD_COAST } from '@/lib/world-coast';
+import BirthDataForm from '@/components/BirthDataForm';
+import CityAutocomplete from '@/components/CityAutocomplete';
+import { toChartRequest, type BirthData } from '@/lib/birth-data';
+import { loadRecentCities, rememberCity, type RecentCity } from '@/lib/recent-cities';
 
 type Lang = 'ru' | 'en';
 
@@ -52,11 +56,6 @@ const P_NAME: Record<Lang, Record<string, string>> = {
     Jupiter: 'Jupiter', Saturn: 'Saturn', Uranus: 'Uranus', Neptune: 'Neptune', Pluto: 'Pluto' },
 };
 const SG = ['♈', '♉', '♊', '♋', '♌', '♍', '♎', '♏', '♐', '♑', '♒', '♓'];
-const CITIES: [string, number, number][] = [
-  ['Запорожье', 47.84, 35.14], ['Прага', 50.08, 14.44], ['Пльзень', 49.74, 13.37],
-  ['Барселона', 41.39, 2.17], ['Валенсия', 39.47, -0.38], ['Малага', 36.72, -4.42],
-  ['Братислава', 48.15, 17.11],
-];
 
 const LAT_T = 78, LAT_B = -58, ORB = 8;
 
@@ -65,7 +64,8 @@ function ui(lang: Lang) {
     eyebrow: 'Astro · Carto · Graphy · Lewis 1976', titleA: 'Где ', titleEm: 'что', titleB: ' звучит',
     hint: 'ведите курсор · на телефоне — касайтесь',
     point: 'Точка', anglesHere: 'Углы в этой точке', onAngles: 'Планеты на углах · орб 8°',
-    cities: 'Быстрый переход', yourData: 'Ваши данные',
+    cities: 'Перейти к городу', yourData: 'Ваши данные',
+    citySearch: 'найдите город', recent: 'Недавние',
     hoverPrompt: 'Наведите на карту', noneInOrb: 'Ни одной планеты в орбе 8°',
     date: 'Дата', time: 'Время', tz: 'Часовой пояс', lat: 'Широта', lon: 'Долгота',
     place: 'Место', build: 'Построить карту', building: 'Считаем…',
@@ -82,7 +82,8 @@ function ui(lang: Lang) {
     eyebrow: 'Astro · Carto · Graphy · Lewis 1976', titleA: 'Where it ', titleEm: 'all', titleB: ' resonates',
     hint: 'move the cursor · on a phone, touch',
     point: 'Point', anglesHere: 'Angles at this point', onAngles: 'Planets on angles · orb 8°',
-    cities: 'Quick jump', yourData: 'Your data',
+    cities: 'Jump to a city', yourData: 'Your data',
+    citySearch: 'search for a city', recent: 'Recent',
     hoverPrompt: 'Point at the map', noneInOrb: 'No planet within 8° orb',
     date: 'Date', time: 'Time', tz: 'Timezone', lat: 'Latitude', lon: 'Longitude',
     place: 'Place', build: 'Build chart', building: 'Computing…',
@@ -147,12 +148,11 @@ export default function AstrocartographyPage() {
   const [savedNote, setSavedNote] = useState(false);
   const [busy, setBusy] = useState(false);
 
-  const [bdate, setBdate] = useState('1977-07-01');
-  const [btime, setBtime] = useState('22:30');
-  const [blat, setBlat] = useState('47.8388');
-  const [blon, setBlon] = useState('35.1396');
-  const [bplace, setBplace] = useState('Запорожье');
-  const [btz, setBtz] = useState('Europe/Kyiv');
+  // Where the map cursor can be sent: the user's own search history, not a
+  // fixed list of someone else's cities.
+  const [jump, setJump] = useState('');
+  const [recent, setRecent] = useState<RecentCity[]>([]);
+  useEffect(() => { setRecent(loadRecentCities()); }, []);
 
   const wrapRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -354,20 +354,11 @@ export default function AstrocartographyPage() {
       return next;
     });
 
-  async function onSubmit(ev: React.FormEvent) {
-    ev.preventDefault();
+  async function onSubmit(b: BirthData) {
     if (!navigator.onLine) { setNotice({ text: t.noNet }); return; }
     setBusy(true);
     try {
-      const data = await fetchChart({
-        birth_date: bdate,
-        birth_time: btime ? `${btime}:00` : null,
-        birth_place: bplace || (lang === 'ru' ? 'рождение' : 'birth'),
-        latitude: parseFloat(blat),
-        longitude: parseFloat(blon),
-        timezone_name: btz,
-        locale: lang,
-      });
+      const data = await fetchChart(toChartRequest(b, lang));
       setCore(data.chart_core);
       setProv(data.provenance || null);
       setSavedNote(false);
@@ -490,48 +481,51 @@ export default function AstrocartographyPage() {
 
           <div className="panel-block">
             <div className="eyebrow" style={{ marginBottom: 9 }}>{t.cities}</div>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5 }}>
-              {CITIES.map(([n, la, lo]) => (
-                <button key={n} type="button" onClick={() => setCursor({ lat: la, lon: lo, name: n })}
-                  style={{ font: 'inherit', fontSize: 11.5, padding: '4px 9px', cursor: 'pointer', background: 'transparent', color: 'var(--muted)', border: '1px solid var(--grat-2)' }}>
-                  {n}
-                </button>
-              ))}
-            </div>
+            <CityAutocomplete
+              value={jump}
+              locale={lang}
+              placeholder={t.citySearch}
+              onChange={setJump}
+              onCitySelect={(city) => {
+                const name = city.name || city.display;
+                setCursor({ lat: city.lat, lon: city.lon, name });
+                setRecent(rememberCity({ name, lat: city.lat, lon: city.lon }));
+                setJump('');
+              }}
+            />
+            {recent.length > 0 && (
+              <>
+                <div className="eyebrow" style={{ margin: '11px 0 6px' }}>{t.recent}</div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5 }}>
+                  {recent.map((c) => (
+                    <button
+                      key={c.name}
+                      type="button"
+                      className="city-chip"
+                      onClick={() => setCursor({ lat: c.lat, lon: c.lon, name: c.name })}
+                    >
+                      {c.name}
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
           </div>
 
-          <form onSubmit={onSubmit} className="panel-block">
-            <div className="eyebrow" style={{ marginBottom: 9 }}>{t.yourData}</div>
-            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-              <Field label={t.date}><input type="date" value={bdate} onChange={(e) => setBdate(e.target.value)} style={inp} /></Field>
-              <Field label={t.time}><input type="time" value={btime} onChange={(e) => setBtime(e.target.value)} style={inp} /></Field>
-            </div>
-            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 7 }}>
-              <Field label={t.lat}><input type="number" step="0.0001" value={blat} onChange={(e) => setBlat(e.target.value)} style={inp} /></Field>
-              <Field label={t.lon}><input type="number" step="0.0001" value={blon} onChange={(e) => setBlon(e.target.value)} style={inp} /></Field>
-            </div>
-            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 7 }}>
-              <Field label={t.place}><input type="text" value={bplace} onChange={(e) => setBplace(e.target.value)} style={inp} /></Field>
-              <Field label={t.tz}>
-                <select value={btz} onChange={(e) => setBtz(e.target.value)} style={inp}>
-                  {['Europe/Kyiv', 'Europe/Moscow', 'Europe/Prague', 'Europe/Madrid', 'Asia/Tokyo', 'UTC'].map((z) => (
-                    <option key={z} value={z}>{z}</option>
-                  ))}
-                </select>
-              </Field>
-            </div>
-            <button type="submit" disabled={busy} style={{
-              marginTop: 10, width: '100%', background: 'var(--brass)', color: 'var(--abyss)', border: 0,
-              fontFamily: 'var(--font-ui)', fontWeight: 600, padding: 8, cursor: busy ? 'not-allowed' : 'pointer',
-              letterSpacing: '.02em', opacity: busy ? 0.45 : 1,
-            }}>{busy ? t.building : t.build}</button>
+          <BirthDataForm
+            lang={lang}
+            busy={busy}
+            submitLabel={t.build}
+            busyLabel={t.building}
+            onSubmit={onSubmit}
+          >
             {notice && (
               <div style={{ border: '1px solid var(--brass-dim)', background: 'var(--notice-bg)', color: 'var(--notice-ink)', padding: '8px 10px', fontSize: 12, lineHeight: 1.5, marginTop: 9 }}>
                 {notice.text}{notice.resetAt ? ` ${t.resetAt}${notice.resetAt}.` : ''}
                 {notice.accountUrl && <> <a href={notice.accountUrl} style={{ color: 'var(--brass)' }}>{t.account}</a></>}
               </div>
             )}
-          </form>
+          </BirthDataForm>
         </aside>
       </div>
 
@@ -558,16 +552,3 @@ export default function AstrocartographyPage() {
   );
 }
 
-const inp: React.CSSProperties = {
-  width: '100%', background: 'var(--abyss)', color: 'var(--parchment)',
-  border: '1px solid var(--grat-2)', fontFamily: 'var(--font-data)', fontSize: 12, padding: '6px 8px',
-};
-
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <div style={{ flex: 1, minWidth: 110 }}>
-      <label style={{ display: 'block', color: 'var(--dim)', fontFamily: 'var(--font-data)', fontSize: 10, letterSpacing: '.04em', textTransform: 'uppercase', margin: '0 0 3px' }}>{label}</label>
-      {children}
-    </div>
-  );
-}

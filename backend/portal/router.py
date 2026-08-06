@@ -88,7 +88,7 @@ CONTENT: dict[str, dict[str, str]] = {
         "first_ask_title": "Первый вопрос",
         "first_ask_body": "Просто напишите в чате свои данные рождения — "
                           "сервис сам предложит порядок разбора.",
-        "first_ask_example": "Посчитай мою карту: 1 июля 1977, 22:30, Запорожье",
+        "first_ask_example": "Посчитай мою карту: 12 марта 1990, 14:30, Прага",
         "first_ask_note": "Дальше можно спрашивать свободно: про деньги, "
                           "профессию, десятилетие, города, лучший день для "
                           "разговора — или рассказать сон.",
@@ -175,7 +175,7 @@ CONTENT: dict[str, dict[str, str]] = {
         "first_ask_title": "Your first question",
         "first_ask_body": "Just type your birth data in the chat — the "
                           "service proposes the reading order itself.",
-        "first_ask_example": "Compute my chart: 1 July 1977, 22:30, Zaporizhzhia",
+        "first_ask_example": "Compute my chart: 12 March 1990, 14:30, Prague",
         "first_ask_note": "From there ask freely: money, vocation, the decade "
                           "ahead, cities, the best day for a conversation — "
                           "or describe a dream.",

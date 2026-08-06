@@ -72,12 +72,14 @@ TEXT: dict[str, dict[str, str]] = {
         "data_h": "Ваши данные",
         "data_export": "Выгрузить всё, что о вас хранится (JSON)",
         "delete_h": "Удаление аккаунта",
-        "delete_b": "Аккаунт отключается сразу, данные удаляются через 30 "
-                    "дней. Отменить можно до конца этого срока — напишите нам.",
+        "delete_b": "Данные стираются сразу и безвозвратно: почта, имя, хеш "
+                    "пароля, привязка коннектора, ключ выданной натальной "
+                    "карты, подписки и закодированная серия снов. Отменить "
+                    "нельзя — сначала выгрузите данные, если они нужны.",
         "delete_confirm": "Я понимаю последствия",
         "delete_btn": "Удалить аккаунт",
-        "deleted_h": "Аккаунт помечен на удаление",
-        "deleted_b": "Данные будут удалены",
+        "deleted_h": "Аккаунт удалён",
+        "deleted_b": "Данные стёрты",
         "err_credentials": "Неверная почта или пароль.",
         "err_exists": "Такая почта уже зарегистрирована — войдите.",
         "err_weak": "Пароль должен быть не короче 8 символов.",
@@ -116,13 +118,15 @@ TEXT: dict[str, dict[str, str]] = {
         "data_h": "Your data",
         "data_export": "Export everything held about you (JSON)",
         "delete_h": "Delete account",
-        "delete_b": "The account is disabled immediately and the data is "
-                    "purged after 30 days. It can be undone until then — "
-                    "contact us.",
+        "delete_b": "The data is erased immediately and irreversibly: "
+                    "email, name, password hash, connector identity, the "
+                    "issued chart grant key, subscriptions and the coded "
+                    "dream series. This cannot be undone — export first if "
+                    "you want a copy.",
         "delete_confirm": "I understand the consequences",
         "delete_btn": "Delete account",
-        "deleted_h": "Account marked for deletion",
-        "deleted_b": "Data will be purged",
+        "deleted_h": "Account deleted",
+        "deleted_b": "Data erased",
         "err_credentials": "Wrong email or password.",
         "err_exists": "That email is already registered — sign in instead.",
         "err_weak": "Password must be at least 8 characters.",
@@ -353,21 +357,21 @@ async def export_data(request: Request):
 
 @router.post("/account/delete")
 async def delete_account(request: Request, confirm: str = Form("")):
-    """Soft-delete, gated on an explicit tick — this is not undoable by us."""
+    """Erase the account, gated on an explicit tick. Irreversible."""
     locale = _ctx(request)["locale"]
     text = TEXT[locale]
 
     if confirm != "yes":
         return _signin_page(request, error=text["err_confirm"], status_code=400)
 
-    from backend.api.v1.users import request_account_deletion
+    from backend.api.v1.users import delete_account as erase_account
 
     try:
         async with _session() as db:
             user = await _user_from_cookie(request, db)
             if user is None:
                 return RedirectResponse("/account", status_code=303)
-            result = await request_account_deletion(user, db)
+            await erase_account(user, db)
     except Exception as exc:
         logger.warning("Account deletion failed: %s", exc)
         return _signin_page(request, error=text["err_unavailable"], status_code=503)
@@ -375,7 +379,7 @@ async def delete_account(request: Request, confirm: str = Form("")):
     response = templates.TemplateResponse(
         request,
         "account_deleted.html",
-        _ctx(request, purge_at=result.get("purge_at", "")),
+        _ctx(request),
     )
     _sign_out(response)
     return response

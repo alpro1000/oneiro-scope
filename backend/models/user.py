@@ -55,7 +55,12 @@ class User(Base):
     is_active = Column(Boolean, default=True, nullable=False)
     is_verified = Column(Boolean, default=False, nullable=False)
 
-    # GDPR: pending hard-delete (soft-delete + cron purge after 30 days).
+    # Vestigial. This once meant "soft-deleted, a cron will purge in 30 days",
+    # but no such job was ever written and nothing read the column, so accounts
+    # marked here were simply kept forever while the UI said they were gone.
+    # Deletion now erases the row outright (backend/api/v1/users.py), so nothing
+    # sets this any more. Kept as a nullable column only because dropping it
+    # needs a migration against live data; drop it when one is due anyway.
     pending_deletion_at = Column(DateTime(timezone=True), nullable=True)
 
     # Timestamps

@@ -633,7 +633,7 @@ POST /api/v1/dreams/analyze  |  MCP analyze_dream (data-first)
          ├────────────── MCP path (default): NO server prose.
          │               how_to_read + disclaimer; the calling model
          │               interprets the deterministic coding itself.
-         │               Optional: store_for_user_id → dream_entries
+         │               Optional: remember=True → dream_entries (own account)
          │               (personal series; dream_series_stats, N≥15).
          ▼
 ┌─────────────────────────────────────────┐

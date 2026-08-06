@@ -14,13 +14,13 @@ from __future__ import annotations
 
 import json
 import logging
-import uuid as uuid_mod
 from contextlib import asynccontextmanager
 from datetime import date as date_cls
 from pathlib import Path
 from typing import Any, Optional
 
 from backend.mcp.tools._menu import DREAM_TEXT, USER_ID, with_menu
+from backend.mcp.tools._principal import mcp_auth_context, resolve_connector_user
 from backend.services.dreams.schemas import (
     DreamAnalysisRequest,
     DreamCategory,
@@ -66,7 +66,7 @@ async def analyze_dream(
     dreamer_age_group: Optional[str] = None,
     locale: str = "ru",  # ru | en | de | es | fr
     include_interpretation: bool = False,
-    store_for_user_id: Optional[str] = None,
+    remember: bool = False,
 ) -> dict[str, Any]:
     """Analyze a dream: structural Hall/Van de Castle coding + symbols +
     Jungian archetypes + DreamBank norms + lunar context.
@@ -99,14 +99,12 @@ async def analyze_dream(
             interpretation, recommendations). Default False — only for a
             client with no model of its own; requires a server LLM key and
             degrades to a template without one.
-        store_for_user_id: UUID of a registered user. When given, the coded
-            HVdC features (never the text) are appended to that user's
-            personal dream series for `dream_series_stats`. Requires the
-            user's consent — pass only when the user asked to keep a journal.
-            SECURITY BOUNDARY: until the Auth0 sub→User mapping lands (P0,
-            next-session.md), this UUID is a bearer capability — the server
-            cannot yet verify the caller owns it. Treat it as a secret;
-            never echo another person's UUID.
+        remember: Append the coded HVdC features (never the text) to the
+            CALLING account's personal dream series, which
+            `dream_series_stats` then reads. Opt-in: pass True only when the
+            user asked to keep a journal. The series belongs to the
+            authenticated connector principal — there is no way to write into
+            someone else's.
     """
     req = DreamAnalysisRequest(
         dream_text=dream_text,
@@ -122,9 +120,8 @@ async def analyze_dream(
     # non-empty on this path — drop it instead of shipping a dead [].
     out.pop("physiological_correlations", None)
 
-    if store_for_user_id:
+    if remember:
         out["series"] = await _store_in_series(
-            store_for_user_id,
             resp,
             dream_date=req.dream_date or date_cls.today(),
             locale=locale,
@@ -148,27 +145,49 @@ async def analyze_dream(
 
 
 async def _store_in_series(
-    user_id: str, resp, *, dream_date: date_cls, locale: str
+    resp, *, dream_date: date_cls, locale: str
 ) -> dict[str, Any]:
-    """Append the coded features to the user's series; never fail the
-    analysis if the database is unreachable."""
+    """Append the coded features to the CALLER's own series.
+
+    The user is resolved from the authenticated OAuth subject, never from an
+    argument. This used to take a `store_for_user_id` UUID straight off the
+    tool call, which made the identifier a bearer capability: anyone who
+    learned another person's UUID could append to — and, via
+    `dream_series_stats`, read — their dream journal. Nothing verified
+    ownership. Now there is nothing to forge.
+
+    Never fails the analysis if the database is unreachable.
+    """
     from backend.services.dreams import series as series_svc
 
-    try:
-        uid = uuid_mod.UUID(user_id)
-    except ValueError:
-        return {"stored": False, "reason": f"invalid user_id: {user_id!r}"}
+    on_http, subject = mcp_auth_context()
+    if subject is None:
+        # Off the HTTP transport there is no principal to own a series, and
+        # on it an unreadable subject is a broken handoff. Either way: refuse
+        # to write rather than guess whose journal this is.
+        return {
+            "stored": False,
+            "reason": "sign_in_required" if on_http else "no_connector_account",
+            "message": (
+                "A personal dream series belongs to a signed-in account. "
+                "Connect with sign-in enabled to keep a journal."
+            ),
+        }
     try:
         async with _db_session() as session:
+            user = await resolve_connector_user(session, subject)
+            if user.id is None:
+                await session.flush()
             entry = await series_svc.store_entry(
                 session,
-                user_id=uid,
+                user_id=user.id,
                 dream_date=dream_date,
                 locale=locale,
                 content=resp.content_analysis,
                 symbols=[s.symbol for s in resp.symbols],
                 primary_emotion=resp.primary_emotion.value if resp.primary_emotion else None,
             )
+            await session.commit()
         return {"stored": True, "entry_id": str(entry.id)}
     except Exception as exc:  # DB down must not kill the analysis
         logger.warning("dream series store failed: %s", exc)
@@ -176,7 +195,6 @@ async def _store_in_series(
 
 
 async def dream_series_stats(
-    user_id: str,
     period: str = "all",
     locale: str = "ru",
 ) -> dict[str, Any]:
@@ -190,31 +208,40 @@ async def dream_series_stats(
     `insufficient_data` status — a three-dream "baseline" is noise, and the
     tool says so instead of pretending.
 
-    Dreams enter the series via `analyze_dream(store_for_user_id=...)`.
-    Only deterministic HVdC features are stored, never the dream text.
-    GDPR: entries are included in the account data export and erased with
-    the account.
-
-    SECURITY BOUNDARY: the server cannot yet bind this user_id to the
-    authenticated MCP principal — the Auth0 sub→User mapping is a tracked
-    P0 (next-session.md); until it lands the UUID acts as a bearer
-    capability. Do not call this for a UUID the user did not give you.
+    Reads the CALLING account's own series — the user is the authenticated
+    connector principal, never an argument. Dreams enter it via
+    `analyze_dream(remember=True)`. Only deterministic HVdC features are
+    stored, never the dream text. GDPR: entries are included in the account
+    data export and erased with the account.
 
     Args:
-        user_id: UUID of the registered user whose series to read.
         period: "30d" | "90d" | "365d" | "all" — window over dream dates.
         locale: "ru" or "en" — language of the disclaimer.
     """
     from backend.services.dreams import series as series_svc
 
-    try:
-        uid = uuid_mod.UUID(user_id)
-    except ValueError:
-        return {"status": "error", "error": f"invalid user_id: {user_id!r}"}
+    on_http, subject = mcp_auth_context()
+    if subject is None:
+        # Previously this took a `user_id` argument and read whatever series
+        # it named, with nothing checking the caller owned it. A UUID is not
+        # an authorisation.
+        return {
+            "status": "sign_in_required" if on_http else "no_connector_account",
+            "error": "A personal dream series belongs to a signed-in account.",
+        }
 
     try:
         async with _db_session() as session:
-            out = await series_svc.series_stats(session, uid, period)
+            user = await resolve_connector_user(session, subject)
+            if user.id is None:
+                # Never stored a dream: the account row is still pending, so
+                # there is no series rather than an empty one.
+                return {
+                    "status": "insufficient_data",
+                    "reason": "no_entries",
+                    "disclaimer": _disclaimer(locale),
+                }
+            out = await series_svc.series_stats(session, user.id, period)
     except ValueError as exc:
         return {"status": "error", "error": str(exc)}
     except Exception as exc:
