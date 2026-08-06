@@ -313,35 +313,46 @@ def test_deletion_requires_the_confirmation_tick(client, monkeypatch):
 
     async def _delete(user, db):
         called["n"] += 1
-        return {"purge_at": "2026-09-01T00:00:00+00:00"}
+        return {"status": "deleted", "erased": []}
 
     import backend.api.v1.users as users_api
 
-    monkeypatch.setattr(users_api, "request_account_deletion", _delete)
+    monkeypatch.setattr(users_api, "delete_account", _delete)
 
     unticked = client.post(
         "/account/delete", data={}, cookies={acc.SESSION_COOKIE: "valid"}
     )
     assert unticked.status_code == 400
-    assert called["n"] == 0
+    assert called["n"] == 0, "erasure is irreversible — it must not run unticked"
 
 
-def test_confirmed_deletion_soft_deletes_and_signs_out(client, monkeypatch):
+def test_confirmed_deletion_erases_and_signs_out(client, monkeypatch):
+    """Confirmation runs the erasure and ends the session.
+
+    The handler used to call `request_account_deletion`, which only set a
+    `pending_deletion_at` flag no code ever read; the page then quoted a purge
+    date that would never arrive. It now calls the erasing `delete_account`,
+    so there is no date to show and none is asserted.
+    """
     _signed_in(monkeypatch)
+    called = {"n": 0}
 
     async def _delete(user, db):
-        return {"purge_at": "2026-09-01T00:00:00+00:00"}
+        called["n"] += 1
+        return {"status": "deleted", "erased": ["account"]}
 
     import backend.api.v1.users as users_api
 
-    monkeypatch.setattr(users_api, "request_account_deletion", _delete)
+    monkeypatch.setattr(users_api, "delete_account", _delete)
 
     resp = client.post(
         "/account/delete", data={"confirm": "yes"},
         cookies={acc.SESSION_COOKIE: "valid"},
     )
     assert resp.status_code == 200
-    assert "2026-09-01" in resp.text
+    assert called["n"] == 1
+    # No purge date is promised any more — the erasure already happened.
+    assert "purge" not in resp.text.lower()
     # Session cookie is dropped along with the account.
     assert 'oneiro_session=""' in resp.headers.get("set-cookie", "") or \
         "Max-Age=0" in resp.headers.get("set-cookie", "")
