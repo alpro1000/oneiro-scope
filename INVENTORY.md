@@ -47,7 +47,7 @@
 | packages | 2 | 0 |
 | packages/mcp-app | 2 | 5 |
 | packages/mcp-app/src | 0 | 7 |
-| packages/mcp-app/test | 0 | 1 |
+| packages/mcp-app/test | 0 | 2 |
 | packages/chart-kit | 2 | 3 |
 | packages/chart-kit/src | 0 | 7 |
 | packages/chart-kit/test | 0 | 3 |
@@ -151,4 +151,4 @@
 | external/DReAMy | 1 | 1 |
 | external/DReAMy/dreamy | 0 | 3 |
 
-**ИТОГО:** папок = 147, файлов = 537
+**ИТОГО:** папок = 147, файлов = 538

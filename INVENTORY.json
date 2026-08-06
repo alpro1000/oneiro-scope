@@ -228,7 +228,7 @@
     {
       "path": "packages/mcp-app/test",
       "dirs": 0,
-      "files": 1
+      "files": 2
     },
     {
       "path": "packages/chart-kit",
@@ -742,5 +742,5 @@
     }
   ],
   "total_dirs": 147,
-  "total_files": 537
+  "total_files": 538
 }
