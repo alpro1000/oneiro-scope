@@ -15,7 +15,7 @@
 
 import type { ToolResult } from './bridge';
 import { markUp, type Evidence } from './clause-marks';
-import { esc, fromResult, mountView, type Lang } from './view';
+import { ASK_LABEL, askButton, esc, fromResult, mountView, type Lang } from './view';
 
 interface Symbol {
   symbol?: string;
@@ -72,6 +72,9 @@ const COPY = {
       + 'детерминированный подсчёт (1.0) и словарь (0.8).',
     waiting: 'Ожидание разбора…',
     empty: 'Нет данных. Вызовите analyze_dream.',
+    askOne: 'Объясни эту закодированную улику из моего сна',
+    askAll: 'Прочитай этот разбор целиком по Холлу/Ван де Каслу',
+    askHint: 'Нажмите «объяснить» у любой улики — в чат уйдёт сама фраза и её правило.',
     disclaimerLead: 'Подсчёт проверяем: под каждым числом лежит фраза.',
     disclaimer: 'Значение символа — традиция толкования, не диагноз. '
       + 'Рефлексивно-развлекательный материал, не медицинский, психологический, '
@@ -95,6 +98,9 @@ const COPY = {
       + 'deterministic coding (1.0) and the symbol dictionary (0.8).',
     waiting: 'Waiting for the analysis…',
     empty: 'No data. Call analyze_dream.',
+    askOne: 'Explain this coded piece of evidence from my dream',
+    askAll: 'Read this Hall/Van de Castle coding as a whole',
+    askHint: 'Press "explain" on any item — the clause and its rule go to the chat.',
     disclaimerLead: 'The coding is checkable: every number has a clause under it.',
     disclaimer: 'What a symbol means is a tradition of interpretation, not a '
       + 'diagnosis. Reflective / entertainment material, not medical, '
@@ -131,6 +137,12 @@ function render(payload: Payload, lang: Lang, args: Record<string, unknown>): st
         ${e.target ? ` · ${t.target}: ${esc(e.target)}` : ''}
       </div>
       ${e.source ? `<div class="ev-src dim">${t.source}: ${esc(e.source)}</div>` : ''}
+      ${askButton(
+        `${t.askOne}: ${e.category ?? ''}${e.subtype ? ` / ${e.subtype}` : ''}, `
+        + `«${e.evidence ?? ''}»${e.actor ? `, ${t.actor}: ${e.actor}` : ''}`
+        + `${e.target ? `, ${t.target}: ${e.target}` : ''}. ${e.source ?? ''}`,
+        ASK_LABEL[lang],
+      )}
     </div>`).join('');
 
   const symbols = (payload.symbols ?? []).map((s) =>
@@ -164,6 +176,10 @@ function render(payload: Payload, lang: Lang, args: Record<string, unknown>): st
         <section>
           <div class="eyebrow">${t.ledger}</div>
           ${ledger || `<p class="dim">—</p>`}
+          ${evidence.length ? `${askButton(
+            `${t.askAll}. ${JSON.stringify(payload.content_analysis ?? {})}`,
+            t.askAll, true,
+          )}<p class="ask-hint">${t.askHint}</p>` : ''}
         </section>
       </div>
       <div class="panels">

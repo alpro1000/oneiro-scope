@@ -12,14 +12,24 @@
  *   ← `ui/notifications/tool-result`       the payload to render
  *   ← `ui/notifications/host-context-changed`  theme / display-mode changes
  *   → `ui/notifications/size-changed`      so the host can size the iframe
+ *   → `ui/message`                         hand a question back to the chat
+ *
+ * `ui/message` is the hinge of the whole product, not a convenience. The
+ * numbers a view draws are the deterministic layer (1.0); what they MEAN is
+ * the model's layer (0.7) and must be labelled as such. A button that puts
+ * the exact figures back into the conversation and asks for them to be read
+ * is that seam made literal: the user points at one aspect, one line, one
+ * coded clause, and the model answers about THAT — with the orb and the
+ * source in front of it instead of a paraphrase.
  *
  * Deliberately NOT used: `tools/call`, `resources/read`, `ui/open-link`,
  * `ui/update-model-context`. Every OneiroScope view derives everything it
- * draws from the `chart_core` it is handed, locally, via chart-kit — so it
- * never needs to call back for data. That is what lets the resource ship with
- * no declared CSP domains at all: `connect-src 'none'` is enough, the host has
- * nothing to warn the user about, and the view cannot exfiltrate a birth time
- * even if its code were tampered with.
+ * draws from what it was handed, locally — so it never calls back for data.
+ * That is what lets the resource ship with no declared CSP domains at all:
+ * `connect-src 'none'` is enough, the host has nothing to warn the user
+ * about, and the view cannot exfiltrate a birth time even if its code were
+ * tampered with. `ui/message` does not weaken that: it goes to the host, in
+ * the open, as a visible turn in the conversation.
  */
 
 export interface HostContext {
@@ -106,6 +116,21 @@ export class HostBridge {
       jsonrpc: '2.0',
       method: 'ui/notifications/size-changed',
       params: { width, height },
+    });
+  }
+
+  /**
+   * Put a question into the chat, as if the user had typed it.
+   *
+   * The text carries the figures verbatim rather than a summary — the point
+   * is that the model reads the same numbers the user is looking at.
+   */
+  ask(text: string): void {
+    this.send({
+      jsonrpc: '2.0',
+      id: this.nextId++,
+      method: 'ui/message',
+      params: { role: 'user', content: { type: 'text', text } },
     });
   }
 

@@ -82,6 +82,31 @@ def test_the_view_is_self_contained_and_reaches_no_network(view):
     assert not leftovers, f"unexpected URL in {view.slug}: {leftovers[:2]}"
 
 
+@pytest.mark.parametrize("view", apps.VIEWS, ids=lambda v: v.slug)
+def test_every_view_can_hand_its_figures_back_to_the_chat(view):
+    """`ui/message` is the seam, not a convenience.
+
+    A view draws the deterministic layer (1.0); what it MEANS is the model's
+    layer (0.7). The control that puts the exact figures back into the
+    conversation is how a user crosses from one to the other without anyone
+    paraphrasing the numbers in between — so every view must have it.
+    """
+    html = view.html()
+    assert "data-ask=" in html, f"{view.slug} cannot ask the chat anything"
+    assert "ui/message" in html, f"{view.slug} does not speak ui/message"
+
+
+def test_asking_the_chat_is_not_a_network_call():
+    """The ask goes to the HOST, in the open, as a visible turn.
+
+    Worth stating as a test: adding an outbound-looking feature is exactly
+    when someone reaches for fetch(), which would break the no-CSP-domains
+    property every view depends on.
+    """
+    for view in apps.VIEWS:
+        assert "postMessage" in view.html()
+
+
 def test_tool_meta_points_at_a_registered_view():
     meta = apps.tool_ui_meta(apps.NATAL_WHEEL)
     assert meta["ui"]["resourceUri"] == apps.NATAL_WHEEL.uri

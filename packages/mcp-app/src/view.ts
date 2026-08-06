@@ -26,6 +26,23 @@ export interface ViewSpec<P> {
   strings: Record<Lang, ViewStrings>;
 }
 
+/**
+ * Mark up an "explain this" control.
+ *
+ * `question` is the text handed to the chat verbatim, so it should carry the
+ * figures rather than describe them: the model should be reading the same
+ * numbers the user is pointing at, not a paraphrase of them.
+ *
+ * Rendered as a real <button>, so it is reachable by keyboard and announced
+ * as a control — these are the only interactive elements in any view.
+ */
+export function askButton(question: string, label: string, strong = false): string {
+  const cls = strong ? 'ask ask-strong' : 'ask';
+  return `<button type="button" class="${cls}" data-ask="${esc(question)}">${esc(label)}</button>`;
+}
+
+export const ASK_LABEL: Record<Lang, string> = { ru: 'объяснить', en: 'explain' };
+
 /** Locale from the payload if it says, else the document's. */
 function langOf(payload: unknown): Lang {
   const l = (payload as { locale?: string } | null)?.locale;
@@ -98,6 +115,14 @@ export function mountView<P>(spec: ViewSpec<P>): void {
   bridge.initialize().then((ctx) => {
     if (ctx?.theme) document.documentElement.dataset.theme = ctx.theme;
     bridge.reportSize();
+  });
+
+  // One delegated listener rather than a handler per row: a natal chart can
+  // carry sixty of these, and the markup is regenerated on every repaint.
+  root.addEventListener('click', (ev) => {
+    const el = (ev.target as HTMLElement | null)?.closest?.('[data-ask]');
+    const question = el?.getAttribute('data-ask');
+    if (question) bridge.ask(question);
   });
 
   if (typeof ResizeObserver !== 'undefined') {

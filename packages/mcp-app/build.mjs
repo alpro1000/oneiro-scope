@@ -90,6 +90,41 @@ tr:last-child td{border-bottom:0}
 .disclaimer{color:var(--muted);font-size:12.5px;line-height:1.6;margin:11px 0 0;max-width:64ch}
 .disclaimer b{color:var(--parchment);font-weight:500}
 
+/* --- "explain" controls: the seam between the computed layer and the model's
+   ---  reading of it.
+   ---
+   ---  Per-row controls are QUIET text, not outlined boxes. A natal chart
+   ---  carries thirty of them, and thirty brass rectangles fight the numbers
+   ---  they sit next to — the design system's rule that emphasis must not
+   ---  compete with data. Only the section-level "read this as a whole" is
+   ---  drawn as a button, because there is exactly one of it per panel. */
+.ask{
+  background:transparent;border:0;padding:0;cursor:pointer;
+  font-family:var(--font-ui);font-size:11px;letter-spacing:.02em;
+  color:var(--muted);border-bottom:1px solid transparent;
+  transition:color .15s ease,border-color .15s ease;
+}
+.ask:hover{color:var(--brass);border-bottom-color:var(--brass-dim)}
+.ask:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
+.ask-strong{
+  border:1px solid var(--brass-dim);color:var(--brass);padding:5px 10px;
+  font-size:12px;width:100%;text-align:center;
+}
+.ask-strong:hover{background:var(--brass);color:var(--abyss);border-bottom-color:var(--brass-dim)}
+.ask-cell{text-align:right;white-space:nowrap;padding-left:10px}
+.asp .ask{margin-top:3px}
+.ev-row .ask{margin-top:5px;margin-left:2.1em}
+.lday .ask{margin-top:6px}
+.lg .ask{margin-left:5px;font-size:10px}
+.ask-row{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;margin-top:11px;
+  padding-top:10px;border-top:1px solid var(--grat-1)}
+.ask-row .ask-strong{width:auto}
+.ask-hint{font-family:var(--font-ui);font-size:11px;color:var(--dim);line-height:1.5;
+  margin:7px 0 0;display:block}
+.ask-row .ask-hint{margin:0;flex:1;min-width:14ch}
+section > .ask-strong{margin-top:10px}
+@media (prefers-reduced-motion: reduce){.ask{transition:none}}
+
 /* --- shared page furniture ------------------------------------------------ */
 .head{margin-bottom:14px}
 h1{font-family:var(--font-display);font-weight:400;letter-spacing:-.015em;

@@ -9,7 +9,7 @@
  */
 
 import type { ToolResult } from './bridge';
-import { esc, fromResult, mountView, type Lang } from './view';
+import { ASK_LABEL, askButton, esc, fromResult, mountView, type Lang } from './view';
 
 interface Day {
   date?: string;
@@ -56,6 +56,9 @@ const COPY = {
     day: 'лунный день', starts: 'начало',
     illum: 'освещённость', sign: 'Луна в знаке',
     tz: 'часовой пояс', days: 'дней',
+    askOne: 'Объясни этот лунный день',
+    askAll: 'Разбери этот период по лунным дням: на что он годится',
+    askHint: 'Нажмите «объяснить» у любого дня — в чат уйдут его числа.',
     waiting: 'Ожидание календаря…',
     empty: 'Нет данных. Вызовите get_lunar_period.',
     disclaimerLead: 'Фазы и знаки — астрономия, они проверяемы.',
@@ -68,6 +71,9 @@ const COPY = {
     day: 'lunar day', starts: 'starts',
     illum: 'illumination', sign: 'Moon in',
     tz: 'timezone', days: 'days',
+    askOne: 'Explain this lunar day',
+    askAll: 'Read this period day by day: what it suits',
+    askHint: 'Press "explain" on any day — its figures go to the chat.',
     waiting: 'Waiting for the calendar…',
     empty: 'No data. Call get_lunar_period.',
     disclaimerLead: 'Phases and signs are astronomy — verifiable.',
@@ -123,6 +129,11 @@ function render(payload: Payload, lang: Lang): string {
       ${sign ? `<div class="lday-sign">${sign}</div>` : ''}
       ${d.lunar_day_start_time
         ? `<div class="num lday-start dim">${t.starts} ${esc(d.lunar_day_start_time)}</div>` : ''}
+      ${askButton(
+        `${t.askOne}: ${d.date ?? ''}, ${d.lunar_day ?? '?'} ${t.day}, ${pretty}, `
+        + `${(illum * 100).toFixed(1)}% ${t.illum}${d.moon_sign ? `, ${t.sign} ${d.moon_sign}` : ''}.`,
+        ASK_LABEL[lang],
+      )}
     </div>`;
   }).join('');
 
@@ -139,6 +150,10 @@ function render(payload: Payload, lang: Lang): string {
       <h1>${t.title}</h1>
     </div>
     <div class="lgrid">${cells}</div>
+    ${days.length ? `<div class="ask-row">${askButton(
+      `${t.askAll}: ${days[0]?.date ?? ''} — ${days[days.length - 1]?.date ?? ''}.`,
+      t.askAll, true,
+    )}<span class="ask-hint">${t.askHint}</span></div>` : ''}
     <div class="prov">${provBits}</div>
     <p class="disclaimer"><b>${t.disclaimerLead}</b> ${t.disclaimer}</p>
   `;

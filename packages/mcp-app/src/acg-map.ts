@@ -18,7 +18,7 @@ import type { ToolResult } from './bridge';
 // static geography drift the moment one is edited, and nothing would catch
 // it. Aliased to frontend/lib/world-coast.ts in both tsconfig and the build.
 import { WORLD_COAST } from '@frontend/world-coast';
-import { esc, fromResult, mountView, type Lang } from './view';
+import { ASK_LABEL, askButton, esc, fromResult, mountView, type Lang } from './view';
 
 // Bodies get the classical-metal colours; the tokens carry them as --p-*.
 const P_GLYPH: Record<string, string> = {
@@ -43,6 +43,9 @@ const COPY = {
     method: 'метод',
     waiting: 'Ожидание линий от сервера…',
     empty: 'Нет данных карты. Вызовите astrocartography_lines.',
+    askOne: 'Объясни линии этой планеты на астрокарте',
+    askAll: 'Разбери мою астрокарту: какие места на что настроены',
+    askHint: 'Нажмите «объяснить» у планеты — в чат уйдут её углы.',
     disclaimerLead: 'Линии и углы — геометрия, она проверяема.',
     disclaimer: 'Символическое значение планеты на угле — традиция толкования, '
       + 'а не прогноз. Рефлексивно-развлекательный материал, не медицинский, '
@@ -59,6 +62,9 @@ const COPY = {
     method: 'method',
     waiting: 'Waiting for the lines…',
     empty: 'No map data. Call astrocartography_lines.',
+    askOne: "Explain this planet's lines on the astrocartography map",
+    askAll: 'Read my astrocartography map: which places are tuned to what',
+    askHint: 'Press "explain" on a planet — its angles go to the chat.',
     disclaimerLead: 'Lines and angles are geometry — verifiable.',
     disclaimer: 'The symbolic meaning of a planet on an angle is a tradition of '
       + 'interpretation, not a prediction. Reflective / entertainment material, '
@@ -169,9 +175,18 @@ function render(payload: Payload, lang: Lang): string {
       + `<circle cx="${n2(px(birth.lon!))}" cy="${n2(py(birth.lat!))}" r="1.4" fill="var(--brass)"/></g>`
     : '';
 
+  // Which angles this planet actually has lines for — the question should
+  // name them rather than assume all four.
+  const anglesOf = (planet: string) => [...new Set(features
+    .filter((f) => f.properties?.planet === planet)
+    .map((f) => f.properties?.angle ?? '')
+    .filter(Boolean))].join(', ');
+
   const legend = [...present].sort().map((p) =>
     `<span class="lg"><i style="background:var(--p-${p.toLowerCase()},var(--muted))"></i>`
-    + `${P_GLYPH[p] ?? ''} ${esc(p)}</span>`).join('');
+    + `${P_GLYPH[p] ?? ''} ${esc(p)}`
+    + askButton(`${t.askOne}: ${p} — ${anglesOf(p)}.`, ASK_LABEL[lang])
+    + `</span>`).join('');
 
   const meta = payload.meta ?? {};
   const provBits = [
@@ -203,6 +218,9 @@ function render(payload: Payload, lang: Lang): string {
         <span><i class="k dotted"></i>${t.dc}</span>
       </div>
       ${birth?.name ? `<div class="kv"><span>${t.birth}</span><b>${esc(birth.name)}</b></div>` : ''}
+      <div class="ask-row">${askButton(
+        `${t.askAll}${birth?.name ? ` (${birth.name})` : ''}.`, t.askAll, true,
+      )}<span class="ask-hint">${t.askHint}</span></div>
     </div>
     <div class="prov">${provBits}</div>
     <p class="disclaimer"><b>${t.disclaimerLead}</b> ${t.disclaimer}</p>

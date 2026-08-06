@@ -24,7 +24,7 @@ import {
   type ChartCore,
 } from '@oneiroscope/chart-kit';
 import type { ToolResult } from './bridge';
-import { esc, fromResult, mountView, type Lang } from './view';
+import { ASK_LABEL, askButton, esc, fromResult, mountView, type Lang } from './view';
 
 const SIGN_GLYPH = ['♈', '♉', '♊', '♋', '♌', '♍', '♎', '♏', '♐', '♑', '♒', '♓'];
 const P_GLYPH: Record<string, string> = {
@@ -51,6 +51,10 @@ const COPY = {
     houses: 'дома',
     tz: 'пояс',
     utc: 'UTC',
+    askPlacement: 'Объясни это положение в натальной карте',
+    askAspect: 'Объясни этот аспект в натальной карте',
+    askAll: 'Прочитай эту карту целиком: характер, сильные стороны, зоны роста',
+    askHint: 'Нажмите «объяснить» у любой строки — вопрос уйдёт в чат вместе с точными числами.',
     disclaimerLead: 'Геометрия проверяема.',
     disclaimer: 'Значения знаков, домов и аспектов — традиция толкования, не прогноз. Рефлексивно-развлекательный материал, не медицинский, психологический, юридический или финансовый совет.',
   },
@@ -72,6 +76,10 @@ const COPY = {
     houses: 'houses',
     tz: 'zone',
     utc: 'UTC',
+    askPlacement: 'Explain this placement in the natal chart',
+    askAspect: 'Explain this aspect in the natal chart',
+    askAll: 'Read this chart as a whole: character, strengths, growth areas',
+    askHint: 'Press "explain" on any row — the question goes to the chat with the exact figures.',
     disclaimerLead: 'The geometry is verifiable.',
     disclaimer: 'What a sign, house or aspect means is a tradition of interpretation, not a prediction. Reflective / entertainment material, not medical, psychological, legal or financial advice.',
   },
@@ -159,12 +167,18 @@ function render(payload: Payload, lang: Lang): string {
     const house = cusps ? houseOf(body.ecl_lon, cusps) : null;
     const flag = borderline.has(name)
       ? `<span class="flag" title="${t.borderline}">△</span>` : '';
+    // The question carries the placement verbatim — sign, exact degree,
+    // house, retrograde — so the model reads what the user is pointing at.
+    const q = `${t.askPlacement}: ${name} ${fmtSign(body.ecl_lon)}`
+      + `${house ? `, ${house} ${t.house}` : ''}${body.retrograde ? ', R' : ''}`
+      + `${borderline.has(name) ? `, ${t.borderline}` : ''}.`;
     return `<tr>
       <td class="glyph" style="color:var(--p-${name.toLowerCase()},var(--muted))">${P_GLYPH[name] ?? '·'}</td>
       <td class="body">${esc(name)}</td>
       <td class="num">${fmtSign(body.ecl_lon)}${flag}</td>
       <td class="num dim">${body.retrograde ? t.retro : ''}</td>
       <td class="num dim">${house ? `${house} ${t.house}` : '—'}</td>
+      <td class="ask-cell">${askButton(q, ASK_LABEL[lang])}</td>
     </tr>`;
   }).join('');
 
@@ -175,10 +189,15 @@ function render(payload: Payload, lang: Lang): string {
   const asps = kitAspects(core)
     .slice()
     .sort((x, y) => x.orb - y.orb)
-    .map((a) => `<div class="asp">
+    .map((a) => {
+      const q = `${t.askAspect}: ${a.a} ${a.type} ${a.b}, ${t.orb} ${fmtOrb(a.orb)}, `
+        + `${a.applying ? t.applying : t.separating}.`;
+      return `<div class="asp">
       <div class="asp-pair">${P_GLYPH[a.a] ?? ''} ${esc(a.a)} <span class="dim">—</span> ${P_GLYPH[a.b] ?? ''} ${esc(a.b)}</div>
       <div class="asp-num num">${esc(a.type)} · ${t.orb} ${fmtOrb(a.orb)} · <span class="dim">${a.applying ? t.applying : t.separating}</span></div>
-    </div>`).join('');
+      ${askButton(q, ASK_LABEL[lang])}
+    </div>`;
+    }).join('');
 
   const prov = payload.provenance ?? {};
   const meta = payload.meta ?? {};
@@ -199,6 +218,11 @@ function render(payload: Payload, lang: Lang): string {
           <div class="kv"><span>${t.tz}</span><b class="num">${esc(b.tz_used)} ${esc(b.utc_offset_used)}</b></div>
           <div class="kv"><span>lat / lon</span><b class="num">${b.lat.toFixed(4)}° / ${b.lon.toFixed(4)}°</b></div>
           ${b.place_label ? `<div class="kv"><span>place</span><b>${esc(b.place_label)}</b></div>` : ''}
+          ${askButton(
+            `${t.askAll}. ${b.place_label || ''} ${esc(b.utc)} (${esc(b.tz_used)} ${esc(b.utc_offset_used)}).`,
+            t.askAll, true,
+          )}
+          <p class="ask-hint">${t.askHint}</p>
         </section>
         ${timed ? '' : `<p class="note">${t.noTime}</p>`}
         <section>
