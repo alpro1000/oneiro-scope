@@ -43,7 +43,7 @@
     {
       "path": "frontend/lib",
       "dirs": 0,
-      "files": 14
+      "files": 16
     },
     {
       "path": "frontend/e2e",
@@ -72,7 +72,7 @@
     },
     {
       "path": "frontend/app/[locale]",
-      "dirs": 9,
+      "dirs": 10,
       "files": 2
     },
     {
@@ -82,6 +82,11 @@
     },
     {
       "path": "frontend/app/[locale]/account",
+      "dirs": 0,
+      "files": 1
+    },
+    {
+      "path": "frontend/app/[locale]/connect",
       "dirs": 0,
       "files": 1
     },
@@ -198,7 +203,7 @@
     {
       "path": "frontend/components",
       "dirs": 0,
-      "files": 9
+      "files": 11
     },
     {
       "path": "oneiro-scope",
@@ -711,6 +716,6 @@
       "files": 3
     }
   ],
-  "total_dirs": 141,
-  "total_files": 512
+  "total_dirs": 142,
+  "total_files": 517
 }
