@@ -85,3 +85,170 @@ body {
 .nav-link:focus-visible,
 .nav-link-m:focus-visible,
 .tool-card:focus-visible { outline: 2px solid var(--brass); outline-offset: 2px; }
+
+/* ── Birth-data entry (components/BirthDataForm.tsx) ───────────────────────
+   A sentence with blanks, not a stack of boxes. The blanks are underlined
+   inputs sitting on the text baseline; everything numeric stays in the data
+   face, because a date and a time ARE measurements. */
+.birth-sentence {
+  font-family: var(--font-ui);
+  font-size: 13.5px;
+  line-height: 2.1;
+  color: var(--muted);
+  margin: 0;
+}
+.blank {
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid var(--grat-2);
+  color: var(--parchment);
+  font-family: var(--font-data);
+  font-size: 12.5px;
+  padding: 2px 2px 3px;
+  transition: border-color .15s ease;
+}
+.blank:hover { border-bottom-color: var(--brass-dim); }
+.blank:focus { outline: 0; border-bottom-color: var(--brass); }
+.blank-date { width: 8.9em; }
+.blank-time { width: 5.4em; }
+/* Dark UA date/time widgets: without this the picker glyph renders black. */
+.blank::-webkit-calendar-picker-indicator { filter: invert(1) opacity(.45); cursor: pointer; }
+.blank::-webkit-calendar-picker-indicator:hover { filter: invert(1) opacity(.85); }
+.blank-static {
+  font-family: var(--font-data);
+  font-size: 12.5px;
+  color: var(--dim);
+  border-bottom: 1px dashed var(--grat-2);
+  padding-bottom: 3px;
+}
+
+.birth-toggle {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: 10px;
+  font-family: var(--font-ui);
+  font-size: 12px;
+  color: var(--muted);
+  cursor: pointer;
+}
+.birth-toggle input { accent-color: var(--brass); cursor: pointer; }
+.birth-toggle:hover { color: var(--parchment); }
+
+.birth-note {
+  font-family: var(--font-ui);
+  font-size: 11.5px;
+  line-height: 1.55;
+  color: var(--dim);
+  margin: 6px 0 0;
+}
+
+.birth-coords { margin-top: 11px; padding-top: 10px; border-top: 1px solid var(--grat-1); }
+.birth-coords-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+.birth-readout {
+  font-family: var(--font-data);
+  font-size: 12px;
+  color: var(--parchment);
+  margin-top: 5px;
+}
+.birth-src {
+  font-family: var(--font-ui);
+  font-size: 11px;
+  color: var(--dim);
+  margin-left: 8px;
+}
+.birth-flabel {
+  display: block;
+  color: var(--dim);
+  font-family: var(--font-data);
+  font-size: 10px;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  margin: 0 0 3px;
+}
+.birth-input {
+  width: 100%;
+  background: var(--abyss);
+  color: var(--parchment);
+  border: 1px solid var(--grat-2);
+  font-family: var(--font-data);
+  font-size: 12px;
+  padding: 6px 8px;
+}
+.birth-input:focus { outline: 0; border-color: var(--brass); }
+
+/* --muted, not --dim: this is a real control, and --dim fails AA on --panel. */
+.birth-link {
+  background: 0;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  font-family: var(--font-ui);
+  font-size: 11.5px;
+  color: var(--muted);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  transition: color .15s ease;
+}
+.birth-link:hover { color: var(--brass); }
+.birth-link:focus-visible { outline: 2px solid var(--brass); outline-offset: 2px; }
+
+.birth-submit {
+  margin-top: 12px;
+  width: 100%;
+  background: var(--brass);
+  color: var(--abyss);
+  border: 0;
+  font-family: var(--font-ui);
+  font-weight: 600;
+  font-size: 13px;
+  letter-spacing: .02em;
+  padding: 9px;
+  cursor: pointer;
+}
+.birth-submit:disabled { opacity: .45; cursor: not-allowed; }
+.birth-submit:focus-visible { outline: 2px solid var(--brass); outline-offset: 2px; }
+
+.birth-issues {
+  border: 1px solid var(--brass-dim);
+  background: var(--notice-bg);
+  color: var(--notice-ink);
+  padding: 8px 10px;
+  font-family: var(--font-ui);
+  font-size: 12px;
+  line-height: 1.5;
+  margin-top: 9px;
+}
+.birth-issues ul { margin: 4px 0 0; padding-left: 17px; }
+
+.birth-foot {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 11px;
+  padding-top: 9px;
+  border-top: 1px solid var(--grat-1);
+  font-family: var(--font-ui);
+  font-size: 11px;
+  color: var(--dim);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .blank, .birth-link, .birth-input { transition: none; }
+}
+
+/* Recent-city chips on the astrocartography panel. */
+.city-chip {
+  font-family: var(--font-ui);
+  font-size: 11.5px;
+  padding: 4px 9px;
+  cursor: pointer;
+  background: transparent;
+  color: var(--muted);
+  border: 1px solid var(--grat-2);
+  transition: border-color .15s ease, color .15s ease;
+}
+.city-chip:hover { color: var(--parchment); border-color: var(--brass-dim); }
+.city-chip:focus-visible { outline: 2px solid var(--brass); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { .city-chip { transition: none; } }

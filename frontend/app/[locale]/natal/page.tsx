@@ -47,6 +47,8 @@ import {
   type ChartProvenance,
 } from '@/lib/chart-store';
 import { DEMO_CORE } from '@/lib/demo-chart';
+import BirthDataForm from '@/components/BirthDataForm';
+import { toChartRequest, type BirthData } from '@/lib/birth-data';
 
 // ── language-neutral glyphs ─────────────────────────────────────────────────
 const SIGN_GLYPH = ['♈', '♉', '♊', '♋', '♌', '♍', '♎', '♏', '♐', '♑', '♒', '♓'];
@@ -213,13 +215,9 @@ export default function NatalPage() {
   const [busy, setBusy] = useState(false);
   const [disclaimer, setDisclaimer] = useState<string | null>(null);
 
-  // form fields
-  const [bdate, setBdate] = useState('1977-07-01');
-  const [btime, setBtime] = useState('22:30');
-  const [blat, setBlat] = useState('47.8388');
-  const [blon, setBlon] = useState('35.1396');
-  const [bplace, setBplace] = useState('Запорожье');
-  const [btz, setBtz] = useState('Europe/Kyiv');
+  // Birth data lives in BirthDataForm / lib/birth-data — shared with the
+  // astrocartography screen so it is entered once, and starting empty rather
+  // than pre-filled with one particular person's chart.
 
   // Restore the most recent saved chart (opens with no network).
   useEffect(() => {
@@ -287,20 +285,11 @@ export default function NatalPage() {
     return { b, timed, useSystem, cusps, border, movers, wheel, angs, asps, houseList, lunar };
   }, [core, system, hAbbr]);
 
-  async function onSubmit(ev: React.FormEvent) {
-    ev.preventDefault();
+  async function onSubmit(b: BirthData) {
     if (!navigator.onLine) { setNotice({ text: t.noNet }); return; }
     setBusy(true);
     try {
-      const data = await fetchChart({
-        birth_date: bdate,
-        birth_time: btime ? `${btime}:00` : null,
-        birth_place: bplace || (lang === 'ru' ? 'рождение' : 'birth'),
-        latitude: parseFloat(blat),
-        longitude: parseFloat(blon),
-        timezone_name: btz,
-        locale: lang,
-      });
+      const data = await fetchChart(toChartRequest(b, lang));
       setCore(data.chart_core);
       setProv(data.provenance || null);
       setSystem((data.chart_core.house_system as HouseSystem) || 'placidus');
@@ -543,43 +532,26 @@ export default function NatalPage() {
           </div>
 
           {/* birth-data entry — a real chart is the one paid, gated call */}
-          <form onSubmit={onSubmit} style={{ border: '1px solid var(--grat-2)', background: 'var(--shelf)', padding: '13px 15px', marginTop: 14 }}>
-            <span className="eyebrow" style={{ display: 'block', marginBottom: 9 }}>{t.yourData}</span>
-            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-              <Field label={t.date}><input type="date" value={bdate} onChange={(e) => setBdate(e.target.value)} style={inputStyle} /></Field>
-              <Field label={t.time}><input type="time" value={btime} onChange={(e) => setBtime(e.target.value)} style={inputStyle} /></Field>
-            </div>
-            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginTop: 8 }}>
-              <Field label={t.lat}><input type="number" step="0.0001" value={blat} onChange={(e) => setBlat(e.target.value)} style={inputStyle} /></Field>
-              <Field label={t.lon}><input type="number" step="0.0001" value={blon} onChange={(e) => setBlon(e.target.value)} style={inputStyle} /></Field>
-            </div>
-            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginTop: 8 }}>
-              <Field label={t.place}><input type="text" value={bplace} onChange={(e) => setBplace(e.target.value)} style={inputStyle} /></Field>
-              <Field label={t.tz}>
-                <select value={btz} onChange={(e) => setBtz(e.target.value)} style={inputStyle}>
-                  {['Europe/Kyiv', 'Europe/Moscow', 'Europe/Prague', 'Europe/Madrid', 'Asia/Tokyo', 'UTC'].map((z) => (
-                    <option key={z} value={z}>{z}</option>
-                  ))}
-                </select>
-              </Field>
-            </div>
-            <button type="submit" disabled={busy} style={{
-              marginTop: 11, width: '100%', background: 'var(--brass)', color: 'var(--abyss)', border: 0,
-              fontFamily: 'var(--font-ui)', fontWeight: 600, padding: 9, cursor: busy ? 'not-allowed' : 'pointer',
-              letterSpacing: '.02em', opacity: busy ? 0.45 : 1,
-            }}>{busy ? t.building : t.build}</button>
-          </form>
-
-          {notice && (
-            <div style={{
-              border: '1px solid var(--brass-dim)', background: 'var(--notice-bg)', color: 'var(--notice-ink)',
-              padding: '9px 12px', fontSize: 12.5, lineHeight: 1.5, marginTop: 12,
-            }}>
-              {notice.text}
-              {notice.resetAt ? ` ${t.resetAt}${notice.resetAt}.` : ''}
-              {notice.accountUrl && <> <a href={notice.accountUrl} style={{ color: 'var(--brass)' }}>{t.account}</a></>}
-            </div>
-          )}
+          <div style={{ border: '1px solid var(--grat-2)', background: 'var(--shelf)', marginTop: 14 }}>
+            <BirthDataForm
+              lang={lang}
+              busy={busy}
+              submitLabel={t.build}
+              busyLabel={t.building}
+              onSubmit={onSubmit}
+            >
+              {notice && (
+                <div style={{
+                  border: '1px solid var(--brass-dim)', background: 'var(--notice-bg)', color: 'var(--notice-ink)',
+                  padding: '9px 12px', fontSize: 12.5, lineHeight: 1.5, marginTop: 12,
+                }}>
+                  {notice.text}
+                  {notice.resetAt ? ` ${t.resetAt}${notice.resetAt}.` : ''}
+                  {notice.accountUrl && <> <a href={notice.accountUrl} style={{ color: 'var(--brass)' }}>{t.account}</a></>}
+                </div>
+              )}
+            </BirthDataForm>
+          </div>
         </div>
       </div>
 
