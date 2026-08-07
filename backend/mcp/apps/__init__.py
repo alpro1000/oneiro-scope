@@ -117,7 +117,31 @@ DREAM_EVIDENCE = View(
     ),
 )
 
-VIEWS: tuple[View, ...] = (NATAL_WHEEL, ACG_MAP, LUNAR_MONTH, DREAM_EVIDENCE)
+RELOCATIONS = View(
+    slug="relocations",
+    filename="relocations.html",
+    title="Comparing places",
+    description=(
+        "Relocation comparison: the chart angles recomputed per city, the "
+        "planets within orb of them, and the weight — with a quiet zone shown "
+        "as a quiet zone rather than hidden."
+    ),
+)
+
+PATTERN_MAP = View(
+    slug="pattern-map",
+    filename="pattern-map.html",
+    title="Chart pattern",
+    description=(
+        "Houses, rulers, occupants and dignities behind a chart pattern — the "
+        "money contour or the vocation map. Every block hands its own signs, "
+        "houses and dignities back to the chat."
+    ),
+)
+
+VIEWS: tuple[View, ...] = (
+    NATAL_WHEEL, ACG_MAP, LUNAR_MONTH, DREAM_EVIDENCE, RELOCATIONS, PATTERN_MAP,
+)
 
 
 def tool_ui_meta(view: View, *, visibility: list[str] | None = None) -> dict[str, Any]:
