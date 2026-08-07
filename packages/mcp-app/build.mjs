@@ -32,6 +32,10 @@ const VIEWS = [
   { entry: 'src/acg-map.ts', out: 'acg-map.html', title: 'Astrocartography' },
   { entry: 'src/lunar-month.ts', out: 'lunar-month.html', title: 'Lunar calendar' },
   { entry: 'src/dream-evidence.ts', out: 'dream-evidence.html', title: 'Dream coding' },
+  { entry: 'src/relocations.ts', out: 'relocations.html', title: 'Comparing places' },
+  // One view, two tools: money_contour and vocation_map return the same
+  // envelope and the same nested shapes.
+  { entry: 'src/pattern-map.ts', out: 'pattern-map.html', title: 'Chart pattern' },
 ];
 
 /** Design tokens, minus anything that would need the network. */
@@ -89,6 +93,35 @@ tr:last-child td{border-bottom:0}
 .asp-num{font-size:11.5px;text-align:left;margin-top:1px}
 .disclaimer{color:var(--muted);font-size:12.5px;line-height:1.6;margin:11px 0 0;max-width:64ch}
 .disclaimer b{color:var(--parchment);font-weight:500}
+
+/* --- relocation comparison ------------------------------------------------- */
+.locs{display:grid;gap:1px;background:var(--grat-1);
+  grid-template-columns:repeat(auto-fill,minmax(280px,1fr));border:1px solid var(--grat-2)}
+.loc{border:0}
+.loc-head{display:flex;align-items:baseline;justify-content:space-between;gap:10px}
+.loc h2{font-family:var(--font-display);font-weight:400;font-size:19px;
+  letter-spacing:-.015em;margin:0}
+.loc-score{font-size:17px;color:var(--brass)}
+.loc-score .dim{font-size:10.5px}
+.loc-line{font-size:12px;color:var(--muted);margin-top:6px;line-height:1.6}
+.loc-line .lbl{font-family:var(--font-data);font-size:10px;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--dim);display:block;margin-bottom:2px}
+.loc-flag{display:inline-block;font-family:var(--font-data);font-size:10px;
+  letter-spacing:.08em;text-transform:uppercase;color:var(--brass);
+  border:1px solid var(--brass-dim);padding:1px 6px;margin-top:7px}
+.loc-plain{font-size:12.5px;color:var(--muted);line-height:1.55;margin:7px 0 0}
+.loc .ask{margin-top:9px}
+
+/* --- chart patterns (money contour / vocation map) ------------------------- */
+.pgrid{display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));
+  align-items:start}
+.blk{margin-top:8px}
+.blk-lbl{font-family:var(--font-data);font-size:10px;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--dim);margin-bottom:3px}
+.pl{font-size:12.5px;color:var(--muted);line-height:1.7;
+  display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+.pl .num{font-family:var(--font-data);color:var(--parchment)}
+.dig{font-family:var(--font-data);font-size:11px;color:var(--brass)}
 
 /* --- "explain" controls: the seam between the computed layer and the model's
    ---  reading of it.

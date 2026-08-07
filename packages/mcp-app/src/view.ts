@@ -130,6 +130,17 @@ export function mountView<P>(spec: ViewSpec<P>): void {
   }
 }
 
-/** Escape text destined for innerHTML. Every view renders user-derived text. */
-export const esc = (s: string): string =>
-  s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]!));
+/**
+ * Escape text destined for innerHTML. Every view renders server-derived text.
+ *
+ * Coerces rather than assuming a string. The declared payload types are the
+ * view's belief about a server response, and a field that turns out to be an
+ * object (as `part_of_fortune.dispositor` did) would otherwise throw inside
+ * `render` and leave the whole view blank — a worse failure than printing the
+ * value, and one that gives the reader nothing to report.
+ */
+export const esc = (s: unknown): string =>
+  String(s ?? '').replace(
+    /[&<>"]/g,
+    (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]!),
+  );

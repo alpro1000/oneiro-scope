@@ -5,7 +5,7 @@
  * like markup.
  */
 import { describe, expect, it } from 'vitest';
-import { ASK_LABEL, askButton } from '../src/view';
+import { ASK_LABEL, askButton, esc } from '../src/view';
 
 describe('askButton', () => {
   it('puts the question in data-ask, where the delegated listener reads it', () => {
@@ -34,5 +34,22 @@ describe('askButton', () => {
   it('labels both languages', () => {
     expect(ASK_LABEL.ru).toBe('объяснить');
     expect(ASK_LABEL.en).toBe('explain');
+  });
+});
+
+describe('esc', () => {
+  it('escapes the four characters that matter for innerHTML', () => {
+    expect(esc('<b>"x" & y</b>')).toBe('&lt;b&gt;&quot;x&quot; &amp; y&lt;/b&gt;');
+  });
+
+  it('coerces a non-string instead of throwing', () => {
+    // The regression: `part_of_fortune.dispositor` is a full placement object,
+    // not a planet name. The declared type said string, esc() called .replace
+    // on it, and the whole view went blank — a worse failure than printing the
+    // value, and one that tells the reader nothing.
+    expect(() => esc({ planet: 'saturn' } as unknown as string)).not.toThrow();
+    expect(esc(undefined as unknown as string)).toBe('');
+    expect(esc(null as unknown as string)).toBe('');
+    expect(esc(7 as unknown as string)).toBe('7');
   });
 });

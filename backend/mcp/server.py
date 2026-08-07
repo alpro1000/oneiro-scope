@@ -104,15 +104,23 @@ mcp.tool(meta=apps.tool_ui_meta(apps.ACG_MAP) if _ui_views else None)(
     with_meta(sa.astrocartography_lines)
 )
 mcp.tool()(with_meta(sa.astrocartography_point))
-mcp.tool()(with_meta(sa.compare_relocations))
+mcp.tool(meta=apps.tool_ui_meta(apps.RELOCATIONS) if _ui_views else None)(
+    with_meta(sa.compare_relocations)
+)
 mcp.tool()(with_meta(sa.solar_return_chart))
 mcp.tool()(with_meta(sa.solar_return_suggest))
 
 # --- Analysis patterns -------------------------------------------------------
 # analysis_plan is the entry point: what can be computed, in which order.
 mcp.tool()(with_meta(sp.analysis_plan))
-mcp.tool()(with_meta(sp.money_contour))
-mcp.tool()(with_meta(sp.vocation_map))
+# Both return the same envelope and the same nested shapes, so they share one
+# view rather than two renderers that would need the same bug fixed twice.
+mcp.tool(meta=apps.tool_ui_meta(apps.PATTERN_MAP) if _ui_views else None)(
+    with_meta(sp.money_contour)
+)
+mcp.tool(meta=apps.tool_ui_meta(apps.PATTERN_MAP) if _ui_views else None)(
+    with_meta(sp.vocation_map)
+)
 
 # --- Reference lookups, folded into one tool (WP-10) --------------------------
 mcp.tool()(with_meta(lk.lookup))
