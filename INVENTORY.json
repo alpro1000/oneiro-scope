@@ -223,7 +223,7 @@
     {
       "path": "packages/mcp-app/src",
       "dirs": 0,
-      "files": 7
+      "files": 9
     },
     {
       "path": "packages/mcp-app/test",
@@ -508,7 +508,7 @@
     {
       "path": "backend/mcp/apps/dist",
       "dirs": 0,
-      "files": 5
+      "files": 7
     },
     {
       "path": "backend/mcp/tools",
@@ -742,5 +742,5 @@
     }
   ],
   "total_dirs": 147,
-  "total_files": 538
+  "total_files": 542
 }
