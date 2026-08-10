@@ -53,6 +53,15 @@ class Diagnostics(BaseModel):
     connector_url: str
     checks: list[Check]
     config: dict[str, Any]
+    # The tool registry as THIS process actually serves it. Three separate
+    # times a client's cached schema was debugged as if it were the server —
+    # "MCP declares 46 tools, transit_arc answers Unknown tool" — when the
+    # server declares 19 and never listed those names. Clients cache the tool
+    # list at connect time and do not refresh it on their own; a tool result
+    # can carry a fresh `meta.commit` while the list stays months stale. This
+    # field ends the argument: whatever a client shows that is not in here is
+    # the client's cache, and the fix is to remove and re-add the connector.
+    tools: dict[str, Any]
 
 
 async def _dcr_advertised() -> tuple[bool, str]:
@@ -259,6 +268,14 @@ async def diagnostics(request: Request) -> Diagnostics:
     else:
         mode = "unavailable"
 
+    try:
+        from backend.mcp.server import mcp as mcp_server
+
+        tool_names = sorted(t.name for t in await mcp_server.list_tools())
+        tools: dict[str, Any] = {"count": len(tool_names), "names": tool_names}
+    except Exception as exc:  # noqa: BLE001 — a broken registry is a finding
+        tools = {"error": f"{type(exc).__name__}: {exc}"}
+
     return Diagnostics(
         ready=all(c.ok for c in checks),
         mode=mode,
@@ -274,4 +291,5 @@ async def diagnostics(request: Request) -> Diagnostics:
             "allowed_hosts": hosts,
             "discovery_url": PROTECTED_RESOURCE_PATH,
         },
+        tools=tools,
     )

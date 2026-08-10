@@ -43,12 +43,15 @@ concurrency code.
 
 from __future__ import annotations
 
+import logging
 from typing import Any, Optional, TYPE_CHECKING
 
 from fastapi import HTTPException, status
 
 from backend.core.config import settings
 from backend.services.billing.quotas import QuotaKind, Tier, current_tier
+
+logger = logging.getLogger("oneiro.billing.entitlements")
 
 if TYPE_CHECKING:
     from backend.models.user import User
@@ -219,13 +222,31 @@ def check_chart_entitlement(
     if same_chart(granted_key, chart_key):
         return  # Re-issuing the account's own chart — free, forever.
 
-    # If the flag is set but no key was recorded, the grant was written by
-    # something other than mark_chart_issued (the legacy quotas.mark_used sets
-    # free_natal_used without a key). That path has no production callers today;
-    # were it wired, it MUST also record the key, or an account lands here
-    # unable to re-fetch any chart. Refusing is the safe reading of that
-    # inconsistent state — it never hands out a free second chart — but it is a
-    # state this module's own writer never produces.
+    if not granted_key:
+        # The flag is set but no key was ever recorded. This is not a state
+        # this module's writer produces — it is what the DATABASE contains for
+        # every account that burned its grant under the legacy path
+        # (`quotas.mark_used` set `free_natal_used` before the key column
+        # existed; migration 0002 added the column as NULL). An earlier
+        # version of this code refused here as "the safe reading", and the
+        # owner hit the consequence live: their own birth data answered
+        # `entitlement_required` on every spelling of the city, because a
+        # grant with no key can match nothing — the promise "your own chart
+        # stays available forever" had quietly become "no chart, ever".
+        #
+        # A grant we cannot compare is a grant, not a wall. Allow this
+        # issuance and let `mark_chart_issued` adopt it as THE granted chart;
+        # from then on the account is keyed normally and a second, different
+        # chart is refused. Worst case, a grandfathered account whose first
+        # chart we cannot identify gets one chart of its choosing — which is
+        # exactly what it was promised.
+        logger.warning(
+            "entitlement: account %s has free_natal_used with no chart key "
+            "(legacy grant) — allowing issuance of %s and adopting it as the "
+            "grant",
+            getattr(user, "id", "?"), chart_key,
+        )
+        return
 
     raise EntitlementRequired(
         reason="free_natal_chart_used",
@@ -260,7 +281,13 @@ def mark_chart_issued(
     if current_tier(user, active_subs=active_subs) in (Tier.PREMIUM, Tier.PRO):
         return False
     if getattr(user, "free_natal_used", False):
-        return False
+        if getattr(user, "free_natal_chart_key", None):
+            return False
+        # Legacy grant (flag without key — see check_chart_entitlement):
+        # adopt the chart being issued right now as the granted one, so the
+        # account leaves the unkeyed state the moment it is next used.
+        user.free_natal_chart_key = chart_key
+        return True
     user.free_natal_used = True
     user.free_natal_chart_key = chart_key
     return True

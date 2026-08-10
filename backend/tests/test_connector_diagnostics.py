@@ -185,3 +185,24 @@ def test_missing_dcr_is_named_as_the_connection_killer(client, monkeypatch):
     assert row["ok"] is False
     assert "Dynamic Application Registration" in row["fix"]
     assert body["ready"] is False
+
+
+def test_diagnostics_shows_the_tools_this_process_actually_serves(client):
+    """Three times running, a client's cached schema was debugged as the
+    server: "46 tools, transit_arc answers Unknown tool". The server has
+    never listed those names since WP-10. This field is the proof a browser
+    can open: whatever a client shows that is not in this list is the
+    client's cache, and the fix is re-adding the connector."""
+    body = client.get("/connect/diagnostics").json()
+    tools = body["tools"]
+    assert tools["count"] == len(tools["names"]) > 0
+    assert "calculate_natal_chart" in tools["names"]
+    for ghost in (
+        "transit_arc", "transit_meaning", "electional_day",
+        "list_event_types", "horoscope_report", "profile_report_file",
+        "physiognomy_methods", "generate_horoscope",
+    ):
+        assert ghost not in tools["names"], (
+            f"{ghost} is served again — the cached-client diagnosis in the "
+            "session log is now wrong, re-investigate"
+        )
