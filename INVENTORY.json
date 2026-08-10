@@ -3,7 +3,7 @@
     {
       "path": ".",
       "dirs": 16,
-      "files": 21
+      "files": 22
     },
     {
       "path": ".github",
@@ -283,7 +283,7 @@
     {
       "path": "docs/deploy",
       "dirs": 0,
-      "files": 5
+      "files": 6
     },
     {
       "path": "docs/steering",
@@ -742,5 +742,5 @@
     }
   ],
   "total_dirs": 147,
-  "total_files": 546
+  "total_files": 548
 }

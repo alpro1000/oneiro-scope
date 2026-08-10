@@ -2,7 +2,7 @@
 
 | Путь | Папок | Файлов |
 |---|---:|---:|
-| . | 16 | 21 |
+| . | 16 | 22 |
 | .github | 1 | 0 |
 | .github/workflows | 0 | 9 |
 | tests | 0 | 4 |
@@ -58,7 +58,7 @@
 | agents/prompts | 0 | 5 |
 | agents/specialists | 0 | 5 |
 | docs | 8 | 43 |
-| docs/deploy | 0 | 5 |
+| docs/deploy | 0 | 6 |
 | docs/steering | 0 | 5 |
 | docs/reports | 0 | 2 |
 | docs/deployment | 0 | 1 |
@@ -151,4 +151,4 @@
 | external/DReAMy | 1 | 1 |
 | external/DReAMy/dreamy | 0 | 3 |
 
-**ИТОГО:** папок = 147, файлов = 546
+**ИТОГО:** папок = 147, файлов = 548
