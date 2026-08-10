@@ -134,4 +134,6 @@ jobs:
             backend/tests/test_chart_gate_postgres.py \
             backend/tests/test_migrations_postgres.py \
             backend/tests/test_mcp_apps.py \
+            backend/tests/test_view_payload_contract.py \
+            backend/tests/test_cors.py \
             -v

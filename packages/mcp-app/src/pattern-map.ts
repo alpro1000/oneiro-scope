@@ -46,13 +46,31 @@ interface Point {
   dispositor?: Placement;
 }
 
+/**
+ * The linchpin comes back in TWO shapes, and the stronger one is the odd one.
+ *
+ * When one planet rules both the 2nd and the 8th, the server returns
+ * `{linked: true, type: "same_ruler", planet}` — no `ruler_2nd`, no
+ * `ruler_8th`, no separation, because there is nothing to separate. Only the
+ * weaker `conjunction_of_rulers` case carries the pair. Reading just the pair
+ * rendered the strongest possible result as "linked — / —".
+ */
 interface Linchpin {
   linked?: boolean;
   type?: string;
+  /** `same_ruler` only: the single planet ruling both houses. */
+  planet?: string;
   ruler_2nd?: string;
   ruler_8th?: string;
   separation_deg?: number;
   same_sign?: boolean;
+  same_house?: boolean;
+}
+
+/** `mc.conjunct` is a contact, not a placement: a planet and its orb. */
+interface Conjunction {
+  planet?: string;
+  orb_deg?: number;
 }
 
 interface Payload {
@@ -85,6 +103,7 @@ interface Copy {
   mc: string; workHouses: string; dignified: string; angular: string;
   fortune: string; linchpin: string; sect: string; dispositor: string;
   separation: string; linked: string; notLinked: string; sameSign: string;
+  sameHouse: string; rulesBoth: string; orb: string;
   conjunct: string; empty: string; engine: string; houses: string;
   askHouse: string; askPlacement: string; askPoint: string;
   askAllMoney: string; askAllVoc: string; askHint: string;
@@ -109,6 +128,7 @@ const COPY: Record<Lang, Copy> = {
     fortune: 'Колесо Фортуны', linchpin: 'Линчпин: связка своих и чужих денег',
     sect: 'секта', dispositor: 'диспозитор', separation: 'расхождение',
     linked: 'связаны', notLinked: 'не связаны', sameSign: 'в одном знаке',
+    sameHouse: 'в одном доме', rulesBoth: 'управляет обоими домами', orb: 'орб',
     conjunct: 'в соединении', empty: 'пусто', engine: 'движок', houses: 'дома',
     askHouse: 'Объясни этот дом в моей карте',
     askPlacement: 'Объясни это положение',
@@ -137,6 +157,7 @@ const COPY: Record<Lang, Copy> = {
     fortune: 'Part of Fortune', linchpin: 'Linchpin: own money tied to other people\'s',
     sect: 'sect', dispositor: 'dispositor', separation: 'separation',
     linked: 'linked', notLinked: 'not linked', sameSign: 'same sign',
+    sameHouse: 'same house', rulesBoth: 'rules both houses', orb: 'orb',
     conjunct: 'conjunct', empty: 'empty', engine: 'engine', houses: 'houses',
     askHouse: 'Explain this house in my chart',
     askPlacement: 'Explain this placement',
@@ -235,17 +256,29 @@ function render(payload: Payload, lang: Lang): string {
     }
     const lp = c.linchpin as Linchpin | undefined;
     if (lp) {
+      const sameRuler = lp.type === 'same_ruler' || (!!lp.planet && !lp.ruler_2nd);
+      // Same planet on both ends, or the pair — never an em dash where the
+      // server sent a name.
+      const pairHtml = sameRuler
+        ? `${planet(lp.planet)} <span class="dim">${t.rulesBoth}</span>`
+        : `${planet(lp.ruler_2nd)} <span class="dim">/</span> ${planet(lp.ruler_8th)}`;
+      const pairText = sameRuler
+        ? `${lp.planet ?? '?'} (${t.rulesBoth})`
+        : `${lp.ruler_2nd ?? '?'} / ${lp.ruler_8th ?? '?'}`;
+
       const q = `${t.linchpin}: ${lp.linked ? t.linked : t.notLinked}`
-        + `${lp.type ? `, ${lp.type}` : ''}, ${lp.ruler_2nd ?? ''} / ${lp.ruler_8th ?? ''}`
+        + `${lp.type ? `, ${lp.type}` : ''}, ${pairText}`
         + `${typeof lp.separation_deg === 'number' ? `, ${t.separation} ${lp.separation_deg.toFixed(2)}°` : ''}`
-        + `${lp.same_sign ? `, ${t.sameSign}` : ''}.`;
+        + `${lp.same_sign ? `, ${t.sameSign}` : ''}`
+        + `${lp.same_house ? `, ${t.sameHouse}` : ''}.`;
       blocks.push(`<section>
         <div class="eyebrow">${t.linchpin}</div>
         <div class="kv"><span>${lp.linked ? t.linked : t.notLinked}</span>
-          <b>${planet(lp.ruler_2nd)} <span class="dim">/</span> ${planet(lp.ruler_8th)}</b></div>
+          <b>${pairHtml}</b></div>
         ${typeof lp.separation_deg === 'number'
           ? `<div class="kv"><span>${t.separation}</span><b class="num">${lp.separation_deg.toFixed(2)}°</b></div>` : ''}
         ${lp.same_sign ? `<div class="loc-flag">${t.sameSign}</div>` : ''}
+        ${lp.same_house ? `<div class="loc-flag">${t.sameHouse}</div>` : ''}
         ${askButton(q, ASK_LABEL[lang])}
       </section>`);
     }
@@ -254,19 +287,28 @@ function render(payload: Payload, lang: Lang): string {
         <div class="kv"><span>${esc(String(c.sect))}</span></div></section>`);
     }
   } else {
-    const mc = c.mc as { sign?: string; rulers?: Placement[]; conjunct?: Placement[] } | undefined;
+    const mc = c.mc as
+      { sign?: string; rulers?: Placement[]; conjunct?: Conjunction[] } | undefined;
     if (mc) {
+      const conj = mc.conjunct ?? [];
+      // A conjunction is a planet AND its orb. Rendering it through
+      // `placementLine` printed "☉ sun — —" and threw the orb away, which is
+      // the only figure that says how tight the contact is.
+      const conjText = (x: Conjunction) => `${x.planet ?? '?'} ${t.orb} `
+        + `${typeof x.orb_deg === 'number' ? `${x.orb_deg.toFixed(1)}°` : '—'}`;
+
       const q = `${t.mc}: ${mc.sign ?? ''}. ${t.rulers}: `
         + `${(mc.rulers ?? []).map(placementText).join('; ') || '—'}`
-        + `${(mc.conjunct ?? []).length ? `. ${t.conjunct}: ${(mc.conjunct ?? []).map(placementText).join('; ')}` : ''}.`;
+        + `${conj.length ? `. ${t.conjunct}: ${conj.map(conjText).join('; ')}` : ''}.`;
       blocks.push(`<section>
         <div class="eyebrow">${t.mc}</div>
         <div class="kv"><span>sign</span><b>${sign(mc.sign)}</b></div>
         <div class="blk"><div class="blk-lbl">${t.rulers}</div>
           ${(mc.rulers ?? []).map((r) => `<div class="pl">${placementLine(r, t)}</div>`).join('')
             || `<div class="pl dim">—</div>`}</div>
-        ${(mc.conjunct ?? []).length ? `<div class="blk"><div class="blk-lbl">${t.conjunct}</div>
-          ${(mc.conjunct ?? []).map((r) => `<div class="pl">${placementLine(r, t)}</div>`).join('')}</div>` : ''}
+        ${conj.length ? `<div class="blk"><div class="blk-lbl">${t.conjunct}</div>
+          ${conj.map((x) => `<div class="pl">${planet(x.planet)} <span class="dim">—</span> `
+            + `<span class="num">${t.orb} ${typeof x.orb_deg === 'number' ? `${x.orb_deg.toFixed(1)}°` : '—'}</span></div>`).join('')}</div>` : ''}
         ${askButton(q, ASK_LABEL[lang])}
       </section>`);
     }
@@ -312,7 +354,13 @@ mountView<Payload>({
   pick: (result: ToolResult) =>
     fromResult<Payload>(result, (c) => {
       const p = c as Payload;
-      return p.pattern_id && p.computed ? p : null;
+      // Match the two IDs this view actually renders. Six tools share the
+      // `_base()` envelope (analysis-plan, decade-map, life-pivots,
+      // electional-day, reverse-physiognomy), and `pattern_id && computed`
+      // accepted all of them — then `render` has only two branches, so a
+      // decade map would have been drawn under the heading "Money contour".
+      return (p.pattern_id === 'money-contour' || p.pattern_id === 'vocation-map')
+        && p.computed ? p : null;
     }),
   render,
   strings: {

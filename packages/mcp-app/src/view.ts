@@ -16,6 +16,8 @@ export interface ViewStrings {
   waiting: string;
   /** Shown when a result arrived but carried nothing this view can draw. */
   empty: string;
+  /** Shown when drawing itself threw. Optional: `mountView` supplies a default. */
+  failed?: string;
 }
 
 export interface ViewSpec<P> {
@@ -43,11 +45,41 @@ export function askButton(question: string, label: string, strong = false): stri
 
 export const ASK_LABEL: Record<Lang, string> = { ru: 'объяснить', en: 'explain' };
 
-/** Locale from the payload if it says, else the document's. */
-function langOf(payload: unknown): Lang {
-  const l = (payload as { locale?: string } | null)?.locale;
-  if (l === 'en' || l === 'ru') return l;
-  return document.documentElement.lang === 'en' ? 'en' : 'ru';
+/** Default for `ViewStrings.failed` — the message must name the failure. */
+const FAILED: Record<Lang, string> = {
+  ru: 'Не удалось отрисовать ответ инструмента:',
+  en: 'Could not render the tool result:',
+};
+
+/**
+ * Which language to draw in.
+ *
+ * Three sources, in decreasing authority. The payload, if the tool echoed a
+ * locale. Then **the arguments the tool was called with** — every tool behind
+ * a view takes `locale`, so when the user asked for `locale="en"` that is a
+ * direct statement of intent and the strongest signal actually available.
+ * Then the host context, if it sends one.
+ *
+ * The document's own `lang` is deliberately last and only a tiebreak: the
+ * shell is emitted as `<html lang="ru">`, so consulting it first made `langOf`
+ * incapable of ever returning 'en' and turned every English string in these
+ * views into dead weight that looked maintained.
+ */
+function asLang(value: unknown): Lang | null {
+  if (typeof value !== 'string') return null;
+  const primary = value.toLowerCase().split(/[-_]/)[0];
+  return primary === 'en' ? 'en' : primary === 'ru' ? 'ru' : null;
+}
+
+function langOf(
+  payload: unknown,
+  args: Record<string, unknown>,
+  ctx: HostContext | null,
+): Lang {
+  return asLang((payload as { locale?: string } | null)?.locale)
+    ?? asLang(args.locale)
+    ?? asLang(ctx?.locale)
+    ?? (document.documentElement.lang === 'en' ? 'en' : 'ru');
 }
 
 /**
@@ -93,18 +125,35 @@ export function mountView<P>(spec: ViewSpec<P>): void {
   // The arguments arrive BEFORE the result (the host sends tool-input as the
   // call starts), so by the time there is something to draw they are here.
   let args: Record<string, unknown> = {};
+  let hostContext: HostContext | null = null;
 
   const bridge = new HostBridge({
     onToolInput: (a) => { args = a ?? {}; },
     onToolResult: (result) => {
       const payload = spec.pick(result);
-      lang = payload ? langOf(payload) : lang;
-      root.innerHTML = payload
-        ? spec.render(payload, lang, args)
-        : note(spec.strings[lang].empty);
+      lang = payload ? langOf(payload, args, hostContext) : lang;
+      if (!payload) {
+        root.innerHTML = note(spec.strings[lang].empty);
+      } else {
+        // A renderer reads a server response it only BELIEVES the shape of.
+        // Letting a throw escape leaves the view frozen on "waiting…", which
+        // reads as a slow tool rather than a broken one — the reader waits
+        // instead of reporting it. Say what happened (§12: no silent
+        // degradation) and keep the height report honest.
+        try {
+          root.innerHTML = spec.render(payload, lang, args);
+        } catch (err) {
+          root.innerHTML = note(
+            `${esc(spec.strings[lang].failed ?? FAILED[lang])} ${esc(
+              err instanceof Error ? err.message : String(err),
+            )}`,
+          );
+        }
+      }
       bridge.reportSize();
     },
     onContext: (ctx: HostContext) => {
+      hostContext = ctx;
       if (ctx.theme) document.documentElement.dataset.theme = ctx.theme;
       bridge.reportSize();
     },

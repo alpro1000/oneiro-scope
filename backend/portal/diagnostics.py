@@ -188,6 +188,25 @@ async def diagnostics(request: Request) -> Diagnostics:
                     "that this service has outbound network access",
             ))
 
+    # Not an MCP check, but the same class of failure and the same audience:
+    # something is refused, the server looks healthy, and the reason is only
+    # visible somewhere the person debugging cannot see. A browser blocked by
+    # CORS reports "Failed to fetch" and nothing else; this row names the
+    # variable that fixes it.
+    cors_problem = settings.cors_problem()
+    checks.append(Check(
+        id="browser_origins",
+        ok=cors_problem is None,
+        detail=cors_problem or (
+            f"CORS allows {settings.allowed_origins_list}"
+            + (f" plus regex {settings.ALLOWED_ORIGIN_REGEX}"
+               if settings.ALLOWED_ORIGIN_REGEX else "")
+        ),
+        fix=None if cors_problem is None else
+            "set ALLOWED_ORIGINS to the frontend origin(s) WITH scheme, "
+            "comma-separated (e.g. https://oneiroscope.vercel.app)",
+    ))
+
     if enforced and auth_configured():
         mode = "oauth"
     elif settings.MCP_ENABLED and not enforced:

@@ -33,7 +33,17 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
 
     # CORS
+    # Comma-separated browser origins allowed to call this API with credentials.
+    # The default is a DEVELOPMENT value: in production it lets nothing through,
+    # and the only symptom is in the user's browser console, where the server
+    # never looks. `cors_problem()` below turns that into a startup line and a
+    # row in /connect/diagnostics rather than a mystery.
     ALLOWED_ORIGINS: str = "http://localhost:3000"
+    # Opt-in regex for origins that cannot be enumerated — Vercel gives every
+    # preview deploy its own hostname. Left empty by default on purpose: this
+    # API answers with credentials, so a pattern that is wider than intended
+    # hands cookies to whoever matches it. Anchor it (^…$) and keep it tight.
+    ALLOWED_ORIGIN_REGEX: str = ""
 
     # Where a quota refusal points the user to manage their plan. The portal
     # serves /account on this same service, so a relative path is the honest
@@ -82,6 +92,43 @@ class Settings(BaseSettings):
             origins.append(cleaned)
 
         return origins
+
+    @property
+    def is_production(self) -> bool:
+        return self.ENVIRONMENT.lower() in {"production", "prod"}
+
+    def cors_problem(self) -> str | None:
+        """Why browsers will be refused, in one sentence — or None if fine.
+
+        CORS is the one misconfiguration that leaves the server looking
+        perfectly healthy: every endpoint answers 200, `/health` is green, the
+        log is clean, and only the browser knows the response is unusable
+        because it carries no `Access-Control-Allow-Origin`. That asymmetry is
+        exactly the silent degradation conventions.md §12 forbids, so the
+        condition is named here once and reported everywhere it matters.
+        """
+        origins = self.allowed_origins_list
+        if not origins and not self.ALLOWED_ORIGIN_REGEX:
+            return (
+                "ALLOWED_ORIGINS is empty — every cross-origin browser request "
+                "will be blocked by CORS."
+            )
+        if not self.is_production:
+            return None
+
+        remote = [
+            o for o in origins
+            if "localhost" not in o and "127.0.0.1" not in o
+        ]
+        if not remote and not self.ALLOWED_ORIGIN_REGEX:
+            return (
+                f"ENVIRONMENT=production but ALLOWED_ORIGINS is {origins!r} — "
+                "only localhost is allowed, so the deployed frontend is blocked "
+                "by CORS on every call (login, city search, lunar days). Set "
+                "ALLOWED_ORIGINS to the site's own origin, with scheme, "
+                "comma-separated for several."
+            )
+        return None
 
     # API Keys
     OPENAI_API_KEY: str = ""

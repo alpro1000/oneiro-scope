@@ -37,6 +37,8 @@ export interface HostContext {
   displayMode?: 'inline' | 'fullscreen' | 'pip';
   containerDimensions?: { width?: number; maxHeight?: number };
   styles?: { variables?: Record<string, string> };
+  /** BCP-47 tag when the host sends one. Only the primary subtag is used. */
+  locale?: string;
 }
 
 export interface ToolResult {

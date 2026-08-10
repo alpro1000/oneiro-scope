@@ -10,6 +10,14 @@
  * printed as 0.0 with its own explanation rather than hidden — a quiet zone
  * is a finding, not a gap. And `clean` (no hard contacts) is marked, because
  * "nothing difficult here" is a different statement from "nothing here".
+ *
+ * Order is the server's order. `compare_relocations` documents itself as
+ * "comparison, not ranking" and `score_explanation` spells out why: the
+ * scorer weighs only Venus/Jupiter/Sun/Moon and Saturn/Mars/Pluto, so
+ * Mercury, Uranus and Neptune contribute exactly 0 however tight their orb.
+ * Sorting by that number would present "unscored" as "weakest", which is the
+ * one reading the server explicitly warns against — so `total_significance`
+ * is shown beside the score and the caveat travels with every place.
  */
 
 import type { ToolResult } from './bridge';
@@ -18,7 +26,9 @@ import { ASK_LABEL, askButton, esc, fromResult, mountView, type Lang } from './v
 interface Hit {
   planet?: string;
   angle?: string;
-  orb?: number;
+  /** The server's field name. Reading `orb` here printed 0.00° for every
+   *  contact — and, worse, sent that fabricated exactness to the chat. */
+  orb_deg?: number;
   kind?: string;
 }
 
@@ -42,7 +52,11 @@ interface Location {
   angle_hits?: Hit[];
   score?: number;
   summary?: Summary;
-  score_explanation?: { plain?: string };
+  score_explanation?: {
+    plain?: string;
+    total_significance?: number;
+    unweighted?: Hit[];
+  };
 }
 
 interface Payload {
@@ -67,6 +81,12 @@ const COPY = {
     score: 'вес', angles: 'углы', hits: 'планеты на углах', quiet: 'тихая зона',
     clean: 'без жёстких контактов', orb: 'орб', method: 'метод',
     coords: 'координаты', none: 'ни одной планеты в орбе',
+    significance: 'суммарная значимость',
+    significanceHint: 'без знака — считает и то, что вес не учитывает',
+    scoreCaveat: 'Вес считает только Венеру/Юпитер/Солнце/Луну (плюс) и '
+      + 'Сатурн/Марс/Плутон (минус); Меркурий, Уран и Нептун дают ровно 0 при '
+      + 'любом орбе. Низкий вес — не «пусто»: сверяйся с суммарной значимостью. '
+      + 'Порядок городов — как в запросе, это сравнение, а не рейтинг.',
     askOne: 'Объясни этот город по релокации',
     askAll: 'Сравни эти города между собой: где и для чего лучше',
     askHint: 'Нажмите «объяснить» у города — в чат уйдут его углы и контакты.',
@@ -85,6 +105,13 @@ const COPY = {
     score: 'weight', angles: 'angles', hits: 'planets on angles', quiet: 'quiet zone',
     clean: 'no hard contacts', orb: 'orb', method: 'method',
     coords: 'coordinates', none: 'no planet within orb',
+    significance: 'total significance',
+    significanceHint: 'unsigned — counts what the weight leaves out',
+    scoreCaveat: 'The weight scores only Venus/Jupiter/Sun/Moon (positive) and '
+      + 'Saturn/Mars/Pluto (negative); Mercury, Uranus and Neptune contribute '
+      + 'exactly 0 at any orb. A low weight is not "nothing here" — read it '
+      + 'against total significance. Places are in the order asked for: this is '
+      + 'a comparison, not a ranking.',
     askOne: 'Explain this place under relocation',
     askAll: 'Compare these places: which suits what',
     askHint: 'Press "explain" on a place — its angles and contacts go to the chat.',
@@ -102,47 +129,65 @@ const ANGLE_LABEL: Record<string, string> = {
   asc: 'Asc', mc: 'MC', ic: 'IC', desc: 'Desc',
 };
 
-const deg = (v: number) => `${v.toFixed(2)}°`;
+/**
+ * A figure, or an em dash — never a substitute number.
+ *
+ * `(v ?? 0).toFixed(2)` reads as a measurement and is indistinguishable from
+ * a real one. When a field is missing the honest output is that it is
+ * missing, in the view and in the text sent to the chat alike.
+ */
+const num = (v: unknown, digits: number): string =>
+  typeof v === 'number' && Number.isFinite(v) ? v.toFixed(digits) : '—';
+const deg = (v: unknown) => (typeof v === 'number' && Number.isFinite(v) ? `${v.toFixed(2)}°` : '—');
 const glyph = (p: string) => P_GLYPH[p] ?? P_GLYPH[p.toLowerCase()] ?? '·';
+/** One contact in plain text — used identically on screen and in the ask. */
+const hitText = (h: Hit, orbWord: string) =>
+  `${h.planet ?? '?'} ${h.angle ?? '?'} ${orbWord} ${deg(h.orb_deg)}`;
 
 function render(payload: Payload, lang: Lang): string {
   const t = COPY[lang];
-  const locations = payload.locations ?? [];
-
-  // Sorted by weight, strongest first — the whole reason to compare.
-  const ordered = [...locations].sort((a, b) => (b.score ?? 0) - (a.score ?? 0));
+  // Server order, deliberately: see the note at the top of this file.
+  const ordered = payload.locations ?? [];
 
   const rows = ordered.map((loc) => {
     const hits = loc.angle_hits ?? [];
-    const hitText = hits.length
+    const hitsHtml = hits.length
       ? hits.map((h) => `${glyph(h.planet ?? '')} ${esc(h.planet ?? '')} ${esc(h.angle ?? '')}`
-        + ` <span class="num">${t.orb} ${deg(h.orb ?? 0)}</span>`).join(' · ')
+        + ` <span class="num">${t.orb} ${deg(h.orb_deg)}</span>`).join(' · ')
       : `<span class="dim">${t.none}</span>`;
 
     const angles = Object.entries(loc.angles ?? {})
       .map(([k, v]) => `${ANGLE_LABEL[k] ?? esc(k)} <span class="num">${deg(v)}</span>`)
       .join(' · ');
 
+    const sig = loc.score_explanation?.total_significance;
+
     // The question carries the figures, not a description of them.
     const q = `${t.askOne}: ${loc.name ?? ''} `
-      + `(${(loc.latitude ?? 0).toFixed(4)}, ${(loc.longitude ?? 0).toFixed(4)}). `
+      + `(${num(loc.latitude, 4)}, ${num(loc.longitude, 4)}). `
       + `${t.angles}: ${Object.entries(loc.angles ?? {})
         .map(([k, v]) => `${ANGLE_LABEL[k] ?? k} ${deg(v)}`).join(', ')}. `
       + `${t.hits}: ${hits.length
-        ? hits.map((h) => `${h.planet} ${h.angle} ${t.orb} ${deg(h.orb ?? 0)}`).join('; ')
-        : t.none}. ${t.score} ${(loc.score ?? 0).toFixed(1)}.`;
+        ? hits.map((h) => hitText(h, t.orb)).join('; ')
+        : t.none}. `
+      + `${t.score} ${num(loc.score, 1)}`
+      + (typeof sig === 'number' ? `, ${t.significance} ${num(sig, 1)}` : '')
+      + `. ${t.scoreCaveat}`;
 
     return `<section class="loc">
       <div class="loc-head">
         <h2>${esc(loc.name ?? '—')}</h2>
-        <span class="num loc-score">${(loc.score ?? 0).toFixed(1)}<span class="dim"> ${t.score}</span></span>
+        <span class="num loc-score">${num(loc.score, 1)}<span class="dim"> ${t.score}</span></span>
       </div>
-      <div class="kv"><span>${t.coords}</span><b class="num">${(loc.latitude ?? 0).toFixed(4)}° / ${(loc.longitude ?? 0).toFixed(4)}°</b></div>
+      <div class="kv"><span>${t.coords}</span><b class="num">${num(loc.latitude, 4)}° / ${num(loc.longitude, 4)}°</b></div>
       <div class="loc-line"><span class="lbl">${t.angles}</span> ${angles}</div>
-      <div class="loc-line"><span class="lbl">${t.hits}</span> ${hitText}</div>
+      <div class="loc-line"><span class="lbl">${t.hits}</span> ${hitsHtml}</div>
+      ${typeof sig === 'number'
+        ? `<div class="loc-line"><span class="lbl">${t.significance}</span> <span class="num">${num(sig, 1)}</span> <span class="dim">${t.significanceHint}</span></div>`
+        : ''}
       ${loc.summary?.clean ? `<div class="loc-flag">${t.clean}</div>` : ''}
       ${loc.summary?.plain ? `<p class="loc-plain">${esc(loc.summary.plain)}</p>` : ''}
-      ${!hits.length && loc.score_explanation?.plain
+      ${loc.score_explanation?.plain
         ? `<p class="loc-plain dim">${esc(loc.score_explanation.plain)}</p>` : ''}
       ${askButton(q, ASK_LABEL[lang])}
     </section>`;
@@ -162,7 +207,10 @@ function render(payload: Payload, lang: Lang): string {
     </div>
     <div class="locs">${rows}</div>
     ${ordered.length ? `<div class="ask-row">${askButton(
-      `${t.askAll}: ${ordered.map((l) => `${l.name} (${t.score} ${(l.score ?? 0).toFixed(1)})`).join(', ')}.`,
+      `${t.askAll}: ${ordered.map((l) => `${l.name} (${t.score} ${num(l.score, 1)}`
+        + (typeof l.score_explanation?.total_significance === 'number'
+          ? `, ${t.significance} ${num(l.score_explanation.total_significance, 1)}` : '')
+        + ')').join(', ')}. ${t.scoreCaveat}`,
       t.askAll, true,
     )}<span class="ask-hint">${t.askHint}</span></div>` : ''}
     <div class="prov">${provBits}</div>
