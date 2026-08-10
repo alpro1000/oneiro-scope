@@ -136,4 +136,6 @@ jobs:
             backend/tests/test_mcp_apps.py \
             backend/tests/test_view_payload_contract.py \
             backend/tests/test_cors.py \
+            backend/tests/test_staff_accounts.py \
+            backend/tests/test_confidence_ladder_docs.py \
             -v

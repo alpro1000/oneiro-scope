@@ -135,6 +135,14 @@ class Settings(BaseSettings):
     ANTHROPIC_API_KEY: str = ""
     TOGETHER_API_KEY: str = ""
 
+    # Accounts that operate this deployment: comma-separated emails and/or
+    # OAuth subjects. They resolve to the PRO tier, so the people who build and
+    # support the product can exercise the paid paths they ship. Empty by
+    # default — a deployment that says nothing bypasses nothing. The identity
+    # compared is the AUTHENTICATED one; nothing a caller asserts about itself
+    # takes part. See `backend/services/billing/quotas.py::is_staff`.
+    STAFF_ACCOUNTS: str = ""
+
     # Stripe
     STRIPE_SECRET_KEY: str = ""
     STRIPE_PUBLISHABLE_KEY: str = ""

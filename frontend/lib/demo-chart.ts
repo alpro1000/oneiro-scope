@@ -1,36 +1,61 @@
 import type { ChartCore } from '@oneiroscope/chart-kit';
 
 /**
- * Demo chart — Swiss Ephemeris for 1977-07-01 19:30 UTC (Запорожье).
+ * Sample chart — Greenwich Observatory, noon on 2000-01-01.
  *
- * Real numbers from the server's own builder (`scripts/generate_chart_golden.py`),
- * used to seed screens before a fetch so the wheel/map are never empty. Replaced
- * wholesale by `POST /api/v1/chart`. The client never computes an ephemeris —
- * every angle, cusp, aspect and astrocartography line is DERIVED from this core
- * by `@oneiroscope/chart-kit`, which is exactly why one core works offline.
+ * Screens need something on them before the user has entered anything, or the
+ * wheel and the map are an empty frame that teaches nothing. What they must
+ * NOT show is a person: this file previously shipped the owner's real birth
+ * date, time and city to every visitor, and — worse for the reader — a chart
+ * that looks like theirs but is somebody else's is not a sample, it is a
+ * wrong answer. Hence a place and a moment instead: the reference meridian,
+ * where longitude is defined, at the top of the millennium.
+ *
+ * Real numbers from the server's own builder
+ * (`backend/services/astrology/chart_core.py::build_chart_core`), so every
+ * angle, cusp, aspect and astrocartography line `@oneiroscope/chart-kit`
+ * derives from it is correct — the sample behaves exactly like live data, and
+ * the screens are exercised rather than faked. Replaced wholesale by
+ * `POST /api/v1/chart` as soon as the user submits their own details.
+ *
+ * `SAMPLE_LABEL` is what the UI must show while this is on screen. Every
+ * screen that seeds itself with `SAMPLE_CORE` is responsible for saying so —
+ * an unlabelled sample is indistinguishable from a computed result.
  *
  * Shared by the natal and astrocartography screens so the two never drift.
  */
-export const DEMO_CORE: ChartCore = {
-  version: '1', jd_ut: 2443326.3125, gmst: 212.2347, obliquity: 23.43962,
+export const SAMPLE_CORE: ChartCore = {
+  version: '1', jd_ut: 2451545.0, gmst: 280.4571, obliquity: 23.43768,
   birth: {
-    lat: 47.8388, lon: 35.1396, tz_used: 'Europe/Kyiv', utc_offset_used: '+03:00',
-    tz_source: 'coordinates', local_clock: '1977-07-01T22:30:00',
-    utc: '1977-07-01T19:30:00+00:00', place_label: 'Запорожье', time_known: true,
+    lat: 51.4779, lon: -0.0015, tz_used: 'Europe/London', utc_offset_used: '+00:00',
+    tz_source: 'explicit', local_clock: '2000-01-01T12:00:00',
+    utc: '2000-01-01T12:00:00+00:00', place_label: 'Greenwich', time_known: true,
   },
   bodies: {
-    Sun: { ecl_lon: 99.8251, ecl_lat: 0.0, ra: 100.6892, dec: 23.0758, speed_lon: 0.9531, retrograde: false },
-    Moon: { ecl_lon: 289.2449, ecl_lat: 5.0182, ra: 290.0909, dec: -17.0892, speed_lon: 14.9173, retrograde: false },
-    Mercury: { ecl_lon: 102.0171, ecl_lat: 1.457, ra: 103.206, dec: 24.3474, speed_lon: 2.1629, retrograde: false },
-    Venus: { ecl_lon: 54.9195, ecl_lat: -2.8885, ra: 53.294, dec: 16.1931, speed_lon: 1.0446, retrograde: false },
-    Mars: { ecl_lon: 48.8009, ecl_lat: -0.8224, ra: 46.58, dec: 16.6247, speed_lon: 0.7176, retrograde: false },
-    Jupiter: { ecl_lon: 79.947, ecl_lat: -0.4507, ra: 79.1006, dec: 22.6094, speed_lon: 0.2246, retrograde: false },
-    Saturn: { ecl_lon: 135.1816, ecl_lat: 0.9798, ra: 137.9467, dec: 17.2193, speed_lon: 0.1124, retrograde: false },
-    Uranus: { ecl_lon: 217.7776, ecl_lat: 0.437, ra: 215.5623, dec: -13.6905, speed_lon: -0.0123, retrograde: true },
-    Neptune: { ecl_lon: 254.0923, ecl_lat: 1.5263, ra: 252.9362, dec: -20.9759, speed_lon: -0.0236, retrograde: true },
-    Pluto: { ecl_lon: 191.4284, ecl_lat: 17.0623, ra: 197.2248, dec: 11.1776, speed_lon: 0.0058, retrograde: false },
-    TrueNode: { ecl_lon: 200.8278, ecl_lat: 0.0, ra: 199.2404, dec: -8.131, speed_lon: -0.179, retrograde: true },
-    Chiron: { ecl_lon: 35.121, ecl_lat: -0.3641, ra: 32.9597, dec: 12.886, speed_lon: 0.0331, retrograde: false },
+    Sun: { ecl_lon: 280.3689, ecl_lat: 0.0002, ra: 281.2784, dec: -23.0324, speed_lon: 1.0194, retrograde: false },
+    Moon: { ecl_lon: 223.3238, ecl_lat: 5.1707, ra: 222.4522, dec: -10.9006, speed_lon: 12.0213, retrograde: false },
+    Mercury: { ecl_lon: 271.8893, ecl_lat: -0.9948, ra: 272.0746, dec: -24.4189, speed_lon: 1.5563, retrograde: false },
+    Venus: { ecl_lon: 241.5658, ecl_lat: 2.0663, ra: 239.8928, dec: -18.4489, speed_lon: 1.209, retrograde: false },
+    Mars: { ecl_lon: 327.9633, ecl_lat: -1.0678, ra: 330.5168, dec: -13.1825, speed_lon: 0.7757, retrograde: false },
+    Jupiter: { ecl_lon: 25.2531, ecl_lat: -1.2622, ra: 23.8679, dec: 8.5943, speed_lon: 0.0408, retrograde: false },
+    Saturn: { ecl_lon: 40.3957, ecl_lat: -2.4449, ra: 38.7654, dec: 12.6148, speed_lon: -0.0199, retrograde: true },
+    Uranus: { ecl_lon: 314.8092, ecl_lat: -0.6583, ra: 317.4748, dec: -17.0203, speed_lon: 0.0503, retrograde: false },
+    Neptune: { ecl_lon: 303.193, ecl_lat: 0.235, ra: 305.4328, dec: -19.2132, speed_lon: 0.0356, retrograde: false },
+    Pluto: { ecl_lon: 251.4548, ecl_lat: 10.8552, ra: 251.4192, dec: -11.3943, speed_lon: 0.0352, retrograde: false },
+    TrueNode: { ecl_lon: 123.954, ecl_lat: 0.0, ra: 126.2747, dec: 19.2645, speed_lon: -0.0547, retrograde: true },
+    Chiron: { ecl_lon: 251.6176, ecl_lat: 4.0717, ra: 250.6696, dec: -18.141, speed_lon: 0.1143, retrograde: false },
   },
   node_type: 'true', house_system: 'placidus',
 };
+
+/** Banner text for a screen still showing `SAMPLE_CORE`. */
+export const SAMPLE_LABEL: Record<'ru' | 'en', string> = {
+  ru: 'Образец: Гринвич, 1 января 2000, 12:00. Введите свои данные ниже — '
+    + 'карта пересчитается.',
+  en: 'Sample: Greenwich, 1 January 2000, 12:00. Enter your own details below '
+    + '— the chart will be recomputed.',
+};
+
+/** True while the screen is still showing the sample rather than a result. */
+export const isSample = (core: ChartCore): boolean =>
+  core.jd_ut === SAMPLE_CORE.jd_ut;

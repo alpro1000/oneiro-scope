@@ -69,6 +69,15 @@ services:
       - key: ALLOWED_ORIGIN_REGEX
         sync: false
 
+      # Accounts that operate this deployment — comma-separated emails and/or
+      # OAuth subjects. They resolve to the PRO tier so the people who ship the
+      # paid paths can exercise them; without this the free tier's one-chart-
+      # for-life grant applies to the owner exactly as to a customer, and the
+      # paid path becomes untestable in production. Dashboard-only: it names
+      # real people, and it belongs to the deployment rather than to the repo.
+      - key: STAFF_ACCOUNTS
+        sync: false
+
       - key: LUNAR_DEFAULT_TZ
         value: Europe/Moscow
 

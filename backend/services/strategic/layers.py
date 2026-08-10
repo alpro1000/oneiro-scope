@@ -241,20 +241,53 @@ def insight(
     )
 
 
-# Fill the numeric confidence ladder now that Layer is defined.
-# These values come from `docs/PROJECT-scaffold/CLAUDE.md` confidence ladder:
-# 1.0 ephemeris/calc · 0.9 cited classical rule · 0.8 symbol dictionary ·
-# 0.7 LLM synthesis · 0.6 user context (per-individual, not generalisable).
+# --- THE confidence ladder ----------------------------------------------------
+# This table is the single source of truth. CLAUDE.md quotes it, and
+# `test_confidence_ladder_docs.py` fails when the two disagree — the two had
+# already drifted apart once, which is how a project whose whole pitch is
+# "every claim carries its confidence" ended up documenting a ladder it was
+# not running.
+#
+# Four rungs are the ladder proper — how a claim was ARRIVED at:
+#
+#   1.00  computed or verified   — an ephemeris result, or a fact checked
+#                                  against a record. Reproducible.
+#   0.90  cited rule / study     — named source, someone else's peer review.
+#   0.80  dictionary lookup      — a tradition's own table of meanings.
+#   0.70  generated synthesis    — the model joining the above into prose.
+#
+# The remaining entries are the layers this codebase actually has, each placed
+# on that ladder rather than given a rung of its own. Where a layer sits
+# between rungs it is written down as such, with the reason:
+#
+#   0.85  statistics without a per-claim citation — an industry cycle or a
+#         macro series is real evidence, but weaker than a study we can name.
+#
+# NOTE on USER_CONTEXT. The comment here used to say 0.6 while the code said
+# 0.9. 0.9 is right and the comment was the error: what the user tells us
+# about their own life is strong evidence ABOUT THAT USER — below 1.0 only
+# because it is self-reported rather than verified. "Not generalisable" is a
+# statement about scope, not about confidence, and conflating the two is what
+# produced the discrepancy.
 LAYER_CONFIDENCE.update({
     Layer.OBJECTIVE_FACT: 1.0,        # verified life event / bank record
     Layer.ASTRONOMY: 1.0,             # Swiss Ephemeris computation
     Layer.AGE_PSYCHOLOGY: 0.9,        # peer-reviewed (Erikson, Levinson, H/VdC)
-    Layer.CAREER_CYCLE: 0.85,         # industry statistics
-    Layer.ECONOMICS: 0.85,            # macro data
-    Layer.USER_CONTEXT: 0.9,          # user-supplied, not generalisable
+    Layer.USER_CONTEXT: 0.9,          # self-reported, about the reporter
+    Layer.CAREER_CYCLE: 0.85,         # industry statistics, uncited per claim
+    Layer.ECONOMICS: 0.85,            # macro data, uncited per claim
     Layer.ASTROLOGY_SYMBOLIC: 0.8,    # symbol dictionary / classical rule
     Layer.LLM_NARRATIVE: 0.7,         # generated synthesis
 })
+
+#: The four rungs, as documentation quotes them. Keyed by the phrase CLAUDE.md
+#: uses so the doc-sync test can match on meaning rather than on wording.
+LADDER_RUNGS: dict[str, float] = {
+    "ephemeris/calc": 1.0,
+    "cited classical rule": 0.9,
+    "symbol dictionary": 0.8,
+    "LLM synthesis": 0.7,
+}
 
 
 def numeric_confidence(sources: list[Source]) -> float:

@@ -33,7 +33,7 @@ import {
   saveChart,
   type ChartProvenance,
 } from '@/lib/chart-store';
-import { DEMO_CORE } from '@/lib/demo-chart';
+import { SAMPLE_CORE, SAMPLE_LABEL, isSample } from '@/lib/demo-chart';
 import { WORLD_COAST } from '@/lib/world-coast';
 import BirthDataForm from '@/components/BirthDataForm';
 import CityAutocomplete from '@/components/CityAutocomplete';
@@ -138,7 +138,7 @@ export default function AstrocartographyPage() {
   const lang: Lang = params?.locale === 'ru' ? 'ru' : 'en';
   const t = ui(lang);
 
-  const [core, setCore] = useState<ChartCore>(DEMO_CORE);
+  const [core, setCore] = useState<ChartCore>(SAMPLE_CORE);
   const [cursor, setCursor] = useState<Cursor | null>(null);
   const [hidden, setHidden] = useState<Set<string>>(new Set());
   const [prov, setProv] = useState<ChartProvenance | null>(null);
@@ -382,6 +382,15 @@ export default function AstrocartographyPage() {
 
   return (
     <main style={{ padding: 'clamp(14px,2.2vw,30px)' }}>
+      {isSample(core) && (
+        <p style={{
+          border: '1px solid var(--brass-dim)', background: 'var(--notice-bg)',
+          color: 'var(--notice-ink)', padding: '8px 11px', fontSize: 12,
+          lineHeight: 1.5, margin: '0 0 clamp(12px,1.6vw,20px)',
+        }}>
+          {SAMPLE_LABEL[lang]}
+        </p>
+      )}
       <header style={{
         display: 'flex', flexWrap: 'wrap', alignItems: 'flex-end', gap: '16px 28px',
         paddingBottom: 14, marginBottom: 'clamp(12px,1.6vw,20px)', borderBottom: '1px solid var(--grat-1)',
