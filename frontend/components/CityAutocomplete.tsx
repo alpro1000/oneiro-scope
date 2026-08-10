@@ -2,6 +2,8 @@
 
 import {useState, useEffect, useRef} from 'react';
 
+import {resolveApiBase} from '@/lib/api-base';
+
 type City = {
   name: string;
   country: string;
@@ -44,6 +46,10 @@ export default function CityAutocomplete({
   const [isOpen, setIsOpen] = useState(false);
   const [selectedCity, setSelectedCity] = useState<City | null>(null);
   const [showError, setShowError] = useState(false);
+  // A search that could not run is NOT a search that found nothing. Telling
+  // someone their city does not exist because the request never left the
+  // browser sends them off to re-spell a name that was already correct.
+  const [unavailable, setUnavailable] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
@@ -81,10 +87,21 @@ export default function CityAutocomplete({
       abortControllerRef.current = new AbortController();
       setIsLoading(true);
       setShowError(false);
+      setUnavailable(false);
 
       try {
-        // Use backend API endpoint for city search
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+        // Through the shared resolver, not `?? 'http://localhost:8000'`.
+        // That fallback meant a deployment with NEXT_PUBLIC_API_URL unset
+        // quietly asked the VISITOR'S OWN machine for cities and reported
+        // "city not found" — a wrong answer about the world, phrased as if
+        // the search had run. `resolveApiBase` throws in production instead,
+        // and the catch below says the search is unavailable.
+        const apiUrl = resolveApiBase({
+          serviceName: 'City search',
+          isServer: false,
+          serverEnvVars: [],
+          clientEnvVars: [process.env.NEXT_PUBLIC_API_URL],
+        });
         const url = `${apiUrl}/api/v1/astrology/cities/search?query=${encodeURIComponent(
           value
         )}&locale=${locale}&max_results=10`;
@@ -94,7 +111,7 @@ export default function CityAutocomplete({
         });
 
         if (!response.ok) {
-          throw new Error('City search API error');
+          throw new Error(`City search failed: HTTP ${response.status}`);
         }
 
         const data = await response.json();
@@ -112,9 +129,9 @@ export default function CityAutocomplete({
         setShowError(cities.length === 0 && value.length > 2);
       } catch (error: any) {
         if (error.name !== 'AbortError') {
-          console.error('Failed to fetch cities:', error);
+          console.error('City search unavailable:', error);
           setSuggestions([]);
-          setShowError(true);
+          setUnavailable(true);
         }
       } finally {
         setIsLoading(false);
@@ -178,10 +195,10 @@ export default function CityAutocomplete({
             top: '50%',
             transform: 'translateY(-50%)',
             fontSize: 12,
-            color: showError && !selectedCity ? 'var(--notice-ink)' : 'var(--brass)',
+            color: (showError || unavailable) && !selectedCity ? 'var(--notice-ink)' : 'var(--brass)',
           }}
         >
-          {isLoading ? '…' : selectedCity ? '✓' : showError ? '✕' : ''}
+          {isLoading ? '…' : selectedCity ? '✓' : showError || unavailable ? '✕' : ''}
         </span>
       </div>
 
@@ -195,7 +212,16 @@ export default function CityAutocomplete({
           {selectedCity.lat.toFixed(4)}°, {selectedCity.lon.toFixed(4)}°
         </p>
       )}
-      {!selectedCity && showError && value.length > 2 && (
+      {!selectedCity && unavailable && (
+        <p
+          style={{margin: '4px 0 0', fontSize: 11.5, lineHeight: 1.45, color: 'var(--notice-ink)'}}
+        >
+          {locale === 'ru'
+            ? 'Поиск городов недоступен — сервис не отвечает. Название можно ввести вручную, но координаты подставлены не будут.'
+            : 'City search is unavailable — the service did not answer. You can type the name, but no coordinates will be filled in.'}
+        </p>
+      )}
+      {!selectedCity && showError && !unavailable && value.length > 2 && (
         <p
           style={{margin: '4px 0 0', fontSize: 11.5, lineHeight: 1.45, color: 'var(--notice-ink)'}}
         >

@@ -64,6 +64,22 @@ async def lifespan(app: FastAPI):
     logger.info("Ensuring database schema (create_all, idempotent)...")
     await init_db()
 
+    # Say out loud which browser origins this process will answer. A CORS
+    # refusal is invisible from the server side — the request is served, the
+    # log says 200, and only the browser discovers the response is unreadable.
+    # Printing the allow-list on every boot means the answer to "why does the
+    # site say Failed to fetch" is already in the log.
+    cors_problem = settings.cors_problem()
+    if cors_problem:
+        logger.error("CORS MISCONFIGURED: %s", cors_problem)
+    else:
+        logger.info(
+            "CORS: allowing %s%s",
+            settings.allowed_origins_list,
+            f" + regex {settings.ALLOWED_ORIGIN_REGEX}"
+            if settings.ALLOWED_ORIGIN_REGEX else "",
+        )
+
     logger.info("Application startup complete")
 
     # The streamable-HTTP transport keeps per-session state, so its session
@@ -105,9 +121,13 @@ app.add_middleware(
 )
 
 # CORS
+# Sits OUTSIDE the rate limiter, so even a 429 comes back with the headers that
+# let the browser read it — a refusal the frontend can display beats one it can
+# only report as "Failed to fetch".
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.allowed_origins_list,
+    allow_origin_regex=settings.ALLOWED_ORIGIN_REGEX or None,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

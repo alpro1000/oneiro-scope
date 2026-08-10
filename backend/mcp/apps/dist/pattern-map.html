@@ -1,0 +1,364 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Chart pattern · OneiroScope</title>
+<style>/* OneiroScope design tokens
+   Единственный источник цвета, шрифтов и метрик.
+   Хардкод hex-значений в компонентах запрещён — только var().
+   Эталонная реализация: astrocartography.html */
+
+
+
+:root {
+  /* --- surfaces: ночная морская карта --- */
+  --abyss:      #071320;   /* фон страницы, глубокая вода */
+  --shelf:      #0C1E2E;   /* контейнеры */
+  --panel:      #0A1B29;   /* панели прибора */
+  --land:       #152C3E;   /* заливка суши */
+  --land-edge:  #24445B;   /* контур берега */
+  --grat-1:     #1B3549;   /* сетка, разделители */
+  --grat-2:     #22415A;   /* рамки */
+
+  /* --- ink --- */
+  --parchment:  #E7DDC7;   /* основной текст */
+  --muted:      #89A0B1;   /* второстепенный */
+  --dim:        #5C7385;   /* подписи, метки осей */
+
+  /* --- accent: единственный --- */
+  --brass:      #D2A64B;
+  --brass-dim:  #8A6E32;   /* eyebrow, служебные метки */
+
+  /* --- notice: приглушённая латунь для лимитов/предупреждений (не второй акцент) --- */
+  --notice-bg:  #20180C;   /* тёмно-янтарная подложка сообщения о лимите */
+  --notice-ink: #E8D4A0;   /* текст на ней */
+
+  /* --- планеты: классические металлы --- */
+  --p-sun:      #E8C25A;   /* золото */
+  --p-moon:     #C7D3DD;   /* серебро */
+  --p-mercury:  #9FD5C8;   /* ртуть */
+  --p-venus:    #DB8F6C;   /* медь */
+  --p-mars:     #C6544B;   /* железо */
+  --p-jupiter:  #B9A8DA;   /* олово */
+  --p-saturn:   #8493A2;   /* свинец */
+  --p-uranus:   #6FBACB;
+  --p-neptune:  #5F84BC;
+  --p-pluto:    #997280;
+  --p-truenode: var(--muted);      /* лунный узел — служебная точка, не металл */
+  --p-chiron:   var(--p-mercury);  /* кентавр — ближе всего к ртути */
+
+  /* --- типографика: три гарнитуры, роли фиксированы --- */
+  --font-display: 'Bodoni Moda', Georgia, serif;
+  --font-ui:      'Instrument Sans', system-ui, -apple-system, sans-serif;
+  --font-data:    'IBM Plex Mono', ui-monospace, monospace;
+
+  /* --- метрики --- */
+  --radius: 0;             /* прямые углы везде */
+  --hair: 1px;
+  --panel-w: 300px;
+  --collapse: 900px;
+
+  --track-eyebrow: .22em;
+  --track-display: -.015em;
+  --lh-display: .94;
+}
+
+/* Прибор не скруглён и не отбрасывает тень. Границы вместо теней. */
+* { border-radius: var(--radius); box-shadow: none; }
+
+body {
+  background: var(--abyss);
+  color: var(--parchment);
+  font-family: var(--font-ui);
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, .display {
+  font-family: var(--font-display);
+  font-weight: 400;
+  letter-spacing: var(--track-display);
+  line-height: var(--lh-display);
+}
+h1 em, .display em { font-style: italic; color: var(--brass); }
+
+/* Всё, что является числом или измерением — моноширинным.
+   Это сигнал «здесь расчёт, а не мнение». Главный дифференциатор. */
+.num, .deg, .orb, .coord, .ver, code, kbd, samp {
+  font-family: var(--font-data);
+  font-variant-numeric: tabular-nums;
+}
+
+.eyebrow {
+  font-family: var(--font-data);
+  font-size: 10.5px;
+  letter-spacing: var(--track-eyebrow);
+  text-transform: uppercase;
+  color: var(--brass-dim);
+}
+
+/* Панель прибора: блоки через 1px разделитель */
+.panel        { border: var(--hair) solid var(--grat-2); background: var(--panel); }
+.panel-block  { padding: 13px 15px; border-bottom: var(--hair) solid var(--grat-1); }
+.panel-block:last-child { border-bottom: 0; }
+
+/* Основной паттерн компоновки */
+.stage {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) var(--panel-w);
+  gap: clamp(12px, 1.4vw, 20px);
+  align-items: start;
+}
+@media (max-width: 900px) { .stage { grid-template-columns: 1fr; } }
+
+/* Провенанс: обязателен на каждом экране с расчётом.
+   Это не мелкий шрифт для юристов, это доказательство работы прибора. */
+.provenance {
+  font-family: var(--font-data);
+  font-size: 10px;
+  letter-spacing: .06em;
+  color: var(--dim);
+  padding-top: 12px;
+  border-top: var(--hair) solid var(--grat-1);
+}
+
+/* Пограничное положение планеты — помечается явно, не подразумевается */
+.borderline { color: var(--brass); }
+.borderline::after { content: ' \00B1'; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition: none !important; animation: none !important; }
+}
+
+/* --- Compatibility bridge (transitional) ---------------------------------
+   The screens built before this design system (astrology, dreams, face,
+   calendar, Header) reach the palette through Tailwind utilities — bg-bg,
+   text-ink, gold, rounded-lg — that resolve to the OLD variable names below.
+   Until each screen is rebuilt on the instrument system (natal → lunar →
+   price → connect → cabinet), point those names at the nearest new token so
+   nothing renders unstyled and the whole app shifts toward the new look at
+   once. NEW work must use the named tokens above (--abyss, --brass,
+   --parchment, --font-data …), never these. Delete a line here as its screen
+   is rebuilt; delete the block when the last one is. */
+:root {
+  --bg:             var(--abyss);
+  --surface:        var(--shelf);
+  --surface-strong: var(--panel);
+  --gold:           var(--brass);
+  --gold-soft:      rgba(210, 166, 75, 0.24);
+  --ink:            var(--parchment);
+  --ink-muted:      var(--muted);
+  --accent:         var(--brass);   /* one accent only — collapse the old teal onto brass */
+  --danger:         var(--p-mars);
+  --font-sans:      var(--font-ui);
+  --radius-lg: 0; --radius-md: 0; --radius-sm: 0;  /* instruments are not rounded */
+  --shadow-gold: none;
+}
+
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;background:var(--abyss);color:var(--parchment);
+  font-family:var(--font-ui);font-size:14px}
+body{padding:14px}
+.wrap{display:grid;gap:16px;grid-template-columns:minmax(0,1fr) minmax(0,300px);align-items:start}
+@media (max-width:720px){.wrap{grid-template-columns:1fr}}
+.wheel{color:var(--parchment)}
+.wheel svg{display:block;width:100%;height:auto}
+.panels{display:grid;gap:14px}
+section{border:1px solid var(--grat-2);background:var(--panel);padding:11px 13px}
+.eyebrow{font-family:var(--font-data);font-size:10.5px;letter-spacing:.22em;
+  text-transform:uppercase;color:var(--brass);margin-bottom:8px}
+.kv{display:flex;justify-content:space-between;gap:12px;padding:3px 0;
+  font-size:12.5px;color:var(--muted)}
+.kv b{font-weight:400;color:var(--parchment)}
+table{width:100%;border-collapse:collapse}
+td{padding:3px 0;font-size:12.5px;vertical-align:baseline;border-bottom:1px solid var(--grat-1)}
+tr:last-child td{border-bottom:0}
+.num{font-family:var(--font-data);color:var(--parchment);text-align:right;white-space:nowrap}
+.body{color:var(--muted)}
+.dim{color:var(--dim)}
+.glyph{font-size:15px;width:1.6em}
+.flag{color:var(--brass);margin-left:5px}
+.note{border:1px solid var(--brass-dim);background:var(--notice-bg);color:var(--notice-ink);
+  padding:9px 11px;font-size:12.5px;line-height:1.55;margin:0}
+.prov{display:flex;flex-wrap:wrap;gap:5px 22px;margin-top:14px;padding-top:10px;
+  border-top:1px solid var(--grat-1);font-family:var(--font-data);font-size:11px;color:var(--parchment)}
+.prov b{font-weight:400;color:var(--muted)}
+.asp{padding:5px 0;border-bottom:1px solid var(--grat-1)}
+.asp:last-child{border-bottom:0}
+.asp-pair{font-size:12.5px;color:var(--muted)}
+.asp-num{font-size:11.5px;text-align:left;margin-top:1px}
+.disclaimer{color:var(--muted);font-size:12.5px;line-height:1.6;margin:11px 0 0;max-width:64ch}
+.disclaimer b{color:var(--parchment);font-weight:500}
+
+/* --- relocation comparison ------------------------------------------------- */
+.locs{display:grid;gap:1px;background:var(--grat-1);
+  grid-template-columns:repeat(auto-fill,minmax(280px,1fr));border:1px solid var(--grat-2)}
+.loc{border:0}
+.loc-head{display:flex;align-items:baseline;justify-content:space-between;gap:10px}
+.loc h2{font-family:var(--font-display);font-weight:400;font-size:19px;
+  letter-spacing:-.015em;margin:0}
+.loc-score{font-size:17px;color:var(--brass)}
+.loc-score .dim{font-size:10.5px}
+.loc-line{font-size:12px;color:var(--muted);margin-top:6px;line-height:1.6}
+.loc-line .lbl{font-family:var(--font-data);font-size:10px;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--dim);display:block;margin-bottom:2px}
+.loc-flag{display:inline-block;font-family:var(--font-data);font-size:10px;
+  letter-spacing:.08em;text-transform:uppercase;color:var(--brass);
+  border:1px solid var(--brass-dim);padding:1px 6px;margin-top:7px}
+.loc-plain{font-size:12.5px;color:var(--muted);line-height:1.55;margin:7px 0 0}
+.loc .ask{margin-top:9px}
+
+/* --- chart patterns (money contour / vocation map) ------------------------- */
+.pgrid{display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));
+  align-items:start}
+.blk{margin-top:8px}
+.blk-lbl{font-family:var(--font-data);font-size:10px;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--dim);margin-bottom:3px}
+.pl{font-size:12.5px;color:var(--muted);line-height:1.7;
+  display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+.pl .num{font-family:var(--font-data);color:var(--parchment)}
+.dig{font-family:var(--font-data);font-size:11px;color:var(--brass)}
+
+/* --- "explain" controls: the seam between the computed layer and the model's
+   ---  reading of it.
+   ---
+   ---  Per-row controls are QUIET text, not outlined boxes. A natal chart
+   ---  carries thirty of them, and thirty brass rectangles fight the numbers
+   ---  they sit next to — the design system's rule that emphasis must not
+   ---  compete with data. Only the section-level "read this as a whole" is
+   ---  drawn as a button, because there is exactly one of it per panel. */
+.ask{
+  background:transparent;border:0;padding:0;cursor:pointer;
+  font-family:var(--font-ui);font-size:11px;letter-spacing:.02em;
+  color:var(--muted);border-bottom:1px solid transparent;
+  transition:color .15s ease,border-color .15s ease;
+}
+.ask:hover{color:var(--brass);border-bottom-color:var(--brass-dim)}
+.ask:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
+.ask-strong{
+  border:1px solid var(--brass-dim);color:var(--brass);padding:5px 10px;
+  font-size:12px;width:100%;text-align:center;
+}
+.ask-strong:hover{background:var(--brass);color:var(--abyss);border-bottom-color:var(--brass-dim)}
+.ask-cell{text-align:right;white-space:nowrap;padding-left:10px}
+.asp .ask{margin-top:3px}
+.ev-row .ask{margin-top:5px;margin-left:2.1em}
+.lday .ask{margin-top:6px}
+.lg .ask{margin-left:5px;font-size:10px}
+.ask-row{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;margin-top:11px;
+  padding-top:10px;border-top:1px solid var(--grat-1)}
+.ask-row .ask-strong{width:auto}
+.ask-hint{font-family:var(--font-ui);font-size:11px;color:var(--dim);line-height:1.5;
+  margin:7px 0 0;display:block}
+.ask-row .ask-hint{margin:0;flex:1;min-width:14ch}
+section > .ask-strong{margin-top:10px}
+@media (prefers-reduced-motion: reduce){.ask{transition:none}}
+
+/* --- shared page furniture ------------------------------------------------ */
+.head{margin-bottom:14px}
+h1{font-family:var(--font-display);font-weight:400;letter-spacing:-.015em;
+  line-height:1.02;font-size:clamp(22px,3.4vw,32px);margin:6px 0 0}
+.lede{color:var(--muted);font-size:13.5px;line-height:1.6;margin:8px 0 0;max-width:62ch}
+.head .eyebrow{margin-bottom:0}
+
+/* --- astrocartography ----------------------------------------------------- */
+svg{display:block;width:100%;height:auto;border:1px solid var(--grat-2)}
+.legend{margin-top:12px;border:1px solid var(--grat-2);background:var(--panel);padding:11px 13px}
+.lgs{display:flex;flex-wrap:wrap;gap:6px 14px;margin-bottom:9px}
+.lg{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--muted)}
+.lg i{width:13px;height:2px;display:inline-block}
+.kinds{display:flex;flex-wrap:wrap;gap:5px 18px;font-size:11.5px;color:var(--dim);
+  padding-top:8px;border-top:1px solid var(--grat-1)}
+.kinds span{display:inline-flex;align-items:center;gap:6px}
+.k{width:16px;height:0;border-top:1.4px solid var(--muted);display:inline-block}
+.k.dashed{border-top-style:dashed}
+.k.dotted{border-top-style:dotted}
+
+/* --- lunar calendar ------------------------------------------------------- */
+.lgrid{display:grid;gap:1px;background:var(--grat-1);
+  grid-template-columns:repeat(auto-fill,minmax(132px,1fr));border:1px solid var(--grat-2)}
+.lday{background:var(--panel);padding:9px 10px}
+.lday-top{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.lday-date{font-size:10.5px;color:var(--dim)}
+.lday-n{font-size:19px;color:var(--brass);margin-top:4px;line-height:1.1}
+.lday-n .dim{font-size:10.5px}
+.lday-phase{font-size:11.5px;color:var(--muted);margin-top:2px}
+.lday-illum{font-size:11.5px;margin-top:3px}
+.lday-illum .dim{font-size:10px}
+.lday-sign{font-size:11.5px;color:var(--muted);margin-top:2px}
+.lday-start{font-size:10.5px;margin-top:2px}
+
+/* --- dream coding --------------------------------------------------------- */
+.dream{font-size:14.5px;line-height:1.85;color:var(--parchment);margin:0;max-width:66ch}
+mark.ev{background:transparent;color:var(--parchment);
+  border-bottom:2px solid var(--brass);padding-bottom:1px}
+mark.ev sup{font-family:var(--font-data);font-size:9.5px;color:var(--brass);
+  margin-left:2px;vertical-align:super}
+.ev-row{padding:8px 0;border-bottom:1px solid var(--grat-1)}
+.ev-row:last-child{border-bottom:0}
+.ev-head{display:flex;align-items:baseline;gap:7px;font-size:12.5px}
+.ev-n{color:var(--brass);min-width:1.4em}
+.ev-cat{color:var(--parchment)}
+.ev-conf{margin-left:auto;color:var(--dim);font-size:11px}
+.ev-quote{font-size:13px;color:var(--muted);margin:3px 0 0;padding-left:2.1em;line-height:1.5}
+.ev-meta,.ev-src{font-size:11px;padding-left:2.1em;margin-top:2px}
+.deg{margin:0;padding-left:17px;font-size:11.5px;color:var(--notice-ink)}
+.deg li{margin-bottom:3px}
+.llm{margin-top:14px}
+.prose{font-size:13.5px;line-height:1.7;color:var(--muted);margin:9px 0 0;max-width:66ch;
+  white-space:pre-wrap}
+</style>
+</head>
+<body><div id="root"></div><script>"use strict";(()=>{var S="2026-01-26",_=class{constructor(e){this.nextId=1;this.lastSize={width:0,height:0};this.handler=e,window.addEventListener("message",n=>this.receive(n))}initialize(e=4e3){let n=this.nextId++;return new Promise(t=>{let r=!1,a=l=>{r||(r=!0,window.removeEventListener("message",o),t(l))},o=l=>{let u=l.data;!u||u.jsonrpc!=="2.0"||u.id!==n||a(u.result?.hostContext??{})};window.addEventListener("message",o),this.send({jsonrpc:"2.0",id:n,method:"ui/initialize",params:{capabilities:{},clientInfo:{name:"oneiroscope-view",version:"0.1.0"},protocolVersion:S}}),window.setTimeout(()=>a(null),e)})}reportSize(){let e=document.documentElement,n=Math.ceil(e.scrollWidth),t=Math.ceil(e.scrollHeight);n===this.lastSize.width&&t===this.lastSize.height||(this.lastSize={width:n,height:t},this.send({jsonrpc:"2.0",method:"ui/notifications/size-changed",params:{width:n,height:t}}))}ask(e){this.send({jsonrpc:"2.0",id:this.nextId++,method:"ui/message",params:{role:"user",content:{type:"text",text:e}}})}receive(e){let n=e.data;if(!(!n||n.jsonrpc!=="2.0"||typeof n.method!="string"))switch(n.method){case"ui/notifications/tool-input":this.handler.onToolInput?.((n.params??{}).arguments??{});break;case"ui/notifications/tool-result":this.handler.onToolResult?.(n.params??{});break;case"ui/notifications/host-context-changed":this.handler.onContext?.(n.params??{});break;case"ui/resource-teardown":n.id!==void 0&&this.send({jsonrpc:"2.0",id:n.id,result:{}});break;default:break}}send(e){window.parent.postMessage(e,"*")}};function h(s,e,n=!1){return`<button type="button" class="${n?"ask ask-strong":"ask"}" data-ask="${c(s)}">${c(e)}</button>`}var $={ru:"\u043E\u0431\u044A\u044F\u0441\u043D\u0438\u0442\u044C",en:"explain"},E={ru:"\u041D\u0435 \u0443\u0434\u0430\u043B\u043E\u0441\u044C \u043E\u0442\u0440\u0438\u0441\u043E\u0432\u0430\u0442\u044C \u043E\u0442\u0432\u0435\u0442 \u0438\u043D\u0441\u0442\u0440\u0443\u043C\u0435\u043D\u0442\u0430:",en:"Could not render the tool result:"};function H(s){if(typeof s!="string")return null;let e=s.toLowerCase().split(/[-_]/)[0];return e==="en"?"en":e==="ru"?"ru":null}function T(s,e,n){return H(s?.locale)??H(e.locale)??H(n?.locale)??(document.documentElement.lang==="en"?"en":"ru")}function x(s,e){let n=s.structuredContent;if(n&&typeof n=="object"){let t=e(n);if(t)return t}for(let t of s.content??[]){let r=t;if(!(r?.type!=="text"||typeof r.text!="string"))try{let a=JSON.parse(r.text);if(a&&typeof a=="object"){let o=e(a);if(o)return o}}catch{}}return null}function R(s){let e=document.getElementById("root");if(!e)throw new Error("view shell has no #root");let n=l=>`<p class="note">${l}</p>`,t=document.documentElement.lang==="en"?"en":"ru",r={},a=null,o=new _({onToolInput:l=>{r=l??{}},onToolResult:l=>{let u=s.pick(l);if(t=u?T(u,r,a):t,!u)e.innerHTML=n(s.strings[t].empty);else try{e.innerHTML=s.render(u,t,r)}catch(p){e.innerHTML=n(`${c(s.strings[t].failed??E[t])} ${c(p instanceof Error?p.message:String(p))}`)}o.reportSize()},onContext:l=>{a=l,l.theme&&(document.documentElement.dataset.theme=l.theme),o.reportSize()}});e.innerHTML=n(s.strings[t].waiting),o.initialize().then(l=>{l?.theme&&(document.documentElement.dataset.theme=l.theme),o.reportSize()}),e.addEventListener("click",l=>{let p=l.target?.closest?.("[data-ask]")?.getAttribute("data-ask");p&&o.ask(p)}),typeof ResizeObserver<"u"&&new ResizeObserver(()=>o.reportSize()).observe(document.documentElement)}var c=s=>String(s??"").replace(/[&<>"]/g,e=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"})[e]);var M={sun:"\u2609",moon:"\u263D",mercury:"\u263F",venus:"\u2640",mars:"\u2642",jupiter:"\u2643",saturn:"\u2644",uranus:"\u2645",neptune:"\u2646",pluto:"\u2647"},B={aries:"\u2648",taurus:"\u2649",gemini:"\u264A",cancer:"\u264B",leo:"\u264C",virgo:"\u264D",libra:"\u264E",scorpio:"\u264F",sagittarius:"\u2650",capricorn:"\u2651",aquarius:"\u2652",pisces:"\u2653"},k={ru:{"money-contour":{title:"\u0414\u0435\u043D\u0435\u0436\u043D\u044B\u0439 \u043A\u043E\u043D\u0442\u0443\u0440",eyebrow:"\u0434\u043E\u043C\u0430 2 \xB7 8 \xB7 11 \xB7 \u0443\u043F\u0440\u0430\u0432\u0438\u0442\u0435\u043B\u0438 \xB7 \u041A\u043E\u043B\u0435\u0441\u043E \u0424\u043E\u0440\u0442\u0443\u043D\u044B",lede:"\u0421\u0432\u043E\u0438 \u0434\u0435\u043D\u044C\u0433\u0438, \u0447\u0443\u0436\u0438\u0435 \u0434\u0435\u043D\u044C\u0433\u0438 \u0438 \u0442\u043E, \u0447\u0442\u043E \u0438\u0445 \u0441\u0432\u044F\u0437\u044B\u0432\u0430\u0435\u0442."},"vocation-map":{title:"\u041A\u0430\u0440\u0442\u0430 \u043F\u0440\u0438\u0437\u0432\u0430\u043D\u0438\u044F",eyebrow:"MC \xB7 \u0434\u043E\u043C\u0430 2 \xB7 6 \xB7 10 \xB7 \u0434\u043E\u0441\u0442\u043E\u0438\u043D\u0441\u0442\u0432\u0430 \xB7 \u0443\u0433\u043B\u043E\u0432\u044B\u0435",lede:"\u041A\u0443\u0434\u0430 \u043A\u0430\u0440\u0442\u0430 \u0440\u0430\u0437\u0432\u043E\u0440\u0430\u0447\u0438\u0432\u0430\u0435\u0442 \u0440\u0430\u0431\u043E\u0442\u0443 \u2014 \u0438 \u0447\u0435\u043C \u043E\u043D\u0430 \u0437\u0430 \u044D\u0442\u043E \u043F\u043B\u0430\u0442\u0438\u0442."},house:"\u0434\u043E\u043C",cusp:"\u043A\u0443\u0441\u043F\u0438\u0434",rulers:"\u0443\u043F\u0440\u0430\u0432\u0438\u0442\u0435\u043B\u0438",occupants:"\u0432 \u0434\u043E\u043C\u0435",mc:"MC (\u0432\u0435\u0440\u0448\u0438\u043D\u0430 \u043A\u0430\u0440\u044C\u0435\u0440\u044B)",workHouses:"\u0414\u043E\u043C\u0430 \u0440\u0430\u0431\u043E\u0442\u044B",dignified:"\u041F\u043B\u0430\u043D\u0435\u0442\u044B \u0432 \u0434\u043E\u0441\u0442\u043E\u0438\u043D\u0441\u0442\u0432\u0435",angular:"\u0423\u0433\u043B\u043E\u0432\u044B\u0435 \u043F\u043B\u0430\u043D\u0435\u0442\u044B",fortune:"\u041A\u043E\u043B\u0435\u0441\u043E \u0424\u043E\u0440\u0442\u0443\u043D\u044B",linchpin:"\u041B\u0438\u043D\u0447\u043F\u0438\u043D: \u0441\u0432\u044F\u0437\u043A\u0430 \u0441\u0432\u043E\u0438\u0445 \u0438 \u0447\u0443\u0436\u0438\u0445 \u0434\u0435\u043D\u0435\u0433",sect:"\u0441\u0435\u043A\u0442\u0430",dispositor:"\u0434\u0438\u0441\u043F\u043E\u0437\u0438\u0442\u043E\u0440",separation:"\u0440\u0430\u0441\u0445\u043E\u0436\u0434\u0435\u043D\u0438\u0435",linked:"\u0441\u0432\u044F\u0437\u0430\u043D\u044B",notLinked:"\u043D\u0435 \u0441\u0432\u044F\u0437\u0430\u043D\u044B",sameSign:"\u0432 \u043E\u0434\u043D\u043E\u043C \u0437\u043D\u0430\u043A\u0435",sameHouse:"\u0432 \u043E\u0434\u043D\u043E\u043C \u0434\u043E\u043C\u0435",rulesBoth:"\u0443\u043F\u0440\u0430\u0432\u043B\u044F\u0435\u0442 \u043E\u0431\u043E\u0438\u043C\u0438 \u0434\u043E\u043C\u0430\u043C\u0438",orb:"\u043E\u0440\u0431",conjunct:"\u0432 \u0441\u043E\u0435\u0434\u0438\u043D\u0435\u043D\u0438\u0438",empty:"\u043F\u0443\u0441\u0442\u043E",engine:"\u0434\u0432\u0438\u0436\u043E\u043A",houses:"\u0434\u043E\u043C\u0430",askHouse:"\u041E\u0431\u044A\u044F\u0441\u043D\u0438 \u044D\u0442\u043E\u0442 \u0434\u043E\u043C \u0432 \u043C\u043E\u0435\u0439 \u043A\u0430\u0440\u0442\u0435",askPlacement:"\u041E\u0431\u044A\u044F\u0441\u043D\u0438 \u044D\u0442\u043E \u043F\u043E\u043B\u043E\u0436\u0435\u043D\u0438\u0435",askPoint:"\u041E\u0431\u044A\u044F\u0441\u043D\u0438 \u044D\u0442\u0443 \u0442\u043E\u0447\u043A\u0443 \u0432 \u043C\u043E\u0435\u0439 \u043A\u0430\u0440\u0442\u0435",askAllMoney:"\u0420\u0430\u0437\u0431\u0435\u0440\u0438 \u043C\u043E\u0439 \u0434\u0435\u043D\u0435\u0436\u043D\u044B\u0439 \u043A\u043E\u043D\u0442\u0443\u0440 \u0446\u0435\u043B\u0438\u043A\u043E\u043C: \u0433\u0434\u0435 \u043F\u043E\u0442\u043E\u043B\u043E\u043A \u0438 \u0433\u0434\u0435 \u0440\u044B\u0447\u0430\u0433",askAllVoc:"\u0420\u0430\u0437\u0431\u0435\u0440\u0438 \u043C\u043E\u044E \u043A\u0430\u0440\u0442\u0443 \u043F\u0440\u0438\u0437\u0432\u0430\u043D\u0438\u044F \u0446\u0435\u043B\u0438\u043A\u043E\u043C: \u043A\u0430\u043A\u0438\u0435 \u0437\u0430\u043D\u044F\u0442\u0438\u044F \u043B\u043E\u0436\u0430\u0442\u0441\u044F \u043D\u0430 \u043D\u0435\u0451",askHint:"\u041D\u0430\u0436\u043C\u0438\u0442\u0435 \xAB\u043E\u0431\u044A\u044F\u0441\u043D\u0438\u0442\u044C\xBB \u0443 \u043B\u044E\u0431\u043E\u0433\u043E \u0431\u043B\u043E\u043A\u0430 \u2014 \u0432 \u0447\u0430\u0442 \u0443\u0439\u0434\u0443\u0442 \u0435\u0433\u043E \u0437\u043D\u0430\u043A\u0438, \u0434\u043E\u043C\u0430 \u0438 \u0434\u043E\u0441\u0442\u043E\u0438\u043D\u0441\u0442\u0432\u0430.",waiting:"\u041E\u0436\u0438\u0434\u0430\u043D\u0438\u0435 \u0440\u0430\u0441\u0447\u0451\u0442\u0430\u2026",noData:"\u041D\u0435\u0442 \u0434\u0430\u043D\u043D\u044B\u0445. \u0412\u044B\u0437\u043E\u0432\u0438\u0442\u0435 money_contour \u0438\u043B\u0438 vocation_map.",disclaimerLead:"\u0414\u043E\u043C\u0430, \u0443\u043F\u0440\u0430\u0432\u0438\u0442\u0435\u043B\u0438 \u0438 \u0434\u043E\u0441\u0442\u043E\u0438\u043D\u0441\u0442\u0432\u0430 \u2014 \u0440\u0430\u0441\u0447\u0451\u0442, \u043E\u043D \u043F\u0440\u043E\u0432\u0435\u0440\u044F\u0435\u043C."},en:{"money-contour":{title:"Money contour",eyebrow:"houses 2 \xB7 8 \xB7 11 \xB7 rulers \xB7 Part of Fortune",lede:"Your own money, other people's money, and what links them."},"vocation-map":{title:"Vocation map",eyebrow:"MC \xB7 houses 2 \xB7 6 \xB7 10 \xB7 dignities \xB7 angular",lede:"Where the chart turns work \u2014 and what it pays for it."},house:"house",cusp:"cusp",rulers:"rulers",occupants:"in the house",mc:"MC (career apex)",workHouses:"Houses of work",dignified:"Planets in dignity",angular:"Angular planets",fortune:"Part of Fortune",linchpin:"Linchpin: own money tied to other people's",sect:"sect",dispositor:"dispositor",separation:"separation",linked:"linked",notLinked:"not linked",sameSign:"same sign",sameHouse:"same house",rulesBoth:"rules both houses",orb:"orb",conjunct:"conjunct",empty:"empty",engine:"engine",houses:"houses",askHouse:"Explain this house in my chart",askPlacement:"Explain this placement",askPoint:"Explain this point in my chart",askAllMoney:"Read my money contour as a whole: where the ceiling and the lever are",askAllVoc:"Read my vocation map as a whole: what work fits it",askHint:'Press "explain" on any block \u2014 its signs, houses and dignities go to the chat.',waiting:"Waiting for the computation\u2026",noData:"No data. Call money_contour or vocation_map.",disclaimerLead:"Houses, rulers and dignities are computed \u2014 verifiable."}},P=s=>s?`${B[s]??""} ${c(s)}`:"\u2014",b=s=>s?`${M[s]??""} ${c(s)}`:"\u2014";function y(s,e){let n=[P(s.sign),s.house?`<span class="num">${s.house}</span> ${e.house}`:"",s.dignity?`<span class="dig">${c(s.dignity)}</span>`:"",s.status?`<span class="dig">${c(s.status)}</span>`:"",s.retrograde?'<span class="dim">R</span>':""].filter(Boolean).join(" \xB7 ");return`${b(s.planet)} <span class="dim">\u2014</span> ${n}`}var w=s=>`${s.planet??""} ${s.sign??""}${s.house?`, ${s.house} house`:""}${s.dignity?`, ${s.dignity}`:""}${s.status?`, ${s.status}`:""}${s.retrograde?", R":""}`;function j(s,e,n){let t=s.rulers??[],r=s.occupants??[],a=`${e.askHouse}: ${s.house} ${e.house}, ${e.cusp} ${s.cusp_sign??""}. ${e.rulers}: ${t.map(w).join("; ")||"\u2014"}. ${e.occupants}: ${r.map(w).join("; ")||e.empty}.`;return`<section>
+    <div class="eyebrow">${s.house} ${e.house} \xB7 ${e.cusp} ${P(s.cusp_sign)}</div>
+    <div class="blk">
+      <div class="blk-lbl">${e.rulers}</div>
+      ${t.length?t.map(o=>`<div class="pl">${y(o,e)}</div>`).join(""):'<div class="pl dim">\u2014</div>'}
+    </div>
+    <div class="blk">
+      <div class="blk-lbl">${e.occupants}</div>
+      ${r.length?r.map(o=>`<div class="pl">${y(o,e)}</div>`).join(""):`<div class="pl dim">${e.empty}</div>`}
+    </div>
+    ${h(a,$[n])}
+  </section>`}function A(s,e,n,t){let r=`${n.askPoint}: ${s} \u2014 ${e.sign??""}${e.house?`, ${e.house} ${n.house}`:""}${e.dispositor?`, ${n.dispositor} ${w(e.dispositor)}`:""}${typeof e.lon=="number"?`, ${e.lon.toFixed(2)}\xB0`:""}.`;return`<section>
+    <div class="eyebrow">${s}</div>
+    <div class="kv"><span>${n.house}</span><b class="num">${e.house??"\u2014"}</b></div>
+    <div class="kv"><span>sign</span><b>${P(e.sign)}</b></div>
+    ${e.dispositor?`<div class="blk"><div class="blk-lbl">${n.dispositor}</div>
+      <div class="pl">${y(e.dispositor,n)}</div></div>`:""}
+    ${typeof e.lon=="number"?`<div class="kv"><span>lon</span><b class="num">${e.lon.toFixed(2)}\xB0</b></div>`:""}
+    ${h(r,$[t])}
+  </section>`}function C(s,e,n,t){return e.length?`<section>
+    <div class="eyebrow">${s}</div>
+    ${e.map(r=>`<div class="pl">${y(r,n)}`+h(`${n.askPlacement}: ${w(r)}.`,$[t])+"</div>").join("")}
+  </section>`:""}function z(s,e){let n=k[e],t=s.pattern_id==="vocation-map"?"vocation-map":"money-contour",r=n[t],a=s.computed??{},o=[];if(t==="money-contour"){for(let g of["house_2","house_8","house_11"])a[g]&&o.push(j(a[g],n,e));let i=a.linchpin;if(i){let g=i.type==="same_ruler"||!!i.planet&&!i.ruler_2nd,m=g?`${b(i.planet)} <span class="dim">${n.rulesBoth}</span>`:`${b(i.ruler_2nd)} <span class="dim">/</span> ${b(i.ruler_8th)}`,v=g?`${i.planet??"?"} (${n.rulesBoth})`:`${i.ruler_2nd??"?"} / ${i.ruler_8th??"?"}`,f=`${n.linchpin}: ${i.linked?n.linked:n.notLinked}${i.type?`, ${i.type}`:""}, ${v}${typeof i.separation_deg=="number"?`, ${n.separation} ${i.separation_deg.toFixed(2)}\xB0`:""}${i.same_sign?`, ${n.sameSign}`:""}${i.same_house?`, ${n.sameHouse}`:""}.`;o.push(`<section>
+        <div class="eyebrow">${n.linchpin}</div>
+        <div class="kv"><span>${i.linked?n.linked:n.notLinked}</span>
+          <b>${m}</b></div>
+        ${typeof i.separation_deg=="number"?`<div class="kv"><span>${n.separation}</span><b class="num">${i.separation_deg.toFixed(2)}\xB0</b></div>`:""}
+        ${i.same_sign?`<div class="loc-flag">${n.sameSign}</div>`:""}
+        ${i.same_house?`<div class="loc-flag">${n.sameHouse}</div>`:""}
+        ${h(f,$[e])}
+      </section>`)}a.sect&&o.push(`<section><div class="eyebrow">${n.sect}</div>
+        <div class="kv"><span>${c(String(a.sect))}</span></div></section>`)}else{let i=a.mc;if(i){let m=i.conjunct??[],v=d=>`${d.planet??"?"} ${n.orb} ${typeof d.orb_deg=="number"?`${d.orb_deg.toFixed(1)}\xB0`:"\u2014"}`,f=`${n.mc}: ${i.sign??""}. ${n.rulers}: ${(i.rulers??[]).map(w).join("; ")||"\u2014"}${m.length?`. ${n.conjunct}: ${m.map(v).join("; ")}`:""}.`;o.push(`<section>
+        <div class="eyebrow">${n.mc}</div>
+        <div class="kv"><span>sign</span><b>${P(i.sign)}</b></div>
+        <div class="blk"><div class="blk-lbl">${n.rulers}</div>
+          ${(i.rulers??[]).map(d=>`<div class="pl">${y(d,n)}</div>`).join("")||'<div class="pl dim">\u2014</div>'}</div>
+        ${m.length?`<div class="blk"><div class="blk-lbl">${n.conjunct}</div>
+          ${m.map(d=>`<div class="pl">${b(d.planet)} <span class="dim">\u2014</span> <span class="num">${n.orb} ${typeof d.orb_deg=="number"?`${d.orb_deg.toFixed(1)}\xB0`:"\u2014"}</span></div>`).join("")}</div>`:""}
+        ${h(f,$[e])}
+      </section>`)}let g=a.work_houses??{};for(let m of Object.keys(g).sort((v,f)=>Number(v)-Number(f)))o.push(j(g[m],n,e));o.push(C(n.dignified,a.dignified??[],n,e)),o.push(C(n.angular,a.angular??[],n,e))}a.part_of_fortune&&o.push(A(n.fortune,a.part_of_fortune,n,e));let l=s.provenance??{},u=s.meta??{},p=[l.ephemeris_engine?`<span><b>${n.engine}</b> ${c(String(l.ephemeris_engine))}</span>`:"",l.house_system?`<span><b>${n.houses}</b> ${c(String(l.house_system))}</span>`:"",typeof s.confidence=="number"?`<span><b>confidence</b> ${s.confidence.toFixed(1)}</span>`:"",u.request_id?`<span><b>request</b> ${c(String(u.request_id))}</span>`:""].filter(Boolean).join(""),L=t==="vocation-map"?n.askAllVoc:n.askAllMoney;return`
+    <div class="head">
+      <div class="eyebrow">${r.eyebrow}</div>
+      <h1>${r.title}</h1>
+      <p class="lede">${r.lede}</p>
+    </div>
+    <div class="pgrid">${o.filter(Boolean).join("")}</div>
+    <div class="ask-row">${h(L,L,!0)}
+      <span class="ask-hint">${n.askHint}</span></div>
+    <div class="prov">${p}</div>
+    <p class="disclaimer"><b>${n.disclaimerLead}</b> ${c(s.disclaimer??"")}</p>
+  `}R({pick:s=>x(s,e=>{let n=e;return(n.pattern_id==="money-contour"||n.pattern_id==="vocation-map")&&n.computed?n:null}),render:z,strings:{ru:{waiting:k.ru.waiting,empty:k.ru.noData},en:{waiting:k.en.waiting,empty:k.en.noData}}});})();
+</script></body>
+</html>

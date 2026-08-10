@@ -3,7 +3,7 @@
     {
       "path": ".",
       "dirs": 16,
-      "files": 21
+      "files": 22
     },
     {
       "path": ".github",
@@ -223,7 +223,7 @@
     {
       "path": "packages/mcp-app/src",
       "dirs": 0,
-      "files": 7
+      "files": 9
     },
     {
       "path": "packages/mcp-app/test",
@@ -283,7 +283,7 @@
     {
       "path": "docs/deploy",
       "dirs": 0,
-      "files": 5
+      "files": 6
     },
     {
       "path": "docs/steering",
@@ -508,7 +508,7 @@
     {
       "path": "backend/mcp/apps/dist",
       "dirs": 0,
-      "files": 5
+      "files": 7
     },
     {
       "path": "backend/mcp/tools",
@@ -518,7 +518,7 @@
     {
       "path": "backend/tests",
       "dirs": 1,
-      "files": 49
+      "files": 53
     },
     {
       "path": "backend/tests/dreams",
@@ -742,5 +742,5 @@
     }
   ],
   "total_dirs": 147,
-  "total_files": 538
+  "total_files": 548
 }

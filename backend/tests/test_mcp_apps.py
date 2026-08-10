@@ -180,22 +180,33 @@ async def test_no_other_tool_accidentally_claims_a_view():
         "analyze_dream",
         "get_lunar_period",
         "astrocartography_lines",
+        "compare_relocations",
+        "money_contour",
+        "vocation_map",
     }, with_ui
 
 
 @pytest.mark.anyio
-async def test_every_declared_view_is_claimed_by_exactly_one_tool():
-    """A view nothing points at is dead weight the host will never fetch."""
+async def test_no_declared_view_goes_unclaimed():
+    """A view nothing points at is dead weight the host will never fetch.
+
+    Note what is NOT asserted: that each view has exactly one tool. Sharing is
+    correct where the payloads are the same shape — `money_contour` and
+    `vocation_map` both render through `pattern-map`, and writing two
+    near-identical renderers would give two places to fix one bug. An earlier
+    version of this test forbade that, which was an assumption rather than a
+    requirement.
+    """
     from backend.mcp.server import mcp
 
-    claimed: list[str] = []
+    claimed = set()
     for tool in await mcp.list_tools():
         ui = (tool.model_dump(by_alias=True, exclude_none=True).get("_meta") or {}).get("ui")
         if ui:
-            claimed.append(ui["resourceUri"])
+            claimed.add(ui["resourceUri"])
 
-    assert sorted(claimed) == sorted(v.uri for v in apps.VIEWS)
-    assert len(claimed) == len(set(claimed)), "two tools share one view"
+    declared = {v.uri for v in apps.VIEWS}
+    assert claimed == declared, f"unclaimed: {declared - claimed}, unknown: {claimed - declared}"
 
 
 @pytest.fixture

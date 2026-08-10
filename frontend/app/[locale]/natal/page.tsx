@@ -46,7 +46,7 @@ import {
   saveChart,
   type ChartProvenance,
 } from '@/lib/chart-store';
-import { DEMO_CORE } from '@/lib/demo-chart';
+import { SAMPLE_CORE, SAMPLE_LABEL, isSample } from '@/lib/demo-chart';
 import BirthDataForm from '@/components/BirthDataForm';
 import { toChartRequest, type BirthData } from '@/lib/birth-data';
 
@@ -207,7 +207,7 @@ export default function NatalPage() {
   const t = ui(lang);
   const hAbbr = lang === 'ru' ? 'д' : 'h'; // house prefix: «дом» / house
 
-  const [core, setCore] = useState<ChartCore>(DEMO_CORE);
+  const [core, setCore] = useState<ChartCore>(SAMPLE_CORE);
   const [prov, setProv] = useState<ChartProvenance | null>(null);
   const [system, setSystem] = useState<HouseSystem>('placidus');
   const [notice, setNotice] = useState<Notice | null>(null);
@@ -322,6 +322,15 @@ export default function NatalPage() {
 
   return (
     <main style={{ padding: 'clamp(14px,2.2vw,30px)' }}>
+      {isSample(core) && (
+        <p style={{
+          border: '1px solid var(--brass-dim)', background: 'var(--notice-bg)',
+          color: 'var(--notice-ink)', padding: '8px 11px', fontSize: 12,
+          lineHeight: 1.5, margin: '0 0 clamp(12px,1.6vw,20px)',
+        }}>
+          {SAMPLE_LABEL[lang]}
+        </p>
+      )}
       <header style={{
         display: 'flex', flexWrap: 'wrap', alignItems: 'flex-end', gap: '12px 28px',
         paddingBottom: 14, marginBottom: 'clamp(12px,1.6vw,20px)',

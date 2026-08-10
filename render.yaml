@@ -52,9 +52,30 @@ services:
         generateValue: true
 
       # Frontend now lives on Vercel (see docs/deploy/vercel-frontend.md).
-      # Set this in the Render dashboard to your Vercel URL(s), comma-separated
-      # and WITH scheme, e.g. https://oneiroscope.vercel.app,https://www.oneiroscope.com
+      # Given a VALUE, not `sync: false`. As a dashboard-only variable this was
+      # simply never set, so the default (localhost) applied in production and
+      # every browser call from the Vercel site was blocked by CORS — invisible
+      # server-side, since the requests were served normally and only the
+      # missing Access-Control-Allow-Origin header made them unusable.
+      # Comma-separated, WITH scheme. Add custom domains here, in the blueprint,
+      # so the deployed config stays reproducible from the repo.
       - key: ALLOWED_ORIGINS
+        value: https://oneiroscope.vercel.app
+      # Vercel gives every preview deploy its own hostname, which cannot be
+      # enumerated ahead of time. Anchored to this project's own previews:
+      # `oneiroscope-<hash>-<team>.vercel.app`. Left to the dashboard because
+      # the team slug is account-specific — and because this API answers with
+      # credentials, so widening it is a decision, not a default.
+      - key: ALLOWED_ORIGIN_REGEX
+        sync: false
+
+      # Accounts that operate this deployment — comma-separated emails and/or
+      # OAuth subjects. They resolve to the PRO tier so the people who ship the
+      # paid paths can exercise them; without this the free tier's one-chart-
+      # for-life grant applies to the owner exactly as to a customer, and the
+      # paid path becomes untestable in production. Dashboard-only: it names
+      # real people, and it belongs to the deployment rather than to the repo.
+      - key: STAFF_ACCOUNTS
         sync: false
 
       - key: LUNAR_DEFAULT_TZ

@@ -2,7 +2,7 @@
 
 | Путь | Папок | Файлов |
 |---|---:|---:|
-| . | 16 | 21 |
+| . | 16 | 22 |
 | .github | 1 | 0 |
 | .github/workflows | 0 | 9 |
 | tests | 0 | 4 |
@@ -46,7 +46,7 @@
 | oneiro-scope | 0 | 0 |
 | packages | 2 | 0 |
 | packages/mcp-app | 2 | 5 |
-| packages/mcp-app/src | 0 | 7 |
+| packages/mcp-app/src | 0 | 9 |
 | packages/mcp-app/test | 0 | 2 |
 | packages/chart-kit | 2 | 3 |
 | packages/chart-kit/src | 0 | 7 |
@@ -58,7 +58,7 @@
 | agents/prompts | 0 | 5 |
 | agents/specialists | 0 | 5 |
 | docs | 8 | 43 |
-| docs/deploy | 0 | 5 |
+| docs/deploy | 0 | 6 |
 | docs/steering | 0 | 5 |
 | docs/reports | 0 | 2 |
 | docs/deployment | 0 | 1 |
@@ -103,9 +103,9 @@
 | backend/utils | 0 | 2 |
 | backend/mcp | 2 | 4 |
 | backend/mcp/apps | 1 | 1 |
-| backend/mcp/apps/dist | 0 | 5 |
+| backend/mcp/apps/dist | 0 | 7 |
 | backend/mcp/tools | 0 | 14 |
-| backend/tests | 1 | 49 |
+| backend/tests | 1 | 53 |
 | backend/tests/dreams | 1 | 0 |
 | backend/tests/dreams/golden | 0 | 3 |
 | backend/middleware | 0 | 2 |
@@ -151,4 +151,4 @@
 | external/DReAMy | 1 | 1 |
 | external/DReAMy/dreamy | 0 | 3 |
 
-**ИТОГО:** папок = 147, файлов = 538
+**ИТОГО:** папок = 147, файлов = 548

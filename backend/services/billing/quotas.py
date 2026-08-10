@@ -58,8 +58,57 @@ FREE_DAILY_HOROSCOPE_LIMIT = 1
 FREE_DAILY_EVENT_FORECAST_LIMIT = 1
 
 
+def staff_identities() -> frozenset[str]:
+    """Accounts that are the product's own operators, from configuration.
+
+    Comma-separated emails and/or OAuth subjects in `STAFF_ACCOUNTS`. Empty by
+    default, so nothing is bypassed unless a deployment says so explicitly.
+    """
+    from backend.core.config import settings
+
+    raw = getattr(settings, "STAFF_ACCOUNTS", "") or ""
+    return frozenset(part.strip().lower() for part in raw.split(",") if part.strip())
+
+
+def is_staff(user: User) -> bool:
+    """Whether this account is on the configured staff list.
+
+    Exists because the owner could not use their own product: the free tier
+    grants one natal chart for life, and it applies to the person who built
+    the thing exactly as it applies to a customer — so after one chart, every
+    test of the paid path answered `entitlement_required`. Testing a gate you
+    cannot get past is not testing it.
+
+    The identity is the AUTHENTICATED one, matched against server-side
+    configuration. Nothing a caller can assert about itself takes part, so
+    this widens nothing for anyone not already named in the deployment's env.
+    """
+    allowed = staff_identities()
+    if not allowed:
+        return False
+    for attr in ("email", "oauth_subject"):
+        value = getattr(user, attr, None)
+        if value and str(value).strip().lower() in allowed:
+            return True
+    return False
+
+
 def current_tier(user: User, active_subs: Optional[list[Subscription]] = None) -> Tier:
-    """Return the user's effective tier from their active subscriptions."""
+    """Return the user's effective tier from their active subscriptions.
+
+    Staff resolve to PRO. Doing it HERE rather than at each gate is the point:
+    there is one place that answers "what may this account do", so a bypass
+    cannot be added to the chart gate and forgotten at the next one.
+    """
+    if is_staff(user):
+        # Logged, not silent. A bypass nobody can see in the log is one nobody
+        # remembers is switched on.
+        logger.info(
+            "staff account %s resolved to PRO (STAFF_ACCOUNTS)",
+            getattr(user, "email", None) or getattr(user, "oauth_subject", "?"),
+        )
+        return Tier.PRO
+
     if active_subs is None:
         active_subs = [s for s in (user.subscriptions or []) if s.status == "active"]
     for sub in active_subs:

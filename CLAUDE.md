@@ -57,10 +57,25 @@
   aspects, transits) is computed via Swiss Ephemeris, not generated
   by an LLM. Interpretation of a transit / dream symbol is the AI
   layer and is always last and always labelled.
-- **Confidence ladder.** Astronomy = 1.0 · cited classical rule = 0.9
-  · symbol dictionary = 0.8 · LLM synthesis = 0.7. A higher-confidence
-  source is never overwritten by a lower one. Implemented in
-  `backend/services/strategic/layers.py::LAYER_CONFIDENCE`.
+- **Confidence ladder.** Four rungs, by how a claim was ARRIVED at:
+  ephemeris/calc = 1.0 · cited classical rule = 0.9 · symbol dictionary
+  = 0.8 · LLM synthesis = 0.7. A higher-confidence source is never
+  overwritten by a lower one.
+
+  The code has more *layers* than the ladder has rungs, and each layer
+  sits on one — `OBJECTIVE_FACT` and `ASTRONOMY` at 1.0,
+  `AGE_PSYCHOLOGY` and `USER_CONTEXT` at 0.9, `ASTROLOGY_SYMBOLIC` at
+  0.8, `LLM_NARRATIVE` at 0.7. Two sit deliberately *between* rungs:
+  `CAREER_CYCLE` and `ECONOMICS` at 0.85, because statistics with no
+  per-claim citation are real evidence but weaker than a study we can
+  name. `USER_CONTEXT` is 0.9, not lower: self-report is strong evidence
+  about the person reporting — "not generalisable" is a statement about
+  scope, not confidence.
+
+  The table in `backend/services/strategic/layers.py::LAYER_CONFIDENCE`
+  is the single source of truth; this paragraph quotes it, and
+  `backend/tests/test_confidence_ladder_docs.py` fails when the two
+  disagree. They had drifted apart before — do not edit one alone.
 - **Provenance per item.** Every claim carries its source: which
   computation / which classical text (with citation) / which symbol
   dictionary / which LLM call. Returned in MCP-tool responses as the
