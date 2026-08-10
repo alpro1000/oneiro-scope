@@ -109,12 +109,17 @@ def test_fully_configured_reports_oauth_mode(client, monkeypatch):
     async def _ok():
         return True, "3 signing key(s)"
 
+    async def _dcr():
+        return True, "registration_endpoint: https://tenant.eu.auth0.com/oidc/register"
+
     monkeypatch.setattr(diag, "_jwks_reachable", _ok)
+    monkeypatch.setattr(diag, "_dcr_advertised", _dcr)
     body = client.get("/connect/diagnostics").json()
     assert body["mode"] == "oauth"
     assert _check(body, "auth_configured")["ok"] is True
     assert _check(body, "discovery_published")["ok"] is True
     assert _check(body, "jwks_reachable")["ok"] is True
+    assert _check(body, "dcr_advertised")["ok"] is True
 
 
 def test_unreachable_jwks_is_surfaced_with_a_fix(client, monkeypatch):
@@ -126,7 +131,11 @@ def test_unreachable_jwks_is_surfaced_with_a_fix(client, monkeypatch):
     async def _fail():
         return False, "unreachable: ConnectError"
 
+    async def _dcr():
+        return True, "registration_endpoint: https://tenant.eu.auth0.com/oidc/register"
+
     monkeypatch.setattr(diag, "_jwks_reachable", _fail)
+    monkeypatch.setattr(diag, "_dcr_advertised", _dcr)
     body = client.get("/connect/diagnostics").json()
     jwks = _check(body, "jwks_reachable")
     assert jwks["ok"] is False
@@ -149,3 +158,30 @@ def test_host_matcher_handles_wildcard_ports():
     assert not diag._host_allowed("evil.example.net", ["api.example.com:*"])
     # No allow-list means the transport's protection is off — nothing to fail.
     assert diag._host_allowed("anything", [])
+
+
+def test_missing_dcr_is_named_as_the_connection_killer(client, monkeypatch):
+    """The reported symptom was "Failed to start MCP authorization" on the
+    user's screen — with nothing wrong in this deployment's own config.
+    Claude registers itself as an OAuth client before it can send anyone to
+    log in; an issuer that advertises no registration_endpoint kills the
+    flow at that step. Auth0 ships with the flag OFF, so this row must name
+    it rather than leave the owner staring at a green everything-else."""
+    monkeypatch.setattr(settings, "MCP_REQUIRE_AUTH", True, raising=False)
+    monkeypatch.setattr(
+        settings, "MCP_AUTH_ISSUER", "https://tenant.eu.auth0.com/", raising=False
+    )
+
+    async def _ok():
+        return True, "3 signing key(s)"
+
+    async def _no_dcr():
+        return False, "no registration_endpoint"
+
+    monkeypatch.setattr(diag, "_jwks_reachable", _ok)
+    monkeypatch.setattr(diag, "_dcr_advertised", _no_dcr)
+    body = client.get("/connect/diagnostics").json()
+    row = _check(body, "dcr_advertised")
+    assert row["ok"] is False
+    assert "Dynamic Application Registration" in row["fix"]
+    assert body["ready"] is False

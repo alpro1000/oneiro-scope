@@ -55,6 +55,39 @@ class Diagnostics(BaseModel):
     config: dict[str, Any]
 
 
+async def _dcr_advertised() -> tuple[bool, str]:
+    """Does the authorization server advertise dynamic client registration?
+
+    Claude's connector flow registers ITSELF as an OAuth client (RFC 7591)
+    before it can send anyone to log in. When the issuer's discovery document
+    has no `registration_endpoint`, the connection dies with "Failed to start
+    MCP authorization" — on the user's screen, not in our log, with nothing
+    in this deployment misconfigured. Auth0 ships with that flag OFF
+    (tenant setting "OIDC Dynamic Application Registration"), which makes
+    this the likeliest silent killer of a directory review.
+    """
+    issuer = settings.MCP_AUTH_ISSUER
+    if not issuer:
+        return False, "no issuer configured"
+    url = issuer.rstrip("/") + "/.well-known/openid-configuration"
+    try:
+        import httpx
+
+        async with httpx.AsyncClient(timeout=5.0) as client:
+            resp = await client.get(url)
+        if resp.status_code != 200:
+            return False, f"{url} → HTTP {resp.status_code}"
+        endpoint = resp.json().get("registration_endpoint")
+        if not endpoint:
+            return False, (
+                f"{url} advertises no registration_endpoint — clients that "
+                "self-register (Claude, ChatGPT) cannot start the OAuth flow"
+            )
+        return True, f"registration_endpoint: {endpoint}"
+    except Exception as exc:
+        return False, f"{url} unreachable: {type(exc).__name__}"
+
+
 async def _jwks_reachable() -> tuple[bool, str]:
     """Fetch the JWKS the way token validation will, with a short timeout."""
     url = jwks_url()
@@ -186,6 +219,18 @@ async def diagnostics(request: Request) -> Diagnostics:
                 fix=None if reachable else
                     "check the issuer URL (Auth0 issuers end with a slash) and "
                     "that this service has outbound network access",
+            ))
+
+            dcr_ok, dcr_detail = await _dcr_advertised()
+            checks.append(Check(
+                id="dcr_advertised",
+                ok=dcr_ok,
+                detail=dcr_detail,
+                fix=None if dcr_ok else
+                    "enable dynamic client registration on the authorization "
+                    "server (Auth0: Settings → Advanced → 'OIDC Dynamic "
+                    "Application Registration', and allow the created clients "
+                    "to use your connections)",
             ))
 
     # Not an MCP check, but the same class of failure and the same audience:
