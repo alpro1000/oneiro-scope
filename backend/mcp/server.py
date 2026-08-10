@@ -19,6 +19,7 @@ import logging
 import sys
 
 from mcp.server.fastmcp import FastMCP
+from mcp.types import ToolAnnotations
 
 from backend.mcp import apps
 from backend.mcp.tools._meta import with_meta
@@ -39,19 +40,61 @@ from backend.core.ephemeris import startup_summary as _ephemeris_summary
 
 logger.info("Ephemeris: %s", _ephemeris_summary())
 
+# The instructions used to open with "science-grounded astrology" — an
+# overclaim this project's own domain rules forbid, and precisely the kind of
+# phrase a directory reviewer reads as misleading. What is defensible, and
+# what the code actually enforces, is the split: the astronomy is computed,
+# the interpretation is a tradition and says so.
 mcp = FastMCP(
     "oneiro-scope",
     instructions=(
-        "OneiroScope MCP server. Tools for science-grounded astrology "
-        "(Swiss Ephemeris natal charts, horoscopes, event forecasts), "
-        "dream analysis (Hall/Van de Castle + Jungian archetypes + REM/NREM + "
-        "DreamBank norms), and lunar calendar. Geocoding via GeoNames. All "
-        "interpretations are bilingual (ru/en) and traced to data — never "
-        "invented. Use `validate_birth_data` before `calculate_natal_chart` "
-        "to save LLM cost. Use `search_city` for autocomplete-style lookups. "
-        "Knowledge-base reads (sign/house/aspect/dignity meanings, symbol "
-        "and category lists) live behind the single `lookup` tool."
+        "OneiroScope MCP server: deterministic astronomy and structural "
+        "dream analysis, with interpretation as a separate, labelled layer. "
+        "Astronomy (Swiss Ephemeris): natal charts with houses and "
+        "applying/separating aspects, transits, solar returns, "
+        "astrocartography line sets, relocation comparison, lunar calendar. "
+        "Dreams: Hall/Van de Castle structural coding where every count "
+        "cites the clause it came from, plus DreamBank norm comparison. "
+        "Geocoding via GeoNames; bilingual ru/en. Every response carries "
+        "provenance and a per-claim confidence: computed 1.0, cited rule "
+        "0.9, symbol dictionary 0.8, model synthesis 0.7. Astrology and "
+        "dream interpretation are traditions of reading, not sciences; "
+        "results are reflective/entertainment material and never medical, "
+        "psychological, legal or financial advice — the server refuses "
+        "deterministic prediction language. Use `validate_birth_data` "
+        "before `calculate_natal_chart`. Use `search_city` for "
+        "autocomplete-style lookups. Knowledge-base reads live behind the "
+        "single `lookup` tool."
     ),
+)
+
+# --- Tool annotations (MCP spec) ----------------------------------------------
+# Directory reviews (Claude connectors, ChatGPT apps) read these hints to
+# decide how much friction a tool call deserves. They are promises, so they
+# are set from what the code does, not from what looks nicest:
+#
+# - READ: pure computation over the arguments. No state written, no network
+#   beyond our own process. Everything ephemeris-shaped is here.
+# - GEO: still read-only, but resolves place names through the GeoNames API —
+#   an external service, hence openWorldHint.
+# - `calculate_natal_chart` is NOT read-only: issuing a chart consumes the
+#   free tier's lifetime grant (`mark_chart_issued`). It is idempotent — the
+#   same chart re-issues forever without further effect (`same_chart`) — and
+#   it geocodes when coordinates are not passed.
+# - `analyze_dream` is NOT read-only: `remember=True` appends coded features
+#   to the caller's own series. Not idempotent — each call appends.
+#
+# `test_mcp_moderation.py` asserts every tool carries these and that the two
+# writers are the only tools not marked read-only.
+READ = ToolAnnotations(readOnlyHint=True, openWorldHint=False)
+GEO_READ = ToolAnnotations(readOnlyHint=True, openWorldHint=True)
+NATAL_WRITE = ToolAnnotations(
+    readOnlyHint=False, destructiveHint=False, idempotentHint=True,
+    openWorldHint=True,
+)
+DREAM_WRITE = ToolAnnotations(
+    readOnlyHint=False, destructiveHint=False, idempotentHint=False,
+    openWorldHint=False,
 )
 
 # WP-10: the surface is deliberately small. 47 tools drowned the ones that
@@ -72,58 +115,65 @@ _ui_views = apps.register(mcp)
 # The natal chart is the one tool whose result is a DRAWING as much as a table,
 # so it carries a view. The tool stays visible to the model either way — the
 # chart is useful as data even where nothing is rendered.
-mcp.tool(meta=apps.tool_ui_meta(apps.NATAL_WHEEL) if _ui_views else None)(
-    with_meta(a.calculate_natal_chart)
-)
-mcp.tool()(with_meta(a.forecast_event))
+mcp.tool(
+    meta=apps.tool_ui_meta(apps.NATAL_WHEEL) if _ui_views else None,
+    annotations=NATAL_WRITE,
+)(with_meta(a.calculate_natal_chart))
+mcp.tool(annotations=READ)(with_meta(a.forecast_event))
 
 # --- Dreams ------------------------------------------------------------------
 # The coding view shows the dream text with each coded clause marked — the one
 # place a count and its evidence can be read in a single glance.
-mcp.tool(meta=apps.tool_ui_meta(apps.DREAM_EVIDENCE) if _ui_views else None)(
-    with_meta(d.analyze_dream)
-)
-mcp.tool()(with_meta(d.dream_series_stats))
+mcp.tool(
+    meta=apps.tool_ui_meta(apps.DREAM_EVIDENCE) if _ui_views else None,
+    annotations=DREAM_WRITE,
+)(with_meta(d.analyze_dream))
+mcp.tool(annotations=READ)(with_meta(d.dream_series_stats))
 
 # --- Lunar -------------------------------------------------------------------
-mcp.tool()(with_meta(l.get_lunar_day))
-mcp.tool(meta=apps.tool_ui_meta(apps.LUNAR_MONTH) if _ui_views else None)(
-    with_meta(l.get_lunar_period)
-)
+mcp.tool(annotations=READ)(with_meta(l.get_lunar_day))
+mcp.tool(
+    meta=apps.tool_ui_meta(apps.LUNAR_MONTH) if _ui_views else None,
+    annotations=READ,
+)(with_meta(l.get_lunar_period))
 
 # --- Geo (the natal chain's input control) -----------------------------------
-mcp.tool()(with_meta(g.search_city))
-mcp.tool()(with_meta(g.validate_birth_data))
+mcp.tool(annotations=GEO_READ)(with_meta(g.search_city))
+mcp.tool(annotations=GEO_READ)(with_meta(g.validate_birth_data))
 
 # --- Strategic astronomy: timing and place -----------------------------------
 # Deterministic chart geometry cited as ASTRONOMY-layer evidence.
-mcp.tool()(with_meta(sa.compute_transits))
-mcp.tool()(with_meta(sa.astrocartography_scan))
+mcp.tool(annotations=READ)(with_meta(sa.compute_transits))
+mcp.tool(annotations=READ)(with_meta(sa.astrocartography_scan))
 # The line set is a MAP; a list of coordinates is not the same object.
-mcp.tool(meta=apps.tool_ui_meta(apps.ACG_MAP) if _ui_views else None)(
-    with_meta(sa.astrocartography_lines)
-)
-mcp.tool()(with_meta(sa.astrocartography_point))
-mcp.tool(meta=apps.tool_ui_meta(apps.RELOCATIONS) if _ui_views else None)(
-    with_meta(sa.compare_relocations)
-)
-mcp.tool()(with_meta(sa.solar_return_chart))
-mcp.tool()(with_meta(sa.solar_return_suggest))
+mcp.tool(
+    meta=apps.tool_ui_meta(apps.ACG_MAP) if _ui_views else None,
+    annotations=READ,
+)(with_meta(sa.astrocartography_lines))
+mcp.tool(annotations=READ)(with_meta(sa.astrocartography_point))
+mcp.tool(
+    meta=apps.tool_ui_meta(apps.RELOCATIONS) if _ui_views else None,
+    annotations=READ,
+)(with_meta(sa.compare_relocations))
+mcp.tool(annotations=READ)(with_meta(sa.solar_return_chart))
+mcp.tool(annotations=READ)(with_meta(sa.solar_return_suggest))
 
 # --- Analysis patterns -------------------------------------------------------
 # analysis_plan is the entry point: what can be computed, in which order.
-mcp.tool()(with_meta(sp.analysis_plan))
+mcp.tool(annotations=READ)(with_meta(sp.analysis_plan))
 # Both return the same envelope and the same nested shapes, so they share one
 # view rather than two renderers that would need the same bug fixed twice.
-mcp.tool(meta=apps.tool_ui_meta(apps.PATTERN_MAP) if _ui_views else None)(
-    with_meta(sp.money_contour)
-)
-mcp.tool(meta=apps.tool_ui_meta(apps.PATTERN_MAP) if _ui_views else None)(
-    with_meta(sp.vocation_map)
-)
+mcp.tool(
+    meta=apps.tool_ui_meta(apps.PATTERN_MAP) if _ui_views else None,
+    annotations=READ,
+)(with_meta(sp.money_contour))
+mcp.tool(
+    meta=apps.tool_ui_meta(apps.PATTERN_MAP) if _ui_views else None,
+    annotations=READ,
+)(with_meta(sp.vocation_map))
 
 # --- Reference lookups, folded into one tool (WP-10) --------------------------
-mcp.tool()(with_meta(lk.lookup))
+mcp.tool(annotations=READ)(with_meta(lk.lookup))
 
 
 def main(argv: list[str] | None = None) -> int:

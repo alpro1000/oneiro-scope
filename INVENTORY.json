@@ -283,7 +283,7 @@
     {
       "path": "docs/deploy",
       "dirs": 0,
-      "files": 6
+      "files": 7
     },
     {
       "path": "docs/steering",
@@ -518,7 +518,7 @@
     {
       "path": "backend/tests",
       "dirs": 1,
-      "files": 53
+      "files": 54
     },
     {
       "path": "backend/tests/dreams",
@@ -742,5 +742,5 @@
     }
   ],
   "total_dirs": 147,
-  "total_files": 548
+  "total_files": 550
 }

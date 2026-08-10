@@ -312,3 +312,95 @@ def test_refusal_message_follows_the_locale():
             assert needle in exc.detail["message"], (locale, exc.detail["message"])
         else:  # pragma: no cover - the gate must refuse here
             raise AssertionError("expected a refusal")
+
+
+# ── legacy grant: the flag without the key ───────────────────────────────────
+# `free_natal_used` predates `free_natal_chart_key` (the column arrived with
+# migration 0002 as NULL). Every account that burned its grant under the old
+# `quotas.mark_used` therefore holds a grant that matches NOTHING — and the
+# owner hit the consequence live: their own 1977-07-01 Запорожье answered
+# `entitlement_required` on every spelling of the city.
+
+
+def test_legacy_flag_without_key_does_not_wall_off_every_chart():
+    user = _user(free_natal=True, key=None)
+    own = chart_identity(build_chart_core(**REF).core)
+    check_chart_entitlement(user, own)  # must not raise
+
+
+def test_legacy_grant_is_adopted_once_and_then_keyed_normally():
+    """The grace is one issuance: the next chart becomes THE granted chart,
+    after which the account behaves exactly like a normally-keyed one —
+    its own chart free forever, any other refused."""
+    user = _user(free_natal=True, key=None)
+    own = chart_identity(build_chart_core(**REF).core)
+
+    check_chart_entitlement(user, own)
+    assert mark_chart_issued(user, own) is True  # adoption writes the key
+    assert user.free_natal_chart_key == own
+
+    other = chart_identity(
+        build_chart_core(**{**REF, "birth_time": time(6, 0)}).core
+    )
+    with pytest.raises(EntitlementRequired):
+        check_chart_entitlement(user, other)
+
+    check_chart_entitlement(user, own)  # own chart: free, forever
+    assert mark_chart_issued(user, own) is False  # nothing left to write
+
+
+def test_a_readable_grant_is_never_overwritten_by_adoption():
+    """Adoption exists for the unkeyed legacy state ONLY. An account whose
+    grant is already keyed keeps its FIRST chart."""
+    user = _user(free_natal=True, key="2000-01-01T12:00:00+00:00|51.4779|-0.0015")
+    assert mark_chart_issued(user, "1999-01-01T00:00:00+00:00|0.0|0.0") is False
+    assert user.free_natal_chart_key == "2000-01-01T12:00:00+00:00|51.4779|-0.0015"
+
+
+# ── the refusal is an MCP error, not a look-alike result ─────────────────────
+
+
+def test_tool_level_refusal_raises_tool_error_with_the_structured_payload(monkeypatch):
+    """Owner-reported: `entitlement_required` arrived with `isError: false`,
+    so a generic client displayed the refusal as if it were a successful
+    computation. The tool did not perform the operation — the result must say
+    so. The structured refusal rides in the error message as JSON so the
+    model can still read the limit and the account link."""
+    import json as _json
+
+    from mcp.server.fastmcp.exceptions import ToolError
+
+    from backend.mcp.tools import astrology as A
+
+    core = build_chart_core(**REF).core
+
+    class _Resp:
+        chart_core = core
+
+        def model_dump(self, mode):  # pragma: no cover — refusal path returns first
+            return {}
+
+    class _Svc:
+        async def calculate_natal_chart(self, req, interpret):
+            return _Resp()
+
+    refusal = {
+        "error": "entitlement_required",
+        "reason": "free_natal_chart_used",
+        "allowance": {"kind": "natal_chart", "free": 1, "period": "lifetime"},
+    }
+
+    async def _gate(key, locale="ru"):
+        return refusal, {"gated": True}
+
+    monkeypatch.setattr(A, "_service", _Svc())
+    monkeypatch.setattr(A, "_gate_chart_issuance", _gate)
+
+    with pytest.raises(ToolError) as exc:
+        asyncio.run(A.calculate_natal_chart(
+            birth_date="1977-07-01", birth_place="Запорожье",
+            birth_time="22:30", latitude=47.8388, longitude=35.1396,
+        ))
+    payload = _json.loads(str(exc.value))
+    assert payload["reason"] == "free_natal_chart_used"
+    assert payload["allowance"]["free"] == 1

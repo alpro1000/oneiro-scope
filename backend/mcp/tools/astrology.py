@@ -7,10 +7,13 @@ keep them precise.
 
 from __future__ import annotations
 
+import json
 import logging
 from datetime import date as date_cls, time as time_cls
 from typing import Any, Optional
 from uuid import UUID
+
+from mcp.server.fastmcp.exceptions import ToolError
 
 from backend.mcp.tools._menu import TARGET_DATE, birth_inputs, with_menu
 from backend.mcp.tools._principal import mcp_auth_context, resolve_connector_user
@@ -198,13 +201,17 @@ async def calculate_natal_chart(
     )
     resp = await _svc().calculate_natal_chart(req, interpret=include_interpretation)
 
-    # Gate on issuance of the core (see _gate_chart_issuance). A refusal is a
-    # structured, factual response returned in place of the chart; otherwise
-    # the response carries an `entitlement` stamp saying whether it was
-    # metered.
+    # Gate on issuance of the core (see _gate_chart_issuance). A refusal is
+    # an ERROR at the MCP level, deliberately: it used to be returned as a
+    # normal result, which made `isError: false`, and a generic client showed
+    # the refusal envelope as if it were a successful computation
+    # (owner-reported). The tool did not perform the operation — the result
+    # must say so. The structured refusal (reason, allowance, reset, account
+    # link) rides in the error message as JSON, so the model can still read
+    # the limit and relay the upgrade path.
     refusal, entitlement = await _gate_chart_issuance(chart_identity(resp.chart_core), locale)
     if refusal is not None:
-        return refusal
+        raise ToolError(json.dumps(refusal, ensure_ascii=False))
 
     out = resp.model_dump(mode="json")
     out["entitlement"] = entitlement
