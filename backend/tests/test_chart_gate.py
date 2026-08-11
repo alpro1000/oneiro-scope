@@ -404,3 +404,37 @@ def test_tool_level_refusal_raises_tool_error_with_the_structured_payload(monkey
     payload = _json.loads(str(exc.value))
     assert payload["reason"] == "free_natal_chart_used"
     assert payload["allowance"]["free"] == 1
+
+
+def test_a_refusal_names_the_identity_it_refused(monkeypatch):
+    """An operator who has just filled STAFF_ACCOUNTS cannot otherwise tell
+    "the bypass is off" from "I named the wrong identity" — the symptom is
+    the same refusal, and the only feedback loop is editing a dashboard and
+    re-running a chart. Observed live: a transcribed Auth0 user_id lost two
+    characters, which would have failed silently forever.
+
+    The value is the caller's OWN subject, returned to the caller.
+    """
+    from backend.mcp.tools import astrology as A
+
+    class _Session:
+        async def __aenter__(self): return self
+        async def __aexit__(self, *a): return False
+        async def commit(self): pass
+
+    user = _user(free_natal=True, key="OTHER-CHART")
+
+    monkeypatch.setattr(A, "mcp_auth_context", lambda: (True, "auth0|deadbeef"))
+    monkeypatch.setattr(A, "resolve_connector_user", lambda db, subject: _async(user))
+    monkeypatch.setattr(
+        "backend.core.database.get_sessionmaker", lambda: (lambda: _Session())
+    )
+
+    refusal, stamp = asyncio.run(A._gate_chart_issuance("A-DIFFERENT-CHART"))
+    assert stamp == {"gated": True}
+    assert refusal["reason"] == "free_natal_chart_used"
+    assert refusal["authenticated_as"] == "auth0|deadbeef"
+
+
+async def _async(value):
+    return value
