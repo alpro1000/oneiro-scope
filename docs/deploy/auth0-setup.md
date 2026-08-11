@@ -238,29 +238,37 @@ subject is already handed to the transport in
 5. Скопировать **Client ID** и **Client Secret**.
 6. В Claude → Connectors → OneiroScope → **Advanced settings**: вставить оба.
 
-7. **Applications → APIs → `OneiroScope MCP` → вкладка «Machine to Machine
-   Applications» → найти это приложение → включить «Authorized».**
+7. **Приложение → вкладка «API Access» → строка `OneiroScope MCP` → Edit →
+   включить «User-delegated Access». Scopes оставить пустыми.**
 
-   Это ОБЯЗАТЕЛЬНО, вопреки тому, что подсказывает название вкладки. Здесь
-   было записано обратное — «нужно только для machine-to-machine» — и это
-   оказалось неверно: живой лог Auth0 ответил
+   Это тот шаг, из-за отсутствия которого Auth0 три часа отвечал:
 
    ```
    Client "yogfTIAs..." is not authorized to access resource server
    "https://oneiroscope-backend.onrender.com/mcp"
    ```
 
-   при потоке authorization code с корректным `resource=`, PKCE и
-   `offline_access`. Auth0 хранит на этой вкладке разрешения клиента на API
-   вообще, а не только client-credentials гранты.
+   — при корректном `resource=` (RFC 8707), PKCE S256, `offline_access`,
+   включённых соединениях, верных грантах и совпадающем побайтово
+   идентификаторе API. Всё было настроено, кроме одной галочки.
 
-   Вероятный механизм: приложение, созданное с включённым грантом
-   `Client Credentials`, получает client grant на API автоматически, и снятие
-   галочки этот грант убирает. Гранты снимать всё равно надо (см. шаг 3) —
-   просто авторизацию после этого нужно вернуть здесь.
+   **Здесь два похожих разрешения, и они не взаимозаменяемы:**
 
-   Scopes можно оставить пустыми: сервер ничего не требует
-   (`required_scopes: null` в диагностике).
+   | | Что это | Нужно нам |
+   | --- | --- | --- |
+   | **User-delegated Access** | пользователь делегирует приложению доступ — поток authorization code | **ДА** |
+   | **Client Access** | приложение от своего имени — client credentials, создаёт client grant | нет |
+
+   В этом файле раньше стояло сначала «авторизовывать не нужно вообще», потом
+   «включить на вкладке Machine to Machine Applications у API». Оба указания
+   неверны: первое пропускает шаг, второе включает Client Access, который к
+   authorization code отношения не имеет — client grant создаётся, а ошибка
+   остаётся дословно та же, что и была. Разрешение живёт **на стороне
+   приложения**, а не API.
+
+   `0 / 0 permissions granted` — нормально: наш API не объявляет ни одного
+   scope, и сервер ничего не требует (`required_scopes: null` в диагностике).
+   Значение имеет сам факт разрешения, а не список.
 
 Серверу это безразлично: он ресурс-сервер, проверяет подпись по JWKS и
 audience. Кто именно клиент — дело Claude и Auth0.
