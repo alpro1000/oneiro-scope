@@ -80,6 +80,18 @@ on the next connect.
 2. The application named **`ChatGPT`** — unless the owner says they are
    actively using a ChatGPT connector right now. Ask if unsure.
 
+**Verify on the page, not from a list.** All the Claude rows share the same
+name, and Auth0's delete dialog asks you to type the application NAME — so the
+confirmation step checks nothing that distinguishes them. Before opening
+Danger Zone, confirm on the application's own page that it carries the
+THIRD-PARTY badge and a `tpc_` Client ID. Client IDs transcribed into a report
+drift by a character or two; the screen is the source of truth.
+
+Wait for the tenant's "approaching its available applications limit" banner to
+disappear before moving on. While it is still showing there may be no room for
+a new registration, and a failed connect leaves yet another dead client — the
+exact loop that produced six of them.
+
 For each: **⋯ menu → Delete** (or open the app → Settings → Danger Zone →
 Delete). Confirm the dialog. Report each deletion by Client ID.
 
@@ -139,3 +151,11 @@ Skip DCR entirely by giving the connector a client of its own.
 3. Final report: which Client IDs were deleted, whether reconnection used
    dynamic registration or a manual client, the tool count, and the natal
    chart outcome.
+
+## Why this will recur
+
+Every connect/disconnect cycle leaves one dynamically registered client
+behind — Auth0 does not garbage-collect them, and the connector does not
+unregister on removal. Six accumulated before the tenant ran out of room.
+Expect to run this cleanup again after a few reconnection cycles, and check
+the application list first whenever a connector suddenly refuses to register.
