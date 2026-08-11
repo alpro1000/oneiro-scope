@@ -12,7 +12,7 @@
 | frontend/messages | 0 | 5 |
 | frontend/lib | 0 | 16 |
 | frontend/e2e | 0 | 2 |
-| frontend/__tests__ | 0 | 4 |
+| frontend/__tests__ | 0 | 5 |
 | frontend/styles | 0 | 2 |
 | frontend/scripts | 0 | 1 |
 | frontend/app | 3 | 2 |
@@ -42,7 +42,7 @@
 | frontend/public/vendor | 1 | 2 |
 | frontend/public/vendor/mediapipe | 0 | 1 |
 | frontend/.storybook | 0 | 2 |
-| frontend/components | 0 | 11 |
+| frontend/components | 0 | 12 |
 | oneiro-scope | 0 | 0 |
 | packages | 2 | 0 |
 | packages/mcp-app | 2 | 5 |
@@ -151,4 +151,4 @@
 | external/DReAMy | 1 | 1 |
 | external/DReAMy/dreamy | 0 | 3 |
 
-**ИТОГО:** папок = 147, файлов = 553
+**ИТОГО:** папок = 147, файлов = 555
