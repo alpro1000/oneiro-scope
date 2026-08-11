@@ -224,7 +224,13 @@ subject is already handed to the transport in
    ```
    (точный адрес показан в самом диалоге коннектора при ошибке — сверьте.)
 3. **Advanced Settings → Grant Types**: включить `Authorization Code` и
-   `Refresh Token`.
+   `Refresh Token` — и **снять все остальные**. Auth0 по умолчанию ставит
+   галочки щедро, а браузерный агент однажды оставил `Implicit` и
+   `Client Credentials`, назвав это «для гибкости». Это наоборот: Implicit
+   выброшен из OAuth 2.1 и отдаёт токен в адресную строку, где тот оседает
+   в истории и логах; Client Credentials на клиенте с пользовательским
+   callback означает, что утёкший секрет даёт токены БЕЗ пользователя.
+   Нашему потоку нужны ровно два гранта.
 4. **Applications → APIs → `OneiroScope MCP` → Settings → Allow Offline
    Access — ВКЛЮЧИТЬ.** Без этого Auth0 не выдаёт refresh-токен, коннектор
    подключится и отвалится через час-другой «сам по себе». Пункт живёт у
