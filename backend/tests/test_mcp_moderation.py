@@ -125,6 +125,85 @@ def test_no_description_smuggles_host_directives(tools):
     assert not dirty, f"host-directive shapes in descriptions: {dirty}"
 
 
+# --- face reading: the one tool with a policy rule written about it -----------
+#
+# Both platforms restrict inferring characteristics about people from
+# biometrics, and "read personality from a face" is the example that rule was
+# written for. Three facts keep this tool publishable, and all three have to be
+# legible to a reviewer who only reads the schema:
+#
+#   1. It takes no image and no photo path. The input is a QUESTIONNAIRE — the
+#      person's own words about their own face — which is not biometric
+#      processing: no image, no measurement, no template.
+#   2. It says physiognomy is not scientifically validated, and cites who says
+#      so, rather than presenting a reading as a finding.
+#   3. It rules out assessing other people, by name and by use case.
+#
+# Weakening any of the three turns a defensible reflective feature into the
+# thing the policy prohibits, so each is a test rather than a convention.
+
+
+def _flat(text: str | None) -> str:
+    """Docstrings wrap; a phrase split across a newline still counts."""
+    return " ".join((text or "").split()).lower()
+
+
+def test_the_face_tool_takes_no_photo(tools):
+    face = next(t for t in tools if t.name == "read_face_traits")
+    params = set((face.inputSchema or {}).get("properties", {}))
+    assert params == {"features", "metrics", "landmarks", "locale"}, params
+    assert not params & {"photo_path", "photo_paths", "image", "image_url"}
+
+
+def test_the_face_tool_does_not_present_itself_as_measurement(tools):
+    face = next(t for t in tools if t.name == "read_face_traits")
+    text = _flat(face.description)
+    assert "not scientifically validated" in text
+    assert "todorov" in text, "the claim needs its source, like every other claim"
+
+
+def test_the_face_tool_rules_out_assessing_other_people(tools):
+    """The owner asked for this feature "for everyone, including HR". The
+    feature shipped; that one use did not. Reading a stranger's face to decide
+    about them is prohibited by the EU AI Act (Art. 5) and by both platforms,
+    and facial features correlate with protected characteristics — so the
+    refusal is in the tool's own description, where a model calling it reads
+    it before deciding what to do."""
+    face = next(t for t in tools if t.name == "read_face_traits")
+    text = _flat(face.description)
+    assert "do not use it to assess another person" in text
+    for forbidden_use in ("hiring", "lending", "insurance", "tenancy", "policing"):
+        assert forbidden_use in text, f"the description no longer rules out {forbidden_use}"
+
+
+def test_the_face_reading_carries_its_disclaimer_at_runtime():
+    """A description a reviewer reads is a promise; this is the behaviour."""
+    import asyncio
+
+    from backend.mcp.tools.physiognomy import read_face_traits
+
+    out = asyncio.new_event_loop().run_until_complete(
+        read_face_traits(features={"face_shape": "square", "jaw_wide": True})
+    )
+    assert out["readings"], "a questionnaire answer produced no reading"
+    assert out["disclaimer"].strip(), "reading returned without its disclaimer"
+    assert "how_to_read" in out
+    for r in out["readings"]:
+        assert r["source"], f"reading without a source: {r}"
+
+
+def test_the_face_reading_refuses_an_empty_call():
+    """No silent empty reading (conventions.md §12): nothing in, error out."""
+    import asyncio
+
+    import pytest as _pytest
+
+    from backend.mcp.tools.physiognomy import read_face_traits
+
+    with _pytest.raises(ValueError, match="Nothing to read"):
+        asyncio.new_event_loop().run_until_complete(read_face_traits())
+
+
 def test_no_description_promises_prediction(tools):
     """The no-determinism rule applies to our own marketing surface first.
 

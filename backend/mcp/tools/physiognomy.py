@@ -314,3 +314,86 @@ async def physiognomy_timeline(
         result, domain="astro",
         known_inputs=[FACE_PHOTOS], completed=["face-timeline"], locale=locale,
     )
+
+
+# --- The connector-safe surface (re-added after WP-10) ------------------------
+# WP-10 removed physiognomy from the MCP registry wholesale. Bringing it back
+# needs a smaller shape than the one that left, for a reason that has nothing
+# to do with taste:
+#
+# `analyze_face`, `analyze_face_archive` and `physiognomy_timeline` all accept
+# `photo_path` — a path on THIS server's disk. Over a remote connector nobody
+# can put a file there: the user's photo is on their machine. So the parameter
+# is dead for legitimate use and alive only as a way to point our own file
+# reader at our own filesystem. It is guarded (`_safe_read_path`, hardened
+# across #136–#139), but a guarded door to a room with nothing in it is still
+# better closed. `physiognomy_report` stays out for the same reason it left:
+# it writes an HTML file and returns a path the user cannot open.
+#
+# What remains is the input a chat can actually produce: the QUESTIONNAIRE.
+# Thirteen optional fields in words — face shape, eye spacing, brow thickness.
+# A model reading a person's own description fills those directly, and the
+# result is not biometric processing at all: no image, no measurement, no
+# template. The person says what their face is like and gets a traditional
+# reading back. That is the same thing the website does and the only form of
+# this feature that belongs on a public connector.
+#
+# `metrics` and `landmarks` stay available for a client that computed them
+# locally (the web scanner does; photos never leave the browser).
+
+
+async def read_face_traits(
+    features: Optional[dict] = None,
+    metrics: Optional[dict] = None,
+    landmarks: Optional[list[list[float]]] = None,
+    locale: str = "ru",
+) -> dict[str, Any]:
+    """Traditional face reading from SELF-DESCRIBED features (no photo).
+
+    Reflective/entertainment reading in the mianxiang and European
+    (Lavater, Corman, Kretschmer) traditions. Physiognomy is NOT
+    scientifically validated — Todorov, "Face Value" (2017): stable
+    personality traits cannot be read from a face. Every reading returns with
+    its source and that statement attached.
+
+    Intended for the reader's own face, described in their own words. Do not
+    use it to assess another person, and never for hiring, lending, insurance,
+    tenancy, policing or any decision about someone. The returned disclaimer
+    says so and must be shown.
+
+    Args:
+        features: The questionnaire — the normal chat input. All fields
+            optional; only answered ones produce readings. Values are exactly:
+            `face_shape`: round | square | long | pointed | rectangular
+            `eye_spacing`: wide | average | close
+            `eye_size`: large | average | small
+            `brow_thickness`: full | average | thin
+            `lip_fullness`: full | average | thin
+            booleans: `heavy_eyelid`, `steady_gaze`, `nose_fleshy`,
+            `jaw_wide`, `cheeks_full`, `cheekbones_high`, `forehead_high`,
+            `ears_large`.
+            An unlisted value is rejected rather than coerced — "oval" is not
+            a face shape this knowledge base codes.
+        metrics: Scale-free facial ratios, if a client computed them.
+        landmarks: 468-point FaceMesh coordinates, if a client extracted them
+            in the browser. Photos are never sent anywhere.
+        locale: "ru" or "en".
+
+    Returns:
+        Readings grouped by system, each with its source and confidence tier,
+        the five-element balance, plus the disclaimer.
+    """
+    if not any((features, metrics, landmarks)):
+        raise ValueError(
+            "Nothing to read. Pass `features` — the questionnaire — describing "
+            "the person's own face in their words. Photos are not accepted "
+            "here: this server cannot see the reader's machine."
+        )
+    resp = _analyze(landmarks, metrics, features, None, locale)
+    out = resp.model_dump(mode="json")
+    out["how_to_read"] = (
+        "Traditional reading, not measurement of character. Each item carries "
+        "its own source and tier; present them as a tradition's claim, never "
+        "as a fact about the person. The disclaimer is not optional."
+    )
+    return out

@@ -379,9 +379,17 @@ def build_plan(
 
 # Reference dictionaries: lookups, not computations over a person. All of
 # them live behind the single `lookup` tool since WP-10.
+#
+# "face" is a domain in this table but not in `capability_menu` — deliberately.
+# A face reading is a dictionary lookup keyed by what the reader said about
+# their own face; it computes nothing, depends on nothing, and leads nowhere,
+# so it is not a stage in a reading and offers no next step. Listing it here is
+# what keeps `test_every_registered_computation_is_a_stage_or_reference`
+# meaningful: every registered tool is either a step or a declared lookup.
 REFERENCE_TOOLS: dict[str, tuple[str, ...]] = {
     "astro": ("lookup", "search_city", "validate_birth_data"),
     "dreams": ("lookup",),
+    "face": ("read_face_traits", "physiognomy_methods"),
 }
 
 

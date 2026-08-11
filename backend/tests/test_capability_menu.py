@@ -168,14 +168,39 @@ def test_registry_matches_the_wp10_surface():
     """47 tools drowned the working set; the cut is enforced, not aspirational."""
     registered = _registered_tool_names()
     assert registered, "could not parse the registry — the check would be vacuous"
-    assert len(registered) == 19, (
-        f"registry has {len(registered)} tools — WP-10 fixed the surface at 19; "
-        f"a new tool needs an explicit owner decision, not a drive-by add"
+    assert len(registered) == 21, (
+        f"registry has {len(registered)} tools — WP-10 cut it to 19 and the "
+        f"owner re-added face reading (21); a new tool needs an explicit owner "
+        f"decision, not a drive-by add"
     )
+    # Face reading came back in a smaller shape than the one that left: the
+    # questionnaire path only. The tools listed here take `photo_path` — a path
+    # on the SERVER's disk, unreachable for a remote caller and therefore a
+    # dead parameter in front of a live file reader. They stay out.
     for gone in ("generate_horoscope", "horoscope_report", "profile_report_file",
-                 "analyze_face", "physiognomy_report", "mc_in_sign",
+                 "analyze_face", "physiognomy_report", "analyze_face_archive",
+                 "physiognomy_timeline", "mc_in_sign",
                  "list_event_types", "decade_map", "synastry"):
         assert gone not in registered, f"{gone} came back after WP-8/WP-10"
+
+
+def test_the_face_tools_never_take_a_server_side_path():
+    """The whole reason face reading could return. If a `photo_path` /
+    `photo_paths` parameter reappears on a REGISTERED face tool, the surface
+    is back to offering a file reader over a connector, and the biometric
+    argument that keeps this feature publishable collapses with it."""
+    import inspect
+
+    from backend.mcp.tools import physiognomy as ph
+
+    registered = _registered_tool_names()
+    for name in ("read_face_traits", "physiognomy_methods"):
+        assert name in registered, f"{name} left the registry"
+        params = set(inspect.signature(getattr(ph, name)).parameters)
+        assert not params & {"photo_path", "photo_paths",
+                             "early_photo_paths", "later_photo_paths"}, (
+            f"{name} accepts a server-side photo path"
+        )
 
 
 def test_every_stage_points_at_a_registered_tool():

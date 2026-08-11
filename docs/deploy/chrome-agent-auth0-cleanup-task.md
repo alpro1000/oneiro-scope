@@ -160,10 +160,13 @@ Skip DCR entirely by giving the connector a client of its own.
 
 ## Phase 5 — Verify and report
 
-1. In Claude, open the connector's tool list. Expect **19 tools**. If it shows
+1. In Claude, open the connector's tool list. Expect **21 tools**. If it shows
    `transit_arc`, `transit_meaning`, `electional_day`, `list_event_types` or
    `horoscope_report`, the connector is showing a cached schema — remove and
-   re-add it again.
+   re-add it again. The live list is always at
+   `https://oneiroscope-backend.onrender.com/connect/diagnostics` under
+   `tools.names`; compare against that rather than against this number, which
+   changes whenever the owner adds a tool.
 2. Ask the owner to run a natal chart for `01.07.1977, 22:30, Запорожье`.
    - Success → done.
    - `entitlement_required` → ask them for the **`authenticated_as`** field in
