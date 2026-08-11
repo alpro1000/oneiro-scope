@@ -29,6 +29,7 @@
 import { useRouter } from 'next/navigation';
 import BirthDataForm from '@/components/BirthDataForm';
 import type { BirthData } from '@/lib/birth-data';
+import { track } from '@/lib/metrics';
 
 type Lang = 'ru' | 'en';
 
@@ -58,7 +59,14 @@ export default function FaceTransition({ lang }: { lang: Lang }) {
 
   // The form has already written the data to localStorage by the time submit
   // fires, so the chart screen needs no parameters — it restores and computes.
-  const go = (_b: BirthData) => router.push(`/${lang}/natal`);
+  //
+  // This submit IS the funnel's conversion: a free reading was read to the end
+  // and the person answered with their birth date. Counted anonymously — the
+  // date itself never goes to the counter, only that one was entered.
+  const go = (_b: BirthData) => {
+    track('birth_date_entered');
+    router.push(`/${lang}/natal`);
+  };
 
   return (
     <section

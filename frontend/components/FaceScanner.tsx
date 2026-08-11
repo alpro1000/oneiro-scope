@@ -13,6 +13,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import FaceTransition from '@/components/FaceTransition';
+import { track } from '@/lib/metrics';
 import { useTranslations } from 'next-intl';
 import {
   brightnessOk,
@@ -122,6 +123,11 @@ export default function FaceScanner({ locale }: { locale: string }) {
       try {
         setResult(await analyzeFaceArchive(frames, locale));
         setPhase('done');
+        // The funnel's denominator: a COMPLETE reading reached the screen.
+        // Fired here rather than on page load, because "opened the scanner"
+        // and "got a result" are different numbers and only the second one
+        // makes the conversion below it meaningful.
+        track('face_result_shown');
       } catch (e) {
         setError(e instanceof Error ? e.message : String(e));
         setPhase('error');
