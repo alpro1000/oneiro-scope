@@ -14,12 +14,18 @@ import LanguageSwitcher from './LanguageSwitcher';
  *
  * The nav leads with the three finished instrument screens (natal,
  * astrocartography, lunar calendar) and keeps the real features still on the
- * old design (dreams, face, account) reachable. The old `/astrology`
- * (superseded by `/natal`) and `/pricing` (payment path is blocked upstream)
- * are intentionally not in the primary nav until they are rebuilt — they still
- * resolve at their URLs. `/face` is back in the nav now that its scanner loads
- * (its runtime is self-hosted); its instrument redesign and analysis fixes are
- * separate follow-ups.
+ * old design (dreams, account) reachable. The old `/astrology` (superseded by
+ * `/natal`) and `/pricing` (payment path is blocked upstream) are
+ * intentionally not in the primary nav until they are rebuilt — they still
+ * resolve at their URLs.
+ *
+ * `/face` is deliberately NOT here, and it is the one omission that is a
+ * positioning decision rather than a to-do. Face reading is an ENTRANCE: people
+ * arrive on it from a shared link, get a free complete result, and are handed
+ * on to the chart. Listing it in the primary nav beside the natal wheel and
+ * astrocartography states that it is a peer instrument, which blurs exactly
+ * what the rest of this frame is built to claim — that the numbers here are
+ * computed. It stays reachable at its URL and from the home page.
  */
 export default function Header() {
   const params = useParams();
@@ -34,7 +40,6 @@ export default function Header() {
     {href: `/${locale}/astrocartography`, label: t('astrocartography')},
     {href: `/${locale}/calendar`, label: t('calendar')},
     {href: `/${locale}/dreams`, label: t('dreams')},
-    {href: `/${locale}/face`, label: t('face')},
     {href: `/${locale}/connect`, label: t('connect')},
     {href: `/${locale}/account`, label: t('account')},
   ];
