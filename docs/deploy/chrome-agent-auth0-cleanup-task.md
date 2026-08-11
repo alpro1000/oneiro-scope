@@ -40,6 +40,19 @@ So this task is cleanup, not reconfiguration.
   - APIs: `https://manage.auth0.com/dashboard/eu/dev-u22itgv3h8ew1sgz/apis`
   - Database connections: `https://manage.auth0.com/dashboard/eu/dev-u22itgv3h8ew1sgz/connections/database`
   Within a page, use the search box rather than scrolling.
+- **NEVER transcribe an identifier — use the copy button.** Not Client IDs,
+  not `user_id`s, not connection ids. This cost three separate debugging
+  sessions:
+  - an Auth0 `user_id` came back two characters short;
+  - `tpc_` client ids in a deletion report drifted by a character each;
+  - a Client ID read off a screenshot turned capital `I` into digit `1`, and
+    Auth0 answered `Unknown client` for an hour while every setting around it
+    was already correct.
+  Auth0 renders IDs in a font where `I`/`1`, `O`/`0` and `l`/`I` are barely
+  distinguishable, and a screenshot cannot be proofread. Every ID field in the
+  dashboard has a copy icon next to it. Use it, paste it, and if the value must
+  reach a human, tell them to copy it themselves rather than reading yours.
+
 - **One phase per run.** These phases are independent; finishing one and
   reporting beats attempting all of them and losing the transcript.
 
