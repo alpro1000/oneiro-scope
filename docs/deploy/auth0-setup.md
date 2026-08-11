@@ -225,8 +225,16 @@ subject is already handed to the transport in
    (точный адрес показан в самом диалоге коннектора при ошибке — сверьте.)
 3. **Advanced Settings → Grant Types**: включить `Authorization Code` и
    `Refresh Token`.
-4. Скопировать **Client ID** и **Client Secret**.
-5. В Claude → Connectors → OneiroScope → **Advanced settings**: вставить оба.
+4. **Applications → APIs → `OneiroScope MCP` → Settings → Allow Offline
+   Access — ВКЛЮЧИТЬ.** Без этого Auth0 не выдаёт refresh-токен, коннектор
+   подключится и отвалится через час-другой «сам по себе». Пункт живёт у
+   API, а не у приложения, поэтому его пропускают.
+5. Скопировать **Client ID** и **Client Secret**.
+6. В Claude → Connectors → OneiroScope → **Advanced settings**: вставить оба.
+
+Что не нужно: авторизовывать приложение для API отдельным списком — это
+требуется только для machine-to-machine (client credentials). Здесь поток
+authorization code, и audience приходит из нашего RFC 9728 документа.
 
 Серверу это безразлично: он ресурс-сервер, проверяет подпись по JWKS и
 audience. Кто именно клиент — дело Claude и Auth0.
