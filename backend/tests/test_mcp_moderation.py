@@ -125,22 +125,32 @@ def test_no_description_smuggles_host_directives(tools):
     assert not dirty, f"host-directive shapes in descriptions: {dirty}"
 
 
-# --- face reading: the one tool with a policy rule written about it -----------
+# --- face reading: staged, and safe for the day it ships ----------------------
 #
-# Both platforms restrict inferring characteristics about people from
-# biometrics, and "read personality from a face" is the example that rule was
-# written for. Three facts keep this tool publishable, and all three have to be
-# legible to a reviewer who only reads the schema:
+# `read_face_traits` is written, tested and NOT registered. The owner's call:
+# a reviewer who reads "face reading" in a tool list and closes the
+# application without opening the schema rejects the whole server, and the
+# funnel that needs this feature lives on the web, which needs no approval.
+#
+# These tests therefore run against the FUNCTION, not the served tool list.
+# That is the point: the guarantees have to outlive the registration, or the
+# day someone re-adds the two lines they will be re-adding something nobody
+# has checked in months. Three properties make it publishable, and all three
+# must be legible to a reviewer who only reads the schema:
 #
 #   1. It takes no image and no photo path. The input is a QUESTIONNAIRE — the
 #      person's own words about their own face — which is not biometric
-#      processing: no image, no measurement, no template.
+#      processing at all: no image, no measurement, no template.
 #   2. It says physiognomy is not scientifically validated, and cites who says
 #      so, rather than presenting a reading as a finding.
 #   3. It rules out assessing other people, by name and by use case.
-#
-# Weakening any of the three turns a defensible reflective feature into the
-# thing the policy prohibits, so each is a test rather than a convention.
+
+
+@pytest.fixture(scope="module")
+def face_tool():
+    from backend.mcp.tools.physiognomy import read_face_traits
+
+    return read_face_traits
 
 
 def _flat(text: str | None) -> str:
@@ -148,42 +158,70 @@ def _flat(text: str | None) -> str:
     return " ".join((text or "").split()).lower()
 
 
-def test_the_face_tool_takes_no_photo(tools):
-    face = next(t for t in tools if t.name == "read_face_traits")
-    params = set((face.inputSchema or {}).get("properties", {}))
+def test_the_face_reading_is_staged_not_shipped(tools):
+    """The submission decision, in executable form.
+
+    Delete this test when the listing is approved and the tools go back —
+    that is the intended way past it. It exists so the re-add is a decision
+    someone makes on purpose, having read why it was staged, rather than a
+    drive-by two-line edit. See the block in `backend/mcp/server.py`.
+    """
+    served = {t.name for t in tools}
+    assert not served & {"read_face_traits", "physiognomy_methods"}, (
+        "face reading is back on the MCP surface. If that is deliberate and "
+        "the directory listing is already approved, delete this test. If it "
+        "is not, the whole server is now carrying a rejection risk for two "
+        "tools whose users are on the web."
+    )
+
+
+def test_the_face_tool_takes_no_photo(face_tool):
+    import inspect
+
+    params = set(inspect.signature(face_tool).parameters)
     assert params == {"features", "metrics", "landmarks", "locale"}, params
     assert not params & {"photo_path", "photo_paths", "image", "image_url"}
 
 
-def test_the_face_tool_does_not_present_itself_as_measurement(tools):
-    face = next(t for t in tools if t.name == "read_face_traits")
-    text = _flat(face.description)
+def test_the_face_tool_does_not_present_itself_as_measurement(face_tool):
+    text = _flat(face_tool.__doc__)
     assert "not scientifically validated" in text
     assert "todorov" in text, "the claim needs its source, like every other claim"
 
 
-def test_the_face_tool_rules_out_assessing_other_people(tools):
+def test_the_face_tool_rules_out_assessing_other_people(face_tool):
     """The owner asked for this feature "for everyone, including HR". The
-    feature shipped; that one use did not. Reading a stranger's face to decide
-    about them is prohibited by the EU AI Act (Art. 5) and by both platforms,
-    and facial features correlate with protected characteristics — so the
-    refusal is in the tool's own description, where a model calling it reads
-    it before deciding what to do."""
-    face = next(t for t in tools if t.name == "read_face_traits")
-    text = _flat(face.description)
+    feature was built; that one use was not. Reading a stranger's face to
+    decide about them is prohibited by the EU AI Act (Art. 5) and by both
+    platforms, and facial features correlate with protected characteristics —
+    so the refusal is in the tool's own description, where a model calling it
+    reads it before deciding what to do."""
+    text = _flat(face_tool.__doc__)
     assert "do not use it to assess another person" in text
     for forbidden_use in ("hiring", "lending", "insurance", "tenancy", "policing"):
         assert forbidden_use in text, f"the description no longer rules out {forbidden_use}"
 
 
-def test_the_face_reading_carries_its_disclaimer_at_runtime():
+def test_the_face_tool_says_what_it_is_in_its_first_line(face_tool):
+    """No euphemism at the top of the description.
+
+    The temptation on a re-review is to name it something that does not scan
+    as physiognomy. That reads as an attempt to slip it past, which is worse
+    than the honest name — so the opening line states the thing itself, and
+    that it runs on self-description rather than photographs. A reviewer
+    should have the answer before they have the question.
+    """
+    first = _flat((face_tool.__doc__ or "").strip().splitlines()[0])
+    assert "face reading" in first, first
+    assert "self-described" in first or "no photo" in first, first
+
+
+def test_the_face_reading_carries_its_disclaimer_at_runtime(face_tool):
     """A description a reviewer reads is a promise; this is the behaviour."""
     import asyncio
 
-    from backend.mcp.tools.physiognomy import read_face_traits
-
     out = asyncio.new_event_loop().run_until_complete(
-        read_face_traits(features={"face_shape": "square", "jaw_wide": True})
+        face_tool(features={"face_shape": "square", "jaw_wide": True})
     )
     assert out["readings"], "a questionnaire answer produced no reading"
     assert out["disclaimer"].strip(), "reading returned without its disclaimer"
@@ -192,16 +230,12 @@ def test_the_face_reading_carries_its_disclaimer_at_runtime():
         assert r["source"], f"reading without a source: {r}"
 
 
-def test_the_face_reading_refuses_an_empty_call():
+def test_the_face_reading_refuses_an_empty_call(face_tool):
     """No silent empty reading (conventions.md §12): nothing in, error out."""
     import asyncio
 
-    import pytest as _pytest
-
-    from backend.mcp.tools.physiognomy import read_face_traits
-
-    with _pytest.raises(ValueError, match="Nothing to read"):
-        asyncio.new_event_loop().run_until_complete(read_face_traits())
+    with pytest.raises(ValueError, match="Nothing to read"):
+        asyncio.new_event_loop().run_until_complete(face_tool())
 
 
 def test_no_description_promises_prediction(tools):

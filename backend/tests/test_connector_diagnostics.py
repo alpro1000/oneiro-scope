@@ -219,12 +219,7 @@ def test_diagnostics_shows_the_tools_this_process_actually_serves(client):
     server: "46 tools, transit_arc answers Unknown tool". The server has
     never listed those names since WP-10. This field is the proof a browser
     can open: whatever a client shows that is not in this list is the
-    client's cache, and the fix is re-adding the connector.
-
-    `physiognomy_methods` used to be on this list and no longer is — the
-    owner re-added face reading, so it is served for real now and proves
-    nothing about a stale cache. `analyze_face` and `physiognomy_report`
-    took its place: they are the two that stayed removed."""
+    client's cache, and the fix is re-adding the connector."""
     body = client.get("/connect/diagnostics").json()
     tools = body["tools"]
     assert tools["count"] == len(tools["names"]) > 0
@@ -232,7 +227,8 @@ def test_diagnostics_shows_the_tools_this_process_actually_serves(client):
     for ghost in (
         "transit_arc", "transit_meaning", "electional_day",
         "list_event_types", "horoscope_report", "profile_report_file",
-        "analyze_face", "physiognomy_report", "generate_horoscope",
+        "analyze_face", "physiognomy_report", "physiognomy_methods",
+        "generate_horoscope",
     ):
         assert ghost not in tools["names"], (
             f"{ghost} is served again — the cached-client diagnosis in the "
