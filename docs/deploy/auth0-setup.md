@@ -191,3 +191,57 @@ on or how many analyses they have run — that is the account layer
 page. Linking the two means mapping the token's `sub` to a `User` row; the
 subject is already handed to the transport in
 `scope["state"]["mcp_subject"]`, which is the hook to build on.
+
+---
+
+## Когда динамическая регистрация не срабатывает
+
+Симптом в Claude: **«Couldn't register with OneiroScope's sign-in service»**,
+подключение не начинается. Это провал шага, на котором Claude регистрирует
+себя OAuth-клиентом (RFC 7591) — до всякого логина.
+
+**Внимание на ложно-зелёную проверку.** Строка `dcr_advertised` в
+`/connect/diagnostics` по умолчанию читает лишь наличие поля
+`registration_endpoint` в discovery-документе, а Auth0 публикует это поле
+независимо от настройки тенанта. Проверить по-настоящему:
+
+```
+<backend>/connect/diagnostics?probe=1
+```
+
+Проба посылает намеренно невалидную регистрацию (пустое тело), поэтому
+клиента не создаёт: `400` — регистрация открыта, `403` — отказ.
+
+### Путь A — обойти DCR вовсе (5 минут, рекомендую)
+
+Диалог коннектора сам это предлагает: «add an OAuth Client ID».
+
+1. Auth0 → **Applications → Create Application** → **Regular Web Application**.
+2. В настройках приложения → **Allowed Callback URLs**, через запятую:
+   ```
+   https://claude.ai/api/mcp/auth_callback,
+   https://claude.com/api/mcp/auth_callback
+   ```
+   (точный адрес показан в самом диалоге коннектора при ошибке — сверьте.)
+3. **Advanced Settings → Grant Types**: включить `Authorization Code` и
+   `Refresh Token`.
+4. Скопировать **Client ID** и **Client Secret**.
+5. В Claude → Connectors → OneiroScope → **Advanced settings**: вставить оба.
+
+Серверу это безразлично: он ресурс-сервер, проверяет подпись по JWKS и
+audience. Кто именно клиент — дело Claude и Auth0.
+
+### Путь B — починить DCR
+
+Классическая ловушка Auth0: динамически зарегистрированные клиенты —
+**third-party applications**, а они могут пользоваться только **domain-level**
+соединениями. Мало включить флаг:
+
+1. **Settings → Advanced → OIDC Dynamic Application Registration** — включить.
+2. Повысить соединение до domain-level. В дашборде этого пункта нет, только
+   Management API (Auth0 → **Management API Explorer**):
+   ```
+   GET   /api/v2/connections            → найти id нужного соединения
+   PATCH /api/v2/connections/{id}       {"is_domain_connection": true}
+   ```
+3. Проверить: `<backend>/connect/diagnostics?probe=1` → `400`.

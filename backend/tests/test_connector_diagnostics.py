@@ -206,3 +206,89 @@ def test_diagnostics_shows_the_tools_this_process_actually_serves(client):
             f"{ghost} is served again — the cached-client diagnosis in the "
             "session log is now wrong, re-investigate"
         )
+
+
+def test_the_cheap_dcr_check_does_not_claim_more_than_it_tested(client, monkeypatch):
+    """A green that meant nothing. Auth0 publishes `registration_endpoint`
+    whether or not the tenant accepts dynamic registration, so reading the
+    field reported ok while real registrations were refused — the connector
+    said "Couldn't register with OneiroScope's sign-in service" against a
+    fully green diagnostics page. The wording must now say what it proved."""
+    monkeypatch.setattr(settings, "MCP_REQUIRE_AUTH", True, raising=False)
+    monkeypatch.setattr(
+        settings, "MCP_AUTH_ISSUER", "https://tenant.eu.auth0.com/", raising=False
+    )
+
+    async def _ok():
+        return True, "3 signing key(s)"
+
+    monkeypatch.setattr(diag, "_jwks_reachable", _ok)
+
+    class _Resp:
+        status_code = 200
+
+        @staticmethod
+        def json():
+            return {"registration_endpoint": "https://tenant.eu.auth0.com/oidc/register"}
+
+    class _Client:
+        async def __aenter__(self): return self
+        async def __aexit__(self, *a): return False
+        async def get(self, url): return _Resp()
+        async def post(self, url, json):  # must not be reached without probe
+            raise AssertionError("the default check must not POST")
+
+    import httpx
+    monkeypatch.setattr(httpx, "AsyncClient", lambda **kw: _Client())
+
+    row = _check(client.get("/connect/diagnostics").json(), "dcr_advertised")
+    assert row["ok"] is True
+    assert "NOT proof" in row["detail"] and "probe=1" in row["detail"]
+
+
+def test_the_probe_separates_open_registration_from_refused(client, monkeypatch):
+    """The probe posts an empty body: no client can be created either way.
+    400 means the server took the request and disliked the payload — i.e.
+    registration is open. 403 is the actual failure the owner hit."""
+    monkeypatch.setattr(settings, "MCP_REQUIRE_AUTH", True, raising=False)
+    monkeypatch.setattr(
+        settings, "MCP_AUTH_ISSUER", "https://tenant.eu.auth0.com/", raising=False
+    )
+
+    async def _ok():
+        return True, "3 signing key(s)"
+
+    monkeypatch.setattr(diag, "_jwks_reachable", _ok)
+
+    import httpx
+
+    def _client_returning(post_status):
+        class _Disc:
+            status_code = 200
+            @staticmethod
+            def json():
+                return {"registration_endpoint": "https://tenant.eu.auth0.com/oidc/register"}
+
+        class _Reg:
+            status_code = post_status
+
+        class _Client:
+            async def __aenter__(self): return self
+            async def __aexit__(self, *a): return False
+            async def get(self, url): return _Disc()
+            async def post(self, url, json):
+                assert json == {}, "the probe must not send a creatable payload"
+                return _Reg()
+
+        return lambda **kw: _Client()
+
+    monkeypatch.setattr(httpx, "AsyncClient", _client_returning(400))
+    row = _check(client.get("/connect/diagnostics?probe=1").json(), "dcr_advertised")
+    assert row["ok"] is True and "accepts dynamic registration" in row["detail"]
+
+    monkeypatch.setattr(httpx, "AsyncClient", _client_returning(403))
+    row = _check(client.get("/connect/diagnostics?probe=1").json(), "dcr_advertised")
+    assert row["ok"] is False
+    assert "REFUSES" in row["detail"]
+    # The fix must name the escape hatch that needs no DCR at all.
+    assert "Regular Web Application" in row["fix"]

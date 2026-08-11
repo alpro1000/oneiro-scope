@@ -64,16 +64,31 @@ class Diagnostics(BaseModel):
     tools: dict[str, Any]
 
 
-async def _dcr_advertised() -> tuple[bool, str]:
-    """Does the authorization server advertise dynamic client registration?
+async def _dcr_advertised(probe: bool = False) -> tuple[bool, str]:
+    """Can a client self-register with the authorization server (RFC 7591)?
 
-    Claude's connector flow registers ITSELF as an OAuth client (RFC 7591)
-    before it can send anyone to log in. When the issuer's discovery document
-    has no `registration_endpoint`, the connection dies with "Failed to start
-    MCP authorization" — on the user's screen, not in our log, with nothing
-    in this deployment misconfigured. Auth0 ships with that flag OFF
-    (tenant setting "OIDC Dynamic Application Registration"), which makes
-    this the likeliest silent killer of a directory review.
+    Claude's connector registers ITSELF as an OAuth client before it can send
+    anyone to log in; a failure there reads as "Couldn't register with
+    OneiroScope's sign-in service" on the user's screen, with nothing in this
+    deployment misconfigured.
+
+    Two levels, because the cheap one lies. Reading `registration_endpoint`
+    out of the discovery document proves only that the FIELD is present —
+    Auth0 publishes it whether or not the tenant actually accepts dynamic
+    registration, so this check reported `ok` while real registrations were
+    being refused. That is exactly the shape of failure this file exists to
+    prevent, so the wording no longer claims more than it tested.
+
+    `probe=True` (query `?probe=1`) settles it by POSTing a DELIBERATELY
+    INVALID registration — an empty body, which every conforming server
+    rejects for missing `redirect_uris`. The status code separates the two
+    cases without ever creating a client:
+
+        400 / 422  → registration is open; the payload was the problem  → OK
+        401 / 403  → registration is refused                            → the bug
+
+    Off by default: this endpoint is public, and firing an outbound POST per
+    page load would make it an amplifier.
     """
     issuer = settings.MCP_AUTH_ISSUER
     if not issuer:
@@ -84,15 +99,39 @@ async def _dcr_advertised() -> tuple[bool, str]:
 
         async with httpx.AsyncClient(timeout=5.0) as client:
             resp = await client.get(url)
-        if resp.status_code != 200:
-            return False, f"{url} → HTTP {resp.status_code}"
-        endpoint = resp.json().get("registration_endpoint")
-        if not endpoint:
-            return False, (
-                f"{url} advertises no registration_endpoint — clients that "
-                "self-register (Claude, ChatGPT) cannot start the OAuth flow"
+            if resp.status_code != 200:
+                return False, f"{url} → HTTP {resp.status_code}"
+            endpoint = resp.json().get("registration_endpoint")
+            if not endpoint:
+                return False, (
+                    f"{url} advertises no registration_endpoint — clients that "
+                    "self-register (Claude, ChatGPT) cannot start the OAuth flow"
+                )
+            if not probe:
+                return True, (
+                    f"registration_endpoint advertised: {endpoint}. NOT proof "
+                    "that registration is accepted — Auth0 publishes this field "
+                    "regardless of the tenant setting. Add ?probe=1 to test it."
+                )
+
+            # Empty body on purpose: no client can be created by this.
+            reg = await client.post(endpoint, json={})
+
+        if reg.status_code in (400, 422):
+            return True, (
+                f"{endpoint} accepts dynamic registration "
+                f"(rejected an empty body with {reg.status_code}, as it should)"
             )
-        return True, f"registration_endpoint: {endpoint}"
+        if reg.status_code in (401, 403):
+            return False, (
+                f"{endpoint} REFUSES dynamic registration (HTTP "
+                f"{reg.status_code}). This is the 'Couldn't register with the "
+                "sign-in service' error a connector shows."
+            )
+        return False, (
+            f"{endpoint} answered HTTP {reg.status_code} to a probe — "
+            "unexpected; read the body manually before concluding"
+        )
     except Exception as exc:
         return False, f"{url} unreachable: {type(exc).__name__}"
 
@@ -130,8 +169,13 @@ def _host_allowed(request_host: str, allowed: list[str]) -> bool:
 
 
 @router.get("/connect/diagnostics", response_model=Diagnostics)
-async def diagnostics(request: Request) -> Diagnostics:
-    """Machine-readable connector readiness. Open it in a browser."""
+async def diagnostics(request: Request, probe: bool = False) -> Diagnostics:
+    """Machine-readable connector readiness. Open it in a browser.
+
+    `?probe=1` additionally tests dynamic client registration for real,
+    with a request that cannot create anything. Off by default because this
+    endpoint is public.
+    """
     from backend.app.main import api_app  # set at import; None-safe below
 
     mounted = getattr(api_app.state, "mcp_session_manager", None) is not None
@@ -230,16 +274,20 @@ async def diagnostics(request: Request) -> Diagnostics:
                     "that this service has outbound network access",
             ))
 
-            dcr_ok, dcr_detail = await _dcr_advertised()
+            dcr_ok, dcr_detail = await _dcr_advertised(probe=probe)
             checks.append(Check(
                 id="dcr_advertised",
                 ok=dcr_ok,
                 detail=dcr_detail,
                 fix=None if dcr_ok else
-                    "enable dynamic client registration on the authorization "
-                    "server (Auth0: Settings → Advanced → 'OIDC Dynamic "
-                    "Application Registration', and allow the created clients "
-                    "to use your connections)",
+                    "Auth0: Settings → Advanced → 'OIDC Dynamic Application "
+                    "Registration' ON, AND promote the login connection to "
+                    "domain level (Management API: PATCH /api/v2/connections/"
+                    "{id} {\"is_domain_connection\": true}) — dynamically "
+                    "registered clients are third-party apps and can only use "
+                    "domain-level connections. Fallback that needs neither: "
+                    "create a Regular Web Application in Auth0 and paste its "
+                    "Client ID/Secret into the connector's Advanced settings.",
             ))
 
     # Not an MCP check, but the same class of failure and the same audience:
