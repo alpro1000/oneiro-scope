@@ -33,6 +33,15 @@ So this task is cleanup, not reconfiguration.
   the resource the tokens are issued for; without it every login stops working.
 - Do not change plans, enable paid features, or touch other tenants.
 - After each phase, post a short status line.
+- **Navigate by URL, never by hunting the sidebar.** A browser agent once
+  burned 68 steps scrolling Auth0's menus to reach one toggle and died of
+  context overflow mid-task. Auth0's dashboard URLs are stable — use them:
+  - Applications: `https://manage.auth0.com/dashboard/eu/dev-u22itgv3h8ew1sgz/applications`
+  - APIs: `https://manage.auth0.com/dashboard/eu/dev-u22itgv3h8ew1sgz/apis`
+  - Database connections: `https://manage.auth0.com/dashboard/eu/dev-u22itgv3h8ew1sgz/connections/database`
+  Within a page, use the search box rather than scrolling.
+- **One phase per run.** These phases are independent; finishing one and
+  reporting beats attempting all of them and losing the transcript.
 
 ## Phase 0 — Inventory (no changes)
 
