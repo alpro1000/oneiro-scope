@@ -33,6 +33,28 @@ So this task is cleanup, not reconfiguration.
   the resource the tokens are issued for; without it every login stops working.
 - Do not change plans, enable paid features, or touch other tenants.
 - After each phase, post a short status line.
+- **Navigate by URL, never by hunting the sidebar.** A browser agent once
+  burned 68 steps scrolling Auth0's menus to reach one toggle and died of
+  context overflow mid-task. Auth0's dashboard URLs are stable — use them:
+  - Applications: `https://manage.auth0.com/dashboard/eu/dev-u22itgv3h8ew1sgz/applications`
+  - APIs: `https://manage.auth0.com/dashboard/eu/dev-u22itgv3h8ew1sgz/apis`
+  - Database connections: `https://manage.auth0.com/dashboard/eu/dev-u22itgv3h8ew1sgz/connections/database`
+  Within a page, use the search box rather than scrolling.
+- **NEVER transcribe an identifier — use the copy button.** Not Client IDs,
+  not `user_id`s, not connection ids. This cost three separate debugging
+  sessions:
+  - an Auth0 `user_id` came back two characters short;
+  - `tpc_` client ids in a deletion report drifted by a character each;
+  - a Client ID read off a screenshot turned capital `I` into digit `1`, and
+    Auth0 answered `Unknown client` for an hour while every setting around it
+    was already correct.
+  Auth0 renders IDs in a font where `I`/`1`, `O`/`0` and `l`/`I` are barely
+  distinguishable, and a screenshot cannot be proofread. Every ID field in the
+  dashboard has a copy icon next to it. Use it, paste it, and if the value must
+  reach a human, tell them to copy it themselves rather than reading yours.
+
+- **One phase per run.** These phases are independent; finishing one and
+  reporting beats attempting all of them and losing the transcript.
 
 ## Phase 0 — Inventory (no changes)
 
@@ -138,10 +160,13 @@ Skip DCR entirely by giving the connector a client of its own.
 
 ## Phase 5 — Verify and report
 
-1. In Claude, open the connector's tool list. Expect **19 tools**. If it shows
+1. In Claude, open the connector's tool list. Expect **21 tools**. If it shows
    `transit_arc`, `transit_meaning`, `electional_day`, `list_event_types` or
    `horoscope_report`, the connector is showing a cached schema — remove and
-   re-add it again.
+   re-add it again. The live list is always at
+   `https://oneiroscope-backend.onrender.com/connect/diagnostics` under
+   `tools.names`; compare against that rather than against this number, which
+   changes whenever the owner adds a tool.
 2. Ask the owner to run a natal chart for `01.07.1977, 22:30, Запорожье`.
    - Success → done.
    - `entitlement_required` → ask them for the **`authenticated_as`** field in

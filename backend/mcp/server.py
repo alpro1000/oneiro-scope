@@ -29,6 +29,7 @@ from backend.mcp.tools import dreams as d
 from backend.mcp.tools import geo as g
 from backend.mcp.tools import lookup as lk
 from backend.mcp.tools import lunar as l
+from backend.mcp.tools import physiognomy as ph
 from backend.mcp.tools import strategic_astro as sa
 from backend.mcp.tools import strategic_patterns as sp
 
@@ -171,6 +172,18 @@ mcp.tool(
     meta=apps.tool_ui_meta(apps.PATTERN_MAP) if _ui_views else None,
     annotations=READ,
 )(with_meta(sp.vocation_map))
+
+# --- Face reading (questionnaire only) ---------------------------------------
+# Back on the surface after WP-10 removed it, but in a smaller shape. The
+# tools that left took `photo_path` — a path on THIS server's disk, which no
+# remote caller can write to, so it was a dead parameter guarding a live file
+# reader. What returns is the input a chat can actually produce: the person's
+# own description of their own face. No image, no measurement, no biometric
+# template — which is also what keeps it defensible on a public connector.
+# `physiognomy_report` stays out: it writes an HTML file and hands back a path
+# nobody can open.
+mcp.tool(annotations=READ)(with_meta(ph.read_face_traits))
+mcp.tool(annotations=READ)(with_meta(ph.physiognomy_methods))
 
 # --- Reference lookups, folded into one tool (WP-10) --------------------------
 mcp.tool(annotations=READ)(with_meta(lk.lookup))

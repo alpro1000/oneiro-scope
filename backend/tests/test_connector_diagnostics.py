@@ -49,6 +49,40 @@ def _check(body, check_id):
     raise AssertionError(f"no check {check_id!r} in {[c['id'] for c in body['checks']]}")
 
 
+# The DCR probe is patched by several tests, so its stub lives here ONCE.
+#
+# It used to be hand-written in each test as `async def _dcr(): ...`, and the
+# day `_dcr_advertised` grew its `probe` argument all three went red — but not
+# at the patch site. `monkeypatch.setattr` swaps an attribute without checking
+# it is callable the same way, so the mismatch only surfaced as a 500 from
+# inside the endpoint, with the real TypeError buried under five frames of
+# starlette middleware. Worse, this whole file skips when an optional backend
+# dependency is missing, which is the normal state of a dev sandbox — so the
+# breakage was invisible locally and only CI saw it.
+def _dcr_stub(ok: bool, detail: str):
+    async def _dcr(probe: bool = False) -> tuple[bool, str]:
+        return ok, detail
+
+    return _dcr
+
+
+def _patch_dcr(monkeypatch, ok: bool, detail: str) -> None:
+    monkeypatch.setattr(diag, "_dcr_advertised", _dcr_stub(ok, detail))
+
+
+def test_the_dcr_stub_matches_the_real_probe():
+    """Catch the drift at its source instead of as a 500 five frames deep."""
+    import inspect
+
+    assert (
+        inspect.signature(_dcr_stub(True, "x"))
+        == inspect.signature(diag._dcr_advertised)
+    ), (
+        "the DCR stub and the real probe have drifted apart — update "
+        "`_dcr_stub` to match `diagnostics._dcr_advertised`"
+    )
+
+
 def test_public_server_reports_mode_public_and_flags_open_auth(client):
     body = client.get("/connect/diagnostics").json()
     assert body["mode"] == "public"
@@ -109,11 +143,9 @@ def test_fully_configured_reports_oauth_mode(client, monkeypatch):
     async def _ok():
         return True, "3 signing key(s)"
 
-    async def _dcr():
-        return True, "registration_endpoint: https://tenant.eu.auth0.com/oidc/register"
-
     monkeypatch.setattr(diag, "_jwks_reachable", _ok)
-    monkeypatch.setattr(diag, "_dcr_advertised", _dcr)
+    _patch_dcr(monkeypatch, True,
+               "registration_endpoint: https://tenant.eu.auth0.com/oidc/register")
     body = client.get("/connect/diagnostics").json()
     assert body["mode"] == "oauth"
     assert _check(body, "auth_configured")["ok"] is True
@@ -131,11 +163,9 @@ def test_unreachable_jwks_is_surfaced_with_a_fix(client, monkeypatch):
     async def _fail():
         return False, "unreachable: ConnectError"
 
-    async def _dcr():
-        return True, "registration_endpoint: https://tenant.eu.auth0.com/oidc/register"
-
     monkeypatch.setattr(diag, "_jwks_reachable", _fail)
-    monkeypatch.setattr(diag, "_dcr_advertised", _dcr)
+    _patch_dcr(monkeypatch, True,
+               "registration_endpoint: https://tenant.eu.auth0.com/oidc/register")
     body = client.get("/connect/diagnostics").json()
     jwks = _check(body, "jwks_reachable")
     assert jwks["ok"] is False
@@ -175,11 +205,8 @@ def test_missing_dcr_is_named_as_the_connection_killer(client, monkeypatch):
     async def _ok():
         return True, "3 signing key(s)"
 
-    async def _no_dcr():
-        return False, "no registration_endpoint"
-
     monkeypatch.setattr(diag, "_jwks_reachable", _ok)
-    monkeypatch.setattr(diag, "_dcr_advertised", _no_dcr)
+    _patch_dcr(monkeypatch, False, "no registration_endpoint")
     body = client.get("/connect/diagnostics").json()
     row = _check(body, "dcr_advertised")
     assert row["ok"] is False
@@ -192,7 +219,12 @@ def test_diagnostics_shows_the_tools_this_process_actually_serves(client):
     server: "46 tools, transit_arc answers Unknown tool". The server has
     never listed those names since WP-10. This field is the proof a browser
     can open: whatever a client shows that is not in this list is the
-    client's cache, and the fix is re-adding the connector."""
+    client's cache, and the fix is re-adding the connector.
+
+    `physiognomy_methods` used to be on this list and no longer is — the
+    owner re-added face reading, so it is served for real now and proves
+    nothing about a stale cache. `analyze_face` and `physiognomy_report`
+    took its place: they are the two that stayed removed."""
     body = client.get("/connect/diagnostics").json()
     tools = body["tools"]
     assert tools["count"] == len(tools["names"]) > 0
@@ -200,7 +232,7 @@ def test_diagnostics_shows_the_tools_this_process_actually_serves(client):
     for ghost in (
         "transit_arc", "transit_meaning", "electional_day",
         "list_event_types", "horoscope_report", "profile_report_file",
-        "physiognomy_methods", "generate_horoscope",
+        "analyze_face", "physiognomy_report", "generate_horoscope",
     ):
         assert ghost not in tools["names"], (
             f"{ghost} is served again — the cached-client diagnosis in the "

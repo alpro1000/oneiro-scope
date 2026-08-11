@@ -56,7 +56,7 @@ class Diagnostics(BaseModel):
     # The tool registry as THIS process actually serves it. Three separate
     # times a client's cached schema was debugged as if it were the server —
     # "MCP declares 46 tools, transit_arc answers Unknown tool" — when the
-    # server declares 19 and never listed those names. Clients cache the tool
+    # server declares 21 and never listed those names. Clients cache the tool
     # list at connect time and do not refresh it on their own; a tool result
     # can carry a fresh `meta.commit` while the list stays months stale. This
     # field ends the argument: whatever a client shows that is not in here is

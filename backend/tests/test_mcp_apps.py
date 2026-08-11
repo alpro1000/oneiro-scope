@@ -158,8 +158,9 @@ async def test_the_natal_tool_declares_the_view_without_changing_the_surface():
     from backend.mcp.server import mcp
 
     tools = await mcp.list_tools()
-    # WP-10: the owner fixed this at 19. A view must not smuggle in a tool.
-    assert len(tools) == 19, [t.name for t in tools]
+    # WP-10 fixed this at 19; the owner re-added the two face-reading tools.
+    # The number is not the point — a view must not smuggle in a tool.
+    assert len(tools) == 21, [t.name for t in tools]
 
     natal = next(t for t in tools if t.name == "calculate_natal_chart")
     dumped = natal.model_dump(by_alias=True, exclude_none=True)

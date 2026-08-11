@@ -238,7 +238,18 @@ class AstrologyService:
                 lat=location.latitude,
                 lon=location.longitude,
                 place_label=request.birth_place,
-                timezone_name=location.timezone,
+                # The CALLER's assertion, not the zone we resolved. Passing
+                # `location.timezone` here made `chart_core.birth.tz_source`
+                # read "explicit" for every chart, including ones where nobody
+                # named a zone and we derived it from the coordinates
+                # ourselves — a provenance field claiming the user vouched for
+                # something the server had guessed. Those are not the same
+                # claim: a caller-named zone can be wrong (an hour of error
+                # moves the MC ~15°), a tzdata lookup is our own and checkable.
+                # Left as None, `resolve_birth_moment` does the same
+                # TimezoneFinder lookup the geocoder would have, so the zone is
+                # unchanged — only the label stops lying.
+                timezone_name=request.timezone_name,
             ).core,
             interpretation=interpretation,
             structured_interpretation=structured_interpretation,
