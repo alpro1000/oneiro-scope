@@ -112,7 +112,17 @@ async def _gate_chart_issuance(
                     user, chart_key, active_subs=active_subs, locale=locale
                 )
             except EntitlementRequired as exc:
-                return exc.detail, {"gated": True}
+                # Tell the caller WHICH identity was refused.
+                #
+                # Without this, an operator who has just put an account into
+                # STAFF_ACCOUNTS has no way to tell "the bypass is off" from
+                # "the bypass is on but I named the wrong identity" — the
+                # symptom is identical, and the only feedback loop is editing
+                # a dashboard and re-running a chart. The subject is the
+                # caller's OWN authenticated identity, returned to the caller,
+                # so this reveals nothing they do not already have; it is the
+                # same fact `/me` would hand back.
+                return {**exc.detail, "authenticated_as": subject}, {"gated": True}
             if mark_chart_issued(user, chart_key, active_subs=active_subs):
                 await db.commit()
             return None, {
