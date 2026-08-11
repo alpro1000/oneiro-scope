@@ -238,9 +238,29 @@ subject is already handed to the transport in
 5. Скопировать **Client ID** и **Client Secret**.
 6. В Claude → Connectors → OneiroScope → **Advanced settings**: вставить оба.
 
-Что не нужно: авторизовывать приложение для API отдельным списком — это
-требуется только для machine-to-machine (client credentials). Здесь поток
-authorization code, и audience приходит из нашего RFC 9728 документа.
+7. **Applications → APIs → `OneiroScope MCP` → вкладка «Machine to Machine
+   Applications» → найти это приложение → включить «Authorized».**
+
+   Это ОБЯЗАТЕЛЬНО, вопреки тому, что подсказывает название вкладки. Здесь
+   было записано обратное — «нужно только для machine-to-machine» — и это
+   оказалось неверно: живой лог Auth0 ответил
+
+   ```
+   Client "yogfTIAs..." is not authorized to access resource server
+   "https://oneiroscope-backend.onrender.com/mcp"
+   ```
+
+   при потоке authorization code с корректным `resource=`, PKCE и
+   `offline_access`. Auth0 хранит на этой вкладке разрешения клиента на API
+   вообще, а не только client-credentials гранты.
+
+   Вероятный механизм: приложение, созданное с включённым грантом
+   `Client Credentials`, получает client grant на API автоматически, и снятие
+   галочки этот грант убирает. Гранты снимать всё равно надо (см. шаг 3) —
+   просто авторизацию после этого нужно вернуть здесь.
+
+   Scopes можно оставить пустыми: сервер ничего не требует
+   (`required_scopes: null` в диагностике).
 
 Серверу это безразлично: он ресурс-сервер, проверяет подпись по JWKS и
 audience. Кто именно клиент — дело Claude и Auth0.
