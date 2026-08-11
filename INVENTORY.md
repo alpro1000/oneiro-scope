@@ -105,7 +105,7 @@
 | backend/mcp/apps | 1 | 1 |
 | backend/mcp/apps/dist | 0 | 7 |
 | backend/mcp/tools | 0 | 14 |
-| backend/tests | 1 | 54 |
+| backend/tests | 1 | 55 |
 | backend/tests/dreams | 1 | 0 |
 | backend/tests/dreams/golden | 0 | 3 |
 | backend/middleware | 0 | 2 |
@@ -151,4 +151,4 @@
 | external/DReAMy | 1 | 1 |
 | external/DReAMy/dreamy | 0 | 3 |
 
-**ИТОГО:** папок = 147, файлов = 552
+**ИТОГО:** папок = 147, файлов = 553
