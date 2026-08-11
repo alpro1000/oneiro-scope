@@ -10,7 +10,7 @@
 | frontend/types | 0 | 2 |
 | frontend/i18n | 0 | 1 |
 | frontend/messages | 0 | 5 |
-| frontend/lib | 0 | 16 |
+| frontend/lib | 0 | 17 |
 | frontend/e2e | 0 | 2 |
 | frontend/__tests__ | 0 | 5 |
 | frontend/styles | 0 | 2 |
@@ -98,18 +98,18 @@
 | .claude/skills/character-face | 0 | 1 |
 | backend | 12 | 5 |
 | backend/alembic | 1 | 2 |
-| backend/alembic/versions | 0 | 4 |
-| backend/models | 0 | 7 |
+| backend/alembic/versions | 0 | 5 |
+| backend/models | 0 | 8 |
 | backend/utils | 0 | 2 |
 | backend/mcp | 2 | 4 |
 | backend/mcp/apps | 1 | 1 |
 | backend/mcp/apps/dist | 0 | 7 |
 | backend/mcp/tools | 0 | 14 |
-| backend/tests | 1 | 55 |
+| backend/tests | 1 | 56 |
 | backend/tests/dreams | 1 | 0 |
 | backend/tests/dreams/golden | 0 | 3 |
 | backend/middleware | 0 | 2 |
-| backend/services | 8 | 0 |
+| backend/services | 9 | 0 |
 | backend/services/billing | 0 | 4 |
 | backend/services/email | 1 | 2 |
 | backend/services/email/templates | 5 | 0 |
@@ -136,9 +136,10 @@
 | backend/services/astrology/engine | 0 | 5 |
 | backend/services/physiognomy | 1 | 9 |
 | backend/services/physiognomy/knowledge_base | 0 | 2 |
+| backend/services/metrics | 0 | 2 |
 | backend/app | 0 | 2 |
 | backend/api | 1 | 1 |
-| backend/api/v1 | 0 | 10 |
+| backend/api/v1 | 0 | 11 |
 | backend/core | 0 | 8 |
 | backend/data | 1 | 1 |
 | backend/data/ephemeris | 0 | 3 |
@@ -151,4 +152,4 @@
 | external/DReAMy | 1 | 1 |
 | external/DReAMy/dreamy | 0 | 3 |
 
-**ИТОГО:** папок = 147, файлов = 555
+**ИТОГО:** папок = 148, файлов = 562
