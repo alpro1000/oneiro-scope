@@ -121,6 +121,11 @@ class Reading(BaseModel):
     text: str
     source: str
     confidence: float = TRADITION_CONFIDENCE
+    #: WP-13 (additive): 0.6 read as "60% likely" would be a much stronger
+    #: claim than this feature is entitled to make. The name states the actual
+    #: standing — a tradition with no empirical validation (Todorov 2017) —
+    #: which is the one thing a reader of a face reading most needs to know.
+    rule_source_tier: str = "unvalidated_tradition"
 
 
 class ElementScore(BaseModel):

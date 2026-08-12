@@ -317,6 +317,10 @@ def relocation_summary(result: "RelocationResult", locale: str = "ru") -> dict:
         "clean": clean,
         "luck": [name(h.planet) for h in benefic_hits],
         "confidence": 0.8,
+        # WP-13 (additive): the number says "0.8", which reads as a
+        # likelihood; the name says what it actually is — a tradition's
+        # own table of meanings. Both travel, nothing is removed.
+        "rule_source_tier": "symbol_dictionary",
         "source": "relocation rule-set (classical angle practice)",
     }
 
@@ -508,6 +512,10 @@ def home_vs_work_focus(
         "home_hits": _hit_dicts(home_hits),
         "work_hits": _hit_dicts(work_hits),
         "confidence": 0.8,
+        # WP-13 (additive): the number says "0.8", which reads as a
+        # likelihood; the name says what it actually is — a tradition's
+        # own table of meanings. Both travel, nothing is removed.
+        "rule_source_tier": "symbol_dictionary",
         "source": "home axis = IC/Asc (houses 4/1), work axis = MC/Desc (houses 10/7) "
                   "— classical angle-to-house mapping",
     }
@@ -603,6 +611,10 @@ def score_explanation(result: "RelocationResult", locale: str = "ru") -> dict:
         "driving": [{"planet": h.planet, "angle": h.angle, "orb_deg": h.orb_deg} for h in driving],
         "unweighted": [{"planet": h.planet, "angle": h.angle, "orb_deg": h.orb_deg} for h in unweighted],
         "confidence": 0.8,
+        # WP-13 (additive): the number says "0.8", which reads as a
+        # likelihood; the name says what it actually is — a tradition's
+        # own table of meanings. Both travel, nothing is removed.
+        "rule_source_tier": "symbol_dictionary",
         "source": "composite scorer caveat (Venus/Jupiter/Sun/Moon +, Saturn/Mars/Pluto -, Mercury/Uranus/Neptune "
                   "unscored but counted in total_significance)",
     }

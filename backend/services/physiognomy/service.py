@@ -97,4 +97,9 @@ class PhysiognomyService:
                 "measurements": 1.0,
                 "interpretations": TRADITION_CONFIDENCE,
             },
+            # WP-13 (additive): the same split, named rather than scored.
+            "rule_source_tier": {
+                "measurements": "computed",
+                "interpretations": "unvalidated_tradition",
+            },
         }

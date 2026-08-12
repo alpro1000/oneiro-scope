@@ -237,5 +237,6 @@ def synastry_summary(result: SynastryResult, locale: str = "ru") -> dict:
         "highlights": result.highlights,
         "overall_score": result.overall_score,
         "confidence": 0.8,
+        "rule_source_tier": "symbol_dictionary",
         "source": "classical synastry rule-set (inter-chart aspects)",
     }
