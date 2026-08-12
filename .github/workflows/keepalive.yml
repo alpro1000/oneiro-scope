@@ -13,14 +13,22 @@ on:
     - cron: "*/10 6-23 * * *"
   workflow_dispatch: {}
 
-permissions: {}
+permissions:
+  contents: read
 
 jobs:
   ping:
     runs-on: ubuntu-latest
-    timeout-minutes: 3
+    timeout-minutes: 5
     steps:
+      # Full history: the staleness check below needs the deployed commit to
+      # exist locally, and it may be many commits back.
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
       - name: Ping /health
+        id: ping
         run: |
           set -euo pipefail
           url="https://oneiroscope-backend.onrender.com/health"
@@ -38,3 +46,46 @@ jobs:
             echo "::error::ephemeris engine is not SWIEPH in production"
             exit 1
           }
+          deployed=$(printf '%s' "$body" | sed -n 's/.*"commit":[[:space:]]*"\([^"]*\)".*/\1/p')
+          echo "deployed=$deployed" >> "$GITHUB_OUTPUT"
+
+      # Why this exists, in one story: production served a build twelve days
+      # old while the owner tested it and wrote up three bugs in detail — all
+      # three had been fixed nine days earlier, in one commit. Nothing was
+      # wrong with the code and nothing was wrong with the report; the only
+      # broken thing was that a stale deploy is invisible. A green health
+      # check said "healthy" the entire time, because it was.
+      #
+      # Failure threshold is AGE, not difference. A deploy in flight makes the
+      # two disagree for a few minutes and that is normal; a day behind is not
+      # a race, it is a deploy that never happened.
+      - name: Deployed commit vs default branch
+        env:
+          DEPLOYED: ${{ steps.ping.outputs.deployed }}
+        run: |
+          set -euo pipefail
+          head_sha=$(git rev-parse HEAD)
+          if [ -z "$DEPLOYED" ] || [ "$DEPLOYED" = "unknown" ]; then
+            echo "::warning::/health did not report a commit — cannot check staleness"
+            exit 0
+          fi
+          echo "deployed=$DEPLOYED  branch head=$head_sha"
+          if git merge-base --is-ancestor "$DEPLOYED" HEAD 2>/dev/null; then
+            behind=$(git rev-list --count "$DEPLOYED..HEAD")
+            if [ "$behind" -eq 0 ]; then
+              echo "production is up to date"; exit 0
+            fi
+            deployed_at=$(git log -1 --format=%ct "$DEPLOYED")
+            age_h=$(( ( $(date +%s) - deployed_at ) / 3600 ))
+            msg="production is $behind commit(s) behind (${age_h}h old): deployed $DEPLOYED"
+            if [ "$age_h" -ge 24 ]; then
+              echo "::error::$msg — a deploy did not happen; redeploy before trusting any bug report against it"
+              exit 1
+            fi
+            echo "::warning::$msg (under 24h — probably a deploy in flight)"
+          else
+            # Not an ancestor: a rollback, a branch deploy, or force-pushed
+            # history. Never normal, but not always urgent — say so loudly
+            # without failing a keepalive over it.
+            echo "::warning::deployed commit $DEPLOYED is not an ancestor of this branch — rollback or branch deploy?"
+          fi

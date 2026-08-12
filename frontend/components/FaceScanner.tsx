@@ -12,6 +12,8 @@
  */
 
 import { useCallback, useEffect, useRef, useState } from 'react';
+import FaceTransition from '@/components/FaceTransition';
+import { track } from '@/lib/metrics';
 import { useTranslations } from 'next-intl';
 import {
   brightnessOk,
@@ -121,6 +123,11 @@ export default function FaceScanner({ locale }: { locale: string }) {
       try {
         setResult(await analyzeFaceArchive(frames, locale));
         setPhase('done');
+        // The funnel's denominator: a COMPLETE reading reached the screen.
+        // Fired here rather than on page load, because "opened the scanner"
+        // and "got a result" are different numbers and only the second one
+        // makes the conversion below it meaningful.
+        track('face_result_shown');
       } catch (e) {
         setError(e instanceof Error ? e.message : String(e));
         setPhase('error');
@@ -354,6 +361,96 @@ export default function FaceScanner({ locale }: { locale: string }) {
 
       {phase === 'done' && result && (
         <section aria-label={t('reportLabel')}>
+          {/* ── LAYER 1 · MEASUREMENT ───────────────────────────────────────
+              Everything above the boundary line is reproducible: FaceMesh
+              geometry, in monospace like every other number in the
+              instrument. Nothing here is a claim about a person.
+
+              The five-element headline used to sit at the top, styled as
+              THE result. It is a mianxiang reading, not a measurement, so it
+              now lives below the line with the rest of the tradition — the
+              split is only honest if the most eye-catching claim obeys it. */}
+          <div style={{ border: '1px solid var(--grat-2)', background: 'var(--shelf)', padding: '13px 15px' }}>
+            <span className="eyebrow" style={{ display: 'block' }}>
+              {ru ? 'измерено' : 'measured'}
+            </span>
+            <p className="num" style={{ margin: '7px 0 0', fontSize: 11.5, color: 'var(--dim)' }}>
+              {t('framesUsed', {
+                used: result.frames_used,
+                skipped: result.skipped.length,
+              })}
+            </p>
+          </div>
+
+          {/* Lens-robust deviations — the honest headline (no width family). */}
+          {result.signature?.length > 0 && (
+            <div style={{ border: '1px solid var(--grat-2)', background: 'var(--shelf)', padding: '13px 15px', marginTop: 12 }}>
+              <span className="eyebrow" style={{ display: 'block', marginBottom: 9 }}>
+                {ru ? 'подпись лица · устойчиво к ракурсу' : 'face signature · lens-robust'}
+              </span>
+              <table className="num" style={{ width: '100%', borderCollapse: 'collapse', fontFamily: 'var(--font-data)', fontSize: 11.5 }}>
+                <tbody>
+                  {result.signature.map((s) => (
+                    <tr key={s.metric} style={{ borderTop: '1px solid var(--grat-1)' }}>
+                      <td style={{ padding: '5px 6px 5px 0', color: 'var(--parchment)' }}>{s.metric}</td>
+                      <td style={{ padding: '5px 6px 5px 0', textAlign: 'right', color: 'var(--muted)' }}>
+                        {s.median.toFixed(4)}
+                      </td>
+                      <td style={{ padding: '5px 0', textAlign: 'right', color: 'var(--brass)', whiteSpace: 'nowrap' }}>
+                        {s.deviation_units > 0 ? '+' : ''}
+                        {s.deviation_units.toFixed(2)} σ
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          <div style={{ border: '1px solid var(--grat-2)', background: 'var(--shelf)', padding: '13px 15px', marginTop: 12 }}>
+            <span className="eyebrow" style={{ display: 'block', marginBottom: 9 }}>
+              {t('coverageTitle')}
+            </span>
+            <dl style={{ margin: 0 }}>
+              {Object.entries(result.coverage).map(([k, v]) => (
+                <div key={k} style={{ marginBottom: 8 }}>
+                  <dt className="num" style={{ fontSize: 11, color: 'var(--brass)', letterSpacing: '.04em' }}>
+                    {t(`coverage_${k}`)}
+                  </dt>
+                  <dd style={{ margin: '2px 0 0', fontSize: 12.5, lineHeight: 1.5, color: 'var(--muted)' }}>
+                    {v}
+                  </dd>
+                </div>
+              ))}
+            </dl>
+          </div>
+
+          {/* ── THE BOUNDARY ────────────────────────────────────────────────
+              One sentence, at reading size, exactly where the register
+              changes. Not 8px grey in a footer: a person who stops reading
+              here has still read the one thing they must. The typeface
+              switches with it — numbers were monospace, the tradition speaks
+              in the UI face — so the line is visible before it is read. */}
+          <p
+            style={{
+              margin: 'clamp(18px,2.6vw,28px) 0 clamp(14px,2vw,22px)',
+              paddingTop: 'clamp(14px,2vw,20px)',
+              borderTop: '1px solid var(--brass-dim)',
+              fontSize: 14,
+              lineHeight: 1.6,
+              color: 'var(--parchment)',
+              maxWidth: '54ch',
+            }}
+          >
+            {ru
+              ? 'Всё выше — измерения, их можно перепроверить. Всё ниже принадлежит традиции: эмпирических подтверждений у этих толкований нет.'
+              : 'Everything above is measurement and can be re-checked. Everything below belongs to a tradition: these readings have no empirical support.'}
+          </p>
+
+          {/* ── LAYER 2 · TRADITION ─────────────────────────────────────────
+              Prose, UI typeface, spoken as the tradition's claim. Monospace
+              survives only where a number really is a number: the source
+              line under a reading and the metric names cited as evidence. */}
           <div style={{ border: '1px solid var(--grat-2)', background: 'var(--shelf)', padding: '13px 15px' }}>
             <span className="eyebrow" style={{ display: 'block' }}>{t('resultType')}</span>
             <h2 className="display" style={{ fontSize: 26, margin: '6px 0 0', color: 'var(--parchment)' }}>
@@ -361,12 +458,6 @@ export default function FaceScanner({ locale }: { locale: string }) {
                 + {result.secondary_element}
               </em>
             </h2>
-            <p className="num" style={{ margin: '8px 0 0', fontSize: 11.5, color: 'var(--dim)' }}>
-              {t('framesUsed', {
-                used: result.frames_used,
-                skipped: result.skipped.length,
-              })}
-            </p>
           </div>
 
           {/* The backend's own reconciled verdicts. This block was dropped
@@ -407,31 +498,6 @@ export default function FaceScanner({ locale }: { locale: string }) {
                   )}
                 </div>
               ))}
-            </div>
-          )}
-
-          {/* Lens-robust deviations — the honest headline (no width family). */}
-          {result.signature?.length > 0 && (
-            <div style={{ border: '1px solid var(--grat-2)', background: 'var(--shelf)', padding: '13px 15px', marginTop: 12 }}>
-              <span className="eyebrow" style={{ display: 'block', marginBottom: 9 }}>
-                {ru ? 'подпись лица · устойчиво к ракурсу' : 'face signature · lens-robust'}
-              </span>
-              <table className="num" style={{ width: '100%', borderCollapse: 'collapse', fontFamily: 'var(--font-data)', fontSize: 11.5 }}>
-                <tbody>
-                  {result.signature.map((s) => (
-                    <tr key={s.metric} style={{ borderTop: '1px solid var(--grat-1)' }}>
-                      <td style={{ padding: '5px 6px 5px 0', color: 'var(--parchment)' }}>{s.metric}</td>
-                      <td style={{ padding: '5px 6px 5px 0', textAlign: 'right', color: 'var(--muted)' }}>
-                        {s.median.toFixed(4)}
-                      </td>
-                      <td style={{ padding: '5px 0', textAlign: 'right', color: 'var(--brass)', whiteSpace: 'nowrap' }}>
-                        {s.deviation_units > 0 ? '+' : ''}
-                        {s.deviation_units.toFixed(2)} σ
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
             </div>
           )}
 
@@ -483,24 +549,6 @@ export default function FaceScanner({ locale }: { locale: string }) {
             })}
           </ul>
 
-          <div style={{ border: '1px solid var(--grat-2)', background: 'var(--shelf)', padding: '13px 15px', marginTop: 12 }}>
-            <span className="eyebrow" style={{ display: 'block', marginBottom: 9 }}>
-              {t('coverageTitle')}
-            </span>
-            <dl style={{ margin: 0 }}>
-              {Object.entries(result.coverage).map(([k, v]) => (
-                <div key={k} style={{ marginBottom: 8 }}>
-                  <dt className="num" style={{ fontSize: 11, color: 'var(--brass)', letterSpacing: '.04em' }}>
-                    {t(`coverage_${k}`)}
-                  </dt>
-                  <dd style={{ margin: '2px 0 0', fontSize: 12.5, lineHeight: 1.5, color: 'var(--muted)' }}>
-                    {v}
-                  </dd>
-                </div>
-              ))}
-            </dl>
-          </div>
-
           <p style={{ marginTop: 14, fontSize: 12.5, lineHeight: 1.55, color: 'var(--muted)', maxWidth: '66ch' }}>
             {result.disclaimer}
           </p>
@@ -515,6 +563,10 @@ export default function FaceScanner({ locale }: { locale: string }) {
           >
             {t('rescan')}
           </button>
+
+          {/* ── LAYER 3 · THE HAND-OFF ──────────────────────────────────────
+              Last, and only once the reading above is complete. */}
+          <FaceTransition lang={ru ? 'ru' : 'en'} />
         </section>
       )}
     </div>

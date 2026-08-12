@@ -49,6 +49,7 @@ import {
 import { SAMPLE_CORE, SAMPLE_LABEL, isSample } from '@/lib/demo-chart';
 import BirthDataForm from '@/components/BirthDataForm';
 import { toChartRequest, type BirthData } from '@/lib/birth-data';
+import { track } from '@/lib/metrics';
 
 // ── language-neutral glyphs ─────────────────────────────────────────────────
 const SIGN_GLYPH = ['♈', '♉', '♊', '♋', '♌', '♍', '♎', '♏', '♐', '♑', '♒', '♓'];
@@ -297,6 +298,11 @@ export default function NatalPage() {
       setNotice(null);
       if (data.disclaimer) setDisclaimer(data.disclaimer);
       await saveChart(data.chart_core);
+      // Counted only on a chart that actually came back. A refusal at the
+      // gate lands in the catch below and must not inflate this number —
+      // otherwise the drop-off between "entered a date" and "got a chart",
+      // which is where the paywall lives, becomes invisible.
+      track('natal_computed');
     } catch (err) {
       if (err instanceof ChartFetchError && (err.status === 401 || err.status === 402)) {
         const d = err.detail;

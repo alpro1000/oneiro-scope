@@ -99,7 +99,12 @@ def test_the_deploys_command_can_find_the_migrations(monkeypatch):
 
     revisions = [r.revision for r in script.walk_revisions()]
     assert "0000_baseline" in revisions, revisions
-    assert script.get_current_head() == "0002_chart_gate_identity"
+    # A SINGLE head. Pinning the name would make every new migration edit this
+    # line, which teaches people to edit it without thinking; what actually
+    # matters is that the history never forks — two heads make `upgrade head`
+    # ambiguous and it fails at deploy, not here.
+    assert len(script.get_heads()) == 1, script.get_heads()
+    assert script.get_current_head() == revisions[0], "head is not the newest revision"
 
 
 @pytest.fixture
@@ -136,6 +141,10 @@ def test_a_fresh_database_is_built_by_migrations_alone():
     assert "dream_entries" in tables
     # 0002's columns must have landed on top of the baseline's table.
     assert {"oauth_subject", "free_natal_chart_key"} <= _user_columns()
+    # 0003. `returning` alone is a reserved SQL word: the first draft of this
+    # table named the column that and CREATE TABLE failed outright, which is
+    # the kind of thing that only shows up when a migration really runs.
+    assert "funnel_counters" in tables
 
 
 @needs_postgres

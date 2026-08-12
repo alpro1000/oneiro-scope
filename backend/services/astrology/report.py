@@ -170,6 +170,10 @@ def build_report(
             "astronomy": EPHEMERIS_VERSION,
             "method": "Astro*Carto*Graphy (Lewis 1976); Placidus houses",
             "confidence": {"astronomy": 1.0, "labels": 0.8},
+            # WP-13 (additive): same split, named.
+            "rule_source_tier": {
+                "astronomy": "computed", "labels": "symbol_dictionary",
+            },
         },
         "disclaimer": DISCLAIMER_RU if locale == "ru" else DISCLAIMER_EN,
     }

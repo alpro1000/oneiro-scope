@@ -38,6 +38,11 @@ from backend.services.strategic.disclaimer import DISCLAIMER_RU
 
 _LAYER = "astrology_symbolic"
 _CONFIDENCE = 0.9  # cited modern/classical tradition
+# WP-13 (additive). Note this is 0.9, not the 0.8 of a bare symbol lookup:
+# these entries name their source, and a cited rule outranks a dictionary
+# entry. The tier says that in words instead of leaving the reader to
+# infer it from a decimal.
+_TIER = "cited_rule"
 
 
 def mc_in_sign(sign: str, locale: str = "ru") -> dict[str, Any]:
@@ -55,6 +60,7 @@ def mc_in_sign(sign: str, locale: str = "ru") -> dict[str, Any]:
     return {
         "layer": _LAYER,
         "confidence": _CONFIDENCE,
+        "rule_source_tier": _TIER,
         "subject": f"MC in {sign.capitalize()}",
         "archetype": arc["archetype"],
         "themes": arc["themes"],
@@ -77,6 +83,7 @@ def sun_in_sign(sign: str, locale: str = "ru") -> dict[str, Any]:
     return {
         "layer": _LAYER,
         "confidence": _CONFIDENCE,
+        "rule_source_tier": _TIER,
         "subject": f"Sun in {sign.capitalize()}",
         "core_identity": arc["core_identity"],
         "themes": arc["themes"],
@@ -100,6 +107,7 @@ def house_meaning(house_number: int, locale: str = "ru") -> dict[str, Any]:
     return {
         "layer": _LAYER,
         "confidence": _CONFIDENCE,
+        "rule_source_tier": _TIER,
         "subject": f"House {house_number}",
         "name": h["name"],
         "themes": h["themes"],
@@ -122,6 +130,7 @@ def aspect_meaning(aspect_name: str) -> dict[str, Any]:
     return {
         "layer": _LAYER,
         "confidence": _CONFIDENCE,
+        "rule_source_tier": _TIER,
         "subject": f"{aspect_name.capitalize()} aspect",
         "angle_deg": a["angle_deg"],
         "default_orb": a["default_orb"],
@@ -148,6 +157,7 @@ def planet_dignity(planet: str, sign: str) -> dict[str, Any]:
     return {
         "layer": _LAYER,
         "confidence": _CONFIDENCE,
+        "rule_source_tier": _TIER,
         "subject": f"{planet.capitalize()} in {sign.capitalize()}",
         "status": d["status"],
         "score": d["score"],
@@ -174,6 +184,7 @@ def planet_in_house(planet: str, house_number: int) -> dict[str, Any]:
     return {
         "layer": _LAYER,
         "confidence": _CONFIDENCE,
+        "rule_source_tier": _TIER,
         "subject": f"{planet.capitalize()} in House {house_number}",
         "archetype": arc["archetype"],
         "themes": arc["themes"],
@@ -204,6 +215,7 @@ def transit_meaning(transiting: str, aspect: str, natal: str) -> dict[str, Any]:
     return {
         "layer": _LAYER,
         "confidence": _CONFIDENCE,
+        "rule_source_tier": _TIER,
         "subject": f"Transiting {transiting.capitalize()} {aspect} natal {natal.capitalize()}",
         "archetype": arc["archetype"],
         "named": arc["named"],
@@ -225,6 +237,7 @@ def zodiac_sign(sign: str) -> dict[str, Any]:
     return {
         "layer": _LAYER,
         "confidence": _CONFIDENCE,
+        "rule_source_tier": _TIER,
         "subject": sign.capitalize(),
         "element": s["element"],
         "modality": s["modality"],
@@ -246,6 +259,7 @@ def list_archetype_topics() -> dict[str, Any]:
     return {
         "layer": _LAYER,
         "confidence": _CONFIDENCE,
+        "rule_source_tier": _TIER,
         "topics": {
             "zodiac_signs": list(ZODIAC_SIGNS.keys()),
             "mc_in_sign": list(MC_IN_SIGN.keys()),

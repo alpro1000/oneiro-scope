@@ -173,17 +173,33 @@ mcp.tool(
     annotations=READ,
 )(with_meta(sp.vocation_map))
 
-# --- Face reading (questionnaire only) ---------------------------------------
-# Back on the surface after WP-10 removed it, but in a smaller shape. The
-# tools that left took `photo_path` — a path on THIS server's disk, which no
-# remote caller can write to, so it was a dead parameter guarding a live file
-# reader. What returns is the input a chat can actually produce: the person's
-# own description of their own face. No image, no measurement, no biometric
-# template — which is also what keeps it defensible on a public connector.
-# `physiognomy_report` stays out: it writes an HTML file and hands back a path
-# nobody can open.
-mcp.tool(annotations=READ)(with_meta(ph.read_face_traits))
-mcp.tool(annotations=READ)(with_meta(ph.physiognomy_methods))
+# --- Face reading: built, tested, and deliberately NOT registered -------------
+#
+# `ph.read_face_traits` is connector-safe (questionnaire only, no photo path,
+# no image, no biometric template) and every property that makes it safe is
+# pinned by `test_mcp_moderation.py`. It is still not on this surface, and the
+# reason is submission risk, not the tool:
+#
+# a directory reviewer who reads "face reading" in a tool list and closes the
+# application without opening the schema rejects THE WHOLE SERVER — all
+# nineteen tools, the ephemeris, astrocartography. Two tools that add almost
+# nothing to a catalog listing are not worth that trade, especially since the
+# funnel that needs face reading lives on the WEB (`/[locale]/face`, the HTTP
+# API), which needs no one's approval.
+#
+# To restore it after the listing is approved: add the two `mcp.tool(...)`
+# lines back, put `read_face_traits`/`physiognomy_methods` back into
+# `REFERENCE_TOOLS["face"]`, and bump the surface count in the tests that pin
+# it. `test_the_face_reading_is_staged_not_shipped` will fail until you delete
+# it — deliberately, so the decision is re-read rather than re-guessed. Do NOT
+# rename the tool to read as something other than physiognomy: on a re-review
+# that scans as an attempt to slip it past, which is worse than the honest
+# name. The description already opens with what it is.
+#
+# Note for whoever does this on the OpenAI side: publishing an updated tool
+# list is not free there. The server is re-scanned, the new version goes
+# through review, and only the approved version publishes — so plan it as its
+# own cycle, not as a push.
 
 # --- Reference lookups, folded into one tool (WP-10) --------------------------
 mcp.tool(annotations=READ)(with_meta(lk.lookup))

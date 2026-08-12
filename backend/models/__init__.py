@@ -6,6 +6,7 @@ from backend.models.dream import Dream, DreamAnalysis, DreamEmbedding, DreamEntr
 from backend.models.subscription import Subscription
 from backend.models.transaction import Transaction
 from backend.models.dream_usage import DreamUsage
+from backend.models.funnel_counter import FunnelCounter
 
 __all__ = [
     "User",
@@ -17,4 +18,5 @@ __all__ = [
     "Subscription",
     "Transaction",
     "DreamUsage",
+    "FunnelCounter",
 ]

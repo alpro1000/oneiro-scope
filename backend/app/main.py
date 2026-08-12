@@ -29,6 +29,7 @@ from backend.api.v1 import (
     billing,
     users,
     physiognomy,
+    metrics,
 )
 
 
@@ -203,6 +204,9 @@ app.include_router(auth.router, prefix="/api/v1", tags=["Auth"])
 app.include_router(billing.router, prefix="/api/v1", tags=["Billing"])
 app.include_router(users.router, prefix="/api/v1", tags=["Users"])
 app.include_router(physiognomy.router, prefix="/api/v1", tags=["Physiognomy"])
+# Anonymous funnel counters. First-party, no identifiers, no cookies, no
+# third-party script — see backend/api/v1/metrics.py for why it is ours.
+app.include_router(metrics.router, prefix="/api/v1", tags=["Metrics"])
 
 # Portal: server-rendered landing / connect / pricing / legal pages. Same
 # service as the API and /mcp — no second host, no build step.

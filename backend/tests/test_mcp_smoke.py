@@ -49,16 +49,13 @@ async def test_all_tools_registered():
         "analysis_plan",
         "money_contour",
         "vocation_map",
-        # face reading — questionnaire only, no photo path (owner's re-add)
-        "read_face_traits",
-        "physiognomy_methods",
         # folded reference lookups (WP-10)
         "lookup",
     }
     tools = await mcp.list_tools()
     registered = {t.name for t in tools}
     # Exact equality in BOTH directions: a missing tool breaks the product,
-    # a stray one re-grows the surface WP-10 just cut (47 -> 19 -> 21).
+    # a stray one re-grows the surface WP-10 just cut (47 -> 19).
     assert registered == expected, (
         f"missing: {sorted(expected - registered)}; "
         f"unexpected: {sorted(registered - expected)}"

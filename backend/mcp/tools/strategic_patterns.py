@@ -25,6 +25,7 @@ from backend.mcp.tools._menu import (
 )
 from backend.services.strategic.analysis_plan import build_plan
 from backend.services.strategic.disclaimer import DISCLAIMERS, DISCLAIMER_RU
+from backend.services.strategic.layers import tier_for_confidence
 from backend.services.strategic.pattern_engine import (
     decade_map as _decade_map,
     electional_day as _electional_day,
@@ -48,6 +49,11 @@ def _base(
         "pattern_id": pattern_id,
         "layer": layer,
         "confidence": confidence,
+        # WP-13, additive: the same fact said in words. `confidence` alone
+        # reads as a probability to every consumer, and it never was one —
+        # 0.8 means "came from a symbol dictionary", not "80% likely". The
+        # number stays for every client already reading it.
+        "rule_source_tier": tier_for_confidence(confidence).value,
         "interpretation_rules_ref": f"{_CATALOG}#{pattern_id}",
         "disclaimer": DISCLAIMERS.get(locale, DISCLAIMER_RU),
     }

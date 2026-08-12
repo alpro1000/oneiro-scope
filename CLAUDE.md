@@ -76,6 +76,19 @@
   is the single source of truth; this paragraph quotes it, and
   `backend/tests/test_confidence_ladder_docs.py` fails when the two
   disagree. They had drifted apart before — do not edit one alone.
+
+  **Every claim also carries `rule_source_tier` — the same fact in words**
+  (WP-13): `computed` · `cited_rule` · `statistical` · `symbol_dictionary` ·
+  `model_synthesis`, plus `unvalidated_tradition` (0.6) for physiognomy,
+  deliberately below the ladder's lowest rung. The reason: `"confidence":
+  0.7` is read by everyone as "70% likely to be true", which it never meant —
+  it means "arrived at by model synthesis". A number that looks like a
+  likelihood turns a tradition's reading into a prediction with odds
+  attached, the one claim this product refuses to make. The migration is
+  **additive**: `confidence` stays, unchanged, and nothing reading it has to
+  change. `RuleSourceTier` / `TIER_CONFIDENCE` / `LAYER_TIER` live in the same
+  module; `test_rule_source_tier.py` asserts the two vocabularies never
+  disagree, and that an off-ladder number raises instead of guessing a tier.
 - **Provenance per item.** Every claim carries its source: which
   computation / which classical text (with citation) / which symbol
   dictionary / which LLM call. Returned in MCP-tool responses as the

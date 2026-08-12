@@ -140,4 +140,7 @@ jobs:
             backend/tests/test_confidence_ladder_docs.py \
             backend/tests/test_mcp_moderation.py \
             backend/tests/test_tz_provenance.py \
+            backend/tests/test_funnel_metrics.py \
+            backend/tests/test_health_commit.py \
+            backend/tests/test_rule_source_tier.py \
             -v

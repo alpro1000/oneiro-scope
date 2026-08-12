@@ -290,6 +290,110 @@ LADDER_RUNGS: dict[str, float] = {
 }
 
 
+# --- WP-13: the same ladder, said in words -----------------------------------
+#
+# `"confidence": 0.7` is read by everyone — a model, a user, a directory
+# reviewer — as "70% likely to be true". It never meant that. It means "this
+# claim came from the model-synthesis tier", which is a statement about
+# PROVENANCE, not about probability. On an astrology server that misreading is
+# not cosmetic: a number that looks like a likelihood turns a tradition's
+# reading into a prediction with odds attached, which is exactly the claim the
+# whole product refuses to make.
+#
+# So each claim now also carries the tier by NAME. The number stays, unchanged
+# and in place — this is an additive migration, and nothing that reads
+# `confidence` today has to change. Renaming it outright would break every
+# client at once, and (the reason it is happening NOW rather than later)
+# publishing to a directory freezes field names: after the listing, changing
+# them costs a re-review cycle on OpenAI's side.
+class RuleSourceTier(str, Enum):
+    """HOW a claim was arrived at. Not how likely it is to be true."""
+
+    #: Ephemeris result or a fact checked against a record. Reproducible.
+    COMPUTED = "computed"
+    #: A named source — a classical rule, or someone else's peer review.
+    CITED_RULE = "cited_rule"
+    #: Statistics with no per-claim citation: real evidence, weaker than a
+    #: study we can name. The one tier that sits between rungs, deliberately.
+    STATISTICAL = "statistical"
+    #: A tradition's own table of meanings.
+    SYMBOL_DICTIONARY = "symbol_dictionary"
+    #: The model joining the above into prose.
+    MODEL_SYNTHESIS = "model_synthesis"
+    #: A tradition with no empirical validation at all — physiognomy. Below
+    #: the ladder's lowest rung on purpose: weaker than a symbol dictionary,
+    #: and the reading itself says so (Todorov 2017).
+    UNVALIDATED_TRADITION = "unvalidated_tradition"
+
+
+#: Tier → the number it has always carried. The single place the two
+#: vocabularies meet; everything else derives from here.
+TIER_CONFIDENCE: dict[RuleSourceTier, float] = {
+    RuleSourceTier.COMPUTED: 1.0,
+    RuleSourceTier.CITED_RULE: 0.9,
+    RuleSourceTier.STATISTICAL: 0.85,
+    RuleSourceTier.SYMBOL_DICTIONARY: 0.8,
+    RuleSourceTier.MODEL_SYNTHESIS: 0.7,
+    RuleSourceTier.UNVALIDATED_TRADITION: 0.6,
+}
+
+#: Layer → tier. Where a caller knows the layer, this is the authoritative
+#: route: the tier is a property of WHERE a claim came from, and the number is
+#: a consequence of the tier rather than the other way round.
+LAYER_TIER: dict["Layer", RuleSourceTier] = {
+    Layer.OBJECTIVE_FACT: RuleSourceTier.COMPUTED,
+    Layer.ASTRONOMY: RuleSourceTier.COMPUTED,
+    Layer.AGE_PSYCHOLOGY: RuleSourceTier.CITED_RULE,
+    Layer.USER_CONTEXT: RuleSourceTier.CITED_RULE,
+    Layer.CAREER_CYCLE: RuleSourceTier.STATISTICAL,
+    Layer.ECONOMICS: RuleSourceTier.STATISTICAL,
+    Layer.ASTROLOGY_SYMBOLIC: RuleSourceTier.SYMBOL_DICTIONARY,
+    Layer.LLM_NARRATIVE: RuleSourceTier.MODEL_SYNTHESIS,
+}
+
+_CONFIDENCE_TIER: dict[float, RuleSourceTier] = {
+    v: k for k, v in TIER_CONFIDENCE.items()
+}
+
+
+def tier_for_confidence(value: float) -> RuleSourceTier:
+    """Name the tier a bare number belongs to.
+
+    For the call sites that carry a hardcoded confidence and no layer. An
+    unrecognised value RAISES rather than guessing a nearby tier
+    (conventions.md §12): a claim labelled with the wrong provenance is worse
+    than one labelled with none, and the combined values `numeric_confidence`
+    produces (0.95 from converging hard layers) are deliberately NOT in this
+    table — a combined score is not a tier, and forcing it into one would
+    invent a source the claim does not have. Route those through
+    `tier_for_sources` instead.
+    """
+    tier = _CONFIDENCE_TIER.get(round(float(value), 4))
+    if tier is None:
+        raise ValueError(
+            f"confidence {value!r} is not a tier on the ladder "
+            f"{sorted(_CONFIDENCE_TIER)} — pass the layer instead of a number, "
+            f"or add the tier deliberately"
+        )
+    return tier
+
+
+def tier_for_sources(sources: list["Source"]) -> RuleSourceTier:
+    """The tier of the strongest source behind a claim.
+
+    A claim is only as well-founded as its best evidence, and combining
+    several weak sources does not produce a strong one — which is why this
+    takes the max rather than an average.
+    """
+    if not sources:
+        return RuleSourceTier.MODEL_SYNTHESIS
+    return max(
+        (LAYER_TIER[s.layer] for s in sources if s.layer in LAYER_TIER),
+        key=lambda t: TIER_CONFIDENCE[t],
+        default=RuleSourceTier.MODEL_SYNTHESIS,
+    )
+
+
 def numeric_confidence(sources: list[Source]) -> float:
     """Combine numeric per-source confidences using the scaffold rule:
 
