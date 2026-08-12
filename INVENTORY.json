@@ -518,7 +518,7 @@
     {
       "path": "backend/tests",
       "dirs": 1,
-      "files": 57
+      "files": 58
     },
     {
       "path": "backend/tests/dreams",
@@ -747,5 +747,5 @@
     }
   ],
   "total_dirs": 148,
-  "total_files": 563
+  "total_files": 564
 }
