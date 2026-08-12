@@ -287,7 +287,20 @@ def _dump(obj) -> str:
 
 def test_mcp_core_equals_the_shared_builder_byte_for_byte():
     """Acceptance criterion, first half: the MCP surface hands back
-    exactly what the shared builder produces."""
+    exactly what the shared builder produces.
+
+    The two sides must receive the SAME input, which this fixture did not do
+    for a while: it passed `timezone_name="Europe/Kyiv"` to the builder while
+    the MCP call passed no zone at all. Both produced Europe/Kyiv — the
+    server derives it from the coordinates — so the comparison looked sound
+    and stayed green.
+
+    It stopped being green when `tz_source` was fixed to report how the zone
+    was ARRIVED at ("explicit" when the caller named it, "coordinates" when
+    the server derived it). That is a real difference in input, correctly
+    reported, and the test was right to notice it — the fixture was the part
+    that was wrong. Neither door is asked to name the zone now.
+    """
     from backend.mcp.tools.astrology import calculate_natal_chart
 
     payload = dict(
@@ -299,8 +312,13 @@ def test_mcp_core_equals_the_shared_builder_byte_for_byte():
     builder_core = build_chart_response(
         birth_date=date(1977, 7, 1), birth_time=time(22, 30),
         lat=47.8388, lon=35.1396, place_label="Запорожье",
-        timezone_name="Europe/Kyiv", locale="ru",
+        locale="ru",
     )["chart_core"]
+
+    # The comparison is only meaningful if both sides really took the derived
+    # path; a future default flipping to "explicit" would make it vacuous.
+    assert mcp_core["birth"]["tz_source"] == "coordinates", mcp_core["birth"]
+    assert builder_core["birth"]["tz_source"] == "coordinates"
 
     assert _dump(mcp_core) == _dump(builder_core), (
         "the MCP surface diverged from the shared builder — a client would "

@@ -38,8 +38,13 @@ logger = logging.getLogger("oneiro.mcp")
 # WP-1 startup verification: importing the config verifies the .se1 files
 # (or raises, refusing to start the server) and pins SWIEPH globally.
 from backend.core.ephemeris import startup_summary as _ephemeris_summary
+from backend.core.ephemeris import warm_ephemeris as _warm_ephemeris
 
 logger.info("Ephemeris: %s", _ephemeris_summary())
+# The stdio server is its own process, so it pays its own page-in cost. Doing
+# it here means the first chart a desktop client asks for is fast, not the
+# 11-second one production served after every restart.
+logger.info("Ephemeris: warmed the chart path in %.0f ms", _warm_ephemeris())
 
 # The instructions used to open with "science-grounded astrology" — an
 # overclaim this project's own domain rules forbid, and precisely the kind of

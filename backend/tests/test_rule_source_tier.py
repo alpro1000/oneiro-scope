@@ -118,6 +118,74 @@ def test_the_archetype_lookup_names_its_tier():
     assert out["rule_source_tier"] == "cited_rule"
 
 
+# Tools that legitimately emit no `rule_source_tier`, each with the reason.
+# This list is the whole point of the test below it: without it, a tool that
+# emits NOTHING passes a "every emitted tier is valid" check vacuously —
+# there is nothing to validate, so everything is valid. That is how the
+# flagship tool went out carrying its provenance only as English prose in
+# `how_to_read`, where no client can parse it.
+_NO_TIER_BY_DESIGN: dict[str, str] = {
+    "search_city": "geocoder output — a place, not a claim about a person",
+    "validate_birth_data": "input validation; it asserts nothing to interpret",
+    "analysis_plan": "a menu of what can be computed, not a computation",
+    "lookup": "returns entries that carry their own per-item source",
+    "get_lunar_day": "carries a full `provenance` block instead",
+    "get_lunar_period": "carries a full `provenance` block instead",
+    "dream_series_stats": "counts of the caller's own entries; no claim layer",
+    "analyze_dream": "per-event evidence and citations, coded not interpreted",
+    "astrocartography_lines": "GeoJSON geometry; the tier lives on the readings",
+    "astrocartography_point": "geometry plus `score_explanation`",
+    "astrocartography_scan": "geometry table; see `total_significance`",
+    "compare_relocations": "geometry comparison, no interpretive claim",
+    "compute_transits": "geometry: dated aspects, no reading attached",
+    "solar_return_chart": "chart geometry, same contract as the natal core",
+    "solar_return_suggest": "candidate dates, geometry only",
+    "forecast_event": "returns its own weighted factors with sources",
+}
+
+
+def test_the_exemption_list_names_only_registered_tools():
+    """A stale name here would silently excuse a tool that no longer exists,
+    and worse, would keep excusing the one that replaced it."""
+    import asyncio
+
+    from backend.mcp.server import mcp
+
+    served = {t.name for t in asyncio.new_event_loop().run_until_complete(
+        mcp.list_tools()
+    )}
+    unknown = sorted(set(_NO_TIER_BY_DESIGN) - served)
+    assert not unknown, f"exemptions for tools that are not served: {unknown}"
+
+
+def test_every_registered_tool_either_carries_a_tier_or_is_exempt():
+    """The gap the owner found: `calculate_natal_chart` shipped with no tier
+    at all, and the "every emitted tier is valid" test passed on it vacuously
+    — nothing emitted, nothing to invalidate. A test that proves correctness
+    where a field exists and says nothing where it is missing cannot tell
+    "deliberately exempt" from "forgotten".
+
+    So the exemption is written down, and everything else must carry one.
+    """
+    import asyncio
+
+    from backend.mcp.server import mcp
+
+    served = {t.name for t in asyncio.new_event_loop().run_until_complete(
+        mcp.list_tools()
+    )}
+    must_carry = sorted(served - set(_NO_TIER_BY_DESIGN))
+    assert must_carry, "every tool got exempted — the list has eaten the rule"
+
+    # These are the ones that must say their tier as a FIELD. Kept as an
+    # explicit expectation rather than by calling each tool, because several
+    # need birth data, an LLM or a database; the call-based checks below
+    # cover the representative ones end to end.
+    assert set(must_carry) == {
+        "calculate_natal_chart", "money_contour", "vocation_map",
+    }, must_carry
+
+
 def test_every_emitted_tier_is_one_the_taxonomy_defines():
     """A typo in a hand-written literal ships a tier nobody defined, and
     nothing else notices — it is just a string in a dict.

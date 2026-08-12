@@ -225,6 +225,13 @@ async def calculate_natal_chart(
 
     out = resp.model_dump(mode="json")
     out["entitlement"] = entitlement
+    # WP-13. The flagship tool used to state its provenance ONLY as English
+    # prose in `how_to_read` — so a client parsing `rule_source_tier` found
+    # nothing here, on the one response where the answer matters most. The
+    # whole payload is one tier: this is ephemeris output, nothing in it is
+    # interpretation. Saying that as a field costs one line and removes the
+    # need to parse a sentence.
+    out["rule_source_tier"] = "computed"
     if not include_interpretation:
         # Drop the empty interpretation fields and tell the caller to read it.
         out.pop("interpretation", None)

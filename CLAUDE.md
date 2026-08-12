@@ -89,6 +89,16 @@
   change. `RuleSourceTier` / `TIER_CONFIDENCE` / `LAYER_TIER` live in the same
   module; `test_rule_source_tier.py` asserts the two vocabularies never
   disagree, and that an off-ladder number raises instead of guessing a tier.
+
+  **The additive phase ends at `schema_version: 3`.** Additive delivery is
+  right, but a transition with no end date is not a transition — both fields
+  ride the wire forever and the client that reads `0.7` as "70% likely" keeps
+  reading it, because the number never left. At `schema_version: 3`
+  `confidence` is removed, and so is `cache_hit` (hardcoded `false` since
+  WP-6; there is no tool-level cache, so the field states nothing). Until
+  then both stay, unchanged. Bump the version only when the published clients
+  are known to read `rule_source_tier` — for a directory listing that means
+  after a re-review cycle, so plan it as one.
 - **Provenance per item.** Every claim carries its source: which
   computation / which classical text (with citation) / which symbol
   dictionary / which LLM call. Returned in MCP-tool responses as the

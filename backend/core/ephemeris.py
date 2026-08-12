@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import hashlib
 import os
+import time
 from datetime import date
 from functools import lru_cache
 from pathlib import Path
@@ -116,6 +117,49 @@ def _startup_probe() -> None:
 
 
 _startup_probe()
+
+
+#: Bodies every chart computes. The probe above touches three; a natal chart
+#: reads all of these, which is why proving the files are READABLE is not the
+#: same as making the first chart fast.
+_WARM_BODIES = (
+    swe.SUN, swe.MOON, swe.MERCURY, swe.VENUS, swe.MARS, swe.JUPITER,
+    swe.SATURN, swe.URANUS, swe.NEPTUNE, swe.PLUTO, swe.TRUE_NODE, swe.CHIRON,
+)
+
+#: Julian days spanning the birth years people actually enter. One date warms
+#: one region of the file; three spread across the range cover most charts
+#: without pretending to cover all of history.
+_WARM_JDS = (2433283.0, 2444240.0, 2455198.0)  # ~1950, ~1980, ~2010
+
+
+def warm_ephemeris() -> float:
+    """Page the .se1 regions a real chart reads. Returns milliseconds spent.
+
+    Why this exists, measured rather than assumed: the first natal chart after
+    a restart took **11403 ms** in production and 32 ms six seconds later, on
+    identical input with `cache_hit: false` both times. Locally, on an SSD, the
+    same first-versus-third gap is 2.370 ms → 0.006 ms — 380x. On Render's
+    network-backed disk that ratio is the eleven seconds.
+
+    `_startup_probe` did not prevent it and was never going to: it computes
+    three bodies at J2000, which proves the files are readable and warms almost
+    nothing a 1977 chart touches — different bodies, different region of the
+    same file. Integrity and warmth are separate jobs, so they stay separate
+    functions; the probe must remain cheap because it runs on every import,
+    including tests and CLI tools.
+
+    The user-visible defect was worse than the latency: the FIRST call after a
+    restart did not wait eleven seconds, it FAILED. That is precisely the
+    catalog-review scenario — a reviewer tries once and closes the
+    application. `keepalive.yml` could not help, because pinging `/health`
+    keeps the process alive without ever touching the ephemeris.
+    """
+    started = time.perf_counter()
+    for jd in _WARM_JDS:
+        for body in _WARM_BODIES:
+            calc_ut_swieph(jd, body)
+    return (time.perf_counter() - started) * 1000.0
 
 
 @lru_cache(maxsize=1)

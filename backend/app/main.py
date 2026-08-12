@@ -54,6 +54,16 @@ async def lifespan(app: FastAPI):
         ",".join(eph["files"]),
     )
 
+    # Pay the page-in cost HERE, once, instead of charging it to whoever asks
+    # for the first chart. Measured in production: 11403 ms on the first natal
+    # after a restart, 32 ms six seconds later, same input, `cache_hit: false`
+    # both times — and the call before those two did not wait, it failed. The
+    # import-time probe cannot cover this: it computes three bodies at J2000,
+    # while a chart reads twelve across a different region of the same files.
+    from backend.core.ephemeris import warm_ephemeris
+
+    logger.info("Ephemeris: warmed the chart path in %.0f ms", warm_ephemeris())
+
     # Belt and braces. Migrations are now the source of truth for the schema —
     # the 0000 baseline creates the base tables and `alembic upgrade head` runs
     # ahead of this process on deploy (render.yaml). This stays as a safety net

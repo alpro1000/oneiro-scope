@@ -143,4 +143,9 @@ jobs:
             backend/tests/test_funnel_metrics.py \
             backend/tests/test_health_commit.py \
             backend/tests/test_rule_source_tier.py \
+            backend/tests/test_ephemeris_warmup.py \
+            backend/tests/test_staff_identity_is_immutable.py \
+            backend/tests/test_chart_core_contract.py \
+            backend/tests/test_natal_houses_aspects.py \
+            backend/tests/test_geo_candidates_and_coords.py \
             -v
