@@ -28,6 +28,14 @@ class HealthResponse(BaseModel):
     status: str
     service: str
     version: str
+    #: The deployed git commit. `version` is hand-maintained and moves once a
+    #: release; this moves every deploy, which is the question people actually
+    #: have. It exists because production once served a build twelve days old
+    #: while the owner wrote up three bugs that had been fixed nine days
+    #: earlier — there was no way to see which build was answering without
+    #: calling an MCP tool and reading `meta.commit`. `keepalive.yml` now
+    #: compares this against the default branch on every ping.
+    commit: str
     ephemeris: EphemerisInfo
 
 
@@ -45,10 +53,13 @@ def _ephemeris_mode() -> dict:
 @router.get("/health", response_model=HealthResponse)
 async def health_check():
     """Basic health check + ephemeris mode."""
+    from backend.mcp.tools._meta import COMMIT
+
     return {
         "status": "healthy",
         "service": settings.APP_NAME,
         "version": settings.VERSION,
+        "commit": COMMIT,
         "ephemeris": _ephemeris_mode(),
     }
 
