@@ -320,3 +320,47 @@ def test_the_probe_separates_open_registration_from_refused(client, monkeypatch)
     assert "REFUSES" in row["detail"]
     # The fix must name the escape hatch that needs no DCR at all.
     assert "Regular Web Application" in row["fix"]
+
+
+def test_a_broken_import_is_named_as_the_reason_mcp_is_missing(client, monkeypatch):
+    """The mount reason must be the RECORDED one, not the likeliest one.
+
+    mcp 2.x renamed `mcp.server.fastmcp`, so `backend.mcp.server` stopped
+    importing and `/mcp` quietly disappeared from a deploy whose `/health`
+    stayed green. This check used to answer "no MCP_AUTH_ISSUER" to every
+    missing mount, which points at an identity tenant when a dependency is at
+    fault — and it says so in the same voice it uses for facts it checked.
+    """
+    from backend.app.main import api_app
+    from backend.mcp import remote
+
+    monkeypatch.setattr(api_app.state, "mcp_session_manager", None, raising=False)
+    monkeypatch.setattr(
+        remote, "_MOUNT_FAILURE",
+        "ModuleNotFoundError: No module named 'mcp.server.fastmcp'. "
+        "MCP_ENABLED is on, so /mcp is expected but is not mounted.",
+        raising=False,
+    )
+
+    body = client.get("/connect/diagnostics").json()
+    row = _check(body, "mcp_mounted")
+    assert row["ok"] is False
+    assert "mcp.server.fastmcp" in row["detail"], row["detail"]
+    assert "MCP_AUTH_ISSUER" not in row["detail"], (
+        "the check invented an auth cause for a dependency failure"
+    )
+    # A failed mount must take `ready` down with it: a connector that cannot
+    # be reached is not a ready deployment.
+    assert body["ready"] is False
+
+
+def test_a_mount_that_never_ran_says_so_rather_than_guessing(client, monkeypatch):
+    from backend.app.main import api_app
+    from backend.mcp import remote
+
+    monkeypatch.setattr(api_app.state, "mcp_session_manager", None, raising=False)
+    monkeypatch.setattr(remote, "_MOUNT_FAILURE", None, raising=False)
+
+    row = _check(client.get("/connect/diagnostics").json(), "mcp_mounted")
+    assert row["ok"] is False
+    assert "no reason was recorded" in row["detail"]

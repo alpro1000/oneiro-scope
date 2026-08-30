@@ -153,6 +153,7 @@ def resolve_house_system(
     Returns (system_name, substitution_reason). The reason is None when
     the requested system worked.
     """
+    ephe_config.bind_thread()
     requested = requested.lower()
     code = HOUSE_SYSTEM_CODES.get(requested)
     if code is None:
@@ -217,6 +218,7 @@ def _body_state(jd_ut: float, code: int, name: str) -> dict[str, Any]:
     doing the rotation — sending them is cheaper than making every
     client repeat it).
     """
+    ephe_config.bind_thread()
     ecl, ret_ecl = swe.calc_ut(jd_ut, code, FLAGS)
     equ, ret_equ = swe.calc_ut(jd_ut, code, _equatorial_flags())
     for ret in (ret_ecl, ret_equ):
@@ -264,6 +266,7 @@ def build_chart_core(
 
     Returns the `chart_core` object (not the response envelope).
     """
+    ephe_config.bind_thread()
     require_in_range(birth_date, "birth_date")
     requested = house_system.lower()
     if requested not in CHART_KIT_HOUSE_SYSTEMS:

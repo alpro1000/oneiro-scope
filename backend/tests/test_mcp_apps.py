@@ -212,3 +212,35 @@ async def test_no_declared_view_goes_unclaimed():
 @pytest.fixture
 def anyio_backend():
     return "asyncio"
+
+
+@pytest.mark.anyio
+async def test_every_tool_with_a_view_accepts_a_locale():
+    """The views pick their language from the call; the call must offer one.
+
+    `view.ts::langOf` resolves language as: the response's `locale`, then the
+    ARGUMENTS the tool was called with, then the host's context, then the
+    shell's `<html lang="ru">`. Its comment stated that "every tool behind a
+    view takes `locale`" — and three did not: `astrocartography_lines`,
+    `money_contour` and `vocation_map` offered no such argument, so an English
+    caller's astrocartography map and pattern map both came back labelled in
+    Russian, with the geometry correct and the legend unreadable.
+
+    A view whose tool has no `locale` cannot be localised by anything the
+    caller does, so this is a property of the pairing, not of either half.
+    """
+    from backend.mcp.server import mcp
+
+    offenders = []
+    for tool in await mcp.list_tools():
+        meta = tool.model_dump(by_alias=True, exclude_none=True).get("_meta") or {}
+        if not meta.get("ui"):
+            continue
+        if "locale" not in (tool.inputSchema.get("properties") or {}):
+            offenders.append(tool.name)
+
+    assert not offenders, (
+        f"these tools render a view but take no locale: {offenders} — the "
+        "view will fall through to the shell's default language for every "
+        "caller regardless of what they asked for"
+    )

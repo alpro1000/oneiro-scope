@@ -52,7 +52,9 @@ class EphemerisEngine:
         return swe.julday(year, month, day, ut)
 
     def calc_body(self, jd_ut: float, body: int, flags: int | None = None):
+        ephe_config.bind_thread()
         return swe.calc_ut(jd_ut, body, flags or self.config.flags)
 
     def houses(self, jd_ut: float, lat: float, lon: float, house_system: str = "P"):
+        ephe_config.bind_thread()
         return swe.houses_ex(jd_ut, lat, lon, b"P" if house_system == "P" else house_system.encode())

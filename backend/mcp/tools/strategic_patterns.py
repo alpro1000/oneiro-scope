@@ -100,6 +100,7 @@ def money_contour(
     birth_timezone: str,
     lat: float,
     lon: float,
+    locale: str = "ru",  # ru | en | de | es | fr
 ) -> dict[str, Any]:
     """Compute the structural money contour of a natal chart.
 
@@ -116,15 +117,24 @@ def money_contour(
         birth_timezone: IANA tz of the birth place (e.g. "Europe/Kyiv").
         lat: birth latitude, degrees.
         lon: birth longitude, degrees.
+        locale: "ru" or "en". The geometry is language-free; this labels the
+            interactive pattern-map view. Without it the view rendered in
+            Russian for every caller — `view.ts::langOf` reads the response's
+            `locale`, then the call arguments, and this tool offered neither,
+            so it fell through to the shell's `lang="ru"`.
     """
     geo = natal_geometry(birth_date, birth_time, birth_timezone, lat, lon)
     out = _base("money-contour", "astronomy", 1.0)
     out["computed"] = _money_contour(geo)
     out["provenance"] = geo["provenance"]
+    # Echoed, not just accepted: a host that renders the view without
+    # forwarding the call arguments still gets the right language.
+    out["locale"] = locale
     return with_menu(
         out, domain="astro",
         known_inputs=[BIRTH_DATE, BIRTH_TIME, BIRTH_PLACE],
         completed=["money-contour"],
+        locale=locale,
     )
 
 
@@ -134,6 +144,7 @@ def vocation_map(
     birth_timezone: str,
     lat: float,
     lon: float,
+    locale: str = "ru",  # ru | en | de | es | fr
 ) -> dict[str, Any]:
     """Compute vocation signals of a natal chart (for profession clusters).
 
@@ -149,15 +160,24 @@ def vocation_map(
         birth_timezone: IANA tz of the birth place.
         lat: birth latitude, degrees.
         lon: birth longitude, degrees.
+        locale: "ru" or "en". The geometry is language-free; this labels the
+            interactive pattern-map view. Without it the view rendered in
+            Russian for every caller — `view.ts::langOf` reads the response's
+            `locale`, then the call arguments, and this tool offered neither,
+            so it fell through to the shell's `lang="ru"`.
     """
     geo = natal_geometry(birth_date, birth_time, birth_timezone, lat, lon)
     out = _base("vocation-map", "astronomy", 1.0)
     out["computed"] = _vocation_map(geo)
     out["provenance"] = geo["provenance"]
+    # Echoed, not just accepted: a host that renders the view without
+    # forwarding the call arguments still gets the right language.
+    out["locale"] = locale
     return with_menu(
         out, domain="astro",
         known_inputs=[BIRTH_DATE, BIRTH_TIME, BIRTH_PLACE],
         completed=["vocation-map"],
+        locale=locale,
     )
 
 

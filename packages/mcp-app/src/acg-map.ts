@@ -19,17 +19,16 @@ import type { ToolResult } from './bridge';
 // it. Aliased to frontend/lib/world-coast.ts in both tsconfig and the build.
 import { WORLD_COAST } from '@frontend/world-coast';
 import { ASK_LABEL, askButton, esc, fromResult, mountView, type Lang } from './view';
+// Projection and clipping live apart from rendering: they are pure, they
+// are where the meridians were being lost, and a test of them must not
+// need a DOM (importing this module mounts the view).
+import { H, LAT_BOTTOM, LAT_TOP, W, n2, pathFor, px, py } from './acg-geometry';
 
 // Bodies get the classical-metal colours; the tokens carry them as --p-*.
 const P_GLYPH: Record<string, string> = {
   Sun: '☉', Moon: '☽', Mercury: '☿', Venus: '♀', Mars: '♂', Jupiter: '♃',
   Saturn: '♄', Uranus: '♅', Neptune: '♆', Pluto: '♇',
 };
-
-// Latitude window of the reference basemap: past these the equirectangular
-// projection stretches into uselessness.
-const LAT_TOP = 78;
-const LAT_BOTTOM = -58;
 
 const COPY = {
   ru: {
@@ -85,41 +84,11 @@ interface Payload {
   locale?: string;
 }
 
-const W = 1000;
-const H = Math.round((W * (LAT_TOP - LAT_BOTTOM)) / 360);
-const px = (lon: number) => ((lon + 180) / 360) * W;
-const py = (lat: number) => ((LAT_TOP - lat) / (LAT_TOP - LAT_BOTTOM)) * H;
-const n2 = (v: number) => Math.round(v * 100) / 100;
-
 /** MC/IC are meridians (solid/dashed); Asc/Desc are horizon curves. */
 function dashFor(angle: string): string {
   if (angle === 'IC') return ' stroke-dasharray="5 4"';
   if (angle === 'DC' || angle === 'Desc') return ' stroke-dasharray="2 4"';
   return '';
-}
-
-/**
- * A polyline, split where it wraps the antimeridian.
- *
- * Without the split a curve leaving at +180° draws a straight line all the way
- * back across the map — a line through places the planet is nowhere near.
- */
-function pathFor(coords: number[][]): string[] {
-  const runs: string[][] = [];
-  let run: string[] = [];
-  let prevLon: number | null = null;
-  for (const [lon, lat] of coords) {
-    if (!Number.isFinite(lon) || !Number.isFinite(lat)) continue;
-    if (lat > LAT_TOP || lat < LAT_BOTTOM) continue;
-    if (prevLon !== null && Math.abs(lon - prevLon) > 180) {
-      if (run.length > 1) runs.push(run);
-      run = [];
-    }
-    run.push(`${n2(px(lon))},${n2(py(lat))}`);
-    prevLon = lon;
-  }
-  if (run.length > 1) runs.push(run);
-  return runs.map((r) => r.join(' '));
 }
 
 function render(payload: Payload, lang: Lang): string {

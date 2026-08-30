@@ -287,7 +287,21 @@ def _dump(obj) -> str:
 
 def test_mcp_core_equals_the_shared_builder_byte_for_byte():
     """Acceptance criterion, first half: the MCP surface hands back
-    exactly what the shared builder produces."""
+    exactly what the shared builder produces.
+
+    Both calls must name the SAME inputs, and the timezone is one of them.
+    This test used to hand `timezone_name="Europe/Kyiv"` to the builder while
+    the MCP call named no zone at all — so the builder stamped
+    `tz_source: "explicit"`, the tool derived the identical zone from the
+    coordinates and stamped `"coordinates"`, and the comparison failed on a
+    provenance field that was telling the truth about two different calls.
+    Every number matched. Feed both doors the same thing, and a real
+    divergence has nowhere to hide behind an expected one.
+
+    No zone is named here on purpose: it is the path the tool documents as
+    preferred (tzdata from the coordinates carries the historical offsets,
+    which a caller naming a zone from memory does not).
+    """
     from backend.mcp.tools.astrology import calculate_natal_chart
 
     payload = dict(
@@ -299,13 +313,38 @@ def test_mcp_core_equals_the_shared_builder_byte_for_byte():
     builder_core = build_chart_response(
         birth_date=date(1977, 7, 1), birth_time=time(22, 30),
         lat=47.8388, lon=35.1396, place_label="Запорожье",
-        timezone_name="Europe/Kyiv", locale="ru",
+        timezone_name=None, locale="ru",
     )["chart_core"]
 
     assert _dump(mcp_core) == _dump(builder_core), (
         "the MCP surface diverged from the shared builder — a client would "
         "behave differently depending on which door it came through"
     )
+
+
+def test_naming_the_zone_changes_only_how_the_chart_says_it_got_it():
+    """The other half of the same fact, asserted instead of assumed.
+
+    `tz_source` is provenance: "explicit" when the caller named the zone,
+    "coordinates" when tzdata resolved it. For a place where both routes agree
+    the two charts must be identical everywhere ELSE — otherwise naming the
+    zone would be quietly changing the astronomy, and the field would be
+    hiding that rather than reporting it.
+    """
+    common = dict(
+        birth_date=date(1977, 7, 1), birth_time=time(22, 30),
+        lat=47.8388, lon=35.1396, place_label="Запорожье", locale="ru",
+    )
+    named = build_chart_response(timezone_name="Europe/Kyiv", **common)["chart_core"]
+    derived = build_chart_response(timezone_name=None, **common)["chart_core"]
+
+    assert named["birth"]["tz_source"] == "explicit"
+    assert derived["birth"]["tz_source"] == "coordinates"
+    assert named["birth"]["tz_used"] == derived["birth"]["tz_used"] == "Europe/Kyiv"
+
+    named["birth"].pop("tz_source")
+    derived["birth"].pop("tz_source")
+    assert _dump(named) == _dump(derived)
 
 
 def test_http_endpoint_delegates_to_the_shared_builder():

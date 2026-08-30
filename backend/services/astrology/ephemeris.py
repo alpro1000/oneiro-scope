@@ -98,6 +98,7 @@ class SwissEphemeris:
         Returns:
             PlanetData with longitude, latitude, distance, speed
         """
+        ephe_config.bind_thread()
         planet_code = PLANET_CODES.get(planet)
         if planet_code is None:
             raise ValueError(f"No Swiss Ephemeris body code for {planet}")

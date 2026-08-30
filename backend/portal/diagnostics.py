@@ -29,6 +29,7 @@ from backend.mcp.remote import (
     allowed_transport_hosts,
     auth_configured,
     jwks_url,
+    mount_failure as remote_mount_failure,
     oauth_discovery_enabled,
     resource_url,
 )
@@ -191,16 +192,26 @@ async def diagnostics(request: Request, probe: bool = False) -> Diagnostics:
         fix=None if settings.MCP_ENABLED else "set MCP_ENABLED=true",
     ))
 
+    # Report the reason the mount step RECORDED, not the likeliest one.
+    # This check used to state the auth misconfiguration as the cause of every
+    # missing mount, in the same confident voice it uses for facts it has
+    # actually checked — and `build_mcp_http_app` has three other ways to
+    # return nothing, one of which (`backend.mcp.server` failing to import
+    # under mcp 2.x) is a dependency problem no amount of Auth0 configuration
+    # would fix. A page that exists to be trusted without a log must not guess.
+    failure = remote_mount_failure()
     checks.append(Check(
         id="mcp_mounted",
         ok=mounted,
         detail="transport is mounted and its session manager is running"
                if mounted else
-               "transport did NOT mount — with MCP_REQUIRE_AUTH=true in "
-               "production and no MCP_AUTH_ISSUER the server refuses to expose "
-               "tools unauthenticated, so /mcp returns 404",
-        fix=None if mounted else
-            "set MCP_AUTH_ISSUER (recommended) or MCP_REQUIRE_AUTH=false",
+               (f"transport did NOT mount — {failure}" if failure else
+                "transport did NOT mount, and no reason was recorded — the "
+                "app was built without calling build_mcp_http_app()"),
+        fix=None if mounted else (
+            "read the reason above; it names the environment variable or the "
+            "dependency at fault. Server startup logs the same line at ERROR."
+        ),
     ))
 
     has_public_url = bool(settings.MCP_PUBLIC_URL)

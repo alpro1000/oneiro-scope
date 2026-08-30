@@ -25,7 +25,7 @@ except ImportError as exc:  # pragma: no cover
 
 from backend.services.astrology.transits_engine import TransitEvent, find_transits
 
-from backend.core.ephemeris import FLAGS as _FLAGS
+from backend.core.ephemeris import FLAGS as _FLAGS, bind_thread
 
 _BODIES = {
     "Sun": swe.SUN,
@@ -72,6 +72,7 @@ class ThematicArc:
 
 
 def _houses(jd_ut: float, lat: float, lon: float) -> list[float]:
+    bind_thread()
     cusps, _ = swe.houses(jd_ut, lat, lon, b"P")
     return list(cusps)[:12]
 
@@ -93,6 +94,7 @@ def theme_significators(
     """Natal significators for a theme: occupants of the theme houses +
     rulers of their cusps + the theme's natural planets. Restricted to
     the bodies the transit engine tracks natally."""
+    bind_thread()
     if theme not in _THEMES:
         raise ValueError(
             f"Unknown theme {theme!r}; expected one of {sorted(_THEMES)}"

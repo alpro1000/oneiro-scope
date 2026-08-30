@@ -47,6 +47,22 @@ PROTECTED_RESOURCE_PATH = "/.well-known/oauth-protected-resource"
 _JWKS_CACHE: dict[str, tuple[float, list[dict[str, Any]]]] = {}
 _JWKS_TTL_SECONDS = 600.0
 
+# Why /mcp is not mounted, when MCP_ENABLED said it should be. None means
+# either "mounted fine" or "build_mcp_http_app has not run yet"; the two are
+# distinguishable because main.py calls it exactly once, at import.
+#
+# This exists because the absence of a mount is not observable from outside:
+# the REST API answers, /health is green, the log carries one line that
+# scrolled past weeks ago, and the connector just says it cannot reach the
+# server. `/connect/diagnostics` reads this so the reason is on a page the
+# owner can open.
+_MOUNT_FAILURE: Optional[str] = None
+
+
+def mount_failure() -> Optional[str]:
+    """Why the MCP surface is missing, or None when it is not missing."""
+    return _MOUNT_FAILURE
+
 
 class AuthError(Exception):
     """Bearer token missing or invalid. Carries the RFC 6750 error code."""
@@ -511,7 +527,16 @@ def build_mcp_http_app() -> tuple[Optional[Any], Optional[Any]]:
       hard dependency of the web service).
     - `session_manager` is the object whose `.run()` the host application must
       enter for the lifetime of the process; None for stateless transports.
+
+    Whatever goes wrong here is recorded in `mount_failure()` rather than only
+    logged. Not booting the REST API over a broken connector is still the right
+    trade — but "MCP is an add-on" was doing double duty as "MCP may vanish
+    without anyone noticing", and that is how mcp 2.x took /mcp off a
+    production deploy whose `/health` stayed green.
     """
+    global _MOUNT_FAILURE
+    _MOUNT_FAILURE = None
+
     if not settings.MCP_ENABLED:
         logger.info("Remote MCP disabled (MCP_ENABLED=false)")
         return None, None
@@ -519,7 +544,18 @@ def build_mcp_http_app() -> tuple[Optional[Any], Optional[Any]]:
     try:
         from backend.mcp.server import mcp
     except Exception as exc:  # pragma: no cover - import-time env issues
-        logger.warning("Remote MCP unavailable (%s: %s)", type(exc).__name__, exc)
+        # ERROR, with the traceback: MCP_ENABLED is on, so somebody expects a
+        # connector here and is not going to get one. A dependency that has
+        # moved out from under the import is the likeliest cause and the least
+        # guessable from the one-line form this used to log.
+        logger.exception("Remote MCP unavailable — /mcp will NOT be served")
+        _MOUNT_FAILURE = (
+            f"{type(exc).__name__}: {exc}. MCP_ENABLED is on, so /mcp is "
+            "expected but is not mounted — every connector will report this "
+            "server as unreachable. Check that backend/requirements.txt "
+            "installed cleanly (mcp must be 1.x: 2.x renamed "
+            "mcp.server.fastmcp to mcp.server.mcpserver)."
+        )
         return None, None
 
     # The transport's own path defaults to "/mcp"; serving it under
@@ -531,7 +567,11 @@ def build_mcp_http_app() -> tuple[Optional[Any], Optional[Any]]:
     try:
         asgi_app = mcp.streamable_http_app()
     except Exception as exc:  # pragma: no cover
-        logger.warning("Could not build MCP HTTP app: %s", exc)
+        logger.exception("Could not build MCP HTTP app — /mcp will NOT be served")
+        _MOUNT_FAILURE = (
+            f"{type(exc).__name__}: {exc}. The tool registry imported but its "
+            "streamable-HTTP transport would not build, so /mcp is not mounted."
+        )
         return None, None
 
     if settings.MCP_REQUIRE_AUTH and not auth_configured():
@@ -541,6 +581,12 @@ def build_mcp_http_app() -> tuple[Optional[Any], Optional[Any]]:
                 "configured — mounting refused. Set MCP_AUTH_ISSUER (and "
                 "MCP_AUTH_AUDIENCE), or set MCP_REQUIRE_AUTH=false for a "
                 "deliberately public server."
+            )
+            _MOUNT_FAILURE = (
+                "MCP_REQUIRE_AUTH is on but no authorization server is "
+                "configured, so mounting was refused in production. Set "
+                "MCP_AUTH_ISSUER (and MCP_AUTH_AUDIENCE), or set "
+                "MCP_REQUIRE_AUTH=false for a deliberately public server."
             )
             return None, None
         logger.warning(
