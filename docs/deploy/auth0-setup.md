@@ -176,6 +176,7 @@ Smoke test: *"Посчитай мою карту: 1 июля 1977, 22:30, Зап
 | `Could not fetch JWKS` (503) | egress blocked or wrong JWKS URL | `curl` the JWKS URL from the Render shell |
 | `421 Invalid Host header` | transport allow-list | `MCP_PUBLIC_URL` / `MCP_ALLOWED_HOSTS`, see mcp-connector.md |
 | 404 on `/mcp` | endpoint at `/mcp/mcp` (pre-fix build) | redeploy latest `main` |
+| Auth0's own branded **"Oops!, something went wrong"** instead of a login form | the request reached `/authorize` and Auth0 aborted — most often the client has no **User-delegated Access** to the API, but Auth0 never prints the reason on that page | read Monitoring → Logs; scripted end to end in `chrome-agent-auth0-authorize-error-task.md` |
 
 ## Cost
 
