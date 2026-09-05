@@ -114,7 +114,7 @@ Personal/project memory file for cross-session continuity. Read by Claude Code a
   source for coordinates, not hand-picked numbers — either a proper offline
   dataset or an explicit decision that the fallback stays minimal and the
   "90+" claim gets corrected.
-- **`build-and-validate` CI is red on every PR** (pre-existing). Diagnostic improvements landed in PR #113 (`pip install -v`, upgraded setuptools/wheel); next iteration should see the actual error trace. Not blocking — `mergeable_state` is `unstable` not `blocked`.
+- ~~**`build-and-validate` CI is red on every PR** (pre-existing). Diagnostic improvements landed in PR #113 (`pip install -v`, upgraded setuptools/wheel); next iteration should see the actual error trace.~~ **Не воспроизводится (проверено 2026-09-05).** `build-and-validate` зелёная на пяти последних пушах в main (`839a9da`…`15ff6ee`, 10–12 августа) и на PR #191. Кем и когда починена — не установлено; запись оставлена зачёркнутой, чтобы следующая сессия не искала несуществующую красноту.
 
 ## §6 Architecture decisions log
 
