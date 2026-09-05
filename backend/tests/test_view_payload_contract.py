@@ -19,6 +19,7 @@ next to the file that has to change with it.
 
 from __future__ import annotations
 
+import re
 from pathlib import Path
 
 import pytest
@@ -157,6 +158,73 @@ def test_the_two_patterns_really_do_share_one_envelope(geo):
     m, v = money_contour(geo), vocation_map(geo)
     assert "part_of_fortune" in m
     assert {"mc", "work_houses", "dignified"} <= set(v)
+
+
+# --- acg-map.ts --------------------------------------------------------------
+
+
+@pytest.fixture(scope="module")
+def acg(geo):
+    from backend.services.astrology.astrocartography import acg_lines
+
+    return acg_lines(geo["jd_ut"])
+
+
+def _view_window() -> tuple[float, float]:
+    """LAT_TOP / LAT_BOTTOM as the view actually declares them."""
+    src = (VIEWS / "acg-geometry.ts").read_text(encoding="utf-8")
+    found = dict(re.findall(r"export const (LAT_TOP|LAT_BOTTOM) = (-?\d+);", src))
+    assert set(found) == {"LAT_TOP", "LAT_BOTTOM"}, found
+    return float(found["LAT_TOP"]), float(found["LAT_BOTTOM"])
+
+
+def test_the_map_reads_planet_and_angle_off_every_feature(acg):
+    """`acg-map.ts` colours by `properties.planet` and dashes by `.angle`."""
+    features = acg["features"]
+    assert features, "no lines computed for the fixture chart"
+    for f in features:
+        assert set(f["properties"]) >= {"planet", "angle"}, sorted(f["properties"])
+        assert f["geometry"]["type"] == "LineString"
+        for lon, lat in f["geometry"]["coordinates"]:
+            # GeoJSON order. Transposed, the whole map would be drawn sideways
+            # and nothing would raise.
+            assert -180.0 <= lon <= 180.0, f"longitude out of range: {lon}"
+            assert -90.0 <= lat <= 90.0, f"latitude out of range: {lat}"
+
+
+def test_every_angle_family_survives_the_views_latitude_window(acg):
+    """The meridians were silently dropped, and this is the shape of that bug.
+
+    MC/IC come back as TWO-point LineStrings spanning -58…80, while the view
+    clips at -58…78. The old clip discarded out-of-window points instead of
+    truncating the segment, which left one point, which `run.length > 1`
+    rejected — so every MC and IC line vanished while the legend and the
+    "N lines" footer still counted them.
+
+    The clip is fixed in `acg-geometry.ts` (and unit-tested there). This
+    asserts the other half: that each angle family still has geometry INSIDE
+    the window at all, so a future change to the server's latitude span cannot
+    empty the map from the other side.
+    """
+    top, bottom = _view_window()
+    seen: dict[str, int] = {}
+    for f in acg["features"]:
+        angle = f["properties"]["angle"]
+        crosses = any(bottom <= lat <= top for _lon, lat in f["geometry"]["coordinates"])
+        if not crosses:
+            # A segment can still be drawable while both endpoints sit outside,
+            # provided they straddle the window — which is exactly the meridian
+            # case, so count it as present.
+            lats = [lat for _lon, lat in f["geometry"]["coordinates"]]
+            crosses = min(lats) < bottom and max(lats) > top
+        seen[angle] = seen.get(angle, 0) + int(crosses)
+
+    assert set(seen) == {"MC", "IC", "Asc", "Desc"}, sorted(seen)
+    for angle, drawable in seen.items():
+        assert drawable, (
+            f"no {angle} line has any geometry inside the view's latitude "
+            f"window {bottom}…{top} — the map would silently omit them"
+        )
 
 
 # --- the property that makes all of the above matter --------------------------

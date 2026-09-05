@@ -94,6 +94,15 @@ Personal/project memory file for cross-session continuity. Read by Claude Code a
 - ~~LLM cost tracking middleware structure exists but counter not wired~~. **Fixed 2026-05-26 PR #111** — `backend/core/cost_tracker.py` wired into `UniversalLLMProvider.generate()`.
 - ~~Ephemeris mode (SWIEPH vs MOSEPH) not logged in `/health`~~. **Fixed 2026-05-26 PR #111** — and now also logged on app startup (PR #113).
 - LunarWidget no retry on 502.
+- **Зависимости бэкенда резолвятся заново на КАЖДОЙ сборке Render.** Лок-файла
+  нет, команда сборки — голый `pip install -r backend/requirements.txt`, так
+  что версию каждой незакреплённой зависимости выбирает дата деплоя. 2026-08-30
+  это стоило всей MCP-поверхности: `mcp>=1.23` без потолка, mcp 2.0.0
+  переименовал `mcp.server.fastmcp`, `/mcp` перестал монтироваться молча.
+  Потолок для `mcp` поставлен и покрыт тестом, но остальные открытые верхние
+  границы (`claude-agent-sdk>=0.2`, `pymorphy3>=2.0`, `uvicorn…<1`, …) — та же
+  ставка на удачу. Настоящее лечение — lock-файл (pip-tools/uv) плюс сборка
+  из него; до тех пор мажорный релиз любой из них приезжает в прод сам.
 - **Fallback city database is thinner than advertised** (found 2026-07-27, not
   fixed). `POPULAR_CITIES` in `backend/utils/geonames_resolver.py` holds **55**
   entries, while its own comment, the `search_city` docstring and CLAUDE.md all
@@ -105,7 +114,7 @@ Personal/project memory file for cross-session continuity. Read by Claude Code a
   source for coordinates, not hand-picked numbers — either a proper offline
   dataset or an explicit decision that the fallback stays minimal and the
   "90+" claim gets corrected.
-- **`build-and-validate` CI is red on every PR** (pre-existing). Diagnostic improvements landed in PR #113 (`pip install -v`, upgraded setuptools/wheel); next iteration should see the actual error trace. Not blocking — `mergeable_state` is `unstable` not `blocked`.
+- ~~**`build-and-validate` CI is red on every PR** (pre-existing). Diagnostic improvements landed in PR #113 (`pip install -v`, upgraded setuptools/wheel); next iteration should see the actual error trace.~~ **Не воспроизводится (проверено 2026-09-05).** `build-and-validate` зелёная на пяти последних пушах в main (`839a9da`…`15ff6ee`, 10–12 августа) и на PR #191. Кем и когда починена — не установлено; запись оставлена зачёркнутой, чтобы следующая сессия не искала несуществующую красноту.
 
 ## §6 Architecture decisions log
 
@@ -134,6 +143,123 @@ Recent decisions:
 ---
 
 ## §9 Session log
+
+### 2026-08-30 — MCP лежал из-за незакрытого потолка `mcp>=1.23`; и карта теряла все меридианы
+
+Задача: «проверь почему не работает МСП и перепроверь вывод карты». Оба
+вопроса оказались настоящими и не связанными друг с другом.
+
+**1. Почему не работает MCP.** `backend/requirements.txt` держал `mcp>=1.23`
+без верхней границы. **mcp 2.0.0 (2026-07-28) переименовал
+`mcp.server.fastmcp.FastMCP` → `mcp.server.mcpserver.MCPServer`**, поэтому под
+2.x `backend/mcp/server.py` не импортируется вообще. Проверено:
+`pip install --dry-run -r backend/requirements.txt` (ровно команда сборки
+Render, лок-файла нет) сегодня резолвит **mcp 2.1.1**.
+
+Отказ был устроен так, чтобы его не заметили: `build_mcp_http_app()` ловит
+исключение, пишет **warning** и возвращает `(None, None)` — REST поднимается,
+`/health` зелёный, `keepalive` доволен, а `/mcp` просто отсутствует, и
+коннектор говорит «сервер недоступен». Это тот же класс невидимости, что
+CORS 10 августа.
+
+**Почему CI этого не поймал:** `mcp-smoke.yml` ставит зависимости СВОИМ
+списком (`"mcp[cli]>=1.2"`), а не из requirements. 12 августа pip там
+откатился на 1.29.0 (лог рана 31568925787: скачал метаданные 2.0.0, затем
+`Downloading mcp-1.29.0`) — CI был зелёным на графе зависимостей, который прод
+не ставит.
+
+Сделано: потолок `mcp>=1.29,<2` с объяснением, **тот же** спецификатор в
+workflow, `test_dependency_pins.py` (пин ↔ workflow ↔ реально импортируемый
+`mcp.server.fastmcp`), причина отказа монтирования теперь записывается
+(`remote.mount_failure()`), логируется на ERROR с трейсбеком и печатается в
+`/connect/diagnostics` — раньше строка `mcp_mounted` называла ЕДИНСТВЕННУЮ
+причину «не выставлен MCP_AUTH_ISSUER» тем же уверенным тоном, каким она
+сообщает проверенные факты, хотя у `build_mcp_http_app` три других способа
+ничего не вернуть, и сломанный импорт ни одной настройкой Auth0 не лечится.
+Страница, которую открывают ВМЕСТО лога, не имеет права угадывать.
+
+**2. Тесты, которые не гоняет никто.** 16 из 57 файлов `backend/tests/` не
+названы ни одним workflow — `mcp-smoke.yml` перечисляет их поимённо. Среди
+неохваченных: `test_chart_core_contract.py` (контракт ВЫВОДА КАРТЫ),
+`test_natal_houses_aspects.py`, `test_astrology_provenance.py`,
+`test_no_silent_degradation.py`, `test_lunar_endpoint.py`, `test_physiognomy.py`
+(дырка из next-session от 11.08). Все 16 добавлены; `test_dependency_pins.py`
+роняет CI на новом файле, который забыли внести.
+
+**3. Вывод карты — три находки.**
+
+**(а) `swe.set_ephe_path` в этой сборке pyswisseph — ПОТОКОВО-ЛОКАЛЬНЫЙ.**
+Путь ставится один раз при импорте `backend/core/ephemeris.py`, то есть только
+для импортировавшего потока. На любом другом swisseph не находит `.se1` и
+уходит на Moshier: `flags 258` → `260`, **без исключения**. `calc_ut_swieph`
+это ловит по флагам, но ~20 прямых `swe.calc_ut`/`swe.houses` в сервисах
+астрологии флаги не проверяют — то есть отдали бы позиции Moshier под
+штампом «Swiss Ephemeris 2.10.03 (SWIEPH), confidence 1.0». Симптом уже был в
+репозитории: `test_lunar_endpoint.py` отвечал 500 (TestClient крутит приложение
+в потоке портала). В проде сегодня НЕ живой: все эндпоинты `async def`,
+executor'ы только у LLM-провайдера, а FastMCP зовёт синхронные инструменты
+прямо в цикле событий (`func_metadata.py:113`). Мина, не пожар — но мина под
+единственным числом, которому продукт обещает 1.0.
+Сделано: `ephemeris.bind_thread()` (идемпотентно, раз на поток —
+`set_ephe_path` закрывает и переоткрывает файлы, звать на каждый расчёт
+нельзя), вызов внутри `calc_ut_swieph` и в 19 функциях 10 модулей с прямыми
+вызовами; `test_ephemeris_threading.py` сверяет натал/ACG/соляр/транзиты/
+лунный день между потоками и **проверяет саму посылку** (если pyswisseph
+станет процессно-глобальным — тест скипается с объяснением, а не молча
+превращается в декорацию).
+
+**(б) Контракт вывода карты был красным — и по делу неверно.**
+`test_mcp_core_equals_the_shared_builder_byte_for_byte` падал на
+`birth.tz_source`: `coordinates` (MCP) против `explicit` (builder). Числа
+совпадали побайтно; тест кормил две двери РАЗНЫМИ входами — билдеру называл
+`timezone_name="Europe/Kyiv"`, инструменту не называл ничего. Провенанс честно
+сообщал о разнице вызовов. Теперь обе двери получают одно и то же (зона не
+называется — это путь, который сам инструмент документирует как
+предпочтительный), плюс отдельный тест: назвать зону можно, но это обязано
+менять ТОЛЬКО `tz_source` и ничего больше.
+
+**(в) На астрокарте не рисовался НИ ОДИН меридиан.** Сервер отдаёт MC/IC
+двухточечными LineString'ами от широты −58 до **80**, а `acg-map.ts` режет по
+окну −58…**78** — и резал, ВЫБРАСЫВАЯ точки вне окна. Северная точка
+выбрасывалась, оставалась одна, `run.length > 1` её отвергал: **20 из 46
+линий (все MC и IC) не доходили до SVG**. Легенда при этом перечисляла все
+планеты (строится по features, а не по нарисованному), а подпись честно
+считала «46 линий» — полукарта, выглядящая целой. Клип переписан на
+УСЕЧЕНИЕ по границе с интерполяцией; заодно кривые Asc/Desc перестали
+обрываться на отсчёт раньше края. Чистая геометрия вынесена в
+`src/acg-geometry.ts` (импорт `acg-map.ts` монтирует вид и требует DOM — иначе
+тест не написать), `test/acg-map.test.ts` — 7 кейсов на точной серверной
+форме; `vitest.config.ts` добавлен, потому что без алиасов сьют падал на
+РЕЗОЛВЕ и печатался как «0 tests».
+
+**4. Три инструмента с видом не принимали `locale`.** `view.ts::langOf`
+берёт язык из ответа → из аргументов вызова → из контекста хоста → из
+`<html lang="ru">`, и в комментарии написано «каждый инструмент за видом
+принимает locale». Не принимали: `astrocartography_lines`, `money_contour`,
+`vocation_map` — то есть англоязычный пользователь получал астрокарту и карту
+паттернов с русскими подписями. Параметр добавлен и эхом кладётся в ответ;
+`test_mcp_apps.py` теперь утверждает парность «есть вид → есть locale».
+
+**5. Мёртвая «база знаний» астрологии удалена.** `AstroReasoner._load_
+knowledge_base` читал `planets.json`/`houses.json`/`aspects.json` как
+`{"planets": {...}}`, а на диске лежат СПИСКИ правил — `data.get(...)` кидал
+`AttributeError` на каждом конструировании, голый `except` писал ERROR и
+возвращал пустой словарь. Настоящая находка не в поломке: КБ не читал ни один
+промпт, а три аксессора `get_*_meaning` не звал никто. Удалено вместе с
+параметром `knowledge_base_path`; файлы правил оставлены на диске с запиской,
+что их подключение — фича со спекой (цитата подняла бы утверждение с 0.7 до
+0.9), а не тихое воскрешение загрузчика.
+
+**Итог прогонов:** backend 842 passed / 7 skipped (было 3 failed + 5 errors),
+mcp-app 20 vitest + typecheck + `npm run check` зелёные, поверхность проверена
+живьём по streamable-HTTP: 19 инструментов, 6 `ui://`-ресурсов, натал и
+астрокарта считаются, `mcp_mounted: true`.
+
+**Прод из песочницы недоступен** (egress-политика отдаёт 403 на CONNECT к
+`oneiroscope-backend.onrender.com`), поэтому НЕ проверено: какую версию mcp
+поставил последний деплой Render. Если `/connect/diagnostics` показывает
+`tools: {"error": "ModuleNotFoundError..."}` — это оно; лечится передеплоем с
+этой ветки.
 
 ### 2026-08-12 (2) — WP-13 сделан аддитивно: у каждого утверждения появилось ИМЯ тира
 

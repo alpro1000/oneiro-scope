@@ -28,7 +28,7 @@ except ImportError as exc:  # pragma: no cover
         "pyswisseph is required for astrocartography"
     ) from exc
 
-from backend.core.ephemeris import FLAGS as _FLAGS
+from backend.core.ephemeris import FLAGS as _FLAGS, bind_thread
 
 _PLANET_NAMES = {
     swe.SUN: "Sun",
@@ -76,6 +76,7 @@ class RelocationResult:
 
 def natal_planets(jd_ut: float) -> dict[str, float]:
     """Compute zodiacal longitudes of the main bodies at natal moment."""
+    bind_thread()
     out: dict[str, float] = {}
     for p, name in _PLANET_NAMES.items():
         res, _ = swe.calc_ut(jd_ut, p, _FLAGS)
@@ -90,6 +91,7 @@ def natal_equatorial(jd_ut: float) -> dict[str, tuple[float, float]]:
     Asc/Desc horizon curves are loci in right ascension / declination, not
     ecliptic longitude.
     """
+    bind_thread()
     eq_flags = swe.FLG_SWIEPH | swe.FLG_EQUATORIAL
     out: dict[str, tuple[float, float]] = {}
     for p, name in _PLANET_NAMES.items():
@@ -100,6 +102,7 @@ def natal_equatorial(jd_ut: float) -> dict[str, tuple[float, float]]:
 
 def _obliquity(jd_ut: float) -> float:
     """True obliquity of the ecliptic (degrees) at the moment."""
+    bind_thread()
     return swe.calc_ut(jd_ut, swe.ECL_NUT, swe.FLG_SWIEPH)[0][0]
 
 
@@ -752,6 +755,7 @@ def relocate(
     natal moment and list which natal planets fall on any angle within
     `orb_deg`.
     """
+    bind_thread()
     if planets is None:
         planets = natal_planets(jd_ut)
 

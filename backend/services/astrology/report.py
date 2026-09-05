@@ -29,7 +29,7 @@ from backend.services.astrology.astrocartography import (
 from backend.services.astrology.historic_tz import BirthMoment
 from backend.services.astrology.transits_engine import find_transits
 
-from backend.core.ephemeris import FLAGS as _FLAGS, EPHEMERIS_VERSION
+from backend.core.ephemeris import FLAGS as _FLAGS, EPHEMERIS_VERSION, bind_thread
 
 _BODIES = {
     "Sun": swe.SUN, "Moon": swe.MOON, "Mercury": swe.MERCURY,
@@ -108,6 +108,7 @@ def build_report(
     locale: str = "ru",
 ) -> dict:
     """Assemble the full profile report as a JSON-ready dict."""
+    bind_thread()
     jd = moment.jd_ut
     pool = cities or DEFAULT_CITIES
     start = year_start or date_cls.today()

@@ -18,7 +18,7 @@ try:
 except ImportError as exc:  # pragma: no cover
     raise ImportError("pyswisseph is required for transit search") from exc
 
-from backend.core.ephemeris import FLAGS as _FLAGS
+from backend.core.ephemeris import FLAGS as _FLAGS, bind_thread
 
 # Transiting planets we scan. Slow planets dominate — fast planets like
 # Moon are too noisy to be useful here.
@@ -89,6 +89,7 @@ def find_transits(
     previous orb was bigger, treat the local minimum as "exact". Naive
     but accurate to ~1 day, which is what users care about.
     """
+    bind_thread()
     natal: dict[str, float] = {}
     for code, name in _NATAL_BODIES:
         natal[name] = swe.calc_ut(natal_jd_ut, code, _FLAGS)[0][0]

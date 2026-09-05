@@ -1,9 +1,6 @@
 """AI Reasoner for astrological interpretation using multiple LLM providers."""
 
-import json
 import logging
-from datetime import datetime
-from pathlib import Path
 from typing import Optional
 
 from backend.core.llm_provider import UniversalLLMProvider, LLMProvider
@@ -28,16 +25,40 @@ class AstroReasoner:
     """
     AI-powered astrological interpretation engine.
 
-    Uses Claude API for generating interpretations based on
-    astronomical data and astrological knowledge base.
+    Takes the computed chart and asks an LLM to read it. The output is
+    model synthesis (confidence 0.7) — this class cites no rule and reads no
+    knowledge base; see the note on __init__ for the one that used to be here.
     """
 
+    # REMOVED (2026-08-30): `knowledge_base_path`, `self.knowledge_base`,
+    # `_load_knowledge_base()` and the three `get_*_meaning()` accessors.
+    #
+    # The loader read planets.json / houses.json / aspects.json expecting
+    # `{"planets": {...}}` while those files hold LISTS of rule objects
+    # (`[{"rule_id": "PL_SUN_GENERAL_001", "planet": "Sun", ...}]`), so
+    # `data.get(...)` raised AttributeError on every construction. A bare
+    # `except` logged it and returned `{"planets": {}, "houses": {},
+    # "aspects": {}}` — so every AstroReasoner in the project's history ran
+    # with an empty knowledge base and an ERROR line nobody chased.
+    #
+    # It did not matter, and that is the actual finding: no prompt ever read
+    # it. `interpret_natal_chart` fills `planets_json`/`houses_json`/
+    # `aspects_json` from the CHART, and the three accessors had no callers
+    # anywhere in the repo. So this was not a knowledge base that broke — it
+    # was a knowledge base that was never wired, whose only effect was to make
+    # the interpretation look more grounded in the class than it is on the
+    # confidence ladder (LLM synthesis, 0.7).
+    #
+    # The rule files stay on disk: they are a real, if tiny, rules corpus
+    # (`rule_id` + `meaning` + `domains`), and citing them would raise a claim
+    # from 0.7 to 0.9. Wiring them means indexing by planet/house/aspect and
+    # putting the cited rule in the prompt — a feature, with a spec, not a
+    # silent revival of this loader.
     def __init__(
         self,
         max_tokens: int = 4000,
         temperature: float = 0.7,
         preferred_provider: Optional[LLMProvider] = None,
-        knowledge_base_path: Optional[Path] = None,
     ):
         """
         Initialize AstroReasoner.
@@ -46,12 +67,8 @@ class AstroReasoner:
             max_tokens: Maximum tokens for response (increased to 4000 for detailed interpretations)
             temperature: Temperature for generation (0.0-1.0)
             preferred_provider: Preferred LLM provider (or None for cheapest)
-            knowledge_base_path: Path to knowledge base JSON files
         """
         self.max_tokens = max_tokens
-
-        # Load knowledge base
-        self.knowledge_base = self._load_knowledge_base(knowledge_base_path)
 
         # Initialize Universal LLM Provider
         self.llm = UniversalLLMProvider(
@@ -65,41 +82,6 @@ class AstroReasoner:
             logger.info(f"AstroReasoner initialized with providers: {', '.join(available)}")
         else:
             logger.warning("No LLM providers available - using fallback mode")
-
-    def _load_knowledge_base(self, path: Optional[Path]) -> dict:
-        """Load knowledge base from JSON files."""
-        kb = {"planets": {}, "houses": {}, "aspects": {}}
-
-        if path is None:
-            path = Path(__file__).parent.parent / "knowledge_base"
-
-        try:
-            planets_file = path / "planets.json"
-            if planets_file.exists():
-                with open(planets_file, "r", encoding="utf-8") as f:
-                    data = json.load(f)
-                    kb["planets"] = data.get("planets", {})
-
-            houses_file = path / "houses.json"
-            if houses_file.exists():
-                with open(houses_file, "r", encoding="utf-8") as f:
-                    data = json.load(f)
-                    kb["houses"] = data.get("houses", {})
-
-            aspects_file = path / "aspects.json"
-            if aspects_file.exists():
-                with open(aspects_file, "r", encoding="utf-8") as f:
-                    data = json.load(f)
-                    kb["aspects"] = data.get("aspects", {})
-
-            logger.info(
-                f"Knowledge base loaded: {len(kb['planets'])} planets, "
-                f"{len(kb['houses'])} houses, {len(kb['aspects'])} aspects"
-            )
-        except Exception as e:
-            logger.error(f"Failed to load knowledge base: {e}")
-
-        return kb
 
     async def interpret_natal_chart(
         self,
@@ -344,20 +326,3 @@ class AstroReasoner:
                 result["level"] = "Difficult"
 
         return result
-
-    def get_planet_meaning(self, planet: str, locale: str = "ru") -> dict:
-        """Get planet meaning from knowledge base."""
-        planet_key = planet.lower().replace(" ", "_")
-        planet_data = self.knowledge_base["planets"].get(planet_key, {})
-        return planet_data.get("interpretation", {}).get(locale, {})
-
-    def get_aspect_meaning(self, aspect: str, locale: str = "ru") -> dict:
-        """Get aspect meaning from knowledge base."""
-        aspect_key = aspect.lower().replace("-", "_")
-        aspect_data = self.knowledge_base["aspects"].get(aspect_key, {})
-        return aspect_data.get("interpretation", {}).get(locale, {})
-
-    def get_house_meaning(self, house: int, locale: str = "ru") -> dict:
-        """Get house meaning from knowledge base."""
-        house_data = self.knowledge_base["houses"].get(str(house), {})
-        return house_data.get("interpretation", {}).get(locale, {})

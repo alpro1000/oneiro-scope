@@ -96,7 +96,21 @@ sentry-sdk[fastapi]==1.40.0
 # No [cli] extra: it only adds typer for the `mcp` command-line helper, which
 # nothing here uses (the server runs via `python -m backend.mcp.server` on
 # FastMCP from core mcp), and its typer>=0.16 collides with spacy's typer<0.10.
-mcp>=1.23
+#
+# THE CEILING IS LOAD-BEARING, not tidiness. mcp 2.0.0 (2026-07-28) renamed
+# `mcp.server.fastmcp.FastMCP` to `mcp.server.mcpserver.MCPServer`, so
+# `backend/mcp/server.py` raises ModuleNotFoundError under 2.x. The failure is
+# quiet by construction: `build_mcp_http_app()` catches it, the REST API boots
+# fine, `/health` is green — and /mcp is simply never mounted, so every
+# connector reports the server as unreachable with nothing in the logs but one
+# line. This requirements file has no lockfile and Render's build is a bare
+# `pip install -r backend/requirements.txt`, so an open upper bound means the
+# next deploy decides which major version production runs. It resolved 1.29.x
+# through mid-August and 2.1.1 by the end of it.
+# Raising the ceiling means PORTING the server to MCPServer first (see the
+# migration guide at py.sdk.modelcontextprotocol.io/v2/migration), not editing
+# this line. `test_dependency_pins.py` keeps the CI workflow on the same pin.
+mcp>=1.29,<2
 claude-agent-sdk>=0.2
 
 # Testing

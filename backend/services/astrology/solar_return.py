@@ -20,7 +20,7 @@ try:
 except ImportError as exc:  # pragma: no cover
     raise ImportError("pyswisseph is required for solar return") from exc
 
-from backend.core.ephemeris import FLAGS as _FLAGS
+from backend.core.ephemeris import FLAGS as _FLAGS, bind_thread
 
 
 @dataclass(frozen=True)
@@ -56,6 +56,7 @@ _BODIES = {
 
 
 def _sun_longitude(jd: float) -> float:
+    bind_thread()
     return swe.calc_ut(jd, swe.SUN, _FLAGS)[0][0]
 
 
@@ -152,6 +153,7 @@ def solar_return(
         location_lat: Where the person is at the return moment.
         location_lon: Same.
     """
+    bind_thread()
     natal_sun = _sun_longitude(natal_jd_ut)
 
     # Birthday in `return_year` — month/day from natal, time approx

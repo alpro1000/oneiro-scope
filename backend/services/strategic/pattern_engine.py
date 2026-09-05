@@ -28,7 +28,7 @@ try:
 except ImportError as exc:  # pragma: no cover
     raise ImportError("pyswisseph required for pattern_engine") from exc
 
-from backend.core.ephemeris import FLAGS as _FLG, EPHEMERIS_VERSION
+from backend.core.ephemeris import FLAGS as _FLG, EPHEMERIS_VERSION, bind_thread
 
 SIGNS = [
     "aries", "taurus", "gemini", "cancer", "leo", "virgo",
@@ -119,6 +119,7 @@ def _jd(dt_utc: datetime) -> float:
 
 def _lon(jd_ut: float, planet: str) -> tuple[float, float]:
     """(ecliptic longitude, speed) of a planet at JD UT."""
+    bind_thread()
     xx, _ = swe.calc_ut(jd_ut, PLANET_IDS[planet], _FLG)
     return xx[0] % 360.0, xx[3]
 
@@ -194,6 +195,7 @@ def natal_geometry(
     Pure astronomy (confidence 1.0). The dict is the shared input of the
     pattern computations below.
     """
+    bind_thread()
     utc = _to_utc(birth_date, birth_time, birth_timezone)
     jd_ut = _jd(utc)
     cusps, ascmc = swe.houses(jd_ut, lat, lon, b"P")

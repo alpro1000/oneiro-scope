@@ -241,6 +241,7 @@ async def astrocartography_lines(
     birth_lat: float = 0.0,
     birth_lon: float = 0.0,
     birth_name: str = "birth",
+    locale: str = "ru",  # ru | en | de | es | fr
 ) -> dict[str, Any]:
     """Compute the full astrocartography line set for an interactive map.
 
@@ -257,6 +258,11 @@ async def astrocartography_lines(
         birth_lat: Birth latitude (for the birth marker).
         birth_lon: Birth longitude.
         birth_name: Label for the birth place.
+        locale: "ru" or "en". The geometry is language-free; this labels the
+            interactive map (legend, angle names, disclaimer). Without it the
+            map rendered in Russian for every caller — `view.ts::langOf` reads
+            the response's `locale`, then the call arguments, and this tool
+            offered neither, so it fell through to the shell's `lang="ru"`.
     """
     jd = _natal_jd(birth_date, birth_time, birth_timezone)
     return with_menu(
@@ -266,12 +272,16 @@ async def astrocartography_lines(
                 f"Astro*Carto*Graphy (Lewis 1976); {EPHEMERIS_VERSION}; "
                 "MC/IC = meridian loci, Asc/Desc = horizon curves"
             ),
+            # Echoed, not just accepted: a host that renders the view without
+            # forwarding the call arguments still gets the right language.
+            "locale": locale,
             "chart": chart_geometry(jd, birth_lat, birth_lon, birth_name),
             "lines": acg_lines(jd),
         },
         domain="astro",
         known_inputs=_known(birth_date, birth_time, birth_timezone),
         completed=["astrocartography-lines"],
+        locale=locale,
     )
 
 

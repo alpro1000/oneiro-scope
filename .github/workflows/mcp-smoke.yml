@@ -65,8 +65,16 @@ jobs:
           # bring heavy deps (mne, pandas, openai-whisper, sentry, etc.) that
           # aren't required for MCP/agent imports or pure-tool tests, and
           # slow CI install dramatically.
+          #
+          # This list is a SECOND set of pins for the same packages, so it can
+          # test a dependency graph production never installs. It did: this job
+          # was green on mcp 1.29.0 while `pip install -r backend/requirements
+          # .txt` — Render's actual build — resolved mcp 2.1.1 and broke the
+          # server outright. Keep every specifier here identical to the one in
+          # backend/requirements.txt; `test_dependency_pins.py` fails when mcp's
+          # drifts.
           pip install \
-            "mcp[cli]>=1.2" \
+            "mcp>=1.29,<2" \
             "claude-agent-sdk>=0.2" \
             "pydantic>=2.7,<3" \
             "pydantic-settings>=2.1" \
@@ -100,6 +108,12 @@ jobs:
           # spacy, torch) stay out; the code that needs them imports lazily.
 
       - name: Run MCP + agent smoke tests
+        # An explicit file list, not `backend/tests`, because the heavy-dep
+        # suites (dreams ETL, DReAMy) cannot run in this light environment.
+        # The cost is that a NEW test file runs nowhere until someone adds it
+        # here, and sixteen of the fifty-seven had accumulated unrun — among
+        # them every guard on the chart payload. `test_dependency_pins.py`
+        # now fails on an unlisted file, so the list cannot silently rot again.
         run: |
           python -m pytest \
             backend/tests/test_mcp_smoke.py \
@@ -143,4 +157,22 @@ jobs:
             backend/tests/test_funnel_metrics.py \
             backend/tests/test_health_commit.py \
             backend/tests/test_rule_source_tier.py \
+            backend/tests/test_dependency_pins.py \
+            backend/tests/test_astrology_provenance.py \
+            backend/tests/test_astrology_quality.py \
+            backend/tests/test_chart_core_contract.py \
+            backend/tests/test_ephemeris_swieph.py \
+            backend/tests/test_ephemeris_threading.py \
+            backend/tests/test_geo_candidates_and_coords.py \
+            backend/tests/test_geocoder_query_split.py \
+            backend/tests/test_geonames_resolver.py \
+            backend/tests/test_lunar_endpoint.py \
+            backend/tests/test_lunar_engine_smoke.py \
+            backend/tests/test_natal_houses_aspects.py \
+            backend/tests/test_no_silent_degradation.py \
+            backend/tests/test_node_definition_consistency.py \
+            backend/tests/test_response_meta.py \
+            backend/tests/test_wp_contracts.py \
+            backend/tests/test_hvdc_live_text.py \
+            backend/tests/test_physiognomy.py \
             -v

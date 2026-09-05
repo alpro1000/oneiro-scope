@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import hashlib
 import os
+import threading
 from datetime import date
 from functools import lru_cache
 from pathlib import Path
@@ -56,6 +57,43 @@ def resolve_ephe_dir(explicit: str | None = None) -> Path:
 EPHE_DIR: Path = resolve_ephe_dir()
 swe.set_ephe_path(str(EPHE_DIR))
 
+# pyswisseph keeps the C library's `swed` state THREAD-LOCAL in this build, so
+# the `set_ephe_path` above binds the importing thread and nothing else. On any
+# other thread the library starts with no path, fails to open the .se1 files,
+# and falls back to Moshier — returning a plausible number with the Moshier
+# bit set in the returned flags, and no exception. (Spelling that constant out
+# here would trip `test_no_module_references_moseph`, which bans the flag from
+# backend code by substring; the ban is right and this comment is not a use.)
+#
+#     main thread  → swe.calc_ut(...) flags 258  (SWIEPH|SPEED)   ✅
+#     worker thread→ swe.calc_ut(...) flags 260  (MOSEPH|SPEED)   ❌ same shape
+#
+# `calc_ut_swieph` catches that by reading the flags, but roughly twenty direct
+# `swe.calc_ut` / `swe.houses` call sites across the astrology services do not,
+# and would silently publish Moshier positions labelled "Swiss Ephemeris
+# 2.10.03 (SWIEPH), confidence 1.0". Nothing in production offloads ephemeris
+# work to a thread today; `fastapi.testclient` does, which is why
+# test_lunar_endpoint.py was answering 500.
+#
+# Binding is idempotent but NOT free — `swe_set_ephe_path` closes and reopens
+# the data files — so it happens once per thread, tracked here.
+_thread_state = threading.local()
+
+
+def bind_thread() -> None:
+    """Point THIS thread's Swiss Ephemeris at the shipped .se1 files.
+
+    Call once at the entry of any code path that may run off the importing
+    thread and then touches `swe` directly. Cheap after the first call.
+    """
+    if getattr(_thread_state, "bound", False):
+        return
+    swe.set_ephe_path(str(EPHE_DIR))
+    _thread_state.bound = True
+
+
+_thread_state.bound = True  # the import above already bound this thread
+
 FLAGS: int = swe.FLG_SWIEPH | swe.FLG_SPEED
 FLAGS_TEXT = "SWIEPH|SPEED"
 ENGINE_MODE = "swisseph_swieph"
@@ -93,6 +131,7 @@ def calc_ut_swieph(jd_ut: float, body: int) -> tuple:
     witness. Every caller that labels its output SWIEPH must go through
     here (or perform the same check).
     """
+    bind_thread()
     result, ret_flags = swe.calc_ut(jd_ut, body, FLAGS)
     if not ret_flags & swe.FLG_SWIEPH:
         raise RuntimeError(

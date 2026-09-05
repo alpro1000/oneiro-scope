@@ -122,6 +122,7 @@ def _local_noon_utc(target_date: date, tz: str) -> datetime:
 
 
 def compute_lunar(date_iso: str, tz: str) -> LunarResult:
+    ephe_config.bind_thread()
     target_date = date.fromisoformat(date_iso)
     ephe_config.require_in_range(target_date, "lunar calculation")
     noon_utc = _local_noon_utc(target_date, tz)
