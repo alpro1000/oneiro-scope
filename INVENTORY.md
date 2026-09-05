@@ -139,7 +139,7 @@
 | docs/specs/strategic-patterns | 0 | 1 |
 | docs/specs/product-architecture | 0 | 1 |
 | docs/steering | 0 | 5 |
-| docs/deploy | 0 | 9 |
+| docs/deploy | 0 | 10 |
 | packages | 2 | 0 |
 | packages/chart-kit | 2 | 3 |
 | packages/chart-kit/test | 0 | 3 |
@@ -152,4 +152,4 @@
 | .github | 1 | 0 |
 | .github/workflows | 0 | 9 |
 
-**ИТОГО:** папок = 148, файлов = 569
+**ИТОГО:** папок = 148, файлов = 570
